@@ -1,4 +1,4 @@
-# TBT Daily Multi-Table System — Panduan Deploy
+# TBT Daily Multi-Table System — Panduan Deploy 
 
 Ini nambahin fitur baru: buat "hari" main, tambah beberapa meja, tiap meja
 dapat kode buat input skor dari HP masing-masing, dan leaderboard gabungan
