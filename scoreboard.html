@@ -1210,33 +1210,13 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   $('save').addEventListener('click',async function(){
     say('Creating image...');
-
     try{
       var blob=await toBlob();
-      var filename='tbt-scoreboard.png';
-
-      // Prefer the native Save dialog when supported. This is more reliable
-      // than a synthetic <a download> click on browsers that restrict downloads.
-      if(window.showSaveFilePicker){
-        try{
-          var handle=await window.showSaveFilePicker({
-            suggestedName:filename,
-            types:[{description:'PNG Image',accept:{'image/png':['.png']}}]
-          });
-          var writable=await handle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          say('Image saved.');
-          return;
-        }catch(err){
-          // If the user cancelled the native picker, do not trigger another
-          // download unexpectedly.
-          if(err&&err.name==='AbortError'){say('');return;}
-        }
-      }
-
-      // Standard fallback for Chrome, Firefox, Safari, etc.
-      downloadBlob(blob,filename);
+      if(!blob){say('Could not create the image. Please try again.');return;}
+      // Use a normal download link. Do NOT use showSaveFilePicker here:
+      // on mobile it opens a folder/location picker instead of downloading
+      // directly to the browser's normal Downloads location.
+      downloadBlob(blob,'tbt-scoreboard.png');
       say('Image download started.');
     }catch(err){
       console.error('Save image failed:',err);
@@ -1817,12 +1797,63 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   /* tabs and hand-off to the story designer */
   var storyRound=-1;
+  // Story is a separate editable copy of the Play data. We only sync it when
+  // Play has changed since the last Play -> Story hand-off. This means manual
+  // edits made in Story are preserved when the user moves between tabs.
+  var lastPlaySync='';
+  function playSyncKey(){
+    try{
+      return JSON.stringify({
+        names:game.names,
+        title:game.title,
+        date:game.date,
+        useStart:game.useStart,
+        start:game.start,
+        mode:game.mode,
+        custom:game.custom,
+        seatRotation:game.seatRotation,
+        bankrupt:game.bankrupt,
+        events:game.events
+      });
+    }catch(e){return ''; }
+  }
+  function syncPlayToStory(force){
+    var key=playSyncKey();
+    if(!force && key===lastPlaySync)return false;
+
+    var rp=replay(game.events,modeConfig());
+    if(rp.hands.length){
+      var target=storyRound;
+      if(target<0 || target>3 || !rp.hands.some(function(h){return h.wind===target;})){
+        target=rp.hands[rp.hands.length-1].wind;
+      }
+      loadRound(target);
+    }else{
+      // Even before the first hand is recorded, copy only the Play setup.
+      state.names=game.names.slice();
+      state.title=game.title;
+      state.sub=game.date;
+      state.useStart=game.useStart;
+      var base=game.useStart?num(game.start):0;
+      state.starts=[base,base,base,base].map(String);
+      $('title').value=state.title;
+      $('sub').value=state.sub;
+      buildNames();
+      syncStart();
+      refresh();
+    }
+    lastPlaySync=key;
+    return true;
+  }
   function showTab(name){
     $('tab-play').hidden=name!=='play';
     $('tab-rank').hidden=name!=='rank';
     $('tab-story').hidden=name!=='story';
     document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-pressed',t.dataset.tab===name?'true':'false');});
-    if(name==='story'){if(state.round===4)loadOverall();else refresh();}
+
+    if(name==='story'){
+      syncPlayToStory(false);
+    }
     window.scrollTo(0,0);
   }
   document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);});});
