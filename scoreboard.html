@@ -1182,31 +1182,65 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   var downloads=null;
   function say(msg){$('status').textContent=msg||'';}
   function toBlob(){
-    return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
-  }
-  $('save').addEventListener('click',async function(){
-    say('');
-    var blob=await toBlob();
-    if(!blob){say('Could not create the image. Try again.');return;}
-    var url=URL.createObjectURL(blob);
-    try{
-      var a=document.createElement('a');
-      a.href=url;a.download='tbt-scoreboard.png';
-      document.body.appendChild(a);a.click();a.remove();
-      setTimeout(function(){URL.revokeObjectURL(url);},4000);
-      say('Saved. Check your downloads.');
-    }catch(err){
-      // Some mobile browsers (Samsung Internet, in-app browsers) block the
-      // download-link trick. Opening the image directly lets the person
-      // long-press it and save from there instead.
-      var opened=window.open(url,'_blank');
-      if(opened){
-        say('Opened the image in a new tab \u2014 press and hold it, then choose Download or Save image.');
-        setTimeout(function(){URL.revokeObjectURL(url);},60000);
-      }else{
-        say('Could not save the image here. Screenshot the preview instead.');
-        URL.revokeObjectURL(url);
+    return new Promise(function(resolve,reject){
+      try{
+        canvas.toBlob(function(blob){
+          if(blob)resolve(blob);
+          else reject(new Error('Canvas returned an empty PNG blob'));
+        },'image/png');
+      }catch(err){
+        reject(err);
       }
+    });
+  }
+
+  function downloadBlob(blob,filename){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Keep the blob URL alive long enough for browsers that process the
+    // download asynchronously after the click.
+    setTimeout(function(){URL.revokeObjectURL(url);},10000);
+  }
+
+  $('save').addEventListener('click',async function(){
+    say('Creating image...');
+
+    try{
+      var blob=await toBlob();
+      var filename='tbt-scoreboard.png';
+
+      // Prefer the native Save dialog when supported. This is more reliable
+      // than a synthetic <a download> click on browsers that restrict downloads.
+      if(window.showSaveFilePicker){
+        try{
+          var handle=await window.showSaveFilePicker({
+            suggestedName:filename,
+            types:[{description:'PNG Image',accept:{'image/png':['.png']}}]
+          });
+          var writable=await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          say('Image saved.');
+          return;
+        }catch(err){
+          // If the user cancelled the native picker, do not trigger another
+          // download unexpectedly.
+          if(err&&err.name==='AbortError'){say('');return;}
+        }
+      }
+
+      // Standard fallback for Chrome, Firefox, Safari, etc.
+      downloadBlob(blob,filename);
+      say('Image download started.');
+    }catch(err){
+      console.error('Save image failed:',err);
+      say('Could not save the image. Please try again.');
     }
   });
 
