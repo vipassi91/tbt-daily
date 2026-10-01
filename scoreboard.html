@@ -1184,28 +1184,29 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   function toBlob(){
     return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
   }
-  (async function(){
-    try{
-      if(window.claude&&typeof window.claude.use==='function'){
-        downloads=await window.claude.use('downloads');
-      }
-    }catch(e){downloads=null;}
-  })();
-
   $('save').addEventListener('click',async function(){
     say('');
     var blob=await toBlob();
     if(!blob){say('Could not create the image. Try again.');return;}
-    if(!downloads){
-      say('Saving is not available in this view. Screenshot the preview instead.');
-      return;
-    }
+    var url=URL.createObjectURL(blob);
     try{
-      var res=await downloads.save({filename:'tbt-scoreboard.png',data:blob});
-      say(res&&res.status==='saved'?'Saved. Ready for your story.':'');
+      var a=document.createElement('a');
+      a.href=url;a.download='tbt-scoreboard.png';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      say('Saved. Check your downloads.');
     }catch(err){
-      if(err&&err.code==='declined')say('');
-      else say('Could not save the image here. Screenshot the preview instead.');
+      // Some mobile browsers (Samsung Internet, in-app browsers) block the
+      // download-link trick. Opening the image directly lets the person
+      // long-press it and save from there instead.
+      var opened=window.open(url,'_blank');
+      if(opened){
+        say('Opened the image in a new tab \u2014 press and hold it, then choose Download or Save image.');
+        setTimeout(function(){URL.revokeObjectURL(url);},60000);
+      }else{
+        say('Could not save the image here. Screenshot the preview instead.');
+        URL.revokeObjectURL(url);
+      }
     }
   });
 
