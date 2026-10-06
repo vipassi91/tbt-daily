@@ -122,6 +122,34 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 .lbl{font-size:13px;color:var(--muted);font-weight:500;margin:16px 0 8px}
 .pts{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .chip.pt{padding:10px 0;border-radius:10px;text-align:center}
+.patbox{padding:0}
+#pkBox .pattier{margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;overflow:hidden}
+#pkBox .pattier:last-of-type{border-bottom:0}
+#pkCard2{border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+#pkBox .pattier summary{list-style:none;cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+#pkBox .pattier summary::-webkit-details-marker{display:none}
+#pkBox .pattier summary::after{content:'\25be';font-size:12px;text-transform:none;letter-spacing:0;margin-left:8px}
+#pkBox .pattier[open] summary::after{content:'\25b4'}
+#pkBox .pattier .pn{color:var(--accent);font-weight:700;text-transform:none;letter-spacing:0}
+#pkBox .pattier .chips{padding:0 10px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#pkBox .pattier .chips .chip{border-radius:10px;text-align:left;padding:8px 10px;font-size:13px;line-height:1.3;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#pkBox .pattier .chips .chip .ptv{color:var(--muted);flex:0 0 auto}
+#pkBox .pattier .chips .chip[aria-pressed="true"] .ptv{color:inherit;opacity:.85}
+.patbox .chip[disabled]{opacity:.35;cursor:default}
+.patmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.patmodal-overlay[hidden]{display:none}
+.patmodal-sheet{background:var(--bg);width:100%;max-width:640px;max-height:85vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 24px rgba(0,0,0,.18)}
+.patmodal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.patmodal-header h2{margin:0;font-size:17px;font-family:var(--display)}
+.patmodal-x{background:none;border:none;font-size:24px;line-height:1;color:var(--muted);cursor:pointer;padding:4px}
+.patmodal-body{overflow-y:auto;padding:12px 16px;flex:1}
+.patmodal-footer{padding:12px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.patTotal{font-size:14px;color:var(--muted)}
+.patTotal b{color:var(--text);font-size:22px;font-family:var(--display)}
+.patTotal .pkrow{margin-top:8px;line-height:1.5}
+.patTotal .pkrow b.cnt{color:var(--text);font-size:14px;font-family:inherit}
+.patTotal .excl{color:var(--red)}
+.patTotal .note{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--field);border:1px solid var(--line);font-size:13px}
 .dls{display:flex;flex-wrap:wrap;gap:6px}
 .dl{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--field);border:1px solid var(--line);color:var(--muted)}
 .dl.pos{color:var(--text);font-weight:700}
@@ -144,7 +172,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 .lnk{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:500;text-decoration:underline}
 .btn:disabled{opacity:.45;cursor:default}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
-.seg .btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seg .btn[aria-pressed="true"],.tkgrp-ctrl .btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .themes{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .theme{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:var(--muted);font-size:13px;padding:0}
 .theme .sw{width:46px;height:46px;border-radius:14px;border:2px solid transparent;box-shadow:0 0 0 1px var(--line)}
@@ -289,6 +317,30 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     </div>
     <div class="status" id="status" role="status" aria-live="polite"></div>
   </section>
+</div>
+
+<div id="tab-patterns" hidden>
+  <div id="pkCard1">
+    <div class="patbox" id="pkBox"></div>
+  </div>
+
+  <div id="pkCard2">
+    <div class="patTotal" id="pkTotal"></div>
+    <div class="row-actions" style="margin-top:10px"><button class="btn" id="pkClear" type="button">Clear selection</button></div>
+  </div>
+</div>
+
+<div class="patmodal-overlay" id="patModal" hidden>
+  <div class="patmodal-sheet">
+    <div class="patmodal-header">
+      <h2>Pick patterns</h2>
+      <button type="button" class="patmodal-x" id="patModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="patmodal-body" id="patModalSlot"></div>
+    <div class="patmodal-footer">
+      <button type="button" class="btn primary" id="patModalUse" style="width:100%">Use total</button>
+    </div>
+  </div>
 </div>
 
 <footer class="brandfoot">
@@ -1178,49 +1230,37 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   $('footer').addEventListener('input',function(){state.footer=this.value;refresh();});
   $('tagline').addEventListener('input',function(){state.tagline=this.value;refresh();});
 
-  /* ---------- save / share ---------- */
-  var downloads=null;
+  /* ---------- save / share ----------
+     Standard browser download, with a new-tab fallback for mobile
+     browsers (Samsung Internet, some in-app browsers) that block the
+     <a download> + blob: URL trick. This deliberately does NOT use the
+     window.claude artifact-only downloads API, because this page also
+     runs as a plain deployed website where that API never exists. */
   function say(msg){$('status').textContent=msg||'';}
   function toBlob(){
-    return new Promise(function(resolve,reject){
-      try{
-        canvas.toBlob(function(blob){
-          if(blob)resolve(blob);
-          else reject(new Error('Canvas returned an empty PNG blob'));
-        },'image/png');
-      }catch(err){
-        reject(err);
-      }
-    });
-  }
-
-  function downloadBlob(blob,filename){
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;
-    a.download=filename;
-    a.style.display='none';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Keep the blob URL alive long enough for browsers that process the
-    // download asynchronously after the click.
-    setTimeout(function(){URL.revokeObjectURL(url);},10000);
+    return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
   }
 
   $('save').addEventListener('click',async function(){
-    say('Creating image...');
+    say('');
+    var blob=await toBlob();
+    if(!blob){say('Could not create the image. Try again.');return;}
+    var url=URL.createObjectURL(blob);
     try{
-      var blob=await toBlob();
-      if(!blob){say('Could not create the image. Please try again.');return;}
-      // Use a normal download link. Do NOT use showSaveFilePicker here:
-      // on mobile it opens a folder/location picker instead of downloading
-      // directly to the browser's normal Downloads location.
-      downloadBlob(blob,'tbt-scoreboard.png');
-      say('Image download started.');
+      var a=document.createElement('a');
+      a.href=url;a.download='tbt-scoreboard.png';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      say('Saved. Check your downloads.');
     }catch(err){
-      console.error('Save image failed:',err);
-      say('Could not save the image. Please try again.');
+      var opened=window.open(url,'_blank');
+      if(opened){
+        say('Opened the image in a new tab \u2014 press and hold it, then choose Download or Save image.');
+        setTimeout(function(){URL.revokeObjectURL(url);},60000);
+      }else{
+        say('Could not save the image here. Screenshot the preview instead.');
+        URL.revokeObjectURL(url);
+      }
     }
   });
 
@@ -1461,7 +1501,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
         if(w2===dealer)dealerWon=true;
         parts.push(gname(w2)+' '+ptsWord(ev.pts[w2]));
       });
-      desc=parts.join(', ')+' off '+gname(ev.disc);
+      desc='Off '+gname(ev.disc)+': '+parts.join(', ');
     }else if(ev.kind==='invalid'||ev.kind==='false'){
       var pen=ev.kind==='invalid'?12:36;
       for(i=0;i<4;i++)d[i]=(i===ev.who)?-pen:pen/3;
@@ -1490,7 +1530,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     var roundTotal=[cfg.startBase,cfg.startBase,cfg.startBase,cfg.startBase];   // running score this wind round, only tracked when bankrupt is on
     events.forEach(function(ev,i){
       var r=scoreEvent(ev,dealer,cfg);
-      hands.push({i:i,kind:ev.kind,wind:wind,dealer:dealer,streak:streak,deltas:r.d,desc:r.desc,late:done});
+      hands.push({i:i,kind:ev.kind,wind:wind,dealer:dealer,streak:streak,deltas:r.d,desc:r.desc,late:done,patterns:ev.patterns});
       if(done)return;
       var bankrupt=false;
       if(cfg.bankrupt){
@@ -1530,25 +1570,33 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   /* entry form state */
   var f,editIdx=-1;
-  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},who:-1,tenpai:[]};editIdx=-1;}
+  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},who:-1,tenpai:[]};editIdx=-1;}
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
   function eventFromForm(){
     var k=f.kind,ev,ws;
     if(k==='hu'){
       if(f.winner<0||f.disc<0||!f.pts[f.winner])return null;
-      ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+      ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];
+      if(f.patterns[f.winner]){ev.patterns={};ev.patterns[f.winner]=f.patterns[f.winner];}
+      return ev;
     }
     if(k==='zimo'){
       if(f.winner<0||!f.pts[f.winner])return null;
-      ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+      ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];
+      if(f.patterns[f.winner]){ev.patterns={};ev.patterns[f.winner]=f.patterns[f.winner];}
+      return ev;
     }
     if(k==='double'||k==='triple'){
       if(f.disc<0)return null;
       ws=k==='triple'?othersOf(f.disc):f.winners.slice().sort();
       if(ws.length!==(k==='triple'?3:2))return null;
       ev={kind:k,disc:f.disc,winners:ws,pts:{}};
-      for(var j=0;j<ws.length;j++){if(!f.pts[ws[j]])return null;ev.pts[ws[j]]=f.pts[ws[j]];}
+      for(var j=0;j<ws.length;j++){
+        if(!f.pts[ws[j]])return null;
+        ev.pts[ws[j]]=f.pts[ws[j]];
+        if(f.patterns[ws[j]]){if(!ev.patterns)ev.patterns={};ev.patterns[ws[j]]=f.patterns[ws[j]];}
+      }
       return ev;
     }
     if(k==='invalid'||k==='false'){return f.who<0?null:{kind:k,who:f.who};}
@@ -1564,6 +1612,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     if(ev.who!=null)f.who=ev.who;
     if(ev.tenpai)f.tenpai=ev.tenpai.slice();
     f.pts=Object.assign({},ev.pts||{});
+    f.patterns=Object.assign({},ev.patterns||{});
   }
 
   function playerChips(action,selected,allowed,multi){
@@ -1575,11 +1624,20 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     }
     return h+'</div>';
   }
-  function ptsGrid(p,selected){
+  function ptsGrid(p,selected,label){
     var min=modeConfig().minPoint;
-    var h='<div class="pts">';
+    var pkMode=(f.patterns&&f.patterns[p])?'pattern':'points';
+    var h='<div class="lbl">'+esc(label||'Points')+'</div>'
+      +'<div class="chips" style="margin-bottom:10px">'
+      +'<button type="button" class="chip" aria-pressed="'+(pkMode==='points')+'" data-a="ptsmode" data-p="'+p+'">Points</button>'
+      +'<button type="button" class="chip" aria-pressed="'+(pkMode==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button>'
+      +'</div>';
+    h+='<div class="pts">';
     for(var n=min;n<=13;n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
-    return h+'</div>';
+    h+='</div>';
+    var pk=f.patterns&&f.patterns[p];
+    if(pk&&pk.counted&&pk.counted.length)h+='<p class="hint" style="margin-top:6px">Patterns: '+pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ')+'</p>';
+    return h;
   }
   function deltaChips(d){
     return d.map(function(v,i){return '<span class="dl '+(v>0?'pos':v<0?'neg':'')+'">'+esc(gname(i))+' '+sgn(v)+'</span>';}).join('');
@@ -1613,11 +1671,11 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
         h+='<div class="lbl">Winner</div>'+playerChips('win',f.winner);
         if(f.winner>=0){
           h+='<div class="lbl">Discarded by</div>'+playerChips('disc',f.disc,othersOf(f.winner));
-          h+='<div class="lbl">Points</div>'+ptsGrid(f.winner,f.pts[f.winner]);
+          h+=ptsGrid(f.winner,f.pts[f.winner]);
         }
       }else if(k==='zimo'){
         h+='<div class="lbl">Winner</div>'+playerChips('win',f.winner);
-        if(f.winner>=0)h+='<div class="lbl">Points</div>'+ptsGrid(f.winner,f.pts[f.winner]);
+        if(f.winner>=0)h+=ptsGrid(f.winner,f.pts[f.winner]);
       }else if(k==='double'||k==='triple'){
         h+='<div class="lbl">Discarded by</div>'+playerChips('disc',f.disc);
         if(f.disc>=0){
@@ -1626,7 +1684,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
             h+='<div class="lbl">Winners (pick two)</div>'+playerChips('winm',f.winners,othersOf(f.disc),true);
             ws=f.winners.slice().sort();
           }else ws=othersOf(f.disc);
-          ws.forEach(function(p){h+='<div class="lbl">Points for '+esc(gname(p))+'</div>'+ptsGrid(p,f.pts[p]);});
+          ws.forEach(function(p){h+=ptsGrid(p,f.pts[p],'Points for '+gname(p));});
         }
       }else if(k==='invalid'||k==='false'){
         h+='<div class="lbl">'+(k==='invalid'?'Who declared an invalid win?':'Who declared a false win?')+'</div>'+playerChips('who',f.who);
@@ -1650,6 +1708,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     rp.hands.slice().reverse().forEach(function(x){
       hh+='<div class="hitem'+(x.i===editIdx?' editing':'')+'"><div class="hm"><b>'+(x.i+1)+'</b> <span class="han">'+ROUNDS[x.wind].h+'</span> '+ROUNDS[x.wind].en+', dealer '+esc(gname(x.dealer))+' x'+x.streak+'</div>'
         +'<div class="hd">'+esc(x.desc)+(x.late?' (after the game ended)':'')+'</div><div class="dls">'+deltaChips(x.deltas)+'</div>'
+        +patternsReadout(x.patterns)
         +'<div class="hb"><button type="button" class="lnk" data-a="edit" data-v="'+x.i+'">Edit</button><button type="button" class="lnk" data-a="del" data-v="'+x.i+'">Delete</button></div></div>';
     });
     $('ghist').innerHTML=hh;
@@ -1657,6 +1716,17 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     renderRank();
   }
   function plainNum(n){return trimNum(n).replace('-','\u2212');}
+  function patternsReadout(patterns){
+    if(!patterns)return '';
+    var keys=Object.keys(patterns),multi=keys.length>1,lines=[];
+    keys.forEach(function(k){
+      var pk=patterns[k];
+      if(!pk||!pk.counted||!pk.counted.length)return;
+      var list=pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ');
+      lines.push(multi?('Patterns \u2014 '+esc(gname(+k))+': '+list):('Patterns: '+list));
+    });
+    return lines.map(function(l){return '<p class="hint" style="margin-top:6px">'+l+'</p>';}).join('');
+  }
 
   var delArm=-1,delTimer=null;
   $('gentry').addEventListener('click',function(e){
@@ -1671,6 +1741,23 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
       if(ix>=0)f.winners.splice(ix,1);else if(f.winners.length<2)f.winners.push(pv);
     }
     else if(a==='pts'){f.pts[+b.dataset.p]=+v;}
+    else if(a==='ptsmode'){
+      var ppm=+b.dataset.p;
+      if(f.patterns[ppm]){delete f.patterns[ppm];delete f.pts[ppm];renderGame();}
+      return;
+    }
+    else if(a==='patpick'){
+      var pp=+b.dataset.p;
+      var prev=f.patterns[pp]?f.patterns[pp].state:null;
+      delete f.pts[pp];
+      renderGame();
+      if(window.openPatternPickerModal)window.openPatternPickerModal(function(r){
+        f.pts[pp]=r.total;
+        f.patterns[pp]=r;
+        renderGame();
+      },prev);
+      return;
+    }
     else if(a==='who'){f.who=+v;}
     else if(a==='tp'){var tv=+v,tx=f.tenpai.indexOf(tv);if(tx>=0)f.tenpai.splice(tx,1);else f.tenpai.push(tv);}
     else if(a==='cancel'){resetForm();}
@@ -1797,63 +1884,12 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   /* tabs and hand-off to the story designer */
   var storyRound=-1;
-  // Story is a separate editable copy of the Play data. We only sync it when
-  // Play has changed since the last Play -> Story hand-off. This means manual
-  // edits made in Story are preserved when the user moves between tabs.
-  var lastPlaySync='';
-  function playSyncKey(){
-    try{
-      return JSON.stringify({
-        names:game.names,
-        title:game.title,
-        date:game.date,
-        useStart:game.useStart,
-        start:game.start,
-        mode:game.mode,
-        custom:game.custom,
-        seatRotation:game.seatRotation,
-        bankrupt:game.bankrupt,
-        events:game.events
-      });
-    }catch(e){return ''; }
-  }
-  function syncPlayToStory(force){
-    var key=playSyncKey();
-    if(!force && key===lastPlaySync)return false;
-
-    var rp=replay(game.events,modeConfig());
-    if(rp.hands.length){
-      var target=storyRound;
-      if(target<0 || target>3 || !rp.hands.some(function(h){return h.wind===target;})){
-        target=rp.hands[rp.hands.length-1].wind;
-      }
-      loadRound(target);
-    }else{
-      // Even before the first hand is recorded, copy only the Play setup.
-      state.names=game.names.slice();
-      state.title=game.title;
-      state.sub=game.date;
-      state.useStart=game.useStart;
-      var base=game.useStart?num(game.start):0;
-      state.starts=[base,base,base,base].map(String);
-      $('title').value=state.title;
-      $('sub').value=state.sub;
-      buildNames();
-      syncStart();
-      refresh();
-    }
-    lastPlaySync=key;
-    return true;
-  }
   function showTab(name){
     $('tab-play').hidden=name!=='play';
     $('tab-rank').hidden=name!=='rank';
     $('tab-story').hidden=name!=='story';
     document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-pressed',t.dataset.tab===name?'true':'false');});
-
-    if(name==='story'){
-      syncPlayToStory(false);
-    }
+    if(name==='story'){if(state.round===4)loadOverall();else refresh();}
     window.scrollTo(0,0);
   }
   document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);});});
@@ -1953,6 +1989,394 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     Promise.all(loads).then(function(){draw();}).catch(function(){});
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){draw();});
   }catch(e){}
+})();
+</script>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  var PATTERNS=[
+    {t:'b',n:'Kong',p:1},{t:'b',n:'Pong Of Dragon',p:1},{t:'b',n:'Pong Of Seat Wind',p:1},{t:'b',n:'Pong Of Prevailing Wind',p:1},
+    {t:'b',n:'All Simples',p:1},{t:'b',n:'All Sequences / Chi',p:1},{t:'b',n:'Concealed Hand',p:1},
+    {t:'a',n:'Half Outside',p:2},{t:'a',n:'All Types',p:2},
+    {t:'a',n:'Full Outside',p:3},{t:'a',n:'Mixed Straight',p:3},{t:'a',n:'Mixed Sequences / Chi',p:3},{t:'a',n:'All Triplets / Pong',p:3},
+    {t:'a',n:'Pure Straight',p:4},{t:'a',n:'Mixed Triplets / Pong',p:4},{t:'a',n:'Three Concealed Triplets / Pong',p:4},{t:'a',n:'Half Flush',p:4},
+    {t:'e',n:'Split Straight',p:4},
+    {t:'e',n:'Pure Triple Sequences / Chi',p:5},{t:'e',n:'Pure Sequential Triplets / Pong',p:5},{t:'e',n:'Seven Pairs',p:5},
+    {t:'e',n:'Full Flush',p:6},
+    {t:'e',n:'Half Terminals',p:7},{t:'e',n:'Three Quadruplets / Kongs',p:7},
+    {t:'e',n:'Scattered Stars',p:8},
+    {t:'m',n:'All Terminals',p:10},{t:'m',n:'All Honors',p:10},
+    {t:'m',n:'Four Concealed Pong',p:11},{t:'m',n:'Ruby Dragon',p:11},{t:'m',n:'Jade Dragon',p:11},{t:'m',n:'Pearl Dragon',p:11},{t:'m',n:'Seven Stars',p:11},
+    {t:'m',n:'Little Three Dragons',p:12},{t:'m',n:'Little Four Winds',p:12},
+    {t:'l',n:'Big Three Dragons',p:13},{t:'l',n:'Big Four Winds',p:13},{t:'l',n:'Thirteen Orphans',p:13},{t:'l',n:'Nine Gates',p:13},{t:'l',n:'Eighteen Arhats',p:13},
+    {t:'l',n:'Seven Steps',p:13},{t:'l',n:'Seven Wonders',p:13}
+  ];
+  var TIER_LABEL={b:'Beginner',a:'Apprentice',e:'Expert',m:'Master',l:'Legendary (limit)'};
+  var FLOWERS_B=[{n:'No Flower / Season',p:1},{n:'Flower In Season',p:1},{n:'Set Of Flowers / Seasons',p:2},{n:'Royal Garden',p:2},{n:'Imperial Garden',p:2},{n:'Win By Royal Garden',p:3},{n:'Win By Imperial Garden',p:4}];
+  var WINB=[{n:'Last Tile',p:1},{n:'Replacement Tile',p:1},{n:'Double Replacement Tile',p:2},{n:'Robbing A Kong',p:1}];
+
+  var pat={sel:{},flo:{},win:{}};
+
+  function isML(i){return PATTERNS[i].t==='m'||PATTERNS[i].t==='l';}
+  function countSel(map,n){var c=0;for(var i=0;i<n;i++)if(map[i])c++;return c;}
+  function patIdxByName(name){for(var i=0;i<PATTERNS.length;i++)if(PATTERNS[i].n===name)return i;return -1;}
+  function floIdxByName(name){for(var i=0;i<FLOWERS_B.length;i++)if(FLOWERS_B[i].n===name)return i;return -1;}
+  var FLOWER_IN_SEASON_IDX=floIdxByName('Flower In Season');
+  var IDX={
+    KONG:patIdxByName('Kong'),
+    KONG3:patIdxByName('Three Quadruplets / Kongs'),
+    TCP:patIdxByName('Three Concealed Triplets / Pong'),
+    HALFTERM:patIdxByName('Half Terminals'),
+    MIXEDPONG:patIdxByName('Mixed Triplets / Pong'),
+    PURESEQPONG:patIdxByName('Pure Sequential Triplets / Pong'),
+    ALLPONG:patIdxByName('All Triplets / Pong'),
+    ALLSEQ:patIdxByName('All Sequences / Chi'),
+    MIXEDSTRAIGHT:patIdxByName('Mixed Straight'),
+    MIXEDSEQ:patIdxByName('Mixed Sequences / Chi'),
+    PURETRIPLESEQ:patIdxByName('Pure Triple Sequences / Chi'),
+    PURESTRAIGHT:patIdxByName('Pure Straight'),
+    HALFOUTSIDE:patIdxByName('Half Outside'),
+    FULLOUTSIDE:patIdxByName('Full Outside'),
+    ALLTERM:patIdxByName('All Terminals'),
+    SEVENPAIRS:patIdxByName('Seven Pairs'),
+    ALLSIMPLES:patIdxByName('All Simples'),
+    HALFFLUSH:patIdxByName('Half Flush'),
+    FULLFLUSH:patIdxByName('Full Flush'),
+    ALLTYPES:patIdxByName('All Types'),
+    CONCEALEDHAND:patIdxByName('Concealed Hand'),
+    SPLITSTRAIGHT:patIdxByName('Split Straight'),
+    SCATTEREDSTARS:patIdxByName('Scattered Stars'),
+    PONGDRAGON:patIdxByName('Pong Of Dragon'),
+    PONGSEATWIND:patIdxByName('Pong Of Seat Wind'),
+    PONGPREVAILWIND:patIdxByName('Pong Of Prevailing Wind')
+  };
+
+  // One-directional implications: selecting the more specific pattern automatically subsumes the
+  // general one, so the general one locks (but not the reverse -- picking the general one first
+  // doesn't block the specific one, it only becomes locked once the specific one is also ticked).
+  var IMPLIES_MAP={};
+  IMPLIES_MAP[IDX.HALFTERM]=[IDX.ALLPONG,IDX.HALFOUTSIDE,IDX.FULLOUTSIDE];
+  IMPLIES_MAP[IDX.ALLTERM]=[IDX.ALLPONG,IDX.FULLOUTSIDE]; // already covered by the Master/Legendary lock below, kept for clarity
+  IMPLIES_MAP[IDX.KONG3]=[IDX.KONG]; // already claiming all three melds as kongs, so the basic Kong bonus is redundant
+
+  // Seven Pairs has its own closed whitelist of patterns it can stack with; everything else locks
+  // once it's selected.
+  // Closed whitelists: some patterns can only stack with a short, named list of others (or, for
+  // Scattered Stars, nothing at all besides the flower/win bonuses) -- everything not on the list
+  // locks once the anchor pattern is selected.
+  var WHITELIST_LOCKS={};
+  WHITELIST_LOCKS[IDX.SEVENPAIRS]=[IDX.ALLSIMPLES,IDX.HALFFLUSH,IDX.FULLFLUSH,IDX.HALFTERM];
+  WHITELIST_LOCKS[IDX.SPLITSTRAIGHT]=[IDX.ALLTYPES,IDX.CONCEALEDHAND,IDX.ALLSEQ,IDX.KONG,IDX.PONGDRAGON,IDX.PONGSEATWIND,IDX.PONGPREVAILWIND];
+  WHITELIST_LOCKS[IDX.SCATTEREDSTARS]=[];
+
+  // True mutual exclusions: different hand structure entirely, so picking one disables the other
+  // outright rather than just reducing a value.
+  var EXCLUDE_PAIRS=[
+    [IDX.ALLPONG,IDX.MIXEDSTRAIGHT],[IDX.ALLPONG,IDX.MIXEDSEQ],[IDX.ALLPONG,IDX.PURETRIPLESEQ],[IDX.ALLPONG,IDX.PURESTRAIGHT],
+    [IDX.ALLSEQ,IDX.MIXEDPONG],[IDX.ALLSEQ,IDX.TCP],[IDX.ALLSEQ,IDX.PURESEQPONG],
+    [IDX.PURESTRAIGHT,IDX.HALFOUTSIDE],[IDX.PURESTRAIGHT,IDX.ALLTYPES],[IDX.PURESTRAIGHT,IDX.FULLOUTSIDE],
+    [IDX.PURESTRAIGHT,IDX.MIXEDSTRAIGHT],[IDX.PURESTRAIGHT,IDX.MIXEDSEQ],[IDX.PURESTRAIGHT,IDX.MIXEDPONG],[IDX.PURESTRAIGHT,IDX.TCP],
+    [IDX.MIXEDSTRAIGHT,IDX.HALFOUTSIDE],[IDX.MIXEDSTRAIGHT,IDX.FULLOUTSIDE],[IDX.MIXEDSTRAIGHT,IDX.MIXEDSEQ],
+    [IDX.MIXEDSTRAIGHT,IDX.MIXEDPONG],[IDX.MIXEDSTRAIGHT,IDX.TCP],[IDX.MIXEDSTRAIGHT,IDX.HALFFLUSH],
+    [IDX.HALFOUTSIDE,IDX.FULLOUTSIDE],[IDX.HALFOUTSIDE,IDX.ALLPONG],[IDX.HALFOUTSIDE,IDX.MIXEDPONG],[IDX.HALFOUTSIDE,IDX.TCP],
+    [IDX.FULLOUTSIDE,IDX.ALLPONG],[IDX.FULLOUTSIDE,IDX.MIXEDPONG],[IDX.FULLOUTSIDE,IDX.TCP],[IDX.FULLOUTSIDE,IDX.HALFFLUSH],
+    [IDX.MIXEDPONG,IDX.MIXEDSEQ],[IDX.MIXEDSEQ,IDX.TCP],[IDX.HALFFLUSH,IDX.MIXEDSEQ],[IDX.HALFFLUSH,IDX.MIXEDPONG],
+    [IDX.HALFFLUSH,IDX.ALLTYPES],
+    [IDX.FULLFLUSH,IDX.ALLTYPES],[IDX.FULLFLUSH,IDX.HALFFLUSH],[IDX.FULLFLUSH,IDX.HALFOUTSIDE],
+    [IDX.FULLFLUSH,IDX.MIXEDSEQ],[IDX.FULLFLUSH,IDX.MIXEDPONG],[IDX.FULLFLUSH,IDX.MIXEDSTRAIGHT],
+    [IDX.FULLFLUSH,IDX.HALFTERM],[IDX.FULLFLUSH,IDX.SPLITSTRAIGHT],[IDX.FULLFLUSH,IDX.PONGDRAGON],
+    [IDX.FULLFLUSH,IDX.PONGSEATWIND],[IDX.FULLFLUSH,IDX.PONGPREVAILWIND],[IDX.FULLFLUSH,IDX.SCATTEREDSTARS],
+    [IDX.ALLSIMPLES,IDX.PONGDRAGON],[IDX.ALLSIMPLES,IDX.PONGSEATWIND],[IDX.ALLSIMPLES,IDX.PONGPREVAILWIND],
+    [IDX.ALLSIMPLES,IDX.HALFOUTSIDE],[IDX.ALLSIMPLES,IDX.FULLOUTSIDE],[IDX.ALLSIMPLES,IDX.ALLTYPES],
+    [IDX.ALLSIMPLES,IDX.PURESTRAIGHT],[IDX.ALLSIMPLES,IDX.MIXEDSTRAIGHT],[IDX.ALLSIMPLES,IDX.HALFFLUSH],
+    [IDX.ALLSIMPLES,IDX.SPLITSTRAIGHT],[IDX.ALLSIMPLES,IDX.HALFTERM],[IDX.ALLSIMPLES,IDX.SCATTEREDSTARS],
+    [IDX.ALLSEQ,IDX.KONG],[IDX.ALLSEQ,IDX.PONGDRAGON],[IDX.ALLSEQ,IDX.PONGSEATWIND],[IDX.ALLSEQ,IDX.PONGPREVAILWIND],
+    [IDX.ALLSEQ,IDX.HALFOUTSIDE],[IDX.ALLSEQ,IDX.ALLTYPES],[IDX.ALLSEQ,IDX.ALLPONG],[IDX.ALLSEQ,IDX.HALFFLUSH],
+    [IDX.ALLSEQ,IDX.SEVENPAIRS],[IDX.ALLSEQ,IDX.KONG3],[IDX.ALLSEQ,IDX.HALFTERM],[IDX.ALLSEQ,IDX.SCATTEREDSTARS],
+    [IDX.PONGDRAGON,IDX.FULLOUTSIDE],[IDX.PONGDRAGON,IDX.SCATTEREDSTARS],[IDX.PONGDRAGON,IDX.SEVENPAIRS],
+    [IDX.PONGSEATWIND,IDX.FULLOUTSIDE],[IDX.PONGSEATWIND,IDX.SCATTEREDSTARS],[IDX.PONGSEATWIND,IDX.SEVENPAIRS],
+    [IDX.PONGPREVAILWIND,IDX.FULLOUTSIDE],[IDX.PONGPREVAILWIND,IDX.SCATTEREDSTARS],[IDX.PONGPREVAILWIND,IDX.SEVENPAIRS],
+    [IDX.KONG,IDX.SEVENPAIRS],[IDX.KONG,IDX.SCATTEREDSTARS],
+    [IDX.CONCEALEDHAND,IDX.SEVENPAIRS],[IDX.CONCEALEDHAND,IDX.SCATTEREDSTARS],
+    [IDX.PURETRIPLESEQ,IDX.ALLTYPES],[IDX.PURESEQPONG,IDX.ALLTYPES],
+    [IDX.PURETRIPLESEQ,IDX.PURESTRAIGHT],[IDX.PURETRIPLESEQ,IDX.MIXEDSTRAIGHT],[IDX.PURETRIPLESEQ,IDX.MIXEDSEQ],
+    [IDX.PURETRIPLESEQ,IDX.MIXEDPONG],[IDX.PURETRIPLESEQ,IDX.TCP],[IDX.PURETRIPLESEQ,IDX.SPLITSTRAIGHT],
+    [IDX.PURETRIPLESEQ,IDX.PURESEQPONG],[IDX.PURETRIPLESEQ,IDX.SEVENPAIRS],[IDX.PURETRIPLESEQ,IDX.HALFTERM],
+    [IDX.PURETRIPLESEQ,IDX.SCATTEREDSTARS],
+    [IDX.PURESEQPONG,IDX.HALFOUTSIDE],[IDX.PURESEQPONG,IDX.FULLOUTSIDE],[IDX.PURESEQPONG,IDX.MIXEDSTRAIGHT],
+    [IDX.PURESEQPONG,IDX.MIXEDSEQ],[IDX.PURESEQPONG,IDX.PURESTRAIGHT],[IDX.PURESEQPONG,IDX.MIXEDPONG],
+    [IDX.PURESEQPONG,IDX.SEVENPAIRS],[IDX.PURESEQPONG,IDX.SPLITSTRAIGHT],[IDX.PURESEQPONG,IDX.HALFTERM],
+    [IDX.PURESEQPONG,IDX.SCATTEREDSTARS],
+    [IDX.HALFOUTSIDE,IDX.SPLITSTRAIGHT],[IDX.HALFOUTSIDE,IDX.SEVENPAIRS],[IDX.HALFOUTSIDE,IDX.SCATTEREDSTARS],[IDX.HALFOUTSIDE,IDX.HALFTERM],
+    [IDX.ALLTYPES,IDX.FULLOUTSIDE],[IDX.ALLTYPES,IDX.SCATTEREDSTARS],[IDX.ALLTYPES,IDX.SEVENPAIRS],
+    [IDX.FULLOUTSIDE,IDX.SPLITSTRAIGHT],[IDX.FULLOUTSIDE,IDX.SEVENPAIRS],[IDX.FULLOUTSIDE,IDX.HALFTERM],[IDX.FULLOUTSIDE,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDSTRAIGHT,IDX.SPLITSTRAIGHT],[IDX.MIXEDSTRAIGHT,IDX.SEVENPAIRS],[IDX.MIXEDSTRAIGHT,IDX.HALFTERM],
+    [IDX.MIXEDSTRAIGHT,IDX.KONG3],[IDX.MIXEDSTRAIGHT,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDSEQ,IDX.SPLITSTRAIGHT],[IDX.MIXEDSEQ,IDX.SEVENPAIRS],[IDX.MIXEDSEQ,IDX.HALFTERM],
+    [IDX.MIXEDSEQ,IDX.KONG3],[IDX.MIXEDSEQ,IDX.SCATTEREDSTARS],
+    [IDX.ALLPONG,IDX.SPLITSTRAIGHT],[IDX.ALLPONG,IDX.SEVENPAIRS],[IDX.ALLPONG,IDX.HALFTERM],[IDX.ALLPONG,IDX.SCATTEREDSTARS],
+    [IDX.PURESTRAIGHT,IDX.SPLITSTRAIGHT],[IDX.PURESTRAIGHT,IDX.SEVENPAIRS],[IDX.PURESTRAIGHT,IDX.HALFTERM],
+    [IDX.PURESTRAIGHT,IDX.KONG3],[IDX.PURESTRAIGHT,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDPONG,IDX.SPLITSTRAIGHT],[IDX.MIXEDPONG,IDX.SEVENPAIRS],[IDX.MIXEDPONG,IDX.SCATTEREDSTARS],
+    [IDX.TCP,IDX.SPLITSTRAIGHT],[IDX.TCP,IDX.SEVENPAIRS],[IDX.TCP,IDX.SCATTEREDSTARS],
+    [IDX.HALFFLUSH,IDX.SPLITSTRAIGHT],[IDX.HALFFLUSH,IDX.HALFTERM],[IDX.HALFFLUSH,IDX.SCATTEREDSTARS],
+    [IDX.HALFTERM,IDX.SPLITSTRAIGHT],[IDX.HALFTERM,IDX.SCATTEREDSTARS],
+    [IDX.KONG3,IDX.SPLITSTRAIGHT],[IDX.KONG3,IDX.SCATTEREDSTARS],[IDX.KONG3,IDX.PURETRIPLESEQ],[IDX.KONG3,IDX.SEVENPAIRS],
+    [IDX.KONG3,IDX.KONG]
+  ];
+  var EXCLUDE_MAP={};
+  EXCLUDE_PAIRS.forEach(function(pr){
+    (EXCLUDE_MAP[pr[0]]=EXCLUDE_MAP[pr[0]]||[]).push(pr[1]);
+    (EXCLUDE_MAP[pr[1]]=EXCLUDE_MAP[pr[1]]||[]).push(pr[0]);
+  });
+  function excludedBySelection(i,selSet){
+    var ex=EXCLUDE_MAP[i];if(!ex)return false;
+    return ex.some(function(j){return selSet[j];});
+  }
+  function lockedOutBySelection(i,selSet){
+    if(excludedBySelection(i,selSet))return true;
+    for(var k in IMPLIES_MAP){if(selSet[k]&&IMPLIES_MAP[k].indexOf(i)>=0)return true;}
+    for(var w in WHITELIST_LOCKS){
+      var wi=+w;
+      if(selSet[wi]&&i!==wi&&WHITELIST_LOCKS[w].indexOf(i)<0)return true;
+    }
+    return false;
+  }
+
+  // Three Quadruplets/Kongs and Three Concealed Triplets/Pong describe overlapping structure (the
+  // same three melds, differing only on whether the fourth tile was ever drawn), so claiming either
+  // one alongside Half Terminals / Mixed Pong / Pure Sequential Pong over-counts that structure and
+  // caps its value. Three Kong outranks Three Concealed Pong, so pairing the two alone never caps
+  // Three Kong; only Three Concealed Pong gives way there.
+  function effectivePoints(selIdx){
+    var selSet={};selIdx.forEach(function(i){selSet[i]=true;});
+    var hasKong3=!!selSet[IDX.KONG3],hasTCP=!!selSet[IDX.TCP];
+    var hasHT=!!selSet[IDX.HALFTERM],hasMP=!!selSet[IDX.MIXEDPONG],hasPSP=!!selSet[IDX.PURESEQPONG];
+    // Kong3 is only capped by Half Terminals/Mixed Pong/Pure Sequential Pong; pairing with Three
+    // Concealed Pong alone never caps it, since Three Kong outranks Three Concealed Pong.
+    var kongCapped=hasKong3&&(hasHT||hasMP||hasPSP);
+    // Three Concealed Pong is never fully accurate when the melds are actually kongs, so pairing it
+    // with Three Kong always caps it.
+    var tcpCapped=hasTCP&&(hasHT||hasMP||hasPSP||hasKong3);
+    return selIdx.map(function(i){
+      var p=PATTERNS[i].p,capped=false;
+      if(i===IDX.KONG3&&kongCapped){p=3;capped=true;}
+      if(i===IDX.TCP&&tcpCapped){p=2;capped=true;}
+      var count=pat.sel[i]||1;
+      return {i:i,label:PATTERNS[i].n,p:p*count,capped:capped,count:count};
+    });
+  }
+
+  // Mirrors the scoring form's exact exclusion rules, so this tab is a faithful place to poke at them:
+  // (1) any Master/Legendary pick makes the hand ONLY those picks, summed and capped at 13; nothing
+  //     else contributes, not even another M/L pick beyond their own sum.
+  // (2) otherwise, non-M/L patterns are sorted highest-first and added until the running total
+  //     reaches 10; whichever pattern crosses that line still counts in full, anything after it doesn't.
+  // (3) flower and win-condition bonuses are never subject to that 10-point stacking cutoff; they
+  //     always add in full on top, then the grand total is capped at 13.
+  // Pattern-only stacking: sort selected non-M/L patterns highest-first and add until the running
+  // total reaches 10 (whichever pattern crosses that line still counts in full, anything after it
+  // doesn't). Returns this before any flower/win bonus is considered, since whether those bonuses
+  // are even allowed depends on where this number lands.
+  function patternOnlyTotal(selIdx){
+    var pts=effectivePoints(selIdx).sort(function(a,b){return b.p-a.p;});
+    var total=0,counted=[],excluded=[],stopped=false;
+    pts.forEach(function(it){
+      if(stopped){excluded.push(it);return;}
+      total+=it.p;counted.push(it);
+      if(total>=10)stopped=true;
+    });
+    var capNotes=pts.filter(function(it){return it.capped;}).map(function(it){return it.i;});
+    return {total:total,counted:counted,excluded:excluded,stackCutoff:excluded.length>0,capNotes:capNotes};
+  }
+  // Once the pattern-only total above is already above 10, flower and win-condition bonuses can no
+  // longer be added on top of it.
+  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>10;}
+
+  function computeTotal(){
+    var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
+    var mlIdx=selIdx.filter(isML);
+    if(mlIdx.length){
+      var sum=mlIdx.reduce(function(a,i){return a+PATTERNS[i].p;},0);
+      return {
+        mode:'ml',
+        total:Math.min(13,sum),
+        counted:mlIdx.map(function(i){return {label:PATTERNS[i].n,p:PATTERNS[i].p};}),
+        excluded:[],
+        lockedOut:selIdx.filter(function(i){return !isML(i);}).map(function(i){return PATTERNS[i].n;}),
+        bonusLockedOut:[],
+        capNotes:[],
+        capped:sum>13
+      };
+    }
+    var pres=patternOnlyTotal(selIdx);
+    var floItems=[];Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]){var c=pat.flo[k];floItems.push({label:FLOWERS_B[k].n,p:FLOWERS_B[k].p*c,count:c});}});
+    var winItems=[];Object.keys(pat.win).forEach(function(k){if(pat.win[k])winItems.push({label:WINB[k].n,p:WINB[k].p});});
+    var locked=pres.total>10;
+    var bonusItems=locked?[]:floItems.concat(winItems);
+    var flo=locked?0:floItems.reduce(function(a,it){return a+it.p;},0);
+    var win=locked?0:winItems.reduce(function(a,it){return a+it.p;},0);
+    var grand=pres.total+flo+win;
+    return {
+      mode:'normal',
+      total:Math.min(13,grand),
+      counted:pres.counted.concat(bonusItems),
+      excluded:pres.excluded,
+      lockedOut:[],
+      bonusLockedOut:locked?floItems.concat(winItems):[],
+      capNotes:pres.capNotes,
+      capped:grand>13,
+      stackCutoff:pres.stackCutoff,
+      bonusLocked:locked
+    };
+  }
+
+  // Once a tier/bonus section has been open for any reason (a pick inside it, or the user opening
+  // it by hand), it stays open on re-render even if the picks inside it later drop to zero -- only
+  // the user collapsing it by hand should close it.
+  var openSections={};
+  function sectionOpen(key,hasSelection){
+    if(openSections[key]===undefined){
+      if(hasSelection)openSections[key]=true;
+      return hasSelection;
+    }
+    return openSections[key];
+  }
+
+  function tierSection(tier,hasML,hasNonML,selSet,effMap){
+    var idxs=[];PATTERNS.forEach(function(p,i){if(p.t===tier)idxs.push(i);});
+    var n=idxs.filter(function(i){return pat.sel[i];}).length;
+    var isOpen=sectionOpen(tier,n>0);
+    var h='<details class="pattier" data-tier="'+tier+'"'+(isOpen?' open':'')+'><summary>'+TIER_LABEL[tier]+(n?' <span class="pn">'+n+' picked</span>':'')+'</summary><div class="chips">';
+    var isMLTier=(tier==='m'||tier==='l');
+    idxs.forEach(function(i){
+      var p=PATTERNS[i];
+      var count=pat.sel[i]||0;
+      var dis=(hasML&&!count)||(isMLTier&&hasNonML&&!count)||(!count&&lockedOutBySelection(i,selSet));
+      var disp=(effMap[i]!=null)?effMap[i]:p.p;
+      h+='<button type="button" class="chip" data-a="sel" data-v="'+i+'" aria-pressed="'+(count>0)+'"'+(dis?' disabled':'')+'><span>'+esc(p.n)+(count>1?' (\u00d7'+count+')':'')+'</span><span class="ptv">'+disp+'</span></button>';
+    });
+    return h+'</div></details>';
+  }
+
+  function renderBox(){
+    var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
+    var selSet={};selIdx.forEach(function(i){selSet[i]=true;});
+    var hasML=selIdx.some(isML);
+    var hasNonML=selIdx.some(function(i){return !isML(i);});
+    var bonusDis=hasML||(!hasML&&bonusLocked(selIdx));
+    var effMap={};effectivePoints(selIdx).forEach(function(it){effMap[it.i]=it.p;});
+    var h='';
+    ['b','a','e','m','l'].forEach(function(tier){h+=tierSection(tier,hasML,hasNonML,selSet,effMap);});
+    var nFlo=countSel(pat.flo,FLOWERS_B.length);
+    var floOpen=sectionOpen('flo',nFlo>0);
+    h+='<details class="pattier" data-tier="flo"'+(floOpen?' open':'')+'><summary>Flower / season bonus'+(nFlo?' <span class="pn">'+nFlo+' picked</span>':'')+'</summary><div class="chips">';
+    var floSelIdx=-1;Object.keys(pat.flo).forEach(function(k){if(pat.flo[k])floSelIdx=+k;});
+    FLOWERS_B.forEach(function(fl,i){
+      var c=pat.flo[i]||0;
+      var dis=(bonusDis&&!c)||(floSelIdx>=0&&floSelIdx!==i);
+      h+='<button type="button" class="chip" data-a="flo" data-v="'+i+'" aria-pressed="'+(c>0)+'"'+(dis?' disabled':'')+'><span>'+esc(fl.n)+(c>1?' (\u00d7'+c+')':'')+'</span><span class="ptv">'+fl.p*(c||1)+'</span></button>';
+    });
+    h+='</div></details>';
+    var nWin=countSel(pat.win,WINB.length);
+    var winOpen=sectionOpen('win',nWin>0);
+    h+='<details class="pattier" data-tier="win"'+(winOpen?' open':'')+'><summary>Win condition bonus'+(nWin?' <span class="pn">'+nWin+' picked</span>':'')+'</summary><div class="chips">';
+    WINB.forEach(function(w,i){var dis=bonusDis&&!pat.win[i];h+='<button type="button" class="chip" data-a="win" data-v="'+i+'" aria-pressed="'+(!!pat.win[i])+'"'+(dis?' disabled':'')+'><span>'+esc(w.n)+'</span><span class="ptv">'+w.p+'</span></button>';});
+    h+='</div></details>';
+    if(floSelIdx>=0)h+='<p class="hint">Only one flower/season bonus applies at a time, so picking one locks the others.</p>';
+    if(hasML)h+='<p class="hint">Master and Legendary hands don\u2019t stack with anything else, including the flower and win-condition bonuses below \u2014 those are locked.</p>';
+    else if(hasNonML)h+='<p class="hint">Master and Legendary patterns don\u2019t stack with anything else, so they\u2019re locked while a Beginner, Apprentice or Expert pattern is picked.</p>';
+    if(!hasML){
+      if(bonusDis)h+='<p class="hint">Pattern points alone are already above 10, so flower and win-condition bonuses below are locked and can\u2019t be added.</p>';
+      if(selSet[IDX.HALFTERM])h+='<p class="hint">Half Terminals already guarantees All Pong and Half Outside, so those are locked.</p>';
+      if(selSet[IDX.SEVENPAIRS])h+='<p class="hint">Seven Pairs only stacks with All Simples, Half Flush, Full Flush and Half Terminals \u2014 everything else is locked.</p>';
+      if(selSet[IDX.SPLITSTRAIGHT])h+='<p class="hint">Split Straight only stacks with All Types, Concealed Hand and All Sequences / Chi \u2014 everything else is locked.</p>';
+      if(selSet[IDX.SCATTEREDSTARS])h+='<p class="hint">Scattered Stars doesn\u2019t stack with any other pattern \u2014 only the flower and win-condition bonuses below still apply.</p>';
+    }
+    $('pkBox').innerHTML=h;
+    $('pkBox').querySelectorAll('details[data-tier]').forEach(function(d){
+      d.addEventListener('toggle',function(){openSections[d.dataset.tier]=d.open;});
+    });
+  }
+
+  function fmtItems(items){return items.map(function(it){return it.label+' +'+it.p+((it.count&&it.count>1)?' (\u00d7'+it.count+')':'');}).join(', ');}
+
+  function renderTotal(){
+    var r=computeTotal();
+    var h='Faan total <b>'+r.total+'</b> '+(r.total===1?'faan':'faan');
+    h+='<div class="pkrow"><b class="cnt">Counted:</b> '+(r.counted.length?fmtItems(r.counted):'nothing picked yet')+'</div>';
+    if(r.excluded.length)h+='<div class="pkrow excl"><b class="cnt">Excluded by the 10-point stacking cutoff:</b> '+fmtItems(r.excluded)+'</div>';
+    if(r.lockedOut.length)h+='<div class="pkrow excl"><b class="cnt">Locked out by the Master/Legendary pick:</b> '+r.lockedOut.join(', ')+'</div>';
+    if(r.bonusLockedOut.length)h+='<div class="pkrow excl"><b class="cnt">Locked out, pattern points already above 10:</b> '+fmtItems(r.bonusLockedOut)+'</div>';
+    var notes=[];
+    if(r.mode==='ml')notes.push('A Master or Legendary pattern is selected, so only Master/Legendary picks count toward the total; everything else is ignored.');
+    else{
+      if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches 10, no further pattern points are added \u2014 the pattern that crosses 10 still counts in full.');
+      if(r.bonusLocked)notes.push('Pattern points alone are already above 10, so flower and win-condition bonuses don\u2019t add on top.');
+      if(r.capNotes&&r.capNotes.indexOf(IDX.KONG3)>=0)notes.push('Three Quadruplets / Kongs is counted at a reduced +3 (normally +7) because it overlaps in structure with the other triplet-family pattern(s) picked.');
+      if(r.capNotes&&r.capNotes.indexOf(IDX.TCP)>=0)notes.push('Three Concealed Triplets / Pong is counted at a reduced +2 (normally +4) because it overlaps in structure with the other triplet-family pattern(s) picked.');
+    }
+    if(r.capped)notes.push('The grand total is capped at 13 faan.');
+    if(notes.length)h+='<div class="note">'+notes.join(' ')+'</div>';
+    $('pkTotal').innerHTML=h;
+  }
+
+  function sync(){renderBox();renderTotal();}
+
+  $('pkBox').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-a]');if(!b)return;
+    var a=b.dataset.a,v=+b.dataset.v;
+    if(a==='sel'){
+      var selMax=(v===IDX.KONG)?2:1;
+      pat.sel[v]=((pat.sel[v]||0)+1)%(selMax+1);
+    }else if(a==='flo'){
+      var floMax=(v===FLOWER_IN_SEASON_IDX)?2:1;
+      pat.flo[v]=((pat.flo[v]||0)+1)%(floMax+1);
+    }else if(a==='win')pat.win[v]=!pat.win[v];
+    sync();
+  });
+  $('pkClear').addEventListener('click',function(){pat={sel:{},flo:{},win:{}};sync();});
+
+  // Lets other parts of the app (the Play tab's points entry) pop this same picker up as a
+  // modal instead of navigating to the Patterns tab. Moves the picker's own cards into the
+  // modal rather than duplicating any state or rendering logic, then moves them back on close.
+  var patModalOnUse=null;
+  function patCards(){return [$('pkCard1'),$('pkCard2')];}
+  function movePatCardsToModal(){
+    var cards=patCards(),slot=$('patModalSlot');
+    cards.forEach(function(c){slot.appendChild(c);});
+  }
+  function movePatCardsBack(){
+    var cards=patCards(),tab=document.getElementById('tab-patterns');
+    cards.forEach(function(c){tab.appendChild(c);});
+  }
+  function closePatternPickerModal(){
+    $('patModal').hidden=true;
+    movePatCardsBack();
+    patModalOnUse=null;
+  }
+  window.openPatternPickerModal=function(onUse,restoreState){
+    patModalOnUse=onUse;
+    pat=restoreState?{sel:Object.assign({},restoreState.sel),flo:Object.assign({},restoreState.flo),win:Object.assign({},restoreState.win)}:{sel:{},flo:{},win:{}};
+    movePatCardsToModal();
+    $('patModal').hidden=false;
+    sync();
+  };
+  $('patModalClose').addEventListener('click',closePatternPickerModal);
+  $('patModal').addEventListener('click',function(e){if(e.target===$('patModal'))closePatternPickerModal();});
+  $('patModalUse').addEventListener('click',function(){
+    var r=computeTotal();
+    if(patModalOnUse)patModalOnUse({
+      total:r.total,
+      counted:r.counted,
+      state:{sel:Object.assign({},pat.sel),flo:Object.assign({},pat.flo),win:Object.assign({},pat.win)}
+    });
+    closePatternPickerModal();
+  });
+
+  sync();
 })();
 </script>
 </body>
