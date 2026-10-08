@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, validGame, nextStamp } from '../../_tables.js';
+import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
 
 // GET /api/tables/:code: the host's edit code. Returns the raw game object
 // (which carries `lockedAt` once the table has been saved as final).
@@ -35,6 +35,11 @@ export async function onRequestPatch({ request, env, params }) {
     if (current.lockedAt) return json({ error: 'locked', lockedAt: current.lockedAt, updatedAt: t.updated_at, game: current }, 423);
     const base = request.headers.get('X-Base-Version');
     if (base && base !== t.updated_at) return json({ error: 'conflict', updatedAt: t.updated_at, game: current }, 409);
+
+    // Players and rules are fixed once the first hand is recorded (deleting every hand reopens them)
+    if (Array.isArray(current.events) && current.events.length > 0 && !sameSetup(current, game)) {
+      return json({ error: 'setup_locked', updatedAt: t.updated_at, game: current }, 422);
+    }
 
     delete game.lockedAt; // the lock belongs to the server, never to the client
 

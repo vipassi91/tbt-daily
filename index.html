@@ -96,6 +96,15 @@ var S={tab:'total',period:'all',metric:'net',mode:'all',day:null,loaded:false,fa
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
 function modeOf(t){return t.mode||'casual';}
+// one short line describing how a table was played
+function rulesLine(t){
+  var r=t.rules;if(!r)return '';
+  var p=[MODE_LABEL[modeOf(t)]||'Casual',r.minPoint+'+ pts to win','streak '+r.maxStreak,r.start==null?'no start score':'start '+r.start];
+  if(r.bankrupt)p.push('bankrupt');
+  if(r.seatRotation)p.push('seat rotation');
+  if(r.deadwall)p.push('deadwall');
+  return p.join(' \u00b7 ');
+}
 function modeOk(t){return S.mode==='all'||modeOf(t)===S.mode;}
 // mode filter chips: shown when more than one mode has been played (or while a filter is active, so it can be cleared)
 function modeChips(){
@@ -174,6 +183,7 @@ function viewTotal(){
 }
 function tableCard(t){
   var h='<div class="card tcard"><div class="thead"><div class="tname">'+esc(t.label)+'<span class="mbadge">'+esc(MODE_LABEL[modeOf(t)]||'Casual')+'</span></div><div class="tprog">'+progress(t)+'</div></div>';
+  if(t.rules)h+='<div class="dmeta" style="margin-bottom:6px">'+esc(rulesLine(t))+'</div>';
   if(t.events){
     t.players.slice().sort(function(a,b){return a.rank-b.rank||b.netTotal-a.netTotal;}).forEach(function(p){
       h+='<div class="prow"><span class="pr">'+p.rank+'</span><span class="pn">'+esc(p.name)+'</span><span class="pv'+(p.netTotal<0?' neg':'')+'">'+fmtNet(p.netTotal)+'</span></div>';

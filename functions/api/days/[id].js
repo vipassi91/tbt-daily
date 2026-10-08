@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, summarizePlayers, uniqueCode } from '../../_tables.js';
+import { statsFor, summarizePlayers, uniqueCode } from '../../_tables.js';
 
 // GET /api/days/:id: admin only. Includes both codes of every table
 // (edit code for the host, view code for players).
@@ -15,16 +15,15 @@ export async function onRequestGet({ request, env, params }) {
     const tables = [];
     for (const t of results) {
       let viewCode = t.view_code;
-      let stats = t.stats ? JSON.parse(t.stats) : null;
-      if (!viewCode || !stats) {
-        // tables created before view codes / stored results existed get filled in here
-        if (!viewCode) viewCode = await uniqueCode(env, [t.code]);
-        if (!stats) stats = buildStats(JSON.parse(t.rounds), JSON.parse(t.players));
-        await env.DB.prepare('UPDATE tables SET view_code=?, stats=? WHERE id=?').bind(viewCode, JSON.stringify(stats), t.id).run();
+      if (!viewCode) {
+        // tables created before view codes existed get one here
+        viewCode = await uniqueCode(env, [t.code]);
+        await env.DB.prepare('UPDATE tables SET view_code=? WHERE id=?').bind(viewCode, t.id).run();
       }
+      const stats = await statsFor(env, t);
       tables.push({
         id: t.id, code: t.code, view_code: viewCode, label: t.label,
-        events: stats.events, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, updatedAt: t.updated_at,
+        events: stats.events, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null, updatedAt: t.updated_at,
         players: summarizePlayers(stats),
       });
     }

@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, validGame, nextStamp } from '../../_tables.js';
+import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
 
 // POST /api/lock/:code (host code): save the final game and lock the table.
 // The body is the host's game, so the final hands and the lock land in one
@@ -21,6 +21,9 @@ export async function onRequestPost({ request, env, params }) {
     if (body && typeof body === 'object' && Object.keys(body).length) {
       if (!validGame(body)) return json({ error: 'Invalid game data' }, 400);
       game = body;
+    }
+    if (Array.isArray(current.events) && current.events.length > 0 && !sameSetup(current, game)) {
+      return json({ error: 'setup_locked', updatedAt: t.updated_at, game: current }, 422);
     }
     if (!Array.isArray(game.events) || game.events.length === 0) return json({ error: 'Nothing to save yet' }, 400);
 

@@ -108,6 +108,14 @@ function progText(t){
   return t.events+' hand, ronde '+['East','South','West','North'][t.progress.wind];
 }
 var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
+function rulesLine(t){
+  var r=t.rules;if(!r)return '';
+  var p=[modeLabel(t.mode),'min '+r.minPoint+' poin','streak '+r.maxStreak,r.start==null?'tanpa skor awal':'skor awal '+r.start];
+  if(r.bankrupt)p.push('bankrupt');
+  if(r.seatRotation)p.push('rotasi kursi');
+  if(r.deadwall)p.push('deadwall');
+  return p.join(' \u00b7 ');
+}
 function modeLabel(m){return MODE_NAMES[m||'casual']||'Casual';}
 function unlockTable(code){
   if(!confirm('Buka kunci meja ini? Host bisa mengedit lagi sampai disimpan ulang.'))return;
@@ -162,7 +170,7 @@ function viewDay(){
 }
 function tableItem(t){
   var base=location.origin+'/scoreboard.html?';
-  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
+  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
     +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Salin link</button></div>'
     +'<div class="cr"><span class="cl">Pemain</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Salin link</button></div>'
     +'<div class="meta" style="margin-top:6px">Atau cukup kasih kodenya aja (host atau pemain), tinggal buka <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> terus ketik kodenya</div></div>';

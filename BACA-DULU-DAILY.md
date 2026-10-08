@@ -128,3 +128,54 @@ Jalankan tiga baris di `schema-daily.sql` satu per satu di Console D1, lalu pasa
 File yang berubah dari versi sebelumnya: `scoreboard.html`, `index.html`, `admin-daily.html`,
 `functions/_tables.js`, `functions/api/tables/[code].js`, `functions/api/overview.js`,
 `functions/api/days/[id].js`, dan file BARU `functions/api/lock/[code].js`.
+
+## Update terbaru (v6): perbaikan mode
+
+- **Data lama yang tercatat "Casual"**: meja yang terakhir disimpan sebelum versi ini belum punya
+  catatan mode di hasilnya, jadi leaderboard dan admin menganggapnya Casual. Sekarang hasil lama
+  dihitung ulang dari game yang tersimpan saat dibaca pertama kali (otomatis, sekali saja, tanpa
+  mengubah waktu simpan). Tidak perlu migrasi database.
+- **Mode Custom**: mengetik angka di kolom Minimum points / Max streak dulu membuat server menolak
+  SEMUA simpanan berikutnya untuk meja itu (termasuk hand baru). Sekarang diterima, dan angka yang
+  di luar batas dirapikan oleh mesin skor.
+- **Simpanan yang ditolak server** sekarang kelihatan jelas ("NOT saved, last change refused" plus
+  satu peringatan) dan tidak diulang terus-menerus. Edit berikutnya mencoba lagi.
+- Mengganti mode di tengah game memang diperbolehkan, tetapi **seluruh hand yang sudah ada dihitung
+  ulang dengan aturan mode yang baru** (skor, dealer, dan batas dealer nyangkut ikut berubah).
+
+File yang berubah dari v5: `scoreboard.html`, `functions/_tables.js`, `functions/api/overview.js`,
+`functions/api/days/[id].js`.
+
+## Update terbaru (v7): aturan main selalu terlihat
+
+- **Kartu "Game rules"** (hanya baca) di tab Play dan tab Standings: mode, minimum poin untuk menang,
+  batas dealer nyangkut, rotasi kursi, deadwall, skor awal, dan bankrupt. Tampil untuk host maupun
+  pemain, baik game masih berjalan maupun sudah di-Save.
+- **Leaderboard publik dan admin** menampilkan satu baris aturan di tiap meja
+  (contoh: "Default - 2+ pts to win - streak 4 - start 200 - bankrupt").
+- Setelah "Save game" meja bersifat final; kalau ada yang perlu dikoreksi, admin menekan "Buka kunci"
+  di kartu meja.
+- Catatan: memilih mode otomatis mengisi skor awal sesuai preset (Casual/Default 200,
+  Tournament 240, Custom tidak diubah). Skor awal masih bisa diedit selama belum ada hand.
+- Hasil lama dihitung ulang otomatis saat dibaca pertama kali (tanpa migrasi).
+
+File yang berubah dari v6: `scoreboard.html`, `index.html`, `admin-daily.html`,
+`functions/_tables.js`, `functions/api/overview.js`, `functions/api/days/[id].js`.
+
+
+## Update terbaru (v8): pemain dan aturan terkunci setelah hand pertama
+
+- **Pemain (nama) dan semua pengaturan aturan** (mode, rotasi kursi, opsi Custom, skor awal,
+  bankrupt) hanya bisa diubah **sebelum hand pertama dicatat**. Setelah itu kolomnya nonaktif,
+  panel "Players and options" menutup sendiri, dan ada keterangannya. Judul dan tanggal masih
+  bisa diedit. Berlaku untuk host dan untuk scoreboard tanpa kode meja.
+- **Server ikut menolak** perubahan itu (kode 422), jadi halaman yang basi atau browser yang
+  dimodifikasi pun tidak bisa menembusnya. Halaman akan kembali ke versi server dan memberi tahu.
+- Kalau ada salah ketik nama atau salah pilih mode: hapus semua hand di meja itu (dua kali tap
+  "Delete" per hand). Game kembali ke "belum ada hand", dan panel pengaturan terbuka lagi.
+- Leaderboard tetap memakai **net points**. League Score / TBT Rating tetap disembunyikan sampai
+  ada database pemain.
+- Tidak ada migrasi database.
+
+File yang berubah dari v7: `scoreboard.html`, `functions/_tables.js`,
+`functions/api/tables/[code].js`, `functions/api/lock/[code].js`.

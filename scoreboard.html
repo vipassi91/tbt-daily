@@ -118,6 +118,11 @@ details.card[open]>summary{margin-bottom:14px}
 .rsub{font-size:13px;color:var(--muted);margin-top:2px}
 .rv{font-family:var(--display);font-weight:900;font-size:22px}
 .rv.neg{color:var(--red)}
+#gsetup input:disabled,#gsetup .btn:disabled{opacity:.55;cursor:default}
+.rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.rules .k{font-size:12px;color:var(--muted)}
+.rules .v{font-weight:700}
 body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .hb,body.locked #gsetup,body.locked #gentry,body.locked #gnew,body.locked .hb{display:none!important}
 body.connected #gnew{display:none!important}
 .lbl{font-size:13px;color:var(--muted);font-weight:500;margin:16px 0 8px}
@@ -212,6 +217,7 @@ body.connected #gnew{display:none!important}
 
   <details class="card" id="gsetup" open>
     <summary>Players and options</summary>
+    <p class="hint" id="setupNote" style="margin:6px 0 10px"></p>
     <div class="names" id="gnames"></div>
     <div class="field" style="margin-top:12px"><label for="gtitle">Title</label><input id="gtitle" maxlength="30" autocomplete="off"></div>
     <div class="field"><label for="gdate">Date / time</label><input id="gdate" maxlength="40" autocomplete="off"></div>
@@ -231,10 +237,11 @@ body.connected #gnew{display:none!important}
     <p class="hint" id="gbkHint" hidden>If any player's score hits 0 or below during a wind round, that round ends right there and the next wind round starts fresh from the starting score.</p>
   </details>
 
+  <div class="card" id="rulesCard"></div>
   <div class="card" id="gstatus"></div>
   <div class="card" id="gentry"></div>
   <div class="card" id="ghist"></div>
-  <div class="card" id="lockBanner" hidden><b>Saved as final.</b><p class="hint" style="margin:6px 0 0">This game is locked and can’t be edited anymore.</p></div>
+  <div class="card" id="lockBanner" hidden><b>Saved as final.</b><p class="hint" style="margin:6px 0 0">This game is locked and can’t be edited anymore. If something needs fixing, ask the admin to reopen it.</p></div>
   <div id="lockBar" hidden>
     <div class="row-actions"><button class="btn primary" id="lockBtn" type="button">Save game</button></div>
     <p class="hint">Save when the game is over. After saving, it can’t be edited anymore.</p>
@@ -250,6 +257,7 @@ body.connected #gnew{display:none!important}
   <span class="pill">STANDINGS</span>
   <h1>Standings</h1>
   <p class="lede">Ranking for this table, per wind round and overall.</p>
+  <div class="card" id="rankRules"></div>
   <div class="card">
     <div class="chips" id="rkChips"></div>
     <div id="rkBody" style="margin-top:8px"></div>
@@ -1319,7 +1327,7 @@ body.connected #gnew{display:none!important}
   /* ---------- multi-table sync ---------- */
   var syncTimer=null,retryTimer=null,pollTimer=null,syncStatus='',serverReady=false,tableLabel='';
   var baseVersion='';           // the server version (updatedAt) this phone's copy is based on
-  var inFlight=false,again=false;
+  var inFlight=false,again=false,rejectedAlerted=false;
   function tableName(){return VIEW_ONLY?(tableLabel||'Table'):(tableLabel?tableLabel+' ('+TABLE_CODE+')':'Table '+TABLE_CODE);}
   function setBase(v){baseVersion=v||'';if(!VIEW_ONLY){try{localStorage.setItem(GKEY+'-base',baseVersion);}catch(e){}}}
   function clearDirty(){try{localStorage.removeItem(GKEY+'-dirty');}catch(e){}}
@@ -1329,7 +1337,7 @@ body.connected #gnew{display:none!important}
     el.style.display='inline-block';
     var map=VIEW_ONLY
       ?{loading:'Connecting\u2026',saved:tableName()+' \u00b7 View only',error:tableName()+' \u00b7 Offline, retrying',notfound:'Link not found'}
-      :{loading:'Connecting\u2026',saving:'Saving\u2026',saved:tableName()+' \u00b7 Saved \u2713',error:tableName()+' \u00b7 Save failed, retrying',notfound:'Table code not found'};
+      :{loading:'Connecting\u2026',saving:'Saving\u2026',saved:tableName()+' \u00b7 Saved \u2713',error:tableName()+' \u00b7 Save failed, retrying',rejected:tableName()+' \u00b7 NOT saved, last change refused',notfound:'Table code not found'};
     var text=map[syncStatus]||tableName();
     if(game&&game.lockedAt&&(syncStatus==='saved'||syncStatus==='saving'))text=tableName()+' \u00b7 Final \u2713';
     el.textContent=text;
@@ -1361,11 +1369,13 @@ body.connected #gnew{display:none!important}
           if(r.ok){
             setBase(data.updatedAt||baseVersion);
             if(again){again=false;return pushToServer();}
-            clearDirty();syncStatus='saved';updateSyncBadge();return true;
+            clearDirty();rejectedAlerted=false;syncStatus='saved';updateSyncBadge();return true;
           }
           again=false;
           if(r.status===423){onLockedByServer(data);return false;}
           if(r.status===409){onConflict(data,pushToServer);return false;}
+          if(r.status===400){onRejected();return false;}
+          if(r.status===422){onSetupRefused(data);return false;}
           throw new Error('save failed');
         });
       })
@@ -1382,6 +1392,15 @@ body.connected #gnew{display:none!important}
     }else{
       setBase(data.updatedAt);
       if(retry)retry();
+    }
+  }
+  // The server understood the request but refused the data. Retrying the same data would loop forever,
+  // so say so clearly; the next edit tries again.
+  function onRejected(){
+    syncStatus='rejected';updateSyncBadge();
+    if(!rejectedAlerted){
+      rejectedAlerted=true;
+      alert('The server could not accept the last change, so it was NOT saved. Your hands are still on this phone. Undo the last change, or tell the admin.');
     }
   }
   function onLockedByServer(data){
@@ -1453,6 +1472,49 @@ body.connected #gnew{display:none!important}
     },window.TBT_POLL_MS||12000);
   }
 
+  /* ---------- rules of this game, always readable (host, player, saved or not) ---------- */
+  function renderRules(){
+    var cfg=modeConfig();
+    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'}[game.mode||'casual']||'Casual';
+    var onoff=function(b){return b?'On':'Off';};
+    var rows=[
+      ['Minimum to win',cfg.minPoint+(cfg.minPoint===1?' point':' points')],
+      ['Dealer streak','up to '+cfg.maxStreak],
+      ['Seat rotation',onoff(cfg.seatRotation)],
+      ['Non-replenishing deadwall',onoff(cfg.deadwall)],
+      ['Starting score',game.useStart?String(game.start):'Not used'],
+      ['Bankrupt',onoff(cfg.bankrupt)]
+    ];
+    var h='<div class="rhead"><b>Game rules</b><span class="pill">'+esc(label)+'</span></div><div class="rules">';
+    rows.forEach(function(x){h+='<div><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>';});
+    h+='</div>';
+    ['rulesCard','rankRules'].forEach(function(id){var el=$(id);if(el)el.innerHTML=h;});
+  }
+
+  /* ---------- players and rules are fixed once the first hand is recorded ---------- */
+  // (deleting every hand reopens them, because the game is then back to nothing recorded)
+  var setupWasFrozen=null;
+  function setupFrozen(){return (game.events||[]).length>0;}
+  function applySetupLock(){
+    var frozen=setupFrozen();
+    ['gseat','gcMin','gcStreak','gcWall','guse','gbk'].forEach(function(id){var el=$(id);if(el)el.disabled=frozen;});
+    var gs=$('gstart');if(gs)gs.disabled=frozen||!game.useStart;
+    document.querySelectorAll('#gnames input').forEach(function(el){el.disabled=frozen;});
+    document.querySelectorAll('#gmode .btn').forEach(function(el){el.disabled=frozen;});
+    var note=$('setupNote');
+    if(note)note.textContent=frozen
+      ?'Players and rules are fixed because the first hand has been recorded. Title and date can still be edited.'
+      :'Set the players and rules before recording the first hand. They can\u2019t be changed afterwards.';
+    var box=$('gsetup');
+    if(box&&setupWasFrozen!==frozen){box.open=!frozen;setupWasFrozen=frozen;}
+  }
+  function onSetupRefused(data){
+    clearDirty();
+    if(data&&data.game)applyServerGame(data);
+    syncStatus='saved';updateSyncBadge();afterLoad();
+    alert('Players and rules can\u2019t be changed after the first hand is recorded, so that change was not applied.');
+  }
+
   /* ---------- Save game: final, locked ---------- */
   function applyLockState(){
     var locked=!!game.lockedAt;
@@ -1479,6 +1541,7 @@ body.connected #gnew{display:none!important}
           }
           if(r.status===409){onConflict(data,lockNow);return;}
           if(r.status===423){onLockedByServer(data);return;}
+          if(r.status===422){onSetupRefused(data);return;}
           alert((data&&data.error)||'Could not save. Try again.');
         });})
         .catch(function(){
@@ -1817,6 +1880,8 @@ body.connected #gnew{display:none!important}
     $('ghist').innerHTML=hh;
     renderRoundChips(rp);
     renderRank();
+    renderRules();
+    applySetupLock();
     applyLockState();
   }
   function plainNum(n){return trimNum(n).replace('-','\u2212');}
