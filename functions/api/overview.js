@@ -16,7 +16,7 @@ export async function onRequestGet({ env }) {
       }
       tables.push({
         id: t.id, day_id: t.day_id, label: t.label, view_code: t.view_code,
-        events: stats.events, hands: stats.hands, progress: stats.progress,
+        events: stats.events, hands: stats.hands, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked,
         updatedAt: t.updated_at, players: summarizePlayers(stats),
       });
     }

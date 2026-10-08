@@ -1,6 +1,6 @@
 // Scoring engine, ported directly from the scoreboard's own modeConfig()/
 // scoreEvent()/replay() logic, so a table's data means exactly what the
-// app the host is typing into says it means — including mode-specific
+// app the host is typing into says it means, including mode-specific
 // rules (Casual/Default/Tournament/Custom), seat rotation, and bankrupt.
 
 const BASE = [0,2,4,6,8,10,12,16,20,24,28,32,36,40];

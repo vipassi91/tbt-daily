@@ -3,7 +3,7 @@ import { buildStats, uniqueCode } from '../_tables.js';
 
 // POST /api/tables: admin only. Creates a table with two codes:
 // `code` lets the host edit, `view_code` is what players get (read only).
-// Player names are optional here — a blank slot just becomes "Player N"
+// Player names are optional here: a blank slot just becomes "Player N"
 // until the host fills in the real name from the scoreboard itself.
 export async function onRequestPost({ request, env }) {
   if (!isAdmin(request, env)) return unauthorized();

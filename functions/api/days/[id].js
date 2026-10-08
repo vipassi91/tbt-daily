@@ -24,7 +24,7 @@ export async function onRequestGet({ request, env, params }) {
       }
       tables.push({
         id: t.id, code: t.code, view_code: viewCode, label: t.label,
-        events: stats.events, progress: stats.progress, updatedAt: t.updated_at,
+        events: stats.events, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, updatedAt: t.updated_at,
         players: summarizePlayers(stats),
       });
     }

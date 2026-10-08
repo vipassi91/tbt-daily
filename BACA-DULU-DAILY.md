@@ -88,7 +88,7 @@ Jalankan tiga baris di `schema-daily.sql` satu per satu di Console D1, lalu pasa
 
 ## Update terbaru (v4): halaman "masuk pakai kode"
 
-- **Halaman baru `masuk.html`** — satu halaman buat host maupun pemain.
+- **Halaman baru `masuk.html`** - satu halaman buat host maupun pemain.
   Tinggal buka `<domainmu>/masuk.html`, ketik kode 5 karakter yang dikasih
   admin, otomatis diarahkan ke scoreboard yang benar (mode edit kalau kode
   host, mode lihat kalau kode pemain). Nggak perlu kirim link lengkap lagi,
@@ -98,3 +98,33 @@ Jalankan tiga baris di `schema-daily.sql` satu per satu di Console D1, lalu pasa
 - Endpoint baru `functions/api/resolve/[code].js` yang nentuin jenis
   kode. Ini publik (nggak perlu password), tapi cuma bilang "host" atau
   "view", nggak pernah balikin data meja itu sendiri.
+
+
+## Update terbaru (v5)
+
+**Tidak ada migrasi database kali ini.** Cukup ganti file.
+
+- **Tombol "Save game"** di tab Play (host). Ada peringatan: setelah disimpan, game tidak bisa
+  diedit lagi. Kalau game belum selesai (belum sampai angin North), peringatannya menyebutkan itu.
+  Setelah disimpan: form input dan tombol Edit/Delete hilang, ada tulisan "Saved as final", dan
+  server menolak semua perubahan. Admin bisa membuka kunci lewat tombol **Buka kunci** di kartu
+  meja (kalau host salah tekan Save).
+- **Tombol "New game" disembunyikan** untuk host yang masuk lewat kode meja, karena tombol itu
+  menghapus semua hand di meja. Game baru = meja baru dari admin. Scoreboard tanpa kode tetap
+  punya tombolnya.
+- **Cek versi**: kalau meja diubah dari HP lain, HP yang datanya sudah basi tidak menimpa diam-diam.
+  Muncul pilihan: muat versi terbaru, atau tetap pakai versi HP ini dan timpa.
+- **Saran nama untuk host**: kolom nama pemain memunculkan nama yang sudah pernah dipakai di meja
+  lain (yang paling sering dipakai di atas). Nama sementara "Player 1-4" tidak ikut disarankan dan
+  tidak lagi muncul sebagai "pemain" di leaderboard total.
+- **Lencana mode dan filter mode** di leaderboard publik (muncul kalau sudah ada lebih dari satu
+  mode yang dimainkan). Meja yang sudah disimpan diberi tanda "Final".
+- **League Score disembunyikan** sampai rumusnya disepakati. Perhitungannya tetap tersimpan di
+  server. Untuk menampilkannya lagi: ubah `SHOW_RATING` di `index.html` (nama tampilan ada di
+  `RATING_LABEL`).
+- Tab Standings sekarang menghitung "hands won" hanya dari hu, zimo, dan double/triple hu. Draw,
+  invalid win, dan false win tidak dihitung menang.
+
+File yang berubah dari versi sebelumnya: `scoreboard.html`, `index.html`, `admin-daily.html`,
+`functions/_tables.js`, `functions/api/tables/[code].js`, `functions/api/overview.js`,
+`functions/api/days/[id].js`, dan file BARU `functions/api/lock/[code].js`.

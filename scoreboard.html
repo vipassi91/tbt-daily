@@ -118,7 +118,8 @@ details.card[open]>summary{margin-bottom:14px}
 .rsub{font-size:13px;color:var(--muted);margin-top:2px}
 .rv{font-family:var(--display);font-weight:900;font-size:22px}
 .rv.neg{color:var(--red)}
-body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .hb{display:none!important}
+body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .hb,body.locked #gsetup,body.locked #gentry,body.locked #gnew,body.locked .hb{display:none!important}
+body.connected #gnew{display:none!important}
 .lbl{font-size:13px;color:var(--muted);font-weight:500;margin:16px 0 8px}
 .pts{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .chip.pt{padding:10px 0;border-radius:10px;text-align:center}
@@ -188,6 +189,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 </style>
 </head>
 <body>
+<datalist id="nameSuggest"></datalist>
 <div id="syncGate" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px;text-align:center;">
   <div id="syncGateMsg" style="font-size:16px;color:var(--text);"></div>
   <button class="btn primary" id="syncGateBtn" type="button" style="display:none;">Try again</button>
@@ -232,6 +234,12 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   <div class="card" id="gstatus"></div>
   <div class="card" id="gentry"></div>
   <div class="card" id="ghist"></div>
+  <div class="card" id="lockBanner" hidden><b>Saved as final.</b><p class="hint" style="margin:6px 0 0">This game is locked and can’t be edited anymore.</p></div>
+  <div id="lockBar" hidden>
+    <div class="row-actions"><button class="btn primary" id="lockBtn" type="button">Save game</button></div>
+    <p class="hint">Save when the game is over. After saving, it can’t be edited anymore.</p>
+    <p class="hint" id="lockMsg"></p>
+  </div>
   <div class="row-actions">
     <button class="btn primary" id="gstory" type="button">Make story image</button>
     <button class="btn" id="gnew" type="button">New game</button>
@@ -1255,7 +1263,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     }catch(err){
       var opened=window.open(url,'_blank');
       if(opened){
-        say('Opened the image in a new tab \u2014 press and hold it, then choose Download or Save image.');
+        say('Opened the image in a new tab. Press and hold it, then choose Download or Save image.');
         setTimeout(function(){URL.revokeObjectURL(url);},60000);
       }else{
         say('Could not save the image here. Screenshot the preview instead.');
@@ -1305,12 +1313,16 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     }catch(e){}
     return defaultGame();
   }
-  function saveGame(){if(VIEW_ONLY)return;try{localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}if(TABLE_CODE)scheduleServerSave();}
+  function saveGame(){if(VIEW_ONLY||(game&&game.lockedAt))return;try{localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}if(TABLE_CODE)scheduleServerSave();}
   var game=loadGame();
 
   /* ---------- multi-table sync ---------- */
   var syncTimer=null,retryTimer=null,pollTimer=null,syncStatus='',serverReady=false,tableLabel='';
+  var baseVersion='';           // the server version (updatedAt) this phone's copy is based on
+  var inFlight=false,again=false;
   function tableName(){return VIEW_ONLY?(tableLabel||'Table'):(tableLabel?tableLabel+' ('+TABLE_CODE+')':'Table '+TABLE_CODE);}
+  function setBase(v){baseVersion=v||'';if(!VIEW_ONLY){try{localStorage.setItem(GKEY+'-base',baseVersion);}catch(e){}}}
+  function clearDirty(){try{localStorage.removeItem(GKEY+'-dirty');}catch(e){}}
   function updateSyncBadge(){
     var el=$('syncBadge');if(!el)return;
     if(!CONNECTED){el.style.display='none';return;}
@@ -1318,7 +1330,9 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     var map=VIEW_ONLY
       ?{loading:'Connecting\u2026',saved:tableName()+' \u00b7 View only',error:tableName()+' \u00b7 Offline, retrying',notfound:'Link not found'}
       :{loading:'Connecting\u2026',saving:'Saving\u2026',saved:tableName()+' \u00b7 Saved \u2713',error:tableName()+' \u00b7 Save failed, retrying',notfound:'Table code not found'};
-    el.textContent=map[syncStatus]||tableName();
+    var text=map[syncStatus]||tableName();
+    if(game&&game.lockedAt&&(syncStatus==='saved'||syncStatus==='saving'))text=tableName()+' \u00b7 Final \u2713';
+    el.textContent=text;
   }
   function showGate(msg,retry){
     var g=$('syncGate');if(!g)return;
@@ -1328,16 +1342,53 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   }
   function hideGate(){var g=$('syncGate');if(g)g.style.display='none';}
   function scheduleServerSave(){
-    if(!TABLE_CODE||!serverReady)return;
+    if(!TABLE_CODE||!serverReady||game.lockedAt)return;
     clearTimeout(syncTimer);clearTimeout(retryTimer);
     try{localStorage.setItem(GKEY+'-dirty','1');}catch(e){}
     syncStatus='saving';updateSyncBadge();
-    syncTimer=setTimeout(pushToServer,700);
+    syncTimer=setTimeout(function(){pushToServer();},700);
   }
+  // One save at a time, each one built on the version the previous one returned.
   function pushToServer(){
-    fetch('/api/tables/'+encodeURIComponent(TABLE_CODE),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(game)})
-      .then(function(r){if(!r.ok)throw new Error('save failed');try{localStorage.removeItem(GKEY+'-dirty');}catch(e){}syncStatus='saved';updateSyncBadge();})
-      .catch(function(){syncStatus='error';updateSyncBadge();clearTimeout(retryTimer);retryTimer=setTimeout(pushToServer,5000);});
+    if(inFlight){again=true;return Promise.resolve(false);}
+    inFlight=true;again=false;
+    var headers={'Content-Type':'application/json'};
+    if(baseVersion)headers['X-Base-Version']=baseVersion;
+    return fetch('/api/tables/'+encodeURIComponent(TABLE_CODE),{method:'PATCH',headers:headers,body:JSON.stringify(game)})
+      .then(function(r){
+        return r.json().catch(function(){return {};}).then(function(data){
+          inFlight=false;
+          if(r.ok){
+            setBase(data.updatedAt||baseVersion);
+            if(again){again=false;return pushToServer();}
+            clearDirty();syncStatus='saved';updateSyncBadge();return true;
+          }
+          again=false;
+          if(r.status===423){onLockedByServer(data);return false;}
+          if(r.status===409){onConflict(data,pushToServer);return false;}
+          throw new Error('save failed');
+        });
+      })
+      .catch(function(){
+        inFlight=false;syncStatus='error';updateSyncBadge();
+        clearTimeout(retryTimer);retryTimer=setTimeout(pushToServer,5000);return false;
+      });
+  }
+  function onConflict(data,retry){
+    var load=confirm('This table was changed from another device.\n\nOK = load the latest version (your last change on this phone is dropped).\nCancel = keep this phone\u2019s version and overwrite the other one.');
+    if(load){
+      applyServerGame(data);clearDirty();
+      syncStatus='saved';updateSyncBadge();afterLoad();
+    }else{
+      setBase(data.updatedAt);
+      if(retry)retry();
+    }
+  }
+  function onLockedByServer(data){
+    clearDirty();
+    if(data&&data.game)applyServerGame(data);
+    syncStatus='saved';updateSyncBadge();afterLoad();
+    alert('This game was already saved as final, so your last change was not applied.');
   }
   function fetchTable(){
     var url=VIEW_ONLY?('/api/view/'+encodeURIComponent(VIEW_CODE)):('/api/tables/'+encodeURIComponent(TABLE_CODE));
@@ -1351,7 +1402,8 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     game=Object.assign(defaultGame(),data.game);
     game.names=[0,1,2,3].map(function(i){return String(game.names[i]||'');});
     if(!Array.isArray(game.events))game.events=[];
-    tableLabel=data.label||'';
+    if(data.label)tableLabel=data.label;
+    setBase(data.updatedAt);
     try{if(!VIEW_ONLY)localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}
   }
   function afterLoad(){
@@ -1364,10 +1416,21 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     fetchTable().then(function(data){
       var keepLocal=false;
       if(!VIEW_ONLY&&!serverReady){
-        try{var raw=localStorage.getItem(GKEY);keepLocal=!!localStorage.getItem(GKEY+'-dirty')&&!!raw&&Array.isArray(JSON.parse(raw).events);}catch(e){}
+        try{
+          var raw=localStorage.getItem(GKEY);
+          var dirty=!!localStorage.getItem(GKEY+'-dirty')&&!!raw&&Array.isArray(JSON.parse(raw).events);
+          if(dirty){
+            var lockedNow=!!(data.game&&data.game.lockedAt);
+            var savedBase=localStorage.getItem(GKEY+'-base')||'';
+            var changedElsewhere=!!savedBase&&savedBase!==data.updatedAt;
+            if(lockedNow)keepLocal=false;
+            else if(changedElsewhere)keepLocal=!confirm('This phone has changes that were never sent, but the table was changed from another device since.\n\nOK = load the latest version (the unsent changes here are dropped).\nCancel = keep this phone\u2019s version and overwrite.');
+            else keepLocal=true;
+          }
+        }catch(e){}
       }
-      if(keepLocal){tableLabel=data.label||'';}
-      else applyServerGame(data);
+      if(keepLocal){if(data.label)tableLabel=data.label;setBase(data.updatedAt);}
+      else{applyServerGame(data);clearDirty();}
       serverReady=true;syncStatus=keepLocal?'saving':'saved';updateSyncBadge();hideGate();
       afterLoad();
       if(keepLocal)pushToServer();
@@ -1387,7 +1450,74 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
         if(same){if(syncStatus!=='saved'){syncStatus='saved';updateSyncBadge();}return;}
         applyServerGame(data);syncStatus='saved';updateSyncBadge();afterLoad();
       }).catch(function(){syncStatus='error';updateSyncBadge();});
-    },12000);
+    },window.TBT_POLL_MS||12000);
+  }
+
+  /* ---------- Save game: final, locked ---------- */
+  function applyLockState(){
+    var locked=!!game.lockedAt;
+    document.body.classList.toggle('locked',locked);
+    var bn=$('lockBanner');if(bn)bn.hidden=!locked;
+    var bar=$('lockBar');if(bar)bar.hidden=!(TABLE_CODE&&serverReady&&!locked&&(game.events||[]).length>0);
+    updateSyncBadge();
+  }
+  function lockNow(){
+    var btn=$('lockBtn'),note=$('lockMsg');
+    btn.disabled=true;note.textContent='Saving\u2026';
+    clearTimeout(syncTimer);clearTimeout(retryTimer);
+    (function go(tries){
+      if(inFlight&&tries<40){setTimeout(function(){go(tries+1);},150);return;}
+      var headers={'Content-Type':'application/json'};
+      if(baseVersion)headers['X-Base-Version']=baseVersion;
+      fetch('/api/lock/'+encodeURIComponent(TABLE_CODE),{method:'POST',headers:headers,body:JSON.stringify(game)})
+        .then(function(r){return r.json().catch(function(){return {};}).then(function(data){
+          btn.disabled=false;note.textContent='';
+          if(r.ok){
+            game.lockedAt=data.lockedAt;setBase(data.updatedAt);clearDirty();
+            try{localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}
+            syncStatus='saved';afterLoad();return;
+          }
+          if(r.status===409){onConflict(data,lockNow);return;}
+          if(r.status===423){onLockedByServer(data);return;}
+          alert((data&&data.error)||'Could not save. Try again.');
+        });})
+        .catch(function(){
+          btn.disabled=false;note.textContent='';
+          alert('No connection right now. Your hands are kept on this phone. Try Save game again when you are back online.');
+        });
+    })(0);
+  }
+  $('lockBtn').addEventListener('click',function(){
+    if(!TABLE_CODE||game.lockedAt||!serverReady)return;
+    var rp=replay(game.events||[],modeConfig());
+    var msg='Save this game as final?\n\nOnce it is saved it can\u2019t be edited anymore.';
+    if(!rp.done)msg='This game isn\u2019t finished yet (it is still in the '+ROUNDS[rp.wind].en+' wind round).\n\n'+msg;
+    if(!confirm(msg))return;
+    lockNow();
+  });
+
+  /* ---------- name suggestions for the host: names already used at other tables ---------- */
+  function loadNameSuggestions(){
+    if(!TABLE_CODE)return;
+    fetch('/api/overview').then(function(r){return r.ok?r.json():null;}).then(function(o){
+      if(!o)return;
+      var map={};
+      o.tables.forEach(function(t){t.players.forEach(function(p){
+        if(p.placeholder)return;
+        var k=String(p.name).trim().toLowerCase().replace(/\s+/g,' ');
+        var m=map[k]||(map[k]={n:0,spell:{}});
+        m.n++;m.spell[p.name]=(m.spell[p.name]||0)+1;
+      });});
+      var list=Object.keys(map).map(function(k){
+        var m=map[k],best='',bc=-1;
+        for(var s in m.spell)if(m.spell[s]>bc){bc=m.spell[s];best=s;}
+        return {name:best,n:m.n};
+      });
+      list.sort(function(a,b){return b.n-a.n||a.name.localeCompare(b.name);});
+      var dl=$('nameSuggest');if(!dl)return;
+      dl.textContent='';
+      list.slice(0,300).forEach(function(x){var op=document.createElement('option');op.value=x.name;dl.appendChild(op);});
+    }).catch(function(){});
   }
 
   /* ---------- Standings tab: this table, per wind round and overall ---------- */
@@ -1395,64 +1525,37 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   function renderRank(){
     var chips=$('rkChips'),box=$('rkBody');
     if(!chips||!box)return;
-    var cfg=modeConfig();
-    var rp=replay(game.events||[],cfg);
+    var rp=replay(game.events||[],modeConfig());
     var ns=[0,1,2,3].map(gname);
-    var w,i,ch='';
+    var w,ch='';
     ch+='<button type="button" class="chip" data-rk="4" aria-pressed="'+(rkView===4)+'"><span class="han">\u724C</span> Overall</button>';
     for(w=0;w<4;w++)ch+='<button type="button" class="chip" data-rk="'+w+'" aria-pressed="'+(rkView===w)+'"><span class="han">'+ROUNDS[w].h+'</span> '+ROUNDS[w].en+'</button>';
     chips.innerHTML=ch;
-    function roundHands(w){return rp.hands.filter(function(h){return h.wind===w&&!h.late;});}
-    var rows=[];
-    if(rkView===4){
-      var placementCurve={},netAvg={},handsWon={},winVals={};
-      ns.forEach(function(n){placementCurve[n]=[];netAvg[n]=[];handsWon[n]=0;winVals[n]=[];});
-      var totalHands=0;
-      for(w=0;w<4;w++){
-        var hs=roundHands(w);totalHands+=hs.length;
-        var totals={};ns.forEach(function(n){totals[n]=0;});
-        hs.forEach(function(h){ns.forEach(function(n,idx){totals[n]+=h.deltas[idx];if(h.deltas[idx]>0)handsWon[n]++;});});
-        ns.forEach(function(n){netAvg[n].push(totals[n]);});
-        var sorted=ns.slice().sort(function(a,b){return totals[b]-totals[a];});
-        var CURVE={1:100,2:60,3:30,4:0};
-        var k=0;
-        while(k<sorted.length){
-          var j=k;
-          while(j+1<sorted.length&&totals[sorted[j+1]]===totals[sorted[k]])j++;
-          var sum=0;for(var p=k;p<=j;p++)sum+=CURVE[p+1];
-          var avgc=sum/(j-k+1);
-          for(var p2=k;p2<=j;p2++)placementCurve[sorted[p2]].push(avgc);
-          k=j+1;
-        }
-        hs.forEach(function(h){h.deltas.forEach(function(v,idx){if(typeof v==='number'&&v>0)winVals[ns[idx]].push(Math.min(v,144));});});
-      }
-      ns.forEach(function(n){
-        var avg=function(a){return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:0;};
-        var pScore=avg(placementCurve[n]);
-        var netScore=Math.max(0,Math.min(100,((avg(netAvg[n])+240)/480)*100));
-        var winRate=totalHands>0?(handsWon[n]/totalHands)*100:0;
-        var avgWin=avg(winVals[n]);
-        var ptScore=winVals[n].length?Math.max(0,Math.min(100,((avgWin-8)/172)*100)):0;
-        var league=0.35*pScore+0.25*ptScore+0.25*winRate+0.15*netScore;
-        var net=netAvg[n].reduce(function(s,x){return s+x;},0);
-        rows.push({n:n,val:net,sub:'League '+(Math.round(league*10)/10).toFixed(1)+' \u00b7 '+handsWon[n]+(handsWon[n]===1?' hand won':' hands won')});
-      });
-    }else{
-      var hs2=roundHands(rkView);
-      var totals2={},won2={};ns.forEach(function(n){totals2[n]=0;won2[n]=0;});
-      hs2.forEach(function(h){ns.forEach(function(n,idx){totals2[n]+=h.deltas[idx];if(h.deltas[idx]>0)won2[n]++;});});
-      ns.forEach(function(n){rows.push({n:n,val:totals2[n],sub:won2[n]+(won2[n]===1?' hand won':' hands won')});});
+    // Only a hu, a zimo or a double/triple hu is a win. Draws, invalid and false wins are not.
+    function winnersOf(h){
+      var ev=(game.events||[])[h.i];if(!ev)return [];
+      if(ev.kind==='hu'||ev.kind==='zimo')return [ev.winner];
+      if(ev.kind==='double'||ev.kind==='triple')return (ev.winners||[]).slice();
+      return [];
     }
-    var any=rkView===4?(game.events||[]).length>0:roundHands(rkView).length>0;
-    rows.forEach(function(r){r.val=Math.round(r.val*100)/100;});
+    var views=rkView===4?[0,1,2,3]:[rkView];
+    var net=[0,0,0,0],won=[0,0,0,0],played=0;
+    views.forEach(function(wd){
+      rp.hands.filter(function(h){return h.wind===wd&&!h.late;}).forEach(function(h){
+        played++;
+        h.deltas.forEach(function(v,i){net[i]+=v;});
+        winnersOf(h).forEach(function(i){won[i]++;});
+      });
+    });
+    var rows=ns.map(function(name,i){return {n:name,val:Math.round(net[i]*100)/100,sub:won[i]+(won[i]===1?' hand won':' hands won')};});
     rows.sort(function(a,b){return b.val-a.val;});
     var html='';
     rows.forEach(function(x,k){
       x.rank=(k>0&&rows[k-1].val===x.val)?rows[k-1].rank:k+1;
       html+='<div class="rk'+(x.rank===1?' first':'')+'"><div class="rn">'+x.rank+'</div><div class="rm"><div class="rname">'+esc(x.n)+'</div><div class="rsub">'+x.sub+'</div></div><div class="rv'+(x.val<0?' neg':'')+'">'+sgn(x.val)+'</div></div>';
     });
-    box.innerHTML=any?html:'<p class="hint">'+(rkView===4?'No hands recorded yet.':'No hands in this wind round yet.')+'</p>';
-    var st=$('rkStory');if(st)st.disabled=!any;
+    box.innerHTML=played?html:'<p class="hint">'+(rkView===4?'No hands recorded yet.':'No hands in this wind round yet.')+'</p>';
+    var st=$('rkStory');if(st)st.disabled=!played;
   }
   $('rkChips').addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-rk]'):null;if(!b)return;rkView=+b.dataset.rk;renderRank();});
   $('rkStory').addEventListener('click',function(){
@@ -1714,6 +1817,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     $('ghist').innerHTML=hh;
     renderRoundChips(rp);
     renderRank();
+    applyLockState();
   }
   function plainNum(n){return trimNum(n).replace('-','\u2212');}
   function patternsReadout(patterns){
@@ -1730,7 +1834,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   var delArm=-1,delTimer=null;
   $('gentry').addEventListener('click',function(e){
-    if(VIEW_ONLY)return;
+    if(VIEW_ONLY||game.lockedAt)return;
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
     var a=b.dataset.a,v=b.dataset.v;
     if(a==='kind'){var ei=editIdx;resetForm();editIdx=ei;f.kind=v;}
@@ -1769,7 +1873,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
     renderGame();
   });
   $('ghist').addEventListener('click',function(e){
-    if(VIEW_ONLY)return;
+    if(VIEW_ONLY||game.lockedAt)return;
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
     var i=+b.dataset.v;
     if(b.dataset.a==='edit'){formFromEvent(game.events[i]);editIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
@@ -1795,7 +1899,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
         var l=document.createElement('label');l.htmlFor='gname'+i;
         var h=document.createElement('span');h.className='han';h.textContent=ROUNDS[i].h;
         l.appendChild(h);l.appendChild(document.createTextNode(ROUNDS[i].en+' seat'));
-        var inp=document.createElement('input');inp.id='gname'+i;inp.maxLength=16;inp.autocomplete='off';inp.placeholder='Player '+(i+1);
+        var inp=document.createElement('input');inp.id='gname'+i;inp.maxLength=16;inp.autocomplete='off';inp.setAttribute('list','nameSuggest');inp.placeholder='Player '+(i+1);
         inp.value=game.names[i];
         inp.addEventListener('input',function(){game.names[i]=inp.value;saveGame();renderGame();});
         fld.appendChild(l);fld.appendChild(inp);box.appendChild(fld);
@@ -1875,7 +1979,7 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
 
   var newTimer=null;
   $('gnew').addEventListener('click',function(){
-    if(VIEW_ONLY)return;
+    if(VIEW_ONLY||game.lockedAt)return;
     var b=$('gnew');
     if(!newTimer){b.textContent='Tap again to clear all hands';newTimer=setTimeout(function(){b.textContent='New game';newTimer=null;},3000);return;}
     clearTimeout(newTimer);newTimer=null;b.textContent='New game';
@@ -1975,6 +2079,8 @@ body.viewmode #gsetup,body.viewmode #gentry,body.viewmode #gnew,body.viewmode .h
   updateSyncBadge();
   if($('syncGateBtn'))$('syncGateBtn').addEventListener('click',loadFromServer);
   if(VIEW_ONLY)document.body.classList.add('viewmode');
+  if(CONNECTED)document.body.classList.add('connected');
+  if(TABLE_CODE)loadNameSuggestions();
   if(CONNECTED)loadFromServer();
   try{
     var han='\u6771\u5357\u897F\u5317\u724C\u7D42';

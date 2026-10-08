@@ -62,6 +62,7 @@ main{padding:22px 0 70px}
 .login img{width:48px;margin-bottom:12px}
 .login input{font:inherit;font-size:16px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--text);margin:14px 0;text-align:center}
 .err{color:var(--red);font-size:13px;margin:6px 0}
+.mb{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
 .empty{padding:22px;text-align:center;color:var(--muted);font-size:14px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--accent);color:var(--onaccent);padding:10px 18px;border-radius:999px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
@@ -102,8 +103,15 @@ function openDay(id){
 }
 function progText(t){
   if(!t.events)return 'Belum mulai';
+  if(t.locked)return t.events+' hand, final (terkunci)';
   if(t.progress.done)return t.events+' hand, selesai';
   return t.events+' hand, ronde '+['East','South','West','North'][t.progress.wind];
+}
+var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
+function modeLabel(m){return MODE_NAMES[m||'casual']||'Casual';}
+function unlockTable(code){
+  if(!confirm('Buka kunci meja ini? Host bisa mengedit lagi sampai disimpan ulang.'))return;
+  fetch('/api/lock/'+encodeURIComponent(code),{method:'DELETE',headers:H()}).then(function(r){if(!r.ok)throw new Error('x');return openDay(day.id);}).then(render).catch(function(){alert('Gagal membuka kunci.');});
 }
 function copyLink(kind,code){
   var url=location.origin+'/scoreboard.html?'+(kind==='host'?'code=':'view=')+code;
@@ -146,7 +154,7 @@ function viewDay(){
   return '<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 Semua sesi</button>'
     +'<h2>'+esc(d.label)+'</h2><div class="meta" style="margin-bottom:14px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">Lihat halaman publik sesi ini</a> \u00b7 <button class="lnk" style="padding:0;color:var(--red)" onclick="delDay()">Hapus sesi</button></div>'
     +'<datalist id="pnames">'+names.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>'
-    +'<div class="card"><h3 style="margin-bottom:12px">Tambah meja</h3><div class="field"><label>Nama meja</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Nama pemain boleh dikosongin \u2014 host bisa isi sendiri nanti dari scoreboard</div><div class="frow">'
+    +'<div class="card"><h3 style="margin-bottom:12px">Tambah meja</h3><div class="field"><label>Nama meja</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Nama pemain boleh dikosongin, host bisa isi sendiri nanti dari scoreboard</div><div class="frow">'
     +[0,1,2,3].map(function(i){return '<div class="field"><label>Pemain '+(i+1)+' (opsional)</label><input id="ntp'+i+'" list="pnames" autocomplete="off" placeholder="Diisi host nanti" value="'+esc(nt.p[i])+'" oninput="nt.p['+i+']=this.value"></div>';}).join('')
     +'</div><button class="btn primary" onclick="createTable()">Buat meja</button></div>'
     +'<h3 style="margin:22px 0 10px">Meja</h3>'
@@ -154,10 +162,10 @@ function viewDay(){
 }
 function tableItem(t){
   var base=location.origin+'/scoreboard.html?';
-  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div></div><button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div>'
+  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
     +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Salin link</button></div>'
     +'<div class="cr"><span class="cl">Pemain</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Salin link</button></div>'
-    +'<div class="meta" style="margin-top:6px">Atau cukup kasih kodenya aja (host atau pemain) \u2014 tinggal buka <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> terus ketik kodenya</div></div>';
+    +'<div class="meta" style="margin-top:6px">Atau cukup kasih kodenya aja (host atau pemain), tinggal buka <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> terus ketik kodenya</div></div>';
 }
 function createTable(){
   var p=nt.p.map(function(x){return x.trim();});

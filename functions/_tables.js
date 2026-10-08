@@ -32,7 +32,7 @@ export function buildStats(game, fallbackPlayers) {
   const wins = {};
   names.forEach(function (n) { wins[n] = s.rounds.reduce(function (t, r) { return t + (r.handsWon[n] || 0); }, 0); });
   return {
-    v: 1, names: names, rank: rank, wins: wins, aggregates: s.aggregates,
+    v: 1, mode: g.mode || 'casual', locked: !!g.lockedAt, names: names, rank: rank, wins: wins, aggregates: s.aggregates,
     hands: s.totalHands, events: events.length,
     progress: { wind: s.wind, dealer: s.dealer, done: s.done },
   };
@@ -42,7 +42,8 @@ function r2(n) { return Math.round((n || 0) * 100) / 100; }
 
 export function summarizePlayers(stats) {
   return stats.names.map(function (n) {
-    return { name: n, netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n] };
+    // "Player 1".. are stand-ins for seats the host never named; they must not become a real person on the leaderboard
+    return { name: n, placeholder: /^Player [1-4]$/.test(n), netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n] };
   });
 }
 
@@ -54,4 +55,11 @@ export async function uniqueCode(env, avoid) {
     if (!row) return c;
   }
   throw new Error('Could not generate a unique code');
+}
+
+// A strictly increasing version stamp, so two writes in the same millisecond can never share one.
+export function nextStamp(prev) {
+  let now = new Date().toISOString();
+  if (prev && now <= prev) now = new Date(Date.parse(prev) + 1).toISOString();
+  return now;
 }
