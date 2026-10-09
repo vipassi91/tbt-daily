@@ -223,3 +223,53 @@ File yang berubah dari v7: `scoreboard.html`, `functions/_tables.js`,
 - Catatan untuk klien lain: teks "@tiles.by.tiles" dan "Play. Learn. Connect." pada kartu share
   (dan footer serta kartu story) masih tertulis langsung di kode, belum jadi pengaturan brand.
 - Tidak ada migrasi database. File yang berubah dari v11: `scoreboard.html`.
+
+## Update terbaru (v13): bonus menumpuk seperti pola, berhenti di 10
+
+- **Bonus bunga/musim dan bonus win condition dijumlahkan dengan cara yang sama seperti pola**: dari
+  yang terbesar, ditambahkan selama total berjalan masih di bawah 10. Bonus yang melewati 10 tetap
+  dihitung penuh, dan setelah total mencapai 10 atau lebih tidak ada bonus lagi yang ditambah.
+  Sebelumnya bonus bisa menumpuk sampai 13.
+- Contoh: pola 9 + Set Of Flowers (+2) = 11. Pola 9 + Flower In Season x2 = 10, karena tiap Flower
+  In Season dihitung sendiri (+1): yang pertama mencapai 10, yang kedua tidak terhitung. Pola 8 +
+  Flower In Season x2 = 10 (keduanya terhitung).
+- Urutan bonus: yang bernilai lebih besar dulu, dan kalau sama besar, bunga sebelum win condition.
+- Bonus yang tidak terhitung tetap bisa dipilih (tombolnya tidak dikunci) dan dijelaskan di panel
+  total ("Not counted, the total already reached 10").
+- Pola yang sudah tepat 10: tidak ada bonus yang terhitung. Pola di atas 10: bonus tetap terkunci,
+  seperti sebelumnya. Aturan Master/Legendary dan garden win tidak berubah.
+- Hand lama tidak berubah sampai dibuka lagi di picker dan totalnya dipakai ulang.
+- Tidak ada migrasi database. File yang berubah dari v12: `scoreboard.html`.
+
+## Update terbaru (v14): Share hand disamakan dengan versi terbaru
+
+Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terbaru yang dijadikan patokan.
+
+- **Pemilih tile berbaris**: Row 1 = bunga dan musim (otomatis), Row 2 dan Row 3 = diisi sendiri, maksimal
+  10 tile per baris. Kalau baris aktif penuh, tile berikutnya masuk ke baris satunya. Mengetuk tile
+  yang sudah dipilih menghapusnya dari barisnya saja.
+- **Posisi tile di kartu**: Bottom, Center, atau Top.
+- **Tata letak kartu**: story diberi jarak aman 150px di atas dan di bawah; format post diskalakan
+  (teks 88%, tile 80%); daftar pola yang panjang dibagi dua kolom; nama pola yang panjang mengecilkan
+  ukuran huruf daftar dulu, baru dipotong dengan "...".
+- **Save image di modal share**: membuka gambar di tab baru lebih dulu (tekan-tahan untuk menyimpan),
+  lalu mencoba unduh langsung, lalu menyerah dengan pesan. Story tab tetap mengunduh langsung dulu.
+- Yang tetap versi kita: Share terlihat untuk pemain dan game yang sudah di-Save, serta semua kode
+  pattern picker (aturan eksklusi dan batas 10).
+- Tidak ada migrasi database. File yang berubah dari v13: `scoreboard.html`.
+
+## Update terbaru (v15): Save langsung ke HP, Share lewat share sheet
+
+- **Save image** (Story tab dan kartu share hand) sekarang satu ketukan, tanpa langkah tambahan:
+  - Android dan desktop: unduh langsung. Di Android hasilnya masuk ke album "Download" di galeri.
+  - iPhone dan iPad: unduhan biasa hanya masuk ke aplikasi Files, bukan Photos. Jadi Save membuka
+    share sheet, dan di sana pilihan "Save Image" memasukkan gambar langsung ke Photos.
+  - Tab baru (tekan-tahan gambar) hanya jadi jalan terakhir kalau browser memblokir unduhan.
+- **Share** membuka share sheet bawaan HP, tempat Instagram dan WhatsApp muncul kalau terpasang.
+  Tombolnya hanya tampil di perangkat yang mendukung berbagi file. Halaman web tidak bisa langsung
+  memposting ke Story Instagram tanpa lewat share sheet.
+- Pesan lama (misalnya "Could not save...") dibersihkan saat Share diketuk.
+- Keputusan yang dicatat: pola tepat 10 poin = chip bonus tetap bisa diketuk tapi tidak terhitung;
+  garden win pada hand lama = pilihan lain disimpan dan ditandai "Locked out"; Share terlihat untuk
+  pemain dan game final.
+- Tidak ada migrasi database. File yang berubah dari v14: `scoreboard.html`.

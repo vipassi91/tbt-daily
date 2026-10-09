@@ -176,6 +176,17 @@ body.connected #gnew{display:none!important}
 .sharetile-btn .cnt{position:absolute;top:-5px;right:-5px;background:var(--accent);color:#1b1b1b;font-size:10px;font-weight:800;border-radius:50%;width:16px;height:16px;line-height:16px;text-align:center}
 .sharetile-btn:disabled{opacity:.4;cursor:default}
 .sharetiles-selected{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+#shareTilesSelected{display:block;margin-bottom:10px}
+.rowsel{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.rowsel .lbl{margin:0 4px 0 0}
+.rowsel .chip small{opacity:.7;font-weight:600;margin-left:4px}
+.rowblock{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px dashed var(--line);border-radius:9px;margin-bottom:6px;min-height:50px;cursor:pointer}
+.rowblock.fixed{cursor:default}
+.rowblock.active{border:1.5px solid var(--accent);background:rgba(0,0,0,.025)}
+.rowlbl{flex:0 0 96px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);line-height:1.25}
+.rowlbl small{display:block;font-weight:600;text-transform:none;letter-spacing:0;opacity:.8}
+.rowtiles{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0}
+.rowtiles .empty{font-size:12px;color:var(--muted);opacity:.7}
 #shareModal{align-items:stretch}
 #shareModal .patmodal-sheet{max-width:none;width:100%;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none}
 #shareModal .sharetiles-grid{max-height:none;overflow:visible}
@@ -1324,11 +1335,41 @@ body.connected #gnew{display:none!important}
   $('tagline').addEventListener('input',function(){state.tagline=this.value;refresh();});
 
   /* ---------- save / share ----------
-     Standard browser download, with a new-tab fallback for mobile
-     browsers (Samsung Internet, some in-app browsers) that block the
-     <a download> + blob: URL trick. This deliberately does NOT use the
-     window.claude artifact-only downloads API, because this page also
-     runs as a plain deployed website where that API never exists. */
+     Save goes straight to the phone, in one tap:
+     - Android and desktop: a normal download. On Android it lands in the Download album of the gallery.
+     - iPhone and iPad: a download goes to the Files app, not Photos, so Save opens the share sheet, where
+       "Save Image" puts the picture straight into Photos.
+     - A new tab (press and hold) is only the last resort when the browser blocks the download.
+     Share opens the phone's own share sheet (Instagram, WhatsApp and so on). A web page cannot post to an
+     Instagram story by itself; the share sheet is the only route. Neither uses the window.claude artifact
+     API: it does not exist on the deployed site. Used by this page and by the share-hand card. */
+  function isIOS(){return /iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+  window.saveImageToPhone=async function(blob,filename,say){
+    var file=null;
+    try{file=new File([blob],filename,{type:'image/png'});}catch(e){file=null;}
+    if(isIOS()&&file&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file]});say('');return;}
+      catch(err){if(err&&err.name==='AbortError'){say('');return;}}   // closed the sheet: nothing to report
+    }
+    var url=URL.createObjectURL(blob);
+    try{
+      var a=document.createElement('a');
+      a.href=url;a.download=filename;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      say('Saved. Check your gallery or Downloads.');
+    }catch(err){
+      var opened=null;
+      try{opened=window.open(url,'_blank');}catch(e){opened=null;}
+      if(opened){
+        say('Opened the image in a new tab. Press and hold it, then choose Save or Download image.');
+        setTimeout(function(){URL.revokeObjectURL(url);},60000);
+      }else{
+        say('Could not save the image here. Try the Share button instead.');
+        URL.revokeObjectURL(url);
+      }
+    }
+  };
   function say(msg){$('status').textContent=msg||'';}
   function toBlob(){
     return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
@@ -1338,23 +1379,7 @@ body.connected #gnew{display:none!important}
     say('');
     var blob=await toBlob();
     if(!blob){say('Could not create the image. Try again.');return;}
-    var url=URL.createObjectURL(blob);
-    try{
-      var a=document.createElement('a');
-      a.href=url;a.download='tbt-scoreboard.png';
-      document.body.appendChild(a);a.click();a.remove();
-      setTimeout(function(){URL.revokeObjectURL(url);},4000);
-      say('Saved. Check your downloads.');
-    }catch(err){
-      var opened=window.open(url,'_blank');
-      if(opened){
-        say('Opened the image in a new tab. Press and hold it, then choose Download or Save image.');
-        setTimeout(function(){URL.revokeObjectURL(url);},60000);
-      }else{
-        say('Could not save the image here. Screenshot the preview instead.');
-        URL.revokeObjectURL(url);
-      }
-    }
+    window.saveImageToPhone(blob,'tbt-scoreboard.png',say);
   });
 
   try{
@@ -1362,6 +1387,7 @@ body.connected #gnew{display:none!important}
     if(navigator.canShare&&navigator.canShare({files:[probe]}))$('share').hidden=false;
   }catch(e){}
   $('share').addEventListener('click',async function(){
+    say('');
     try{
       var blob=await toBlob();
       var file=new File([blob],'tbt-scoreboard.png',{type:'image/png'});
@@ -2446,8 +2472,11 @@ body.connected #gnew{display:none!important}
   //     else contributes, not even another M/L pick beyond their own sum.
   // (2) otherwise, non-M/L patterns are sorted highest-first and added until the running total
   //     reaches 10; whichever pattern crosses that line still counts in full, anything after it doesn't.
-  // (3) flower and win-condition bonuses are never subject to that 10-point stacking cutoff; they
-  //     always add in full on top, then the grand total is capped at 13.
+  // (3) flower and win-condition bonuses stack on top the same way patterns do: highest first, added
+  //     while the running total is still below 10. The bonus that crosses 10 still counts in full and
+  //     nothing after it does. Each Flower In Season is its own +1. They stay selectable; the surplus
+  //     just isn't counted. If the pattern points alone are already above 10, no bonus is added at
+  //     all. The grand total is capped at 13.
   // Pattern-only stacking: sort selected non-M/L patterns highest-first and add until the running
   // total reaches 10 (whichever pattern crosses that line still counts in full, anything after it
   // doesn't). Returns this before any flower/win bonus is considered, since whether those bonuses
@@ -2495,10 +2524,35 @@ body.connected #gnew{display:none!important}
     var floItems=[];Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]){var c=pat.flo[k];floItems.push({label:FLOWERS_B[k].n,p:FLOWERS_B[k].p*c,count:c});}});
     var winItems=[];Object.keys(pat.win).forEach(function(k){if(pat.win[k])winItems.push({label:WINB[k].n,p:WINB[k].p});});
     var locked=pres.total>10;
-    var bonusItems=locked?[]:floItems.concat(winItems);
-    var flo=locked?0:floItems.reduce(function(a,it){return a+it.p;},0);
-    var win=locked?0:winItems.reduce(function(a,it){return a+it.p;},0);
-    var grand=pres.total+flo+win;
+    // Bonuses stack the way patterns do: highest first (flowers before wins on a tie), added while the
+    // running total is still below 10. The bonus that crosses 10 still counts in full; anything after
+    // it does not. Each Flower In Season is its own +1, so two of them can end up half counted.
+    var bonusItems=[],bonusTrimmed=[];
+    if(!locked){
+      var allBonus=floItems.concat(winItems);
+      var units=[];
+      allBonus.forEach(function(it,k){
+        var n=it.count>1?it.count:1;
+        for(var u=0;u<n;u++)units.push({p:it.p/n,k:k});
+      });
+      units.sort(function(a,b){return b.p-a.p||a.k-b.k;});
+      var running=pres.total,got={};
+      units.forEach(function(u){
+        if(running>=10)return;
+        running+=u.p;got[u.k]=(got[u.k]||0)+1;
+      });
+      allBonus.forEach(function(it,k){
+        var n=it.count>1?it.count:1,g=got[k]||0,unit=it.p/n;
+        if(g>0){
+          var c={label:it.label,p:unit*g};
+          if(g>1)c.count=g;
+          bonusItems.push(c);
+        }
+        if(g<n)bonusTrimmed.push({label:it.label,counted:unit*g,of:it.p});
+      });
+    }
+    var bonusSum=bonusItems.reduce(function(a,it){return a+it.p;},0);
+    var grand=pres.total+bonusSum;
     return {
       mode:'normal',
       total:Math.min(13,grand),
@@ -2509,7 +2563,8 @@ body.connected #gnew{display:none!important}
       capNotes:pres.capNotes,
       capped:grand>13,
       stackCutoff:pres.stackCutoff,
-      bonusLocked:locked
+      bonusLocked:locked,
+      bonusTrimmed:bonusTrimmed
     };
   }
 
@@ -2593,6 +2648,7 @@ body.connected #gnew{display:none!important}
     var h='Faan total <b>'+r.total+'</b> '+(r.total===1?'faan':'faan');
     h+='<div class="pkrow"><b class="cnt">Counted:</b> '+(r.counted.length?fmtItems(r.counted):'nothing picked yet')+'</div>';
     if(r.excluded.length)h+='<div class="pkrow excl"><b class="cnt">Excluded by the 10-point stacking cutoff:</b> '+fmtItems(r.excluded)+'</div>';
+    if(r.bonusTrimmed&&r.bonusTrimmed.length)h+='<div class="pkrow excl"><b class="cnt">Not counted, the total already reached 10:</b> '+r.bonusTrimmed.map(function(t){return esc(t.label)+(t.counted?' (+'+t.counted+' of +'+t.of+' counted)':' +'+t.of);}).join(', ')+'</div>';
     if(r.lockedOut.length)h+='<div class="pkrow excl"><b class="cnt">'+(r.mode==='garden'?'Locked out by the garden win:':'Locked out by the Master/Legendary pick:')+'</b> '+r.lockedOut.join(', ')+'</div>';
     if(r.bonusLockedOut.length)h+='<div class="pkrow excl"><b class="cnt">Locked out, pattern points already above 10:</b> '+fmtItems(r.bonusLockedOut)+'</div>';
     var notes=[];
@@ -2600,6 +2656,7 @@ body.connected #gnew{display:none!important}
     else if(r.mode==='ml')notes.push('A Master or Legendary pattern is selected, so only Master/Legendary picks count toward the total; everything else is ignored.');
     else{
       if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches 10, no further pattern points are added \u2014 the pattern that crosses 10 still counts in full.');
+      if(r.bonusTrimmed&&r.bonusTrimmed.length)notes.push('Flower and win-condition bonuses are added highest first until the running total reaches 10. The one that crosses 10 still counts in full; the rest are not counted, even though they can still be selected.');
       if(r.bonusLocked)notes.push('Pattern points alone are already above 10, so flower and win-condition bonuses don\u2019t add on top.');
       if(r.capNotes&&r.capNotes.indexOf(IDX.KONG3)>=0)notes.push('Three Quadruplets / Kongs is counted at a reduced +3 (normally +7) because it overlaps in structure with the other triplet-family pattern(s) picked.');
       if(r.capNotes&&r.capNotes.indexOf(IDX.TCP)>=0)notes.push('Three Concealed Triplets / Pong is counted at a reduced +2 (normally +4) because it overlaps in structure with the other triplet-family pattern(s) picked.');
@@ -2698,7 +2755,7 @@ body.connected #gnew{display:none!important}
     ['tiles','Tile picker'],['conditions','Hu / Zi Mo (conditions)']
   ];
   var tog={titledate:true,handround:true,name:true,patterns:true,points:true,score:true,tiles:false,conditions:true};
-  var S={idx:-1,winner:-1,winners:[],ev:null,tiles:[],format:'portrait',theme:'forest'};
+  var S={idx:-1,winner:-1,winners:[],ev:null,tiles:[],tileRows:[],row:2,tilePos:'bottom',format:'portrait',theme:'forest'};
   var fontsReady=false;
   try{
     var han='\u6771\u5357\u897F\u5317\u767C\u4E2D\u767D\u80E1\u81EA\u6478';
@@ -2722,7 +2779,7 @@ body.connected #gnew{display:none!important}
     var ev=window.game?window.game.events[idx]:null;
     if(!ev)return;
     var winners=ev.winner!=null?[ev.winner]:(ev.winners||[]);
-    S={idx:idx,winner:winners[0],winners:winners,ev:ev,tiles:[],format:S.format||'portrait',theme:S.theme||'forest'};
+    S={idx:idx,winner:winners[0],winners:winners,ev:ev,tiles:[],tileRows:[],row:2,tilePos:S.tilePos||'bottom',format:S.format||'portrait',theme:S.theme||'forest'};
     var wrap=$('shareWinnerWrap');
     if(winners.length>1){
       wrap.hidden=false;
@@ -2816,7 +2873,9 @@ body.connected #gnew{display:none!important}
   function renderPicker(){
     var h='';
     if(tog.tiles){
-      h+='<div class="shareSubpanel"><div class="lbl" style="margin:0 0 8px;text-align:center">Tap tiles to add (decorative only, not scored). Up to 4 of each, 18 tiles in all. Flowers and seasons are extra, one of each, and go on the first row.</div>';
+      h+='<div class="shareSubpanel"><div class="lbl" style="margin:0 0 8px;text-align:center">Tap tiles to add (decorative only, not scored). Pick where the tiles sit on the card, then choose which row to add to. Up to 10 tiles per row, 4 of each tile and 18 in all. Flowers and seasons are extra, one of each, and get their own row (Row 1, or Row 3 when the position is Top).</div>';
+      h+='<div class="rowsel" id="sharePosSel"></div>';
+      h+='<div class="rowsel" id="shareRowSel"></div>';
       h+='<div class="sharetiles-selected" id="shareTilesSelected" style="margin-bottom:10px"></div>';
       h+='<div class="sharetiles-grid">';
       TILE_GROUPS.forEach(function(g){
@@ -2838,19 +2897,45 @@ body.connected #gnew{display:none!important}
   var MAX_MAIN=18,MAX_BONUS=8;   // 8 flowers and seasons, one of each, like a real set
   function isBonusTile(i){return i>=34;}
   function groupCount(bonus){return S.tiles.filter(function(t){return isBonusTile(t)===bonus;}).length;}
+  var ROW_MAX=10;
+  function rowCount(r){return S.tileRows.filter(function(x){return x===r;}).length;}
+  function otherRow(r){return r===2?3:2;}
   function renderSelectedTiles(){
     var el=$('shareTilesSelected');if(!el)return;
-    if(!S.tiles.length){
-      el.innerHTML='<p class="hint" style="margin:0;text-align:center">No tiles added yet.</p>';
-    }else{
-      // shown in the same order as on the card: flowers and seasons first
-      var order=S.tiles.map(function(idx,j){return {idx:idx,j:j};});
-      order=order.filter(function(o){return isBonusTile(o.idx);}).concat(order.filter(function(o){return !isBonusTile(o.idx);}));
-      var h='';
-      order.forEach(function(o){h+='<div class="extile" data-rm="'+o.j+'" style="background-image:url(\''+TILE_IMG[o.idx]+'\')" title="Tap to remove"></div>';});
-      el.innerHTML=h;
+    // Row 1 (flowers and seasons, automatic) then Row 2 and Row 3 (chosen by the user)
+    var rows={1:[],2:[],3:[]};
+    S.tiles.forEach(function(idx,j){rows[S.tileRows[j]].push({idx:idx,j:j});});
+    var isTop=(S.tilePos==='top');
+    // slot 1 = flowers & seasons (automatic), slots 2 and 3 = the two rows the user fills.
+    // Top: the user's rows are Row 1 and Row 2, flowers & seasons close the block as Row 3.
+    function rowName(slot){return isTop?(slot===1?'Row 3':slot===2?'Row 1':'Row 2'):('Row '+slot);}
+    var h='';
+    function block(r,sub,fixed){
+      h+='<div class="rowblock'+(fixed?' fixed':'')+(!fixed&&S.row===r?' active':'')+'" '+(fixed?'':'data-row="'+r+'"')+'>';
+      h+='<div class="rowlbl">'+rowName(r)+'<small>'+sub+'</small></div><div class="rowtiles">';
+      if(!rows[r].length)h+='<span class="empty">'+(fixed?'':'Tap tiles to add here')+'</span>';
+      rows[r].forEach(function(o){h+='<div class="extile" data-rm="'+o.j+'" style="background-image:url(\''+TILE_IMG[o.idx]+'\')" title="Tap to remove"></div>';});
+      h+='</div></div>';
     }
-    // disable/mark tile buttons that have hit the 4-per-tile cap or their group's 18-tile cap
+    var order=isTop?[2,3,1]:[1,2,3];
+    order.forEach(function(r){
+      if(r===1){if(rows[1].length)block(1,'Flowers &amp; seasons',true);}
+      else block(r,rows[r].length+' / '+ROW_MAX,false);
+    });
+    el.innerHTML=h;
+    var ps=$('sharePosSel');
+    if(ps){
+      var ph='<span class="lbl">Position:</span>';
+      [['bottom','Bottom'],['center','Center'],['top','Top']].forEach(function(p){ph+='<button type="button" class="chip" data-pos="'+p[0]+'" aria-pressed="'+(S.tilePos===p[0])+'">'+p[1]+'</button>';});
+      ps.innerHTML=ph;
+    }
+    var sel=$('shareRowSel');
+    if(sel){
+      var sh='<span class="lbl">Add to:</span>';
+      (isTop?[2,3]:[2,3]).forEach(function(r){sh+='<button type="button" class="chip" data-row="'+r+'" aria-pressed="'+(S.row===r)+'">'+rowName(r)+'<small>'+rowCount(r)+' / '+ROW_MAX+'</small></button>';});
+      sel.innerHTML=sh;
+    }
+    // disable/mark tile buttons that have hit the 4-per-tile cap or the 18-tile cap (flowers and seasons: one each)
     var mainFull=groupCount(false)>=MAX_MAIN,bonusFull=groupCount(true)>=MAX_BONUS;
     document.querySelectorAll('.sharetile-btn[data-pick]').forEach(function(b){
       var i=+b.dataset.pick,c=tileCount(i);
@@ -2863,19 +2948,30 @@ body.connected #gnew{display:none!important}
     });
   }
   $('sharePickerArea').addEventListener('click',function(e){
+    var posBtn=e.target.closest('[data-pos]');
+    if(posBtn){S.tilePos=posBtn.dataset.pos;renderSelectedTiles();drawCard();return;}
+    var rowBtn=e.target.closest('[data-row]');
+    var rm=e.target.closest('[data-rm]');
     var pick=e.target.closest('[data-pick]');
     if(pick){
       var i=+pick.dataset.pick;
       if(groupCount(isBonusTile(i))>=(isBonusTile(i)?MAX_BONUS:MAX_MAIN)||tileCount(i)>=(isBonusTile(i)?1:4))return;
-      S.tiles.push(i);
+      var r=1;
+      if(!isBonusTile(i)){
+        r=S.row;
+        if(rowCount(r)>=ROW_MAX){r=otherRow(r);if(rowCount(r)>=ROW_MAX)return;S.row=r;}   // active row is full: carry on in the other one
+      }
+      S.tiles.push(i);S.tileRows.push(r);
+      if(!isBonusTile(i)&&rowCount(S.row)>=ROW_MAX&&rowCount(otherRow(S.row))<ROW_MAX)S.row=otherRow(S.row);   // row just filled up: move on
       renderSelectedTiles();drawCard();
       return;
     }
-    var rm=e.target.closest('[data-rm]');
     if(rm){
-      S.tiles.splice(+rm.dataset.rm,1);
+      S.tiles.splice(+rm.dataset.rm,1);S.tileRows.splice(+rm.dataset.rm,1);   // other tiles stay where they are
       renderSelectedTiles();drawCard();
+      return;
     }
+    if(rowBtn){S.row=+rowBtn.dataset.row;renderSelectedTiles();}
   });
 
   $('shareModalClose').addEventListener('click',function(){$('shareModal').hidden=true;});
@@ -2954,6 +3050,14 @@ body.connected #gnew{display:none!important}
     ctx.clearRect(0,0,W,H);
 
     var pad=72;
+    // Story margins: the first and last visible element sit 150px from the top and bottom edges.
+    // (the header text starts ~44px below the top of the layout and the footer ends ~41px above the bottom)
+    var isStory=H>W*1.5;
+    var TOPI=isStory?106:0,BOTI=isStory?109:0;   // story: 150px clear at the top and bottom (the header text starts ~44px and the footer ends ~41px inside the layout)
+    var K=isStory?1:0.88;                         // post: text, chips, footer and spacing at 88%
+    var KT=isStory?1:0.8;                         // post: tiles at 80%
+    function fs(n){return Math.round(n*K);}
+    function vy(n){return 44+TOPI+(n-44)*K;}
     var ev=S.ev,kind=ev.kind,w=S.winner;
     var hp=(ev.pts&&ev.pts[w]!=null)?ev.pts[w]:0;
     var row=null;
@@ -2965,6 +3069,13 @@ body.connected #gnew{display:none!important}
     background(W,H,t,rd);
     ctx.textBaseline='alphabetic';ctx.textAlign='left';
 
+    // shortens text with an ellipsis so it fits maxW at the given font (used by the title line and the pattern list)
+    function clip(txt,font,maxW){
+      ctx.font=font;
+      if(ctx.measureText(txt).width<=maxW)return txt;
+      while(txt.length>1&&ctx.measureText(txt+'\u2026').width>maxW)txt=txt.slice(0,-1);
+      return txt+'\u2026';
+    }
     // ---- header: title + date top-left, Hand #N . Round top-right (each can be switched off) ----
     var cornerBits=[];
     if(row!=null)cornerBits.push('Hand '+(row.i+1));
@@ -2972,8 +3083,8 @@ body.connected #gnew{display:none!important}
     var rightW=0;
     if(tog.handround&&cornerBits.length){
       var ctext=cornerBits.join('  \u00b7  ');
-      ctx.font='700 28px '+INTER;ctx.fillStyle=muted;ctx.textAlign='right';
-      ctx.fillText(ctext,W-pad,66);
+      ctx.font='700 '+fs(28)+'px '+INTER;ctx.fillStyle=muted;ctx.textAlign='right';
+      ctx.fillText(ctext,W-pad,vy(66));
       rightW=ctx.measureText(ctext).width;
       ctx.textAlign='left';
     }
@@ -2981,18 +3092,12 @@ body.connected #gnew{display:none!important}
       var g=window.game||{};
       var ttl=String(g.title||'').trim(),dte=String(g.date||'').trim();
       var maxLeft=W-pad*2-(rightW?rightW+32:0);
-      var clip=function(txt,font,maxW){
-        ctx.font=font;
-        if(ctx.measureText(txt).width<=maxW)return txt;
-        while(txt.length>1&&ctx.measureText(txt+'\u2026').width>maxW)txt=txt.slice(0,-1);
-        return txt+'\u2026';
-      };
       if(ttl||dte){
         // one line: "Title  \u00b7  Date". Shrink a little if needed, then shorten the title as a last resort.
         var sep=(ttl&&dte)?'  \u00b7  ':'';
         var scales=[1,.92,.84,.76],k,tf,df,tW=0,sW=0,dW=0;
         for(k=0;k<scales.length;k++){
-          tf='800 '+Math.round(30*scales[k])+'px '+INTER;df='500 '+Math.round(28*scales[k])+'px '+INTER;
+          tf='800 '+Math.round(fs(30)*scales[k])+'px '+INTER;df='500 '+Math.round(fs(28)*scales[k])+'px '+INTER;
           ctx.font=tf;tW=ttl?ctx.measureText(ttl).width:0;
           ctx.font=df;sW=sep?ctx.measureText(sep).width:0;dW=dte?ctx.measureText(dte).width:0;
           if(tW+sW+dW<=maxLeft)break;
@@ -3003,25 +3108,44 @@ body.connected #gnew{display:none!important}
         }
         ctx.textAlign='left';
         var x0=pad;
-        if(ttl){ctx.font=tf;ctx.fillStyle=ink;ctx.fillText(ttl,x0,66);x0+=tW;}
-        if(sep){ctx.font=df;ctx.fillStyle=muted;ctx.fillText(sep,x0,66);x0+=sW;}
-        if(dte){ctx.font=df;ctx.fillStyle=muted;ctx.fillText(dte,x0,66);}
+        if(ttl){ctx.font=tf;ctx.fillStyle=ink;ctx.fillText(ttl,x0,vy(66));x0+=tW;}
+        if(sep){ctx.font=df;ctx.fillStyle=muted;ctx.fillText(sep,x0,vy(66));x0+=sW;}
+        if(dte){ctx.font=df;ctx.fillStyle=muted;ctx.fillText(dte,x0,vy(66));}
       }
     }
 
-    var contentTop=128;
-    var gap=32;
+    var contentTop=vy(128);
+    var gap=Math.round(32*K);
     var leftColW=W-pad*2;
     var leftX=pad;
 
     // Fixed slots: each section has its own constant Y, so toggling a field on/off never shifts
     // the sections below it \u2014 only the patterns list (whose own length varies hand to hand) and
     // whatever sits after it move, which is content-driven rather than toggle-driven.
-    var NAME_Y=contentTop,COND_Y=contentTop+106,SCORE_Y=contentTop+190;
-    var SCORE_SIZE=132;
-    var BREAKDOWN_Y=SCORE_Y+SCORE_SIZE*0.85+54;
-    var BD_ROW_H=54,BD_MAX_ROWS=3;
-    var POINTS_Y=BREAKDOWN_Y+BD_ROW_H*BD_MAX_ROWS+24;
+    var NAME_Y=contentTop,COND_Y=contentTop+106*K,SCORE_Y=contentTop+190*K;
+    var SCORE_SIZE=Math.round(132*K);
+    var BREAKDOWN_Y=SCORE_Y+SCORE_SIZE*0.85+54*K;
+    var BD_ROW_H=Math.round(54*K),BD_MAX_ROWS=3;
+    // tile rows: fixed tile size (a row of 18 fills the width); the block's bottom edge sits 2 tile-heights
+    // above the bottom (of the safe area), which keeps it clear of the footer however long the content is.
+    var tgap=8*KT,avail=W-pad*2,rgap=12*KT;
+    var tw2=((avail-9*8)/10)*KT,th2=tw2*220/174;        // tile size: 10 tiles fill one row
+    var trows=[];
+    if(tog.tiles){
+      (S.tilePos==='top'?[2,3,1]:[1,2,3]).forEach(function(r){   // top: the flowers & seasons row goes last (Row 3)                         // row 1: flowers & seasons; rows 2 and 3: as arranged by the user
+        var rt=S.tiles.filter(function(t,j){return S.tileRows[j]===r;}).slice(0,10);
+        if(rt.length)trows.push(rt);                       // an empty row is simply not drawn
+      });
+    }
+    var blockH=trows.length?trows.reduce(function(a,r){return a+th2;},0)+(trows.length-1)*rgap:0;
+    var lhF=34*K,footCYv=H-BOTI-41-lhF/2,footTop=footCYv-lhF/2;                       // top of the footer logo
+    var pos=S.tilePos||'bottom';
+    var tileTopBottom=trows.length?(H-BOTI-112-blockH):(footTop-24);   // bottom: edge stays 112px above the bottom
+    // the list may not run below this line: bottom keeps clear of the anchored block, centre/top leave room for the block under it
+    var contentLimit=(pos==='bottom')?Math.min(tileTopBottom,footTop)-24:(footTop-24-blockH-24-(pos==='top'?1.5*BD_ROW_H:0));
+    var lineUsed=BD_ROW_H,listBottom=POINTS_Y,lastBase=POINTS_Y;
+    var nBD=row?[0,1,2,3].filter(function(pi){return pi!==w&&row.deltas[pi];}).length:0;
+    var POINTS_Y=BREAKDOWN_Y+BD_ROW_H*BD_MAX_ROWS+24*K;   // fixed slot: always reserves 3 breakdown rows, so this block never moves between hu and zi mo
 
     // ---- seat-wind hanzi + name ----
     if(tog.name){
@@ -3029,12 +3153,12 @@ body.connected #gnew{display:none!important}
       var seatH=seatWind?seatWind.h:'';
       var nameX=leftX;
       if(seatH){
-        ctx.font='400 58px '+KAI;ctx.fillStyle=muted;
-        ctx.fillText(seatH,leftX,NAME_Y+64);
-        nameX=leftX+ctx.measureText(seatH).width+18;
+        ctx.font='400 '+fs(58)+'px '+KAI;ctx.fillStyle=muted;
+        ctx.fillText(seatH,leftX,NAME_Y+64*K);
+        nameX=leftX+ctx.measureText(seatH).width+18*K;
       }
-      ctx.fillStyle=ink;ctx.font='900 74px '+PLAY;
-      ctx.fillText(gname2(w),nameX,NAME_Y+66);
+      ctx.fillStyle=ink;ctx.font='900 '+fs(74)+'px '+PLAY;
+      ctx.fillText(gname2(w),nameX,NAME_Y+66*K);
     }
 
     // ---- Hu / Zi Mo + "from Player X" ----
@@ -3042,28 +3166,28 @@ body.connected #gnew{display:none!important}
       var label=(kind==='zimo')?'ZI MO':'HU';
       var fromText='Self-drawn';
       var condH=(kind==='zimo')?'\u81EA\u6478':'\u80E1';   // 自摸 / 胡
-      ctx.font='400 34px '+KAI;
-      var hw=ctx.measureText(condH).width,hgap=12;
-      ctx.font='800 28px '+INTER;
+      ctx.font='400 '+fs(34)+'px '+KAI;
+      var hw=ctx.measureText(condH).width,hgap=12*K;
+      ctx.font='800 '+fs(28)+'px '+INTER;
       var tw=ctx.measureText(label).width;
-      var bx=leftX,by=COND_Y,bh=52,bw=24+hw+hgap+tw+24;
-      ctx.fillStyle=accent;rr(bx,by,bw,bh,26);ctx.fill();
+      var bx=leftX,by=COND_Y,bh=52*K,bw=24*K+hw+hgap+tw+24*K;
+      ctx.fillStyle=accent;rr(bx,by,bw,bh,26*K);ctx.fill();
       ctx.fillStyle=t.bg2;ctx.textAlign='left';
-      ctx.font='400 34px '+KAI;ctx.fillText(condH,bx+24,by+37);
-      ctx.font='800 28px '+INTER;ctx.fillText(label,bx+24+hw+hgap,by+36);
-      var fx=bx+bw+18;
+      ctx.font='400 '+fs(34)+'px '+KAI;ctx.fillText(condH,bx+24*K,by+37*K);
+      ctx.font='800 '+fs(28)+'px '+INTER;ctx.fillText(label,bx+24*K+hw+hgap,by+36*K);
+      var fx=bx+bw+18*K;
       ctx.fillStyle=muted;
       if(kind==='zimo'){
-        ctx.font='600 28px '+INTER;ctx.fillText(fromText,fx,by+36);
+        ctx.font='600 '+fs(28)+'px '+INTER;ctx.fillText(fromText,fx,by+36*K);
       }else{
-        ctx.font='600 28px '+INTER;ctx.fillText('from ',fx,by+36);
+        ctx.font='600 '+fs(28)+'px '+INTER;ctx.fillText('from ',fx,by+36*K);
         fx+=ctx.measureText('from ').width;
         var dSeat=row?seatWindOf(ev.disc,row.dealer):null;
         if(dSeat&&dSeat.h){
-          ctx.font='400 34px '+KAI;ctx.fillText(dSeat.h,fx,by+37);
+          ctx.font='400 '+fs(34)+'px '+KAI;ctx.fillText(dSeat.h,fx,by+37*K);
           fx+=ctx.measureText(dSeat.h).width+10;
         }
-        ctx.font='600 28px '+INTER;ctx.fillText(gname2(ev.disc),fx,by+36);
+        ctx.font='600 '+fs(28)+'px '+INTER;ctx.fillText(gname2(ev.disc),fx,by+36*K);
       }
     }
 
@@ -3090,21 +3214,21 @@ body.connected #gnew{display:none!important}
       // order by seat wind: East, South, West, North (relative to this hand's dealer)
       if(row.dealer!=null)affected.sort(function(a,b){return ((a-row.dealer+4)%4)-((b-row.dealer+4)%4);});
       affected.forEach(function(pi,ri){
-        var gy=BREAKDOWN_Y+ri*BD_ROW_H+24;
+        var gy=BREAKDOWN_Y+ri*BD_ROW_H+24*K;
         var seatWind2=seatWindOf(pi,row.dealer);
         var seatH2=seatWind2?seatWind2.h:'';
         var bx2=leftX;
         if(seatH2){
-          ctx.font='400 30px '+KAI;ctx.fillStyle=muted;
+          ctx.font='400 '+fs(30)+'px '+KAI;ctx.fillStyle=muted;
           ctx.fillText(seatH2,bx2,gy);
           bx2+=ctx.measureText(seatH2).width+12;
         }
         var nm=gname2(pi),v=row.deltas[pi];
         var vtxt=(v>0?'+':v<0?'\u2212':'')+Math.abs(v);
-        ctx.font='600 27px '+INTER;ctx.fillStyle=muted;
+        ctx.font='600 '+fs(27)+'px '+INTER;ctx.fillStyle=muted;
         ctx.fillText(nm,bx2,gy);
         var nw=ctx.measureText(nm).width;
-        ctx.font='800 27px '+INTER;ctx.fillStyle=(v>0?accent:(v<0?lossColor:muted));
+        ctx.font='800 '+fs(27)+'px '+INTER;ctx.fillStyle=(v>0?accent:(v<0?lossColor:muted));
         ctx.fillText('  '+vtxt,bx2+nw,gy);
       });
     }
@@ -3116,21 +3240,47 @@ body.connected #gnew{display:none!important}
     var cy=POINTS_Y;
     if(showTitle||showList){
       var lineH=BD_ROW_H,ty=cy;
+      var nItems=showList?pk.counted.length:0;
+      lineUsed=lineH;
+      var twoCol=nItems>4,perCol=twoCol?Math.ceil(nItems/2):nItems;
+      var colGap=48,colW=twoCol?(leftColW-colGap)/2:leftColW;
+      if(perCol&&cy+(showTitle?66*K:0)+perCol*lineH>contentLimit){
+        lineH=Math.max(34*K,(contentLimit-cy-(showTitle?66*K:0))/perCol);
+      }
+      lineUsed=lineH;
       if(showTitle){
-        ctx.font='800 40px '+INTER;ctx.fillStyle=ink;
-        ctx.fillText(hp+' point'+(hp===1?'':'s'),leftX,ty+32);
-        ty+=56+10;
+        ctx.font='800 '+fs(40)+'px '+INTER;ctx.fillStyle=ink;
+        ctx.fillText(hp+' point'+(hp===1?'':'s'),leftX,ty+32*K);
+        lastBase=ty+32*K;listBottom=lastBase+8*K;
+        ty+=(56+10)*K;
       }
       if(showList){
-        pk.counted.forEach(function(it){
-          ctx.font='600 27px '+INTER;ctx.fillStyle=muted;
-          ctx.fillText(it.label,leftX,ty+24);
+        var ty0=ty;
+        // Guard for long names: if any label would crowd its points figure, shrink the whole list a little
+        // (never below 22px at full size) so every row keeps the same look; shorten with an ellipsis only as a last resort.
+        var listPx=fs(27),minPx=Math.max(14,Math.round(22*K));
+        function listFits(px){
+          return pk.counted.every(function(it){
+            ctx.font='600 '+px+'px '+INTER;var lw=ctx.measureText(it.label).width;
+            ctx.font='800 '+px+'px '+INTER;var pw=ctx.measureText('+'+it.p).width;
+            return lw+16+pw<=colW;
+          });
+        }
+        while(listPx>minPx&&!listFits(listPx))listPx--;
+        pk.counted.forEach(function(it,i){
+          var col=twoCol?Math.floor(i/perCol):0,rw=twoCol?i%perCol:i;
+          var x0=leftX+col*(colW+colGap),yy=ty0+rw*lineH;
           var ptxt='+'+it.p;
-          ctx.font='800 27px '+INTER;ctx.fillStyle=ink;
+          ctx.font='800 '+listPx+'px '+INTER;
           var pwid=ctx.measureText(ptxt).width;
-          ctx.fillText(ptxt,leftX+leftColW-pwid,ty+24);
-          ty+=lineH;
+          var lbl=clip(it.label,'600 '+listPx+'px '+INTER,colW-16-pwid);   // no-op unless even the smallest size does not fit
+          ctx.font='600 '+listPx+'px '+INTER;ctx.fillStyle=muted;
+          ctx.fillText(lbl,x0,yy+24*K);
+          ctx.font='800 '+listPx+'px '+INTER;ctx.fillStyle=ink;
+          ctx.fillText(ptxt,x0+colW-pwid,yy+24*K);
         });
+        lastBase=ty0+(perCol-1)*lineH+24*K;listBottom=lastBase+8*K;   // baseline of the last list line
+        ty=ty0+perCol*lineH;
       }
       cy=ty+gap;
     }
@@ -3139,17 +3289,11 @@ body.connected #gnew{display:none!important}
 
     // ---- tile rows: fixed tile size (a row of 18 fills the width exactly); flowers and seasons
     // on the first row when there are any, everything else on the next. Each row is centred. ----
-    if(tog.tiles&&S.tiles.length){
-      var tgap=8,avail=W-pad*2,rgap=12;
-      var tw2=(avail-17*tgap)/18,th2=tw2*220/174;
-      var bonusT=S.tiles.filter(function(i){return i>=34;}).slice(0,18);
-      var mainT=S.tiles.filter(function(i){return i<34;}).slice(0,18);
-      var trows=[];
-      if(bonusT.length)trows.push(bonusT);
-      if(mainT.length)trows.push(mainT);
-      var blockH=trows.length*th2+(trows.length-1)*rgap;
-      // sit just above the footer (footer centre line is H-58, logo is 34 tall)
-      y=Math.max(y,H-58-17-26-blockH);
+    if(trows.length){
+      if(pos==='top')y=lastBase+1.5*lineUsed;                                  // right under the list, 1.5 line spacings below its last line
+      else if(pos==='center')y=listBottom+Math.max(0,(footTop-listBottom-blockH)/2);   // centred in the empty space between the list and the footer
+      else y=tileTopBottom;                                                    // bottom
+      if(pos!=='bottom')y=Math.min(y,footTop-24-blockH);                       // never run into the footer
       trows.forEach(function(r,ri){
         var rowW=r.length*tw2+(r.length-1)*tgap;
         var sx=pad+(avail-rowW)/2,ry=y+ri*(th2+rgap);
@@ -3161,12 +3305,12 @@ body.connected #gnew{display:none!important}
     }
 
     // ---- footer: logo + @handle on the left, tagline on the right, all on one shared center line ----
-    var footCY=H-58;
-    ctx.font='600 24px '+INTER;ctx.fillStyle=muted;
+    var footCY=footCYv;
+    ctx.font='600 '+fs(24)+'px '+INTER;ctx.fillStyle=muted;
     ctx.textAlign='left';ctx.textBaseline='middle';
     var handleX=pad;
     if(logoReady){
-      var lh=34,lw=lh*(logoImg.naturalWidth/logoImg.naturalHeight||1);
+      var lh=lhF,lw=lh*(logoImg.naturalWidth/logoImg.naturalHeight||1);
       try{ctx.drawImage(logoImg,pad,footCY-lh/2,lw,lh);}catch(e){}
       handleX=pad+lw+12;
     }
@@ -3189,36 +3333,19 @@ body.connected #gnew{display:none!important}
   /* ---------- save / share ---------- */
   function toBlob(){return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});}
   function say(msg){var el=$('shareStatus');if(el)el.textContent=msg||'';}
-  // Standard download first; a new tab (press and hold to save) when a mobile browser blocks it.
-  // Deliberately not the artifact-only downloads API: it does not exist on the deployed site.
+  // Save goes straight to the phone; see saveImageToPhone in the main script.
   $('shareSaveBtn').addEventListener('click',async function(){
     say('');
     var blob=await toBlob();
     if(!blob){say('Could not create the image. Try again.');return;}
-    var url=URL.createObjectURL(blob);
-    try{
-      var a=document.createElement('a');
-      a.href=url;a.download='tbt-hand.png';
-      document.body.appendChild(a);a.click();document.body.removeChild(a);
-      setTimeout(function(){URL.revokeObjectURL(url);},4000);
-      say('Saved. Check your downloads.');
-    }catch(err){
-      var opened=null;
-      try{opened=window.open(url,'_blank');}catch(e){opened=null;}
-      if(opened){
-        say('Opened the image in a new tab. Press and hold it, then choose Download or Save image.');
-        setTimeout(function(){URL.revokeObjectURL(url);},60000);
-      }else{
-        say('Could not save the image here. Try the Share button instead.');
-        URL.revokeObjectURL(url);
-      }
-    }
+    window.saveImageToPhone(blob,'tbt-hand.png',say);
   });
   try{
     var probe=new File([new Blob(['x'],{type:'image/png'})],'p.png',{type:'image/png'});
     if(navigator.canShare&&navigator.canShare({files:[probe]}))$('shareShareBtn').hidden=false;
   }catch(e){}
   $('shareShareBtn').addEventListener('click',async function(){
+    say('');
     try{
       var blob=await toBlob();
       var file=new File([blob],'tbt-hand.png',{type:'image/png'});
