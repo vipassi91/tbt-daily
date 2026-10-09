@@ -2496,11 +2496,16 @@ body.connected #gnew{display:none!important}
 
   function sync(){renderBox();renderTotal();}
 
+  // Patterns that can be claimed more than once in a hand: tapping cycles off, once, twice, off.
+  var SEL_MAX={};
+  SEL_MAX[IDX.KONG]=2;
+  SEL_MAX[IDX.PONGDRAGON]=2;
+
   $('pkBox').addEventListener('click',function(e){
     var b=e.target.closest('button[data-a]');if(!b)return;
     var a=b.dataset.a,v=+b.dataset.v;
     if(a==='sel'){
-      var selMax=(v===IDX.KONG)?2:1;
+      var selMax=SEL_MAX[v]||1;
       pat.sel[v]=((pat.sel[v]||0)+1)%(selMax+1);
     }else if(a==='flo'){
       var floMax=(v===FLOWER_IN_SEASON_IDX)?2:1;

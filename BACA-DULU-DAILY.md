@@ -179,3 +179,9 @@ File yang berubah dari v6: `scoreboard.html`, `index.html`, `admin-daily.html`,
 
 File yang berubah dari v7: `scoreboard.html`, `functions/_tables.js`,
 `functions/api/tables/[code].js`, `functions/api/lock/[code].js`.
+
+## Update terbaru (v9): Pong Of Dragon di Pattern Picker
+
+- **Pong Of Dragon sekarang bisa dipilih 2x**, seperti Kong dan Flower In Season. Tap pertama
+  = 1x, tap kedua = (x2) dan dihitung +2, tap ketiga = mati. Pola lain tetap 1x.
+- Tidak ada migrasi database. File yang berubah dari v8: `scoreboard.html`.
