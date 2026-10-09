@@ -185,3 +185,41 @@ File yang berubah dari v7: `scoreboard.html`, `functions/_tables.js`,
 - **Pong Of Dragon sekarang bisa dipilih 2x**, seperti Kong dan Flower In Season. Tap pertama
   = 1x, tap kedua = (x2) dan dihitung +2, tap ketiga = mati. Pola lain tetap 1x.
 - Tidak ada migrasi database. File yang berubah dari v8: `scoreboard.html`.
+
+## Update terbaru (v10): aturan eksklusi garden di Pattern Picker
+
+- **Win By Royal Garden** dan **Win By Imperial Garden** berdiri sendiri: kalau salah satunya dipilih,
+  semua pola lain (semua tingkat), bonus bunga/musim lain, dan bonus win condition terkunci.
+  Sebaliknya, kalau ada pilihan lain, kedua garden win itu terkunci sampai pilihan lain dilepas.
+  Royal dan Imperial juga tidak bisa dipilih bersamaan. Total yang dihitung hanya +3 (Royal)
+  atau +4 (Imperial).
+- Hand lama yang tersimpan dengan garden win + pola lain: saat dibuka lagi di picker, yang dihitung
+  hanya garden win-nya, dan sisanya ditampilkan sebagai "Locked out by the garden win".
+- Tidak ada migrasi database. File yang berubah dari v9: `scoreboard.html`.
+
+## Update terbaru (v11): All Types membatasi Pong Of Dragon
+
+- Kalau **All Types** dipilih, **Pong Of Dragon** hanya bisa dipilih **1x** (tap: 1x, mati). Kalau Pong Of
+  Dragon sudah di (x2) lalu All Types ditambahkan, Pong Of Dragon otomatis turun jadi 1x. Begitu All
+  Types dilepas, batasnya kembali 2x. Kong dan pong lain tidak terpengaruh.
+- Hand lama yang tersimpan dengan All Types + Pong Of Dragon (x2) dibuka lagi sebagai 1x.
+- Tidak ada migrasi database. File yang berubah dari v10: `scoreboard.html`.
+
+## Update terbaru (v12): Share hand
+
+- **Tombol "Share"** di riwayat hand untuk hand yang menang (hu, zimo, double, triple). Membuka modal
+  layar penuh: kartu 1080x1350, pilihan format dan tema, saklar apa yang ditampilkan di kartu,
+  pemilih tile dekoratif (tidak dihitung skor), Save image, dan Share. Fitur ini hanya membaca data
+  game, tidak mengubah apa pun yang tersimpan.
+- **Share tersedia untuk semua**: host, pemain (link lihat), dan game yang sudah di-Save. Tombol
+  Edit dan Delete tetap hanya untuk game yang masih terbuka.
+- **Save image di modal share** mengikuti Story tab: unduh langsung dulu, kalau diblokir browser HP
+  gambar dibuka di tab baru (tekan-tahan untuk menyimpan).
+- **Perbaikan font hanzi**: sebelumnya kode memanggil font bernama "TBT Hanzi" yang tidak ada, sehingga
+  font LXGW WenKai yang tertanam tidak pernah dipakai di gambar story. Sekarang memakai nama yang
+  benar ("LXGW WenKai TC"), plus tiga huruf baru untuk kartu share (胡, 自, 摸).
+- **Tema story otomatis**: membuka story dari tab Play atau Standings memilih tema sesuai ronde.
+- Ukuran `scoreboard.html` naik dari sekitar 0,6 MB ke sekitar 2,2 MB (gambar tile untuk pemilih tile).
+- Catatan untuk klien lain: teks "@tiles.by.tiles" dan "Play. Learn. Connect." pada kartu share
+  (dan footer serta kartu story) masih tertulis langsung di kode, belum jadi pengaturan brand.
+- Tidak ada migrasi database. File yang berubah dari v11: `scoreboard.html`.
