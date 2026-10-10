@@ -1670,7 +1670,7 @@ body.connected #gnew{display:none!important}
       if(!o)return;
       var map={};
       o.tables.forEach(function(t){t.players.forEach(function(p){
-        if(p.placeholder)return;
+        if(p.placeholder||p.guest)return;
         var k=String(p.name).trim().toLowerCase().replace(/\s+/g,' ');
         var m=map[k]||(map[k]={n:0,spell:{}});
         m.n++;m.spell[p.name]=(m.spell[p.name]||0)+1;

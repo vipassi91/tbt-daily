@@ -273,3 +273,65 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
   garden win pada hand lama = pilihan lain disimpan dan ditandai "Locked out"; Share terlihat untuk
   pemain dan game final.
 - Tidak ada migrasi database. File yang berubah dari v14: `scoreboard.html`.
+
+## Update terbaru (v16): registry pemain
+
+- **Registry pemain** adalah daftar pemain resmi yang diisi admin, tanpa login apa pun. Datanya: nama
+  lengkap, nama panggilan, nomor WhatsApp, dan username Instagram. **Hanya nama panggilan yang tampil
+  di halaman publik.** Nama lengkap, WhatsApp, dan Instagram hanya terlihat di halaman admin.
+- **Aturan guest**: nama yang tertulis di meja dianggap pemain kalau cocok dengan nama panggilan, nama
+  lengkap, atau ejaan lain yang ditautkan admin. Selain itu menjadi **guest**: tetap tampil di kartu
+  meja dan sesinya (dengan label "guest"), tapi tidak masuk leaderboard (Total, per sesi, dan
+  penghitung Players) dan tidak muncul di saran nama untuk host. Nama ganda (memuat "/", "&", "+" atau
+  "dan") otomatis guest karena tidak terdaftar.
+- **Pengaman**: selama belum ada satu pun pemain terdaftar, aturan guest belum berlaku dan leaderboard
+  tidak berubah. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard.
+- **Halaman `admin-pemain.html`** (link "Pemain" di bar atas halaman admin):
+  - **Aktifkan registry** satu kali (membuat dua tabel baru, aman diulang). Sebelum aktif, halaman ini
+    sudah bisa dipakai untuk memeriksa semua nama yang pernah dipakai.
+  - **Pilih nama yang mau didaftarkan**: setiap guest punya kotak centang. Centang satu per satu, atau
+    pakai "Pilih semua yang tampil" (mengikuti kolom cari), lalu tekan "Daftarkan yang dipilih". Nama
+    panggilannya sama dengan ejaan yang tercatat dan bisa diubah lewat Edit. **Yang tidak dicentang tetap
+    guest.** Nama ganda tidak bisa dicentang. Nama lengkap, WhatsApp, dan Instagram bisa diisi belakangan
+    (pemain yang datanya belum lengkap diberi tanda).
+  - **Daftarkan** satu guest (nama panggilan terisi otomatis), **Tambah pemain baru** (yang belum
+    pernah main), **Edit**, dan **Hapus**.
+  - **Tautkan ke...**: mengaitkan ejaan lain ke pemain yang sudah ada (misalnya salah ketik). Guest
+    yang mirip pemain terdaftar diberi saran "Mirip ...". Dua ejaan yang pernah duduk semeja tidak
+    bisa ditautkan, karena satu orang tidak mungkin dua kursi.
+  - Nomor WhatsApp disimpan dalam bentuk 62812... dan harus unik. Instagram disimpan sebagai username.
+- **Game asli tidak pernah diubah.** Semua diterapkan saat data dibaca. Menghapus pemain dari registry
+  membuat namanya kembali menjadi guest.
+- Keputusan gabung nama dan penanda duo dari versi sebelumnya tidak dibawa, karena modelnya berbeda
+  (sekarang daftar eksplisit). Tabel lama (`players`, `player_aliases`) tidak dipakai dan boleh diabaikan.
+- Dua tabel baru: `registry` dan `registry_names` (SQL manual ada di `schema-players.sql`, tapi tombol
+  di halaman admin sudah cukup).
+- File baru: `admin-pemain.html`, `schema-players.sql`, `functions/_players.js`,
+  `functions/api/admin/players.js`. File berubah: `index.html`, `scoreboard.html`, `admin-daily.html`,
+  `functions/api/overview.js`.
+
+## Update terbaru (v17): pendaftaran lewat link
+
+- Di `admin-pemain.html` ada kartu **"Pendaftaran lewat link"**. Tombolnya: **Buat link pendaftaran**,
+  **Salin link**, **Matikan link** / **Aktifkan lagi**, dan **Buat link baru** (link lama langsung tidak
+  berlaku). Bagikan link-nya ke pemain, misalnya di grup WhatsApp.
+- Pemain membuka link (`daftar.html?t=...`) dan mengisi: nama panggilan (wajib), nama mereka di papan skor
+  (dipilih dari nama yang sudah pernah dipakai di meja, boleh kosong), nama lengkap, nomor WhatsApp
+  (wajib), Instagram, dan kotak persetujuan.
+- Pendaftaran masuk ke daftar **"Menunggu persetujuan"**. **Tidak ada yang tampil di leaderboard sebelum
+  kamu setujui.** Tekan **Tinjau dan setujui** (datanya bisa diubah dulu) atau **Tolak** (data langsung
+  dihapus). Saat disetujui, nama yang dipilih pemain otomatis tertaut ke game-nya.
+- Kenapa harus disetujui: tanpa login, siapa pun yang punya link bisa mengetik nama orang lain. Kartu
+  pendaftaran menunjukkan nama guest yang diklaim beserta jumlah game-nya. Cek dulu orangnya (misalnya
+  lewat WhatsApp) sebelum menyetujui. Kalau nama yang diklaim sudah terdaftar atas orang lain, kartunya
+  diberi tanda merah dan tidak bisa disetujui.
+- Pengaman: link berisi kode rahasia yang bisa dimatikan atau diganti kapan saja; satu nomor WhatsApp
+  hanya bisa mendaftar sekali; satu perangkat maksimal 5 kiriman per jam; daftar tunggu maksimal 200;
+  ada kolom jebakan untuk bot; alamat IP tidak disimpan (hanya hash).
+- Data pendaftar hanya disimpan selama menunggu: setelah disetujui pindah ke registry, setelah ditolak
+  dihapus.
+- Dua tabel baru: `registry_settings` dan `registry_requests`. Kalau registry sudah kamu aktifkan sebelum
+  fitur ini, kartunya menawarkan tombol **Aktifkan pendaftaran lewat link** (registry dan datanya tidak
+  berubah). Kalau belum, tombol "Aktifkan registry pemain" sudah membuat semuanya.
+- File baru: `daftar.html`, `functions/api/signup.js`. File berubah: `admin-pemain.html`,
+  `functions/_players.js`, `functions/api/admin/players.js`, `schema-players.sql`.

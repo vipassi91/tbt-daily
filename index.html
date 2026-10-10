@@ -140,8 +140,8 @@ function aggregate(tables){
   tables.forEach(function(t){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
-      if(p.placeholder)return;   // an unnamed seat is not a person
-      var k=keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0});
+      if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
     });
@@ -186,7 +186,7 @@ function tableCard(t){
   if(t.rules)h+='<div class="dmeta" style="margin-bottom:6px">'+esc(rulesLine(t))+'</div>';
   if(t.events){
     t.players.slice().sort(function(a,b){return a.rank-b.rank||b.netTotal-a.netTotal;}).forEach(function(p){
-      h+='<div class="prow"><span class="pr">'+p.rank+'</span><span class="pn">'+esc(p.name)+'</span><span class="pv'+(p.netTotal<0?' neg':'')+'">'+fmtNet(p.netTotal)+'</span></div>';
+      h+='<div class="prow"><span class="pr">'+p.rank+'</span><span class="pn">'+esc(p.name)+(p.guest?' <span class="mbadge">guest</span>':'')+'</span><span class="pv'+(p.netTotal<0?' neg':'')+'">'+fmtNet(p.netTotal)+'</span></div>';
     });
   }else h+='<div class="dmeta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div>';
   if(t.view_code)h+='<a class="btn primary" href="scoreboard.html?view='+encodeURIComponent(t.view_code)+'">Open table</a>';
