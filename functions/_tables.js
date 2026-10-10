@@ -51,9 +51,9 @@ export function buildStats(game, fallbackPlayers) {
 function r2(n) { return Math.round((n || 0) * 100) / 100; }
 
 export function summarizePlayers(stats) {
-  return stats.names.map(function (n) {
+  return stats.names.map(function (n, i) {
     // "Player 1".. are stand-ins for seats the host never named; they must not become a real person on the leaderboard
-    return { name: n, placeholder: /^Player [1-4]$/.test(n), netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n] };
+    return { name: n, seat: i, placeholder: /^Player [1-4]$/.test(n), netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n] };
   });
 }
 

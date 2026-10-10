@@ -335,3 +335,26 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
   berubah). Kalau belum, tombol "Aktifkan registry pemain" sudah membuat semuanya.
 - File baru: `daftar.html`, `functions/api/signup.js`. File berubah: `admin-pemain.html`,
   `functions/_players.js`, `functions/api/admin/players.js`, `schema-players.sql`.
+
+## Update terbaru (v18): dua orang dengan nama sama (pisah per game)
+
+- Masalah: registry menautkan berdasarkan nama, jadi semua game bernama "Steven" ikut ke satu orang.
+  Sekarang tiap game bisa diatur sendiri.
+- Di `admin-pemain.html` ada tombol **Pisah per game** pada guest atau pemain terdaftar yang punya dua
+  game atau lebih (atau yang punya game hasil pengaturan manual). Daftarnya menampilkan tiap game: sesi,
+  meja, tanggal, hasil, teman main, ditulis sebagai apa, dan sekarang dihitung untuk siapa. Pilihannya:
+  **Ikuti nama**, **Guest (tidak dihitung)**, atau salah satu pemain terdaftar.
+- Contoh dua Steven: daftarkan "Steven A" dari nama Steven, tambah "Steven B" lewat "Tambah pemain
+  baru", lalu buka "Pisah per game" di Steven A dan berikan game yang bukan miliknya ke Steven B.
+- Aturan: satu orang tidak bisa mengisi dua kursi di satu meja. Memilih orang yang memang sudah sesuai
+  nama sama dengan tidak memilih apa-apa. Kalau kursi itu kemudian diganti namanya, pilihan lama berhenti
+  berlaku. Menghapus pemain mengubah game yang diatur manual untuk dia menjadi guest, bukan pindah ke
+  orang yang senama.
+- Pendaftaran lewat link: nama yang sudah dipakai orang lain kini bisa disetujui tanpa menautkan nama
+  (kotak "Tautkan nama ..." di form persetujuan), lalu game-nya diatur per game. Form pendaftaran
+  menawarkan sebuah nama selama masih ada game dengan nama itu yang belum bertuan.
+- **Game asli tidak diubah.** Tabel baru: `registry_seats`. Kalau registry sudah kamu aktifkan sebelum
+  versi ini, muncul tombol **Perbarui registry** (data registry tidak berubah).
+- File yang berubah dari v17: `admin-pemain.html`, `functions/_players.js`, `functions/_tables.js`,
+  `functions/api/admin/players.js`, `functions/api/overview.js`, `functions/api/signup.js`,
+  `schema-players.sql`.

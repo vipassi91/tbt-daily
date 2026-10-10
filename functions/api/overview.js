@@ -15,7 +15,7 @@ export async function onRequestGet({ env }) {
       tables.push({
         id: t.id, day_id: t.day_id, label: t.label, view_code: t.view_code,
         events: stats.events, hands: stats.hands, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null,
-        updatedAt: t.updated_at, players: applyRegistry(reg, summarizePlayers(stats)),
+        updatedAt: t.updated_at, players: applyRegistry(reg, summarizePlayers(stats), t.id),
       });
     }
     return json({ days: dayRes.results, tables: tables });

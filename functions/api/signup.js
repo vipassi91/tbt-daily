@@ -1,5 +1,5 @@
 import { json } from '../_auth.js';
-import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, loadSignup, gatherNames, ipHash, MAX_PENDING, RATE_PER_HOUR } from '../_players.js';
+import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, loadSignup, gatherNames, seatRecords, ipHash, MAX_PENDING, RATE_PER_HOUR } from '../_players.js';
 
 // Public sign-up by link. Everything here is gated by the secret token in the link, and nothing submitted
 // shows anywhere until the admin approves it. Answers never include anybody's details.
@@ -17,8 +17,9 @@ export async function onRequestGet({ request, env }) {
     const o = await openFor(env, t);
     if (!o.ok) return json({ open: false });
     const { typed } = await gatherNames(env);
-    const names = Array.from(typed.values()).filter(function (w) { return !o.reg.names.has(w.key); })
-      .map(function (w) { return w.latestName; }).sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+    const seen = new Set(), names = [];
+    seatRecords(o.reg, typed).forEach(function (r) { if (!r.owner && !seen.has(r.typedKey)) { seen.add(r.typedKey); names.push(r.typedName); } });
+    names.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
     return json({ open: true, names: names });
   } catch (err) {
     return json({ open: false });

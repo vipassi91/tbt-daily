@@ -35,6 +35,10 @@ export const REGISTRY_SQL = [
   'CREATE TABLE IF NOT EXISTS registry_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS registry_requests (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, full_name TEXT, whatsapp TEXT NOT NULL, instagram TEXT, table_name TEXT, ip_hash TEXT, created_at TEXT NOT NULL)',
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_registry_requests_wa ON registry_requests(whatsapp)',
+  // one seat at one table assigned by hand to a person (or to "guest"), for two people who share a name.
+  // name_key is the name written at that seat when the choice was made: if the seat is renamed later, the choice stops applying.
+  'CREATE TABLE IF NOT EXISTS registry_seats (table_id TEXT NOT NULL, seat INTEGER NOT NULL, name_key TEXT NOT NULL, registry_id TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (table_id, seat))',
+  'CREATE INDEX IF NOT EXISTS idx_registry_seats_id ON registry_seats(registry_id)',
 ];
 export async function ensureRegistryTables(env) {
   for (const s of REGISTRY_SQL) await env.DB.prepare(s).run();
@@ -48,9 +52,16 @@ export async function loadRegistry(env) {
     const players = new Map(), names = new Map();
     p.results.forEach(function (r) { players.set(r.id, { id: r.id, fullName: r.full_name || '', nickname: r.nickname, whatsapp: r.whatsapp || '', instagram: r.instagram || '' }); });
     n.results.forEach(function (r) { names.set(r.name_key, r.registry_id); });
-    return { ready: true, players: players, names: names };
+    const seats = new Map();
+    let seatsReady = false;
+    try {
+      const s = await env.DB.prepare('SELECT table_id, seat, name_key, registry_id FROM registry_seats').all();
+      s.results.forEach(function (r) { seats.set(r.table_id + ':' + r.seat, { key: r.name_key, to: r.registry_id }); });
+      seatsReady = true;
+    } catch (e) { /* a registry switched on before per-game assignment: it keeps working by name only */ }
+    return { ready: true, players: players, names: names, seats: seats, seatsReady: seatsReady };
   } catch (e) {
-    return { ready: false, players: new Map(), names: new Map() };
+    return { ready: false, players: new Map(), names: new Map(), seats: new Map(), seatsReady: false };
   }
 }
 // The guest rule only starts once someone is registered, so switching this on never empties the board by itself.
@@ -58,22 +69,34 @@ export function guestRuleOn(reg) { return reg.ready && reg.players.size > 0; }
 
 // The public data: registered people show their nickname and share one key, everyone else is a guest.
 // Nothing private (full name, WhatsApp, Instagram) is ever added here.
-export function applyRegistry(reg, players) {
+export function applyRegistry(reg, players, tableId) {
   if (!guestRuleOn(reg)) return players;
   return players.map(function (p) {
     if (p.placeholder) return p;
     const k = nameKey(p.name);
-    const pl = reg.players.get(reg.names.get(k));
+    const o = seatOwner(reg, tableId, p.seat, k);
+    const pl = o.id && reg.players.get(o.id);
     if (pl) return Object.assign({}, p, { name: pl.nickname, key: pl.id });
     return Object.assign({}, p, { guest: true, key: k });
   });
 }
 
+// Who a seat at a table belongs to: a choice made for that exact seat wins, otherwise the name written there decides.
+export function seatOwner(reg, tableId, seat, typedKey) {
+  const ov = reg.seats.get(tableId + ':' + seat);
+  if (ov && ov.key === typedKey) {
+    if (ov.to === 'guest') return { id: null, override: 'guest' };
+    if (reg.players.has(ov.to)) return { id: ov.to, override: ov.to };
+  }
+  const nid = reg.names.get(typedKey);
+  return { id: nid && reg.players.has(nid) ? nid : null, override: '' };
+}
+
 // Every name as typed at a played table, grouped by its normalised spelling.
 export async function gatherNames(env) {
-  const dayRes = await env.DB.prepare('SELECT id, date FROM days').all();
-  const dayDate = {};
-  dayRes.results.forEach(function (d) { dayDate[d.id] = d.date; });
+  const dayRes = await env.DB.prepare('SELECT id, date, label FROM days').all();
+  const dayDate = {}, dayLabel = {};
+  dayRes.results.forEach(function (d) { dayDate[d.id] = d.date; dayLabel[d.id] = d.label; });
   const tblRes = await env.DB.prepare('SELECT id, day_id, label, players, stats, updated_at FROM tables ORDER BY created_at ASC').all();
   const typed = new Map();
   let played = 0;
@@ -82,7 +105,9 @@ export async function gatherNames(env) {
     if (!stats.events) continue;
     played++;
     const date = dayDate[t.day_id] || '';
-    summarizePlayers(stats).forEach(function (p) {
+    const ps = summarizePlayers(stats);
+    const named = ps.filter(function (q) { return !q.placeholder; }).map(function (q) { return q.name; });
+    ps.forEach(function (p) {
       if (p.placeholder) return;
       const k = nameKey(p.name);
       let w = typed.get(k);
@@ -91,7 +116,7 @@ export async function gatherNames(env) {
       w.games++;
       if (date && (!w.first || date < w.first)) w.first = date;
       if (date >= w.last) { w.last = date; w.latestName = p.name; }
-      w.tables.push({ id: t.id, label: t.label, date: date });
+      w.tables.push({ id: t.id, label: t.label, date: date, seat: p.seat, session: dayLabel[t.day_id] || '', net: p.netTotal, with: named.filter(function (n) { return n !== p.name; }) });
     });
   }
   return { typed: typed, played: played };
@@ -193,4 +218,16 @@ export async function ipHash(request, salt) {
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip + ':' + salt));
   return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('').slice(0, 24);
+}
+
+// Every seat that was played, with who it counts for.
+export function seatRecords(reg, typed) {
+  const out = [];
+  typed.forEach(function (w) {
+    w.tables.forEach(function (t) {
+      const o = seatOwner(reg, t.id, t.seat, w.key);
+      out.push({ typedKey: w.key, typedName: w.latestName, tableId: t.id, seat: t.seat, table: t.label, session: t.session, date: t.date, net: t.net, with: t.with, owner: o.id, override: o.override });
+    });
+  });
+  return out;
 }

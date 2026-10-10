@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, guestRuleOn, gatherNames, sameTableConflict, looksLikeTwo, similarRegistered, ensureRegistryTables, loadSignup, REGISTRY_SQL } from '../../_players.js';
+import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, guestRuleOn, gatherNames, sameTableConflict, looksLikeTwo, similarRegistered, seatRecords, ensureRegistryTables, loadSignup, REGISTRY_SQL } from '../../_players.js';
 
 // GET /api/admin/players (admin): the registered players (with their private details) and the guests.
 // Works before the registry tables exist, so it doubles as an audit of the names in use.
@@ -10,26 +10,26 @@ export async function onRequestGet({ request, env }) {
     const { typed, played } = await gatherNames(env);
     const keysOf = {};
     reg.names.forEach(function (id, k) { (keysOf[id] = keysOf[id] || []).push(k); });
+    // who each seat counts for, after any choice made for that exact seat
+    const recs = seatRecords(reg, typed);
+    const view = function (r) { const o = r.owner && reg.players.get(r.owner); return { tableId: r.tableId, seat: r.seat, session: r.session, table: r.table, date: r.date, net: r.net, with: r.with, typed: r.typedName, override: r.override, owner: o ? o.nickname : null }; };
+    const byOwner = {}, guestBy = {};
+    recs.forEach(function (r) { const bucket = r.owner ? byOwner : guestBy, k = r.owner || r.typedKey; (bucket[k] = bucket[k] || []).push(r); });
+    const dateRange = function (rs) { const d = rs.map(function (r) { return r.date; }).filter(Boolean).sort(); return { first: d[0] || '', last: d[d.length - 1] || '' }; };
     const registered = Array.from(reg.players.values()).map(function (pl) {
-      let games = 0, first = '', last = '';
-      const spellings = {};
-      (keysOf[pl.id] || []).forEach(function (k) {
-        const w = typed.get(k);
-        if (!w) return;
-        games += w.games;
-        if (w.first && (!first || w.first < first)) first = w.first;
-        if (w.last > last) last = w.last;
-        Object.keys(w.variants).forEach(function (n) { spellings[n] = (spellings[n] || 0) + w.variants[n]; });
-      });
+      const rs = byOwner[pl.id] || [], dr = dateRange(rs);
       return {
         id: pl.id, fullName: pl.fullName, nickname: pl.nickname, whatsapp: pl.whatsapp, instagram: pl.instagram,
-        names: (keysOf[pl.id] || []).slice().sort(), games: games, first: first, last: last,
+        names: (keysOf[pl.id] || []).slice().sort(), games: rs.length, first: dr.first, last: dr.last,
         incomplete: !pl.fullName || !pl.whatsapp,
+        // a person with two or more games, or with any game that was set by hand, can be reviewed game by game
+        seats: (rs.length >= 2 || rs.some(function (r) { return r.override; })) ? rs.map(view) : [],
       };
     }).sort(function (a, b) { return a.nickname.toLowerCase() < b.nickname.toLowerCase() ? -1 : 1; });
     const similar = similarRegistered(reg, typed);
-    const guests = Array.from(typed.values()).filter(function (w) { return !reg.names.has(w.key); }).map(function (w) {
-      return { key: w.key, name: w.latestName, games: w.games, last: w.last, two: looksLikeTwo(w.key), similar: similar[w.key] || [] };
+    const guests = Object.keys(guestBy).map(function (k) {
+      const rs = guestBy[k], mapped = reg.names.has(k);
+      return { key: k, name: typed.get(k).latestName, games: rs.length, last: dateRange(rs).last, two: looksLikeTwo(k), mapped: mapped, similar: mapped ? [] : (similar[k] || []), seats: (mapped || rs.length >= 2) ? rs.map(view) : [] };
     }).sort(function (a, b) { return b.games - a.games || (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1); });
     const sg = await loadSignup(env);
     let requests = [];
@@ -46,7 +46,7 @@ export async function onRequestGet({ request, env }) {
         };
       });
     }
-    return json({ ready: reg.ready, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
+    return json({ ready: reg.ready, seatsReady: reg.seatsReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
       signup: { ready: sg.ready, enabled: sg.enabled, token: sg.token, requests: requests } });
   } catch (err) {
     return json({ error: String(err) }, 500);
@@ -151,12 +151,34 @@ export async function onRequestPost({ request, env }) {
       const r = readFields({ nickname: pick(body.nickname, rq.nickname), fullName: pick(body.fullName, rq.full_name), whatsapp: pick(body.whatsapp, rq.whatsapp), instagram: pick(body.instagram, rq.instagram) }, false);
       if (r.error) return json({ error: r.error }, 400);
       const f = r.fields;
-      const keys = Array.from(new Set([nameKey(f.nickname), f.fullName ? nameKey(f.fullName) : null, rq.table_name ? nameKey(rq.table_name) : null].filter(Boolean)));
+      const keys = Array.from(new Set([nameKey(f.nickname), f.fullName ? nameKey(f.fullName) : null, rq.table_name && body.linkName !== false ? nameKey(rq.table_name) : null].filter(Boolean)));
       const bad = await checkKeys(keys, null); if (bad) return json({ error: bad }, 409);
       const pid = newId();
       const dup = await insertPlayer(pid, f, keys); if (dup) return json({ error: dup }, 409);
       await env.DB.prepare('DELETE FROM registry_requests WHERE id=?').bind(rq.id).run();   // the details now live in the registry
       return json({ ok: true, id: pid });
+    }
+
+    if (action === 'seatAssign') {
+      if (!reg.seatsReady) return json({ error: 'setup_needed', message: 'Perbarui registry dulu.' }, 409);
+      const tableId = String(body.tableId || ''), seat = Number(body.seat), to = String(body.to || '');
+      if (!tableId || !Number.isInteger(seat) || seat < 0 || seat > 3) return json({ error: 'Kursi tidak valid' }, 400);
+      const { typed } = await gatherNames(env);
+      let key = null;
+      typed.forEach(function (w) { w.tables.forEach(function (t) { if (t.id === tableId && t.seat === seat) key = w.key; }); });
+      if (!key) return json({ error: 'Kursi tidak ditemukan' }, 404);
+      if (to && to !== 'guest' && !reg.players.has(to)) return json({ error: 'Pemain tidak ditemukan' }, 400);
+      if (to && to !== 'guest') {
+        // one person can not take two seats at one table
+        const sim = { players: reg.players, names: reg.names, seats: new Map(reg.seats) };
+        sim.seats.set(tableId + ':' + seat, { key: key, to: to });
+        const clash = seatRecords(sim, typed).find(function (r) { return r.tableId === tableId && r.seat !== seat && r.owner === to; });
+        if (clash) return json({ error: '"' + reg.players.get(to).nickname + '" sudah duduk di meja yang sama (' + clash.table + ') sebagai "' + clash.typedName + '", jadi tidak bisa mengisi dua kursi.' }, 409);
+      }
+      // choosing what the written name already says is the same as no choice at all
+      if (!to || to === reg.names.get(key)) await env.DB.prepare('DELETE FROM registry_seats WHERE table_id=? AND seat=?').bind(tableId, seat).run();
+      else await env.DB.prepare('INSERT INTO registry_seats (table_id, seat, name_key, registry_id, created_at) VALUES (?,?,?,?,?) ON CONFLICT(table_id, seat) DO UPDATE SET name_key=excluded.name_key, registry_id=excluded.registry_id').bind(tableId, seat, key, to, now).run();
+      return json({ ok: true });
     }
 
     const id = String(body.id || '');
@@ -199,6 +221,8 @@ export async function onRequestPost({ request, env }) {
     if (action === 'remove') {
       await env.DB.prepare('DELETE FROM registry_names WHERE registry_id=?').bind(id).run();
       await env.DB.prepare('DELETE FROM registry WHERE id=?').bind(id).run();
+      // games that were set by hand for this person must not slip over to somebody who shares the name
+      if (reg.seatsReady) await env.DB.prepare("UPDATE registry_seats SET registry_id='guest' WHERE registry_id=?").bind(id).run();
       return json({ ok: true });
     }
 
