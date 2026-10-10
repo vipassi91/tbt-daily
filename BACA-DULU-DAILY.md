@@ -358,3 +358,23 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
 - File yang berubah dari v17: `admin-pemain.html`, `functions/_players.js`, `functions/_tables.js`,
   `functions/api/admin/players.js`, `functions/api/overview.js`, `functions/api/signup.js`,
   `schema-players.sql`.
+
+## Update terbaru (v19): leaderboard baru dan kartu share top 10
+
+- **Penanda peringkat 1 sampai 4** di halaman utama: juara 1 emas dengan mahkota, juara 2 perak, juara 3
+  perunggu, juara 4 hijau giok. Pemain yang seri berbagi peringkat dan penandanya. Berlaku di papan Total
+  dan di papan tiap sesi.
+- **Tombol "Share top 10"** di atas papan, di tab Total (mengikuti filter periode dan mode yang sedang
+  tampil) dan di papan tiap sesi. Membuka jendela dengan pratinjau kartu, pilihan **format** (Story 9:16
+  atau Post 4:5), dan lima **gaya** yang sama dengan kartu scoreboard dan share hand (Midnight, Red,
+  Forest, Black, Cream).
+- **Kartu** memuat 10 teratas, dengan latar empat angin, header berlogo, mahkota untuk juara 1, serta
+  footer berisi handle dan tagline. Hanya pemain terdaftar yang ikut, sama seperti papan di halaman.
+  Kalau pemainnya kurang dari sepuluh, baris yang ada dipusatkan.
+- **Save image** satu ketukan (Android dan desktop mengunduh, iPhone dan iPad lewat share sheet),
+  **Share** lewat share sheet HP (Instagram, WhatsApp, dan lain-lain). Perilakunya sama dengan kartu lain.
+- **Handle dan tagline** di footer kartu diambil dari pengaturan brand: kunci `handle` dan `tagline` di
+  `brands/<slug>.json` (kalau kosong, barisnya tidak ditampilkan). Ini hanya untuk template produk, bukan
+  untuk yang diunggah.
+- Tidak ada perubahan database. File yang diunggah dan berubah dari v18: `index.html`
+  (template produk juga: `build.py` dan `brands/tbt.json`).

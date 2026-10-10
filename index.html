@@ -83,6 +83,36 @@ a{color:inherit}
 .pv{font-family:var(--display);font-weight:700}
 .btn{display:inline-block;margin-top:10px;border-radius:999px;padding:9px 18px;border:1px solid var(--line);background:transparent;text-decoration:none;font-weight:500;font-size:14px}
 .btn.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:700}
+
+/* ranks 1 to 4: gold with a crown, silver, bronze, jade */
+.row.m{margin:6px -8px;padding:12px 8px;border:1px solid var(--mc);border-radius:14px;background:linear-gradient(90deg,var(--mt),transparent 88%)}
+.row.m+.row:not(.m){border-top-color:transparent}
+.row.m .rn{position:relative;background:var(--mb);color:var(--mi);border-color:transparent;font-weight:900;box-shadow:0 2px 8px var(--mt)}
+.row.r1{--mc:rgba(201,150,43,.85);--mt:rgba(240,205,120,.24);--mb:linear-gradient(145deg,#F6DE9A,#C9962B);--mi:#3A2804}
+.row.r2{--mc:rgba(141,151,166,.8);--mt:rgba(205,213,224,.2);--mb:linear-gradient(145deg,#F1F4F8,#8D97A6);--mi:#222A33}
+.row.r3{--mc:rgba(156,94,43,.8);--mt:rgba(222,160,112,.22);--mb:linear-gradient(145deg,#E9B98A,#9C5E2B);--mi:#3A1F0A}
+.row.r4{--mc:rgba(95,180,138,.7);--mt:rgba(143,208,174,.18);--mb:linear-gradient(145deg,#9BD9B6,#2D6A4F);--mi:#0B2A1B}
+.row.r1 .rv{font-size:1.08em}
+.rn .crown{position:absolute;left:50%;top:-15px;width:22px;height:15px;transform:translateX(-50%) rotate(-9deg);color:var(--gold);filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+.sharebar{display:flex;justify-content:flex-end;margin:2px 0 8px}
+.sharebar button{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:700}
+#t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
+#t10Modal[hidden]{display:none}
+.t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
+.t10head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.t10head h3{font-size:20px}
+.t10x{border:0;background:transparent;font-size:28px;line-height:1;padding:2px 8px}
+.t10prev{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:12px}
+.t10prev canvas{display:block;width:100%;height:auto;border-radius:8px}
+.t10row{margin:12px 0 6px;font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.t10sw{display:flex;gap:10px;flex-wrap:wrap}
+.t10sw button{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);padding:0}
+.t10sw button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.t10acts{display:flex;gap:10px;margin-top:16px}
+.t10acts button{flex:1;border-radius:999px;padding:13px;border:1px solid var(--line);background:var(--surface);font-weight:700}
+.t10acts button.pri{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.t10acts button[hidden]{display:none}
+.t10st{min-height:18px;font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
@@ -148,16 +178,30 @@ function aggregate(tables){
   });
   return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins};});
 }
+function rankList(list){
+  var key=(SHOW_RATING&&S.metric==='league')?'league':'net',other=key==='net'?'league':'net';
+  var sorted=list.slice().sort(function(a,b){return b[key]-a[key]||b[other]-a[other]||a.name.localeCompare(b.name);});
+  var prev=null,prevRank=0;
+  return sorted.map(function(p,i){var v=Math.round(p[key]*10)/10,rank=(prev!==null&&v===prev)?prevRank:i+1;prev=v;prevRank=rank;return {p:p,v:v,rank:rank,key:key};});
+}
+var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" d="M8 48L4 20L28 38L50 8L72 38L96 20L92 48Z"/><circle cx="4" cy="18" r="6" fill="currentColor"/><circle cx="50" cy="5" r="6" fill="currentColor"/><circle cx="96" cy="18" r="6" fill="currentColor"/><rect x="8" y="55" width="84" height="11" rx="4" fill="currentColor"/></svg>';
+// Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
 function board(list){
   if(!list.length)return '<p class="empty">No games recorded yet.</p>';
-  var key=(SHOW_RATING&&S.metric==='league')?'league':'net',other=key==='net'?'league':'net';
-  list=list.slice().sort(function(a,b){return b[key]-a[key]||b[other]-a[other]||a.name.localeCompare(b.name);});
-  var html='',prev=null,prevRank=0;
-  list.forEach(function(p,i){
-    var v=Math.round(p[key]*10)/10,rank=(prev!==null&&v===prev)?prevRank:i+1;prev=v;prevRank=rank;
-    html+='<div class="row'+(rank===1?' first':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname">'+esc(p.name)+'</div><div class="rsub">'+p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places')+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
+  var html='';
+  rankList(list).forEach(function(r){
+    var p=r.p,v=r.v,rank=r.rank,key=r.key;
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+(rank===1?CROWN:'')+rank+'</div><div class="rm"><div class="rname">'+esc(p.name)+'</div><div class="rsub">'+p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places')+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
   });
   return '<div class="card">'+html+'</div>';
+}
+// What the Share top 10 card shows: the top ten of the board that is on screen right now.
+var PERIOD_LABEL={week:'This week',month:'This month',all:'All time'};
+function modeLabel(){return S.mode==='all'?'All modes':(MODE_LABEL[S.mode]||S.mode);}
+function shareBar(list,sub,sub2){
+  if(!list.length){S.card=null;return '';}
+  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
+  return '<div class="sharebar"><button type="button" data-share="1"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share top 10</button></div>';
 }
 function seg(name,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
 function chips(name,opts,cur){return '<div class="chips">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
@@ -179,6 +223,7 @@ function viewTotal(){
     +chips('period',[['week','This week'],['month','This month'],['all','All time']],S.period)
     +modeChips()
     +(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')
+    +shareBar(agg,PERIOD_LABEL[S.period],modeLabel()+(SHOW_RATING&&S.metric==='league'?' \u00b7 '+RATING_LABEL:''))
     +board(agg);
 }
 function tableCard(t){
@@ -199,7 +244,7 @@ function viewDay(id){
   return '<button type="button" class="back" data-back="1">\u2039 All sessions</button><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta" style="margin-bottom:6px">'+esc(fmtDate(d.date))+'</div>'
     +modeChips()
     +(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')
-    +board(aggregate(ts.filter(function(t){return t.events>0&&modeOk(t);})))
+    +(function(){var dl=aggregate(ts.filter(function(t){return t.events>0&&modeOk(t);}));return shareBar(dl,d.label,fmtDate(d.date)+(S.mode==='all'?'':' \u00b7 '+modeLabel()))+board(dl);})()
     +'<h3 class="sub">Tables</h3>'
     +(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>');
 }
@@ -226,6 +271,7 @@ document.getElementById('app').addEventListener('click',function(e){
   if(b.dataset.set){S[b.dataset.set]=b.dataset.v;if(b.dataset.set==='tab')S.day=null;render();}
   else if(b.dataset.day){S.day=b.dataset.day;render();window.scrollTo(0,0);}
   else if(b.dataset.back){S.day=null;render();}
+  else if(b.dataset.share){if(window.openTop10Card&&S.card)window.openTop10Card(S.card);}
   else if(b.dataset.refresh){load();}
 });
 function load(){
@@ -235,6 +281,307 @@ function load(){
 }
 render();load();
 setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on a venue screen
+</script>
+<script>
+/* Share top 10: a card in the same family as the scoreboard story and the share-hand card
+   (same five styles, fonts, backdrop, logo header, crown and footer). It shows the top ten of the
+   board that is on screen, and is drawn on a canvas so it can be saved or shared as a picture. */
+(function(){
+  var PLAY='"Playfair Display",Georgia,"Times New Roman",serif';
+  var INTER='"Inter Tight","Helvetica Neue",Arial,sans-serif';
+  var KAI='KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312","TBT Hanzi",serif';
+  var CREAM='#FAF7F2',RED='#B72323';
+  var HANDLE='@tiles.by.tiles',TAGLINE='Play. Learn. Connect.';
+  var WINDS=['\u6771','\u5357','\u897F','\u5317'];
+  var LOGO_ASPECT=217/260;
+  var FORMATS={story:{W:1080,H:1920,label:'Story 9:16'},portrait:{W:1080,H:1350,label:'Post 4:5'}};
+  var THEMES={
+    midnight:{label:'Midnight',bg1:'#1C2C4E',bg2:'#0A1226',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(170,190,255,.12)',vig:'rgba(0,0,12,.36)',grain:.12,sw:'linear-gradient(160deg,#1C2C4E,#0A1226)'},
+    red:{label:'Red',bg1:'#8B1A1A',bg2:'#3A0A0A',text:CREAM,muted:'rgba(250,247,242,.74)',line:'rgba(250,247,242,.32)',loss:'#F6B3AB',wm:.06,bloom:'rgba(255,190,150,.14)',vig:'rgba(20,0,0,.42)',grain:.12,sw:'linear-gradient(160deg,#8B1A1A,#3A0A0A)'},
+    forest:{label:'Forest',bg1:'#1F4B39',bg2:'#0D231A',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(255,255,235,.11)',vig:'rgba(0,0,0,.32)',grain:.12,sw:'linear-gradient(160deg,#1F4B39,#0D231A)'},
+    black:{label:'Black',bg1:'#2A2A2A',bg2:'#080808',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(255,255,255,.09)',vig:'rgba(0,0,0,.5)',grain:.13,sw:'linear-gradient(160deg,#2A2A2A,#080808)'},
+    cream:{label:'Cream',bg1:'#FAF7F2',bg2:'#EBE1CE',text:'#1B4332',muted:'rgba(27,67,50,.7)',line:'rgba(45,106,79,.4)',loss:RED,wm:.075,bloom:'rgba(255,255,255,.6)',vig:'rgba(110,80,30,.16)',grain:.09,sw:'linear-gradient(160deg,#FAF7F2,#EBE1CE)'}
+  };
+  // ranks 1 to 4: gold, silver, bronze, jade (the same colours as the board on the page)
+  var MEDAL=[null,
+    {a:'#F6DE9A',b:'#C9962B',ink:'#3A2804',edge:'#E5B84C'},
+    {a:'#F1F4F8',b:'#8D97A6',ink:'#222A33',edge:'#C3CAD5'},
+    {a:'#E9B98A',b:'#9C5E2B',ink:'#3A1F0A',edge:'#CF8A55'},
+    {a:'#9BD9B6',b:'#2D6A4F',ink:'#0B2A1B',edge:'#5FB48A'}];
+  var st={format:'story',theme:'forest'};
+  var card=null,modal=null,canvas=null,ctx=null,logoImg=null,assets=null,W=1080,H=1920,NOISE=null;
+
+  function $(id){return document.getElementById(id);}
+  function rgba(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+  function spacing(px){if(ctx&&'letterSpacing' in ctx)ctx.letterSpacing=px+'px';}
+  function fit(text,maxW,weight,fam,start,min){
+    var s=start;
+    while(s>min){ctx.font=weight+' '+s+'px '+fam;if(ctx.measureText(text).width<=maxW)break;s-=2;}
+    ctx.font=weight+' '+s+'px '+fam;
+    return s;
+  }
+  function rr(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function crown(cx,top,w,color){
+    var s=w/100;
+    ctx.save();
+    ctx.translate(cx-w/2,top);ctx.scale(s,s);
+    ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineJoin='round';ctx.lineWidth=6;
+    ctx.beginPath();
+    ctx.moveTo(8,48);ctx.lineTo(4,20);ctx.lineTo(28,38);ctx.lineTo(50,8);
+    ctx.lineTo(72,38);ctx.lineTo(96,20);ctx.lineTo(92,48);ctx.closePath();
+    ctx.fill();ctx.stroke();
+    [[4,18],[50,5],[96,18]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],6,0,Math.PI*2);ctx.fill();});
+    rr(8,55,84,11,4);ctx.fill();
+    ctx.restore();
+  }
+  // KaiTi, semibold: regular weight plus a fine same-colour stroke, so the look holds on every device
+  function kai(glyph,x,y,size,color,align,base){
+    ctx.save();
+    ctx.font='400 '+size+'px '+KAI;
+    ctx.textAlign=align||'left';ctx.textBaseline=base||'alphabetic';
+    ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=size*0.03;ctx.lineJoin='round';
+    spacing(0);
+    ctx.strokeText(glyph,x,y);ctx.fillText(glyph,x,y);
+    ctx.restore();
+  }
+  function hline(x1,x2,y,color,w,alpha){
+    ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=color;ctx.lineWidth=w;
+    ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();ctx.restore();
+  }
+  function noisePattern(){
+    if(NOISE)return NOISE;
+    var c=document.createElement('canvas');c.width=c.height=256;
+    var x=c.getContext('2d'),d=x.createImageData(256,256),s=12345;
+    for(var i=0;i<d.data.length;i+=4){
+      s=(s*1664525+1013904223)>>>0;
+      var v=s>>>24;
+      d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;
+    }
+    x.putImageData(d,0,0);
+    NOISE=ctx.createPattern(c,'repeat');
+    return NOISE;
+  }
+  function background(t){
+    var g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,t.bg1);g.addColorStop(1,t.bg2);
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    var b=ctx.createRadialGradient(W/2,120,0,W/2,120,1000);
+    b.addColorStop(0,t.bloom);b.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=b;ctx.fillRect(0,0,W,H);
+    var v=ctx.createRadialGradient(W/2,H*0.46,H*0.28,W/2,H*0.46,H*0.82);
+    v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,t.vig);
+    ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+    // all four winds, huge and barely there, bleeding off the corners: the backdrop of the whole-game scoreboard
+    var wc=document.createElement('canvas');wc.width=W;wc.height=H;
+    var sv=ctx;ctx=wc.getContext('2d');
+    var px=[.84,.84,.16,.16],py=[.78,.22,.22,.78];
+    WINDS.forEach(function(w,i){kai(w,W*px[i],H*py[i],860*(H/1920),t.text,'center','middle');});
+    ctx=sv;
+    ctx.save();ctx.globalAlpha=t.wm;ctx.drawImage(wc,0,0);ctx.restore();
+    ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=t.grain;
+    ctx.fillStyle=noisePattern();ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function draw(){
+    if(!card||!canvas)return;
+    var fm=FORMATS[st.format]||FORMATS.story;
+    W=fm.W;H=fm.H;
+    if(canvas.width!==W)canvas.width=W;
+    if(canvas.height!==H)canvas.height=H;
+    ctx=canvas.getContext('2d');
+    var t=THEMES[st.theme]||THEMES.forest;
+    var isStory=st.format==='story';
+    var rows=card.rows.slice(0,10),n=rows.length,mx=90,x1=W-mx,cx=W/2;
+    background(t);
+    ctx.textBaseline='alphabetic';ctx.textAlign='left';spacing(0);
+
+    // the same frame as the scoreboard card: header pinned to the top safe zone, footer to the bottom
+    var TOP=isStory?256:64,tH=isStory?204:132,headerGap=isStory?46:30;
+    var footLh=56,FOOT_TOP=isStory?1468:H-(footLh+58+56);
+    var tW=tH*LOGO_ASPECT;
+    if(logoImg)ctx.drawImage(logoImg,mx,TOP,tW,tH);
+    var tx=mx+tW+(isStory?44:34),tmax=W-mx-tx;
+    var title=card.title||'Top 10',sub=card.sub||'',sub2=card.sub2||'';
+    if(isStory){
+      var b1=TOP+69,b2=TOP+134,b3=TOP+189;
+      fit(title,tmax,900,PLAY,76,38);
+      ctx.fillStyle=t.text;ctx.fillText(title,tx,b1);
+      var ly=b2;
+      if(sub){fit(sub,tmax,400,PLAY,34,22);ctx.fillStyle=t.muted;ctx.fillText(sub,tx,b2);ly=b3;}
+      if(sub2){fit(sub2,tmax,400,PLAY,34,22);ctx.fillStyle=sub?t.text:t.muted;ctx.fillText(sub2,tx,ly);}
+    }else{
+      var ts=fit(title,tmax,900,PLAY,60,26);
+      var lh2=ts+30,by2=TOP+tH/2-lh2/2+ts*0.78;
+      ctx.fillStyle=t.text;ctx.fillText(title,tx,by2);
+      var line2=[sub,sub2].filter(Boolean).join('   \u00b7   ');
+      if(line2){fit(line2,tmax,400,PLAY,34,18);ctx.fillStyle=t.muted;ctx.fillText(line2,tx,by2+lh2*0.62);}
+    }
+
+    // the ranking: a fixed row height so the card always has the same rhythm, centred when fewer than ten
+    var zoneTop=TOP+tH+headerGap,zoneBottom=FOOT_TOP-(isStory?36:30);
+    hline(mx,x1,zoneTop-14,t.text,2.5,.95);
+    var rowH=Math.min(100,Math.floor((zoneBottom-zoneTop-12)/10));
+    var by=zoneTop+6+Math.max(0,((zoneBottom-zoneTop-12)-rowH*n)/2);
+    rows.forEach(function(r,i){
+      var y=by+i*rowH,cy=y+rowH/2,md=MEDAL[r.rank]||null,bx=mx+36,br=27;
+      if(md){
+        // a band in the medal colour, brightest at the left, with a fine edge
+        var bandX=mx-18,bandW=(x1-mx)+36;
+        var gb=ctx.createLinearGradient(bandX,0,bandX+bandW,0);
+        gb.addColorStop(0,rgba(md.a,.3));gb.addColorStop(1,rgba(md.a,.04));
+        ctx.save();
+        rr(bandX,y+5,bandW,rowH-10,24);ctx.fillStyle=gb;ctx.fill();
+        if(r.rank===1){ctx.shadowColor=md.edge;ctx.shadowBlur=26;}
+        ctx.lineWidth=r.rank===1?4:3;ctx.strokeStyle=md.edge;ctx.globalAlpha=.95;ctx.stroke();
+        ctx.restore();
+      }else if(i>0&&!(rows[i-1].rank<=4)){
+        hline(mx,x1,y,t.text,2,.14);
+      }
+      // rank badge
+      ctx.save();
+      ctx.beginPath();ctx.arc(bx,cy,br,0,Math.PI*2);
+      if(md){
+        var gg=ctx.createLinearGradient(bx-br,cy-br,bx+br,cy+br);
+        gg.addColorStop(0,md.a);gg.addColorStop(1,md.b);
+        ctx.fillStyle=gg;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle='rgba(255,255,255,.55)';ctx.stroke();
+      }else{ctx.lineWidth=2.5;ctx.strokeStyle=t.line;ctx.stroke();}
+      ctx.restore();
+      ctx.textAlign='center';ctx.textBaseline='middle';spacing(0);
+      ctx.font='700 '+(r.rank>=10?27:32)+'px '+INTER;
+      ctx.fillStyle=md?md.ink:t.muted;ctx.fillText(String(r.rank),bx,cy+1);
+      if(r.rank===1)crown(bx,cy-br-30,52,md.edge);
+      // net score at the right, name and games to its left
+      var nx=bx+br+26;
+      ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.font='700 44px '+INTER;
+      var sw=ctx.measureText(r.text).width;
+      ctx.fillStyle=r.neg?t.loss:t.text;ctx.fillText(r.text,x1-8,cy);
+      var maxW=(x1-8-sw)-nx-28;
+      var meta=r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places');
+      ctx.textAlign='left';
+      fit(r.name,maxW,700,PLAY,40,20);
+      ctx.fillStyle=t.text;ctx.fillText(r.name,nx,cy-14);
+      fit(meta,maxW,400,INTER,25,16);
+      ctx.fillStyle=t.muted;ctx.fillText(meta,nx,cy+23);
+    });
+
+    // footer, as on the scoreboard card
+    if(isStory){
+      if(logoImg)ctx.drawImage(logoImg,cx-92*LOGO_ASPECT/2,FOOT_TOP,92*LOGO_ASPECT,92);
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      if(HANDLE){ctx.font='400 34px '+INTER;spacing(2);ctx.fillStyle=t.text;ctx.fillText(HANDLE,cx,FOOT_TOP+92+42);spacing(0);}
+      if(TAGLINE){fit(TAGLINE,W-2*mx,400,INTER,34,20);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+92+88);}
+    }else{
+      ctx.font='400 34px '+INTER;spacing(2);
+      var fw=HANDLE?ctx.measureText(HANDLE).width:0,gapL=HANDLE?16:0,lw=footLh*LOGO_ASPECT,rowW=lw+gapL+fw,x0=cx-rowW/2;
+      if(logoImg)ctx.drawImage(logoImg,x0,FOOT_TOP,lw,footLh);
+      if(HANDLE){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=t.text;ctx.fillText(HANDLE,x0+lw+gapL,FOOT_TOP+footLh/2);}
+      spacing(0);
+      if(TAGLINE){ctx.textAlign='center';ctx.textBaseline='middle';fit(TAGLINE,W-2*mx,400,INTER,28,18);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+footLh+30);}
+    }
+  }
+
+  /* ---------- loading what the card needs: the fonts and the logo ---------- */
+  function loadAssets(){
+    if(assets)return assets;
+    var fonts=(document.fonts&&document.fonts.load)?Promise.all([
+      document.fonts.load('900 76px "Playfair Display"'),document.fonts.load('700 40px "Playfair Display"'),document.fonts.load('400 34px "Playfair Display"'),
+      document.fonts.load('400 34px "Inter Tight"'),document.fonts.load('700 34px "Inter Tight"'),
+      document.fonts.load('400 48px "TBT Hanzi"',WINDS.join(''))
+    ]).catch(function(){}):Promise.resolve();
+    var logo=new Promise(function(res){
+      var im=new Image(),done=false;
+      function fin(v){if(!done){done=true;res(v);}}
+      im.onload=function(){fin(im);};im.onerror=function(){fin(null);};
+      setTimeout(function(){fin(im.complete&&im.naturalWidth?im:null);},2500);
+      im.src=LOGO;
+    });
+    assets=Promise.all([fonts,logo]).then(function(r){logoImg=r[1];});
+    return assets;
+  }
+
+  /* ---------- the window ---------- */
+  function status(msg){var el=$('t10Status');if(el)el.textContent=msg||'';}
+  function toBlob(){return new Promise(function(res){try{canvas.toBlob(function(b){res(b);},'image/png');}catch(e){res(null);}});}
+  function isIOS(){return /iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+  // Save goes straight to the phone: a download on Android and desktop, the share sheet on iPhone and iPad
+  // (that is where "Save Image" puts it in Photos), a new tab only when the browser blocks the download.
+  async function save(){
+    status('');
+    var blob=await toBlob();
+    if(!blob){status('Could not create the image. Try again.');return;}
+    var file=null;
+    try{file=new File([blob],'top10.png',{type:'image/png'});}catch(e){file=null;}
+    if(isIOS()&&file&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file]});return;}
+      catch(err){if(err&&err.name==='AbortError')return;}
+    }
+    var url=URL.createObjectURL(blob);
+    try{
+      var a=document.createElement('a');
+      a.href=url;a.download='top10.png';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      status('Saved. Check your gallery or Downloads.');
+    }catch(err){
+      var opened=null;
+      try{opened=window.open(url,'_blank');}catch(e){opened=null;}
+      if(opened){status('Opened the image in a new tab. Press and hold it, then choose Save or Download image.');setTimeout(function(){URL.revokeObjectURL(url);},60000);}
+      else{status('Could not save the image here. Try the Share button instead.');URL.revokeObjectURL(url);}
+    }
+  }
+  async function share(){
+    status('');
+    try{
+      var blob=await toBlob();
+      if(!blob){status('Could not create the image. Try again.');return;}
+      var file=new File([blob],'top10.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});
+      else status('Sharing is not available here. Use Save image instead.');
+    }catch(err){
+      if(err&&err.name==='AbortError')return;
+      status('Sharing is not available here. Use Save image instead.');
+    }
+  }
+  function syncControls(){
+    Array.prototype.forEach.call(document.querySelectorAll('#t10Fmt button'),function(b){b.setAttribute('aria-pressed',b.dataset.f===st.format?'true':'false');});
+    Array.prototype.forEach.call(document.querySelectorAll('#t10Themes button'),function(b){b.setAttribute('aria-pressed',b.dataset.t===st.theme?'true':'false');});
+  }
+  function close(){if(modal){modal.hidden=true;document.body.style.overflow='';}}
+  function build(){
+    if(modal)return;
+    modal=document.createElement('div');modal.id='t10Modal';modal.hidden=true;
+    modal.innerHTML='<div class="t10box" role="dialog" aria-label="Share top 10"><div class="t10head"><h3>Share top 10</h3><button type="button" class="t10x" id="t10Close" aria-label="Close">&times;</button></div>'
+      +'<div class="t10prev"><canvas id="t10Canvas"></canvas></div>'
+      +'<div class="t10row">Format</div><div class="chips" id="t10Fmt"></div>'
+      +'<div class="t10row">Style</div><div class="t10sw" id="t10Themes"></div>'
+      +'<div class="t10acts"><button type="button" class="pri" id="t10Save">Save image</button><button type="button" id="t10Share" hidden>Share</button></div><div class="t10st" id="t10Status"></div></div>';
+    document.body.appendChild(modal);
+    canvas=$('t10Canvas');
+    $('t10Fmt').innerHTML=Object.keys(FORMATS).map(function(k){return '<button type="button" data-f="'+k+'" aria-pressed="false">'+FORMATS[k].label+'</button>';}).join('');
+    $('t10Themes').innerHTML=Object.keys(THEMES).map(function(k){return '<button type="button" data-t="'+k+'" aria-pressed="false" aria-label="'+THEMES[k].label+'" title="'+THEMES[k].label+'" style="background:'+THEMES[k].sw+'"></button>';}).join('');
+    $('t10Fmt').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;st.format=b.dataset.f;syncControls();draw();});
+    $('t10Themes').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;st.theme=b.dataset.t;syncControls();draw();});
+    $('t10Close').addEventListener('click',close);
+    modal.addEventListener('click',function(e){if(e.target===modal)close();});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)close();});
+    $('t10Save').addEventListener('click',save);
+    $('t10Share').addEventListener('click',share);
+    try{var probe=new File([new Blob(['x'],{type:'image/png'})],'p.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[probe]}))$('t10Share').hidden=false;}catch(e){}
+  }
+  window.openTop10Card=function(c){
+    card=c;build();status('');syncControls();
+    modal.hidden=false;modal.scrollTop=0;document.body.style.overflow='hidden';
+    loadAssets().then(draw);
+  };
+})();
 </script>
 </body>
 </html>
