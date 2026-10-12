@@ -378,3 +378,57 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
   untuk yang diunggah.
 - Tidak ada perubahan database. File yang diunggah dan berubah dari v18: `index.html`
   (template produk juga: `build.py` dan `brands/tbt.json`).
+
+## Update terbaru (v20): leaderboard lebih rapi
+
+- **Angka tidak lagi naik-turun.** Sebelumnya nomor peringkat, skor, angka statistik, dan angka di kartu
+  meja memakai Playfair, yang angkanya bergaya lama (ada yang kecil, ada yang turun). Sekarang semuanya
+  memakai Inter dengan angka sejajar dan selebar sama, jadi kolom skor lurus. Judul tetap Playfair, tapi
+  angkanya (misalnya "Table 1" atau "3Frogs") kini sejajar dengan hurufnya.
+- **Penanda peringkat 1 sampai 4 dibuat lebih tenang.** Semua baris punya bentuk dan ukuran yang sama.
+  Penandanya hanya cincin pada nomor (terisi emas untuk juara 1), garis tipis di tepi kiri, semburat warna
+  yang samar, dan mahkota kecil di samping nama juara. Warnanya emas, perak, perunggu, dan hijau brand.
+  Tidak ada lagi bingkai, cakram berkilau, atau mahkota yang menimpa lencana.
+- **Kartu share top 10** memakai penanda yang sama. Nama pemain di kartu sekarang Inter (judul "Top 10"
+  tetap Playfair, seperti kartu lain).
+- Tidak ada perubahan database. Satu-satunya file yang diunggah dan berubah dari v19: `index.html`.
+
+## Update terbaru (v21): skor Playfair, navigasi, dan pemeriksaan menyeluruh
+
+- **Skor kembali Playfair, nama tetap Inter.** Skor di papan, angka statistik (Sessions, Tables, Players),
+  dan skor di kartu meja memakai Playfair lagi, tapi dengan angka sejajar (semua setinggi huruf kapital),
+  jadi tidak ada lagi angka yang tampak mengecil. Nomor urut (lingkaran peringkat) tetap Inter. Kartu
+  share top 10 tetap memakai Inter untuk nama dan skor, seperti kartu scoreboard.
+- **Tidak ada lagi halaman buntu:**
+  - Halaman utama: tautan **Enter table code** (ke `masuk.html`) di kanan atas.
+  - Tombol **Back** peramban sekarang berpindah antar-tampilan (Total, daftar sesi, satu sesi) alih-alih
+    keluar dari situs. Mengganti filter tidak menambah riwayat.
+  - Scoreboard (host dan pemain): logo dan tautan **‹ Leaderboard** di bilah atas. Kalau meja dibuka dari
+    halaman sesi, tautannya kembali ke sesi itu. Judul tab memuat nama meja (misalnya "Table 1 · ...").
+  - `masuk.html`: tautan ‹ Leaderboard, dan judul tab sendiri. `daftar.html`: tautan Lihat leaderboard
+    di halaman "link tidak berlaku" dan setelah berhasil mendaftar.
+- **Halaman admin memakai satu bilah navigasi yang sama**: Sesi, Pemain, Leaderboard, dengan halaman
+  yang aktif ditandai, plus tombol Keluar. Judul bilahnya sama (TBT ADMIN) di kedua halaman.
+- **Area ketuk cukup besar** (minimal sekitar 38 piksel) untuk Edit, Delete, dan Share di riwayat hand,
+  filter di halaman utama, tombol kecil di admin, dan tautan di detail sesi. Tampilannya hampir tidak
+  berubah, hanya area yang bisa diketuk yang melebar.
+- **Halaman 404** (`404.html`) dengan tautan ke leaderboard dan halaman kode. Catatan: dulu alamat yang
+  salah menampilkan halaman utama; sekarang menampilkan halaman 404.
+- **Alamat pendek untuk admin** lewat berkas `_redirects`: `/admin` membuka halaman sesi, `/pemain`
+  membuka halaman pemain. Berkas ini hanya berfungsi kalau berada di folder paling atas yang diunggah
+  (sama dengan `index.html`). Kalau tidak berfungsi, tidak ada yang rusak; alamat lengkapnya tetap bisa dipakai.
+- Semua halaman mengatur warna bilah peramban HP (terang dan gelap) lewat `theme-color`.
+- Tidak ada perubahan database. File baru: `404.html`, `_redirects`. File berubah dari v20:
+  `index.html`, `scoreboard.html`, `masuk.html`, `daftar.html`, `admin-daily.html`, `admin-pemain.html`.
+
+## Update terbaru (v22): header halaman utama disederhanakan
+
+- Halaman utama (leaderboard) sekarang memakai **bilah atas tipis yang sama dengan scoreboard**: logo kecil
+  dan nama brand di kiri, tautan **Enter table code** di kanan. Logo besar di tengah dan nama brand di bawahnya
+  dihapus.
+- Judul **Leaderboard** dan jam pembaruan kini rata kiri tepat di bawah bilah. Statistik dan papan peringkat
+  naik, jadi peringkat 1 sampai 6 sudah terlihat di layar pertama HP.
+- Logo di bilah bisa diketuk untuk kembali ke halaman utama (tab Total). Area ketuknya dibesarkan di halaman
+  utama dan di scoreboard.
+- Nama brand di bilah diambil dari pengaturan brand (`brand_name`), jadi ikut berganti untuk klien lain.
+- Tidak ada perubahan database. File berubah dari v21: `index.html` dan `scoreboard.html`.

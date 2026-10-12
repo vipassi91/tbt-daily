@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
 <title>Tiles by Tiles scoreboard</title>
 <link rel="icon" type="image/png" id="favicon" href="">
 <style>
@@ -244,6 +246,12 @@ body.connected #gnew{display:none!important}
 .status{min-height:20px;font-size:13px;color:var(--muted);text-align:center;max-width:34ch;line-height:1.4}
 .hint{font-size:13px;color:var(--muted);margin:10px 0 0;line-height:1.45}
 @media (prefers-reduced-motion:no-preference){.btn{transition:border-color .15s,filter .15s}}
+
+/* navigation: the way back to the leaderboard, and hand actions big enough to tap */
+a.brandmark{text-decoration:none;color:inherit;min-height:40px}
+.backlink{display:inline-flex;align-items:center;min-height:40px;padding:0 4px;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
+.hb{gap:4px;margin:-2px 0 -8px -10px}
+.hb .lnk{padding:12px 10px;min-height:40px;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
@@ -254,7 +262,8 @@ body.connected #gnew{display:none!important}
 </div>
 <header class="brandbar">
   <div class="brandin">
-    <span class="brandmark"><img id="brandLogo" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></span>
+    <a class="brandmark" href="index.html" aria-label="Leaderboard"><img id="brandLogo" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a>
+    <a class="backlink" id="backLink" href="index.html">&lsaquo; Leaderboard</a>
   </div>
 </header>
 <div class="tabs" role="group" aria-label="Sections">
@@ -3354,6 +3363,18 @@ body.connected #gnew{display:none!important}
       if(!e||e.name!=='AbortError')say('Sharing is not available here. Use Save image instead.');
     }
   });
+})();
+</script>
+<script>
+// Back link goes to the session this table was opened from, and the tab title names the table.
+(function(){
+  try{
+    var f=new URLSearchParams(location.search).get('from'),a=document.getElementById('backLink');
+    if(f&&a)a.href='index.html?sesi='+encodeURIComponent(f);
+    var badge=document.getElementById('syncBadge'),base=document.title;
+    function retitle(){var m=/^(.+?)(?: \(| \u00b7 )/.exec(badge.textContent.trim());if(m)document.title=m[1]+' \u00b7 '+base;}
+    if(badge&&window.MutationObserver){new MutationObserver(retitle).observe(badge,{childList:true,characterData:true,subtree:true});retitle();}
+  }catch(e){}
 })();
 </script>
 </body>
