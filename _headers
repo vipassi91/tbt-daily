@@ -1,0 +1,47 @@
+# Security and caching headers (Cloudflare Pages reads this file; it applies to the pages and files, not to /api).
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+# Fonts and images live in /assets with a name that changes whenever the file changes, so they can be kept for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Pages that carry a secret in the address (table codes, the sign-up token) or are for admins only:
+# keep them out of search engines and never send the address on to other sites.
+/scoreboard
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/scoreboard.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/daftar
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/daftar.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin-daily
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin-daily.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/pemain
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin-pemain
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin-pemain.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/masuk
+  X-Robots-Tag: noindex
+/masuk.html
+  X-Robots-Tag: noindex

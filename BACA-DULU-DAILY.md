@@ -432,3 +432,57 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
   utama dan di scoreboard.
 - Nama brand di bilah diambil dari pengaturan brand (`brand_name`), jadi ikut berganti untuk klien lain.
 - Tidak ada perubahan database. File berubah dari v21: `index.html` dan `scoreboard.html`.
+
+## Update terbaru (v23): perbaikan dari pemeriksaan menyeluruh
+
+Pemeriksaan ini dijalankan di browser sungguhan (perjalanan penuh admin, host, pemain, kartu, kunci game,
+leaderboard, registry), plus uji nama berisi kode HTML di semua halaman, pemindaian lebar halaman di layar
+390 dan 360 piksel dengan nama panjang, dan pengukuran kontras warna.
+
+- **Nama panjang tidak lagi melebarkan scoreboard.** Kotak skor ronde ("東 Johan 0 / Overall 0") memakai nama
+  yang tidak bisa mengecil, jadi nama seperti "Dennis Wijaya Santoso" membuat seluruh halaman lebih lebar dari
+  layar HP (di host dan di pemain). Sekarang namanya dipotong dengan "..." di kotak itu, dan nama lengkap
+  tetap tampil di tempat lain.
+- **Kontras warna**: teks pudar (muted) di tema terang diperkuat (`#587263`), merah di tema gelap sedikit
+  dilembutkan terangnya (`#EA8888`), dan angka di lencana juara 1 kini memakai tinta cokelat gelap (dulu krem di
+  atas emas, kontras hanya 2,8) di halaman maupun di kartu top 10. Hasil pengukuran: tidak ada lagi teks di
+  bawah standar WCAG AA.
+- Hasil lain yang baik: nama berisi kode HTML tampil sebagai teks biasa di semua halaman (tidak ada celah
+  injeksi), dan semua langkah perjalanan penuh berjalan tanpa error.
+- Warna dasar tertanam di semua halaman, jadi semua file HTML berubah sedikit. Tidak ada perubahan database.
+  Untuk klien lain: cek kontras warna `muted` dan `red` di `brands/<slug>.json`.
+
+## Update terbaru (v24): halaman jauh lebih ringan, cache leaderboard, header keamanan, pratinjau tautan
+
+**PENTING saat mengunggah ke GitHub.** Folder yang diunggah sekarang berisi 83 berkas (ada folder baru
+`assets` berisi 54 berkas). GitHub membatasi 100 berkas per unggahan lewat browser, dan halaman baru memanggil
+isi folder `assets`, jadi unggah dalam dua langkah:
+1. Unggah folder **`assets`** dulu (commit pertama).
+2. Baru unggah **semua yang lain** (commit kedua): halaman HTML, folder `functions`, `_headers`, `_redirects`,
+   `og-image.jpg`, dan berkas SQL/panduan.
+
+Yang berubah:
+- **Font dan gambar dipindah dari dalam halaman ke folder `assets`** (nama berkasnya memuat kode isi
+  berkas, jadi aman disimpan browser selama setahun). Halaman kini hanya mengunduh yang dipakainya.
+  Hasil ukur (jaringan, kunjungan pertama): leaderboard 189 KB menjadi sekitar 150 KB, **scoreboard 1,6 MB menjadi
+  sekitar 400 KB**, halaman kecil 175 KB menjadi sekitar 113 KB. **Kunjungan berikutnya hampir nol unduhan aset**
+  (scoreboard 52 KB) dan setiap pembaruan hanya mengunduh halaman yang berubah. Gambar tile di jendela share
+  baru diunduh saat saklar tile dinyalakan.
+- **Cache leaderboard 30 detik** (`/api/overview`). Berapa pun jumlah penonton, database dibaca satu kali per
+  30 detik. Cek di browser (Network, buka `/api/overview` dua kali): kepala `x-cache` berisi `MISS` lalu `HIT`.
+  Kalau selalu `MISS`, cache Cloudflare tidak tersedia di alamat ini; situs tetap berjalan seperti biasa,
+  hanya penghematannya tidak terjadi. Data baru bisa terlambat sampai 30 detik muncul di leaderboard.
+- **`_headers`**: blokir tampilan di dalam situs lain (frame), `nosniff`, kebijakan keamanan konten, dan
+  aset disimpan setahun. Halaman scoreboard, pendaftaran, admin, dan kode: `noindex` (tidak masuk mesin
+  pencari) dan alamat tidak diteruskan ke situs lain (alamatnya memuat kode). Leaderboard tetap bisa dicari.
+  **Kalau setelah deploy ada halaman kosong atau tombol yang tidak jalan**, hapus satu baris
+  `Content-Security-Policy: ...` di `_headers`, unggah ulang, dan beri tahu saya.
+  Jawaban API kini ditandai `no-store` (tidak disimpan browser) kecuali leaderboard.
+- **Pratinjau tautan** untuk leaderboard (WhatsApp, Instagram): judul, deskripsi, dan gambar `og-image.jpg`
+  (1200x630, 68 KB). Alamat situs diambil dari `site_url` di `brands/<slug>.json` (sekarang
+  `https://tilesbytilesleaderboard.pages.dev`). Kalau pindah ke domain sendiri, ubah `site_url` lalu build ulang.
+  Brand tanpa `site_url` tidak mendapat tag pratinjau (deskripsi tetap ada). Gambar pratinjau per brand:
+  `brands/<slug>.og.jpg`. WhatsApp menyimpan pratinjau lama; untuk mengujinya tambahkan `?v=2` di ujung alamat.
+- **Escape** kini menutup jendela share hand dan pemilih pola di scoreboard.
+- Tidak ada perubahan database. File berubah dari v23: semua halaman HTML, `functions/_auth.js`,
+  `functions/api/overview.js`. File baru: folder `assets`, `_headers`, `og-image.jpg`.
