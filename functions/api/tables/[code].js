@@ -1,13 +1,16 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
 import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
+import { safeDisplay } from '../../_players.js';
 
 // GET /api/tables/:code: the host's edit code. Returns the raw game object
 // (which carries `lockedAt` once the table has been saved as final).
 export async function onRequestGet({ env, params }) {
   try {
-    const t = await env.DB.prepare('SELECT label, rounds, updated_at FROM tables WHERE code=?').bind(params.code.toUpperCase()).first();
+    const t = await env.DB.prepare('SELECT id, label, players, rounds, updated_at FROM tables WHERE code=?').bind(params.code.toUpperCase()).first();
     if (!t) return json({ error: 'Table code not found' }, 404);
-    return json({ label: t.label, updatedAt: t.updated_at, game: JSON.parse(t.rounds) });
+    const game = JSON.parse(t.rounds);
+    let stored = []; try { stored = JSON.parse(t.players); } catch (e) { stored = []; }
+    return json({ label: t.label, updatedAt: t.updated_at, game: game, display: await safeDisplay(env, t.id, game.names, stored) });
   } catch (err) {
     return json({ error: String(err) }, 500);
   }
@@ -55,7 +58,7 @@ export async function onRequestPatch({ request, env, params }) {
       const fresh = await env.DB.prepare('SELECT rounds, updated_at FROM tables WHERE code=?').bind(code).first();
       return json({ error: 'conflict', updatedAt: fresh ? fresh.updated_at : null, game: fresh ? JSON.parse(fresh.rounds) : null }, 409);
     }
-    return json({ ok: true, updatedAt: now });
+    return json({ ok: true, updatedAt: now, display: await safeDisplay(env, t.id, game.names, stats.names) });
   } catch (err) {
     return json({ error: String(err) }, 500);
   }

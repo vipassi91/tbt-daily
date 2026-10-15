@@ -1486,6 +1486,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
           inFlight=false;
           if(r.ok){
             setBase(data.updatedAt||baseVersion);
+          if(data.display!==undefined&&setDisplay(data.display))renderGame();
             if(again){again=false;return pushToServer();}
             clearDirty();rejectedAlerted=false;syncStatus='saved';updateSyncBadge();return true;
           }
@@ -1535,10 +1536,21 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       return r.json();
     });
   }
-  function applyServerGame(data){
+  // Names as the leaderboard knows them (registered nicknames), sent by the server. They are only for SHOWING:
+    // the game keeps the names typed at the table, and that is what gets saved. A seat whose typed name was
+    // changed since the server worked this out shows what is typed.
+    var DISPLAY=null;
+    function setDisplay(list){
+      var next=(Array.isArray(list)&&list.some(function(x){return x;}))?{typed:game.names.slice(),shown:list.map(String)}:null;
+      var was=JSON.stringify(DISPLAY?DISPLAY.shown:null),now=JSON.stringify(next?next.shown:null);
+      DISPLAY=next;return was!==now;
+    }
+    function applyServerGame(data){
     game=Object.assign(defaultGame(),data.game);
     game.names=[0,1,2,3].map(function(i){return String(game.names[i]||'');});
     if(!Array.isArray(game.events))game.events=[];
+    if(data.display!==undefined)setDisplay(data.display);
+    else if(DISPLAY&&DISPLAY.typed.join('\u0001')!==game.names.join('\u0001'))DISPLAY=null;
     if(data.label)tableLabel=data.label;
     setBase(data.updatedAt);
     try{if(!VIEW_ONLY)localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}
@@ -1584,7 +1596,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     pollTimer=setInterval(function(){
       fetchTable().then(function(data){
         var same=JSON.stringify(data.game)===JSON.stringify(game);
-        if(same){if(syncStatus!=='saved'){syncStatus='saved';updateSyncBadge();}return;}
+        if(same){var moved=setDisplay(data.display);if(moved)afterLoad();if(syncStatus!=='saved'){syncStatus='saved';updateSyncBadge();}return;}
         applyServerGame(data);syncStatus='saved';updateSyncBadge();afterLoad();
       }).catch(function(){syncStatus='error';updateSyncBadge();});
     },window.TBT_POLL_MS||12000);
@@ -1745,7 +1757,9 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(rp.hands.length){loadRound(rkView<4&&rp.hands.some(function(h){return h.wind===rkView;})?rkView:rp.hands[rp.hands.length-1].wind);}
   });
 
-  function gname(i){return clean(game.names[i])||('Player '+(i+1));}
+  function displayFor(i){return DISPLAY&&DISPLAY.typed[i]===game.names[i]&&DISPLAY.shown[i]?DISPLAY.shown[i]:'';}
+  function gname(i){return displayFor(i)||clean(game.names[i])||('Player '+(i+1));}
+  function viewNames(){return [0,1,2,3].map(function(i){return displayFor(i)||game.names[i];});}
   window.gname=gname;
   function sgn(n){return n>0?'+'+n:n<0?'\u2212'+Math.abs(n):'0';}
   function ptsWord(p){return p+' pt'+(p===1?'':'s');}
@@ -2229,7 +2243,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var rp=replay(game.events,modeConfig());
     var base=game.useStart?num(game.start):0;
     storyRound=4;
-    state.names=game.names.slice();
+    state.names=viewNames();
     state.title=game.title;state.sub=game.date;
     state.useStart=game.useStart;
     state.starts=[base,base,base,base].map(String);
@@ -2249,7 +2263,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var base=game.useStart?num(game.start):0;
     var starts=[base,base,base,base];   // every wind round begins again from the starting score
     storyRound=w;
-    state.names=game.names.slice();
+    state.names=viewNames();
     state.title=game.title;state.sub=game.date;
     state.useStart=game.useStart;
     state.starts=starts.map(function(v){return String(Math.round(v*100)/100);});

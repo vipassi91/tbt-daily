@@ -231,3 +231,35 @@ export function seatRecords(reg, typed) {
   });
   return out;
 }
+
+// ---- names as the leaderboard knows them, for showing on a table's own pages ----
+// The game itself is never changed: it keeps the names typed at the table. This only says, per seat, which
+// registered nickname that seat counts for ('' when it is a guest or an empty seat), so the scoreboard can show it.
+// The key of a seat is the name the server stored for it (made unique, so two "Steven" at one table are
+// "steven" and "steven 2"), exactly as the leaderboard uses it.
+export function displayNames(reg, tableId, typedNames, storedNames) {
+  return [0, 1, 2, 3].map(function (i) {
+    const typed = String((typedNames && typedNames[i]) || '').trim();
+    if (!typed) return '';
+    const stored = String((storedNames && storedNames[i]) || typed);
+    const o = seatOwner(reg, tableId, i, nameKey(stored));
+    const pl = o.id && reg.players.get(o.id);
+    return pl ? pl.nickname : '';
+  });
+}
+// A table page is asked for again every few seconds by everyone watching, so the registry is kept in memory for a
+// short time instead of being read each time. Any admin change clears it at once (see admin/players.js).
+let regCache = { at: 0, db: null, value: null };
+export async function loadRegistryCached(env) {
+  const ms = env && env.REGISTRY_CACHE_MS !== undefined ? Number(env.REGISTRY_CACHE_MS) : 15000;
+  const now = Date.now();
+  if (ms > 0 && regCache.value && regCache.db === env.DB && now - regCache.at < ms) return regCache.value;
+  const value = await loadRegistry(env);
+  regCache = { at: now, db: env.DB, value: value };
+  return value;
+}
+export function clearRegistryCache() { regCache = { at: 0, db: null, value: null }; }
+// Never lets a problem with the registry get in the way of showing a table.
+export async function safeDisplay(env, tableId, typedNames, storedNames) {
+  try { return displayNames(await loadRegistryCached(env), tableId, typedNames, storedNames); } catch (e) { return ['', '', '', '']; }
+}

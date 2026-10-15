@@ -486,3 +486,21 @@ Yang berubah:
 - **Escape** kini menutup jendela share hand dan pemilih pola di scoreboard.
 - Tidak ada perubahan database. File berubah dari v23: semua halaman HTML, `functions/_auth.js`,
   `functions/api/overview.js`. File baru: folder `assets`, `_headers`, `og-image.jpg`.
+
+## Update terbaru (v25): nama resmi tampil di scoreboard setelah ditautkan
+
+- Setelah sebuah nama ditautkan ke pemain terdaftar (atau satu kursi diatur per game), **scoreboard menampilkan
+  nama resminya**: klasemen, riwayat hand, kotak skor ronde, tab Story, dan semua kartu share. Contoh: yang
+  diketik host "Steven" tampil sebagai "Steven Tan". Berlaku untuk host dan pemain.
+- **Yang disimpan tetap nama yang diketik host.** Isian nama di "Players and options" juga tetap menampilkan
+  yang diketik, dan mencatat hand tidak pernah menimpa nama itu dengan nama resmi. Jadi host boleh mengetik
+  nama aslinya dan menautkannya belakangan.
+- Guest tetap tampil seperti diketik. Kalau dua orang bernama sama duduk di satu meja, hanya kursi yang
+  tertaut yang berganti nama. Kalau host mengubah nama sebelum hand pertama, yang tampil adalah yang baru diketik.
+- Kapan nama baru terlihat: halaman pemain memeriksa tiap 12 detik, jadi penautan baru muncul tanpa perlu hand
+  baru. Halaman host memperbarui saat menyimpan hand atau saat dimuat ulang. Perubahan oleh admin langsung
+  berlaku di server; server menyimpan registry di memori paling lama 15 detik agar database tidak dibaca setiap
+  kali halaman meja dibuka.
+- Halaman admin (daftar meja dan pemain per sesi) masih menampilkan nama yang diketik.
+- Tidak ada perubahan database. File berubah dari v24: `scoreboard.html`, `functions/_players.js`,
+  `functions/api/tables/[code].js`, `functions/api/view/[code].js`, `functions/api/admin/players.js`.

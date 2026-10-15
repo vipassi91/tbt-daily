@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, guestRuleOn, gatherNames, sameTableConflict, looksLikeTwo, similarRegistered, seatRecords, ensureRegistryTables, loadSignup, REGISTRY_SQL } from '../../_players.js';
+import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, guestRuleOn, gatherNames, sameTableConflict, looksLikeTwo, similarRegistered, seatRecords, ensureRegistryTables, loadSignup, clearRegistryCache, REGISTRY_SQL } from '../../_players.js';
 
 // GET /api/admin/players (admin): the registered players (with their private details) and the guests.
 // Works before the registry tables exist, so it doubles as an audit of the names in use.
@@ -66,7 +66,7 @@ function readFields(body, partial) {
 }
 
 // POST /api/admin/players (admin): setup | register | registerAll | update | addname | removename | remove
-export async function onRequestPost({ request, env }) {
+async function handlePost({ request, env }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
     let body;
@@ -230,4 +230,9 @@ export async function onRequestPost({ request, env }) {
   } catch (err) {
     return json({ error: String(err) }, 500);
   }
+}
+
+// Whatever the admin changes, the next table page already shows the new names.
+export async function onRequestPost(context) {
+  try { return await handlePost(context); } finally { clearRegistryCache(); }
 }
