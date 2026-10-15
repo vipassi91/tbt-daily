@@ -5,7 +5,7 @@ const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
 const MODES = ['casual', 'default', 'tournament', 'custom'];
 // Bump this whenever buildStats starts storing something new. Stored results with an older
 // version are rebuilt from the saved game the next time they are read (see statsFor).
-export const STATS_VERSION = 3;
+export const STATS_VERSION = 4;
 
 // The rule set a table is played under, in the same terms the scoring engine uses.
 function rulesOf(g) {
@@ -41,9 +41,37 @@ export function buildStats(game, fallbackPlayers) {
   });
   const wins = {};
   names.forEach(function (n) { wins[n] = s.rounds.reduce(function (t, r) { return t + (r.handsWon[n] || 0); }, 0); });
+  // Facts about each player at this table. Only sums and counts are kept (never averages or percentages), so
+  // they can be added up across tables. Everything is worked out from the recorded hands, which are never deleted,
+  // so a fact added later can be worked out again for every old table.
+  //  - windFirsts: wind rounds in which the player finished first (a tie for first counts for each tied player)
+  //  - ptsSum: the points of the hands the player won (the hand's points, not the score it was turned into)
+  //  - best: the biggest score gained from one hand the player won (null if none)
+  //  - zimo / dealIns: self-draws won, and times the player's discard was used for a hu (hu, double or triple)
+  const facts = {};
+  names.forEach(function (n, idx) {
+    let ptsSum = 0, best = null, zimo = 0, dealIns = 0, windFirsts = 0;
+    s.rounds.forEach(function (r) {
+      if (r.totalHands > 0 && r.places[n] === 1) windFirsts++;
+      r.hands.forEach(function (h) {
+        const ev = events[h.i];
+        if (h.winners.includes(idx)) {
+          const p = ev && ev.pts ? Number(ev.pts[idx]) : 0;
+          if (isFinite(p)) ptsSum += p;
+          const d = h.deltas[idx];
+          if (best === null || d > best) best = d;
+          if (h.kind === 'zimo') zimo++;
+        }
+        if (h.disc === idx && (h.kind === 'hu' || h.kind === 'double' || h.kind === 'triple')) dealIns++;
+      });
+    });
+    facts[n] = { won: wins[n], ptsSum: Math.round(ptsSum * 100) / 100, best: best, zimo: zimo, dealIns: dealIns, windFirsts: windFirsts };
+  });
   return {
     v: STATS_VERSION, mode: g.mode || 'casual', locked: !!g.lockedAt, rules: rulesOf(g), names: names, rank: rank, wins: wins, aggregates: s.aggregates,
     hands: s.totalHands, events: events.length,
+    winds: s.rounds.filter(function (r) { return r.totalHands > 0; }).length,
+    facts: facts,
     progress: { wind: s.wind, dealer: s.dealer, done: s.done },
   };
 }
@@ -53,7 +81,7 @@ function r2(n) { return Math.round((n || 0) * 100) / 100; }
 export function summarizePlayers(stats) {
   return stats.names.map(function (n, i) {
     // "Player 1".. are stand-ins for seats the host never named; they must not become a real person on the leaderboard
-    return { name: n, seat: i, placeholder: /^Player [1-4]$/.test(n), netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n] };
+    return { name: n, seat: i, placeholder: /^Player [1-4]$/.test(n), netTotal: r2(stats.aggregates[n].netTotal), leagueScore: r2(stats.aggregates[n].leagueScore), rank: stats.rank[n], wins: stats.wins[n], windFirsts: stats.facts && stats.facts[n] ? stats.facts[n].windFirsts : undefined };
   });
 }
 
@@ -77,10 +105,14 @@ export function nextStamp(prev) {
 // Stored results for one table row, rebuilt from the saved game when they are missing or were
 // written by an older version (e.g. before results carried the mode). The write-back only
 // lands if nobody saved the table in the meantime, and it never touches updated_at.
-export async function statsFor(env, t) {
+// `budget` ({ left: n }) lets a page that reads many tables bring old statistics up to date a few at a time: after a
+// new version, the first pages show the old numbers for the tables whose turn has not come yet, instead of one
+// request doing all the work at once. Without a budget the statistics are always brought up to date.
+export async function statsFor(env, t, budget) {
   let stats = null;
   try { stats = t.stats ? JSON.parse(t.stats) : null; } catch (e) { stats = null; }
   if (stats && stats.v === STATS_VERSION) return stats;
+  if (budget && stats) { if (budget.left <= 0) return stats; budget.left--; }
   const full = (t.rounds !== undefined) ? t : await env.DB.prepare('SELECT rounds FROM tables WHERE id=?').bind(t.id).first();
   let game = {}, players = [];
   try { game = full ? JSON.parse(full.rounds) : {}; } catch (e) { game = {}; }

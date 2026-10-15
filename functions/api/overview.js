@@ -39,11 +39,12 @@ async function build(env) {
     const tblRes = await env.DB.prepare('SELECT id, day_id, label, view_code, players, stats, updated_at FROM tables ORDER BY created_at ASC').all();
     const reg = await loadRegistry(env);   // admin decisions about who is who; empty until the registry is enabled
     const tables = [];
+    const budget = { left: 12 };   // see statsFor: old statistics are renewed a dozen tables per request
     for (const t of tblRes.results) {
-      const stats = await statsFor(env, t);
+      const stats = await statsFor(env, t, budget);
       tables.push({
         id: t.id, day_id: t.day_id, label: t.label, view_code: t.view_code,
-        events: stats.events, hands: stats.hands, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null,
+        events: stats.events, hands: stats.hands, winds: stats.winds, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null,
         updatedAt: t.updated_at, players: applyRegistry(reg, summarizePlayers(stats), t.id),
       });
     }

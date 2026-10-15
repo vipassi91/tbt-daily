@@ -257,6 +257,17 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .backlink{display:inline-flex;align-items:center;min-height:40px;padding:0 4px;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
 .hb{gap:4px;margin:-2px 0 -8px -10px}
 .hb .lnk{padding:12px 10px;min-height:40px;display:inline-flex;align-items:center}
+
+/* standings: tap a row for the player's statistics; the score digits all stand the same height */
+.rk{flex-wrap:wrap;cursor:pointer}
+.rk:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+.rk .rv{font-variant-numeric:lining-nums tabular-nums}
+.rsub .cv{margin-left:8px;font-size:12px}
+.rkmore{flex-basis:100%;margin:8px 0 2px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--field);cursor:default}
+.rkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px}
+.rkgrid .k{font-size:12px;color:var(--muted)}
+.rkgrid .v{font-weight:700;font-size:18px}
+.rkgrid .u{font-size:12px;font-weight:500;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1714,7 +1725,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   }
 
   /* ---------- Standings tab: this table, per wind round and overall ---------- */
-  var rkView=4;
+  var rkView=4,rkOpen=-1;   // rkOpen: the seat whose statistics are open (-1 none), kept while the list is redrawn
   function renderRank(){
     var chips=$('rkChips'),box=$('rkBody');
     if(!chips||!box)return;
@@ -1732,25 +1743,48 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       return [];
     }
     var views=rkView===4?[0,1,2,3]:[rkView];
-    var net=[0,0,0,0],won=[0,0,0,0],played=0;
-    views.forEach(function(wd){
-      rp.hands.filter(function(h){return h.wind===wd&&!h.late;}).forEach(function(h){
-        played++;
-        h.deltas.forEach(function(v,i){net[i]+=v;});
-        winnersOf(h).forEach(function(i){won[i]++;});
+    var hs=[];
+    views.forEach(function(wd){rp.hands.filter(function(h){return h.wind===wd&&!h.late;}).forEach(function(h){hs.push(h);});});
+    // A hand is any recorded hand (hu, zimo, double/triple hu, draw, invalid or false win). Statistics follow the tab:
+    // the whole game on Overall, only that wind round's hands on East, South, West and North.
+    var played=hs.length,net=[0,0,0,0],won=[0,0,0,0],ptsSum=[0,0,0,0],best=[null,null,null,null],zimo=[0,0,0,0],deal=[0,0,0,0];
+    hs.forEach(function(h){
+      var ev=(game.events||[])[h.i]||{};
+      h.deltas.forEach(function(v,i){net[i]+=v;});
+      winnersOf(h).forEach(function(i){
+        won[i]++;
+        var p=ev.pts?Number(ev.pts[i]):0;if(isFinite(p))ptsSum[i]+=p;   // the points of the hand, not the score it became
+        var d=h.deltas[i];if(best[i]===null||d>best[i])best[i]=d;       // the biggest score gained from one hand
+        if(ev.kind==='zimo')zimo[i]++;
       });
+      if((ev.kind==='hu'||ev.kind==='double'||ev.kind==='triple')&&typeof ev.disc==='number')deal[ev.disc]++;   // discarded into a hu
     });
-    var rows=ns.map(function(name,i){return {n:name,val:Math.round(net[i]*100)/100,sub:won[i]+(won[i]===1?' hand won':' hands won')};});
+    function stat(k,v){return '<div><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';}
+    var rows=ns.map(function(name,i){return {i:i,n:name,val:Math.round(net[i]*100)/100,won:won[i],rate:played?Math.round(won[i]/played*100):0,avg:won[i]?Math.round(ptsSum[i]/won[i]*10)/10:null,best:best[i],zimo:zimo[i],deal:deal[i]};});
     rows.sort(function(a,b){return b.val-a.val;});
     var html='';
     rows.forEach(function(x,k){
       x.rank=(k>0&&rows[k-1].val===x.val)?rows[k-1].rank:k+1;
-      html+='<div class="rk'+(x.rank===1?' first':'')+'"><div class="rn">'+x.rank+'</div><div class="rm"><div class="rname">'+esc(x.n)+'</div><div class="rsub">'+x.sub+'</div></div><div class="rv'+(x.val<0?' neg':'')+'">'+sgn(x.val)+'</div></div>';
+      var open=rkOpen===x.i;
+      html+='<div class="rk'+(x.rank===1?' first':'')+(open?' open':'')+'" data-seat="'+x.i+'" role="button" tabindex="0" aria-expanded="'+open+'"><div class="rn">'+x.rank+'</div><div class="rm"><div class="rname">'+esc(x.n)+'</div><div class="rsub">'+x.won+' of '+played+(played===1?' hand':' hands')+' won<span class="cv" aria-hidden="true">'+(open?'\u25B4':'\u25BE')+'</span></div></div><div class="rv'+(x.val<0?' neg':'')+'">'+sgn(x.val)+'</div>'
+        +(open?'<div class="rkmore"><div class="rkgrid">'+stat('Win rate',x.rate+'%')+stat('Avg points / win',x.avg===null?'-':x.avg+'<span class="u"> pts</span>')+stat('Best hand',x.best===null?'-':sgn(x.best))+stat('Self-draws',x.zimo)+stat('Deal-ins',x.deal)+'</div></div>':'')
+        +'</div>';
     });
     box.innerHTML=played?html:'<p class="hint">'+(rkView===4?'No hands recorded yet.':'No hands in this wind round yet.')+'</p>';
     var st=$('rkStory');if(st)st.disabled=!played;
   }
   $('rkChips').addEventListener('click',function(e){var b=e.target.closest?e.target.closest('[data-rk]'):null;if(!b)return;rkView=+b.dataset.rk;renderRank();});
+  function rkToggle(seat){rkOpen=(rkOpen===seat)?-1:seat;renderRank();}
+  $('rkBody').addEventListener('click',function(e){
+    if(e.target.closest&&e.target.closest('.rkmore'))return;
+    var r=e.target.closest?e.target.closest('.rk'):null;if(r)rkToggle(+r.dataset.seat);
+  });
+  $('rkBody').addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var r=e.target.closest?e.target.closest('.rk'):null;if(!r||e.target!==r)return;
+    e.preventDefault();var seat=+r.dataset.seat;rkToggle(seat);
+    var again=$('rkBody').querySelector('.rk[data-seat="'+seat+'"]');if(again)again.focus();
+  });
   $('rkStory').addEventListener('click',function(){
     showTab('story');
     var rp=replay(game.events,modeConfig());

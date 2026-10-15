@@ -100,8 +100,9 @@ export async function gatherNames(env) {
   const tblRes = await env.DB.prepare('SELECT id, day_id, label, players, stats, updated_at FROM tables ORDER BY created_at ASC').all();
   const typed = new Map();
   let played = 0;
+  const budget = { left: 12 };   // old statistics are renewed a dozen tables per request (see statsFor)
   for (const t of tblRes.results) {
-    const stats = await statsFor(env, t);
+    const stats = await statsFor(env, t, budget);
     if (!stats.events) continue;
     played++;
     const date = dayDate[t.day_id] || '';

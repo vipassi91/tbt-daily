@@ -504,3 +504,33 @@ Yang berubah:
 - Halaman admin (daftar meja dan pemain per sesi) masih menampilkan nama yang diketik.
 - Tidak ada perubahan database. File berubah dari v24: `scoreboard.html`, `functions/_players.js`,
   `functions/api/tables/[code].js`, `functions/api/view/[code].js`, `functions/api/admin/players.js`.
+
+## Update terbaru (v26): statistik di halaman Standing dan sub-baris baru di leaderboard sesi
+
+- **Halaman Standing (scoreboard):** sub-baris tiap pemain kini "7 of 23 hands won". **Ketuk baris** untuk
+  rincian: Win rate, Avg points / win, Best hand, Self-draws, Deal-ins. Satu baris terbuka sekali; ketukan
+  di dalam rincian tidak menutupnya; Enter pada baris juga membuka atau menutupnya. Angka mengikuti tab:
+  Overall menghitung seluruh game, East, South, West, North hanya hand di putaran itu.
+- **Definisi:**
+  - *Hand* = satu hand apa pun hasilnya (hu, zimo, double hu, triple hu, seri, invalid win, false win).
+  - *Win rate* = hand yang dimenangkan dibagi seluruh hand. Double dan triple hu dihitung sebagai kemenangan
+    untuk tiap pemenangnya.
+  - *Avg points / win* = rata-rata **poin hand** (bukan skor) dari hand yang dimenangkan.
+  - *Best hand* = kenaikan **skor** terbesar dari satu hand yang dimenangkan. Pada double atau triple hu, tiap
+    pemenang memakai kenaikan skornya sendiri (tidak dijumlahkan). Pada zimo, itu yang dibayar tiga lawan.
+  - *Self-draws* = jumlah kemenangan zimo. *Deal-ins* = berapa kali buangan pemain dipakai untuk hu (hu biasa,
+    double, triple). Hanya angka, tanpa nama. Invalid win dan false win bukan deal-in.
+  - Pemain tanpa kemenangan menampilkan "-" untuk Avg points / win dan Best hand.
+- **Leaderboard sesi:** sub-baris diganti menjadi "1st in 2/4 rounds · 30% win rate" (first place per putaran
+  angin dari jumlah putaran yang sudah punya hand, dan hand menang dibagi seluruh hand). Seri di posisi pertama
+  dalam satu putaran dihitung first place untuk semua yang seri. Kartu share Top 10 pada halaman sesi memakai
+  kalimat yang sama. **Leaderboard Total (semua waktu) tetap "N games · N first places".**
+- **Angka skor di klasemen scoreboard** memakai angka sejajar, seperti di leaderboard.
+- **Di server:** versi statistik naik ke 4. Tiap meja menyimpan fakta per pemain berupa jumlah (bukan
+  persen): first place per putaran angin, total poin kemenangan, best hand, self-draw, dan deal-in. Hanya yang
+  dibutuhkan leaderboard yang dikirim ke publik. Fakta lain disimpan untuk recap dan halaman pemain nanti.
+  Meja lama dihitung ulang otomatis dari hand-nya, **dua belas meja per permintaan**, supaya tidak membebani
+  server. Selama itu berlangsung (beberapa menit setelah deploy), meja yang belum dihitung ulang memakai
+  sub-baris lama. Tidak ada langkah manual dan tidak ada data yang hilang.
+- Tidak ada perubahan database dan tidak ada berkas aset baru. File berubah dari v25: `scoreboard.html`,
+  `index.html`, `functions/_tables.js`, `functions/_players.js`, `functions/api/overview.js`.

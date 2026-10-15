@@ -208,12 +208,18 @@ function aggregate(tables){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
       if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
-      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0});
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
+      if(p.windFirsts===undefined||t.winds===undefined)m.nofx=true;else{m.hands+=t.hands;m.wf+=p.windFirsts;m.winds+=t.winds;}   // a table whose statistics are not renewed yet has no wind-round facts
     });
   });
-  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins};});
+  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx};});
+}
+// On a session's board: in how many of the wind rounds the player finished first, and the share of hands won.
+function sessionSub(p){
+  if(!p.facts||!p.winds||!p.hands)return '';
+  return '1st in '+p.windFirsts+'/'+p.winds+' rounds \u00b7 '+Math.round(p.wins/p.hands*100)+'% win rate';
 }
 function rankList(list){
   var key=(SHOW_RATING&&S.metric==='league')?'league':'net',other=key==='net'?'league':'net';
@@ -223,21 +229,21 @@ function rankList(list){
 }
 var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" d="M8 48L4 20L28 38L50 8L72 38L96 20L92 48Z"/><circle cx="4" cy="18" r="6" fill="currentColor"/><circle cx="50" cy="5" r="6" fill="currentColor"/><circle cx="96" cy="18" r="6" fill="currentColor"/><rect x="8" y="55" width="84" height="11" rx="4" fill="currentColor"/></svg>';
 // Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
-function board(list){
+function board(list,session){
   if(!list.length)return '<p class="empty">No games recorded yet.</p>';
   var html='';
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places')+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||(p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places')))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
   });
   return '<div class="card">'+html+'</div>';
 }
 // What the Share top 10 card shows: the top ten of the board that is on screen right now.
 var PERIOD_LABEL={week:'This week',month:'This month',all:'All time'};
 function modeLabel(){return S.mode==='all'?'All modes':(MODE_LABEL[S.mode]||S.mode);}
-function shareBar(list,sub,sub2){
+function shareBar(list,sub,sub2,session){
   if(!list.length){S.card=null;return '';}
-  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
+  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,meta:session?sessionSub(p):'',rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
   return '<div class="sharebar"><button type="button" data-share="1"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share top 10</button></div>';
 }
 function seg(name,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
@@ -281,7 +287,7 @@ function viewDay(id){
   return '<button type="button" class="back" data-back="1">\u2039 All sessions</button><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta" style="margin-bottom:6px">'+esc(fmtDate(d.date))+'</div>'
     +modeChips()
     +(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')
-    +(function(){var dl=aggregate(ts.filter(function(t){return t.events>0&&modeOk(t);}));return shareBar(dl,d.label,fmtDate(d.date)+(S.mode==='all'?'':' \u00b7 '+modeLabel()))+board(dl);})()
+    +(function(){var dl=aggregate(ts.filter(function(t){return t.events>0&&modeOk(t);}));return shareBar(dl,d.label,fmtDate(d.date)+(S.mode==='all'?'':' \u00b7 '+modeLabel()),true)+board(dl,true);})()
     +'<h3 class="sub">Tables</h3>'
     +(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>');
 }
@@ -501,7 +507,7 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
       var sw=ctx.measureText(r.text).width;
       ctx.fillStyle=r.neg?t.loss:t.text;ctx.fillText(r.text,x1-8,cy);
       var maxW=(x1-8-sw)-nx-28-(r.rank===1?46:0);
-      var meta=r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places');
+      var meta=r.meta||(r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places'));
       ctx.textAlign='left';
       fit(r.name,maxW,700,INTER,38,20);
       var nw=ctx.measureText(r.name).width;
