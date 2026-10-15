@@ -215,7 +215,7 @@ function viewSignup(){
 }
 function seatPanel(seats){
   var opts=data.registered.map(function(p){return [p.id,p.nickname];});
-  var h='<div class="split"><p class="note" style="margin:0 0 10px">Pilih siapa yang main di tiap game. &quot;Ikuti nama&quot; berarti mengikuti nama yang tertulis di meja. Game aslinya tidak diubah.</p>';
+  var h='<div class="split"><p class="note" style="margin:0 0 10px">'+(seats.length===1?'Game ini tertaut karena namanya. Kalau yang main orang lain, pilih Guest atau pemain yang benar. &quot;Ikuti nama&quot; mengembalikannya ke tautan awal. Game aslinya tidak diubah.':'Pilih siapa yang main di tiap game. &quot;Ikuti nama&quot; berarti mengikuti nama yang tertulis di meja. Game aslinya tidak diubah.')+'</p>';
   seats.forEach(function(s){
     var sel='<option value=""'+(s.override===''?' selected':'')+'>Ikuti nama</option><option value="guest"'+(s.override==='guest'?' selected':'')+'>Guest (tidak dihitung)</option>'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(s.override===o[0]?' selected':'')+'>'+esc(o[1])+'</option>';}).join('');
     h+='<div class="seatrow"><div class="meta" style="margin:0 0 6px"><b>'+esc(s.session||'-')+'</b> &middot; '+esc(s.table)+' &middot; '+fmtDate(s.date)+' &middot; hasil '+(s.net>0?'+':'')+s.net+'<br>Main bareng: '+(s.with.length?s.with.map(esc).join(', '):'-')+'<br>Ditulis sebagai &quot;'+esc(s.typed)+'&quot; &middot; sekarang dihitung untuk: <b>'+(s.owner?esc(s.owner):'guest')+'</b></div><select data-a="seatsel" data-t="'+esc(s.tableId)+'" data-s="'+s.seat+'">'+sel+'</select></div>';
@@ -258,7 +258,7 @@ function viewRegistered(){
     var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">data belum lengkap</span>':'')
       +'<div class="meta">'+(p.fullName?esc(p.fullName)+' &middot; ':'')+p.games+' game &middot; terakhir '+fmtDate(p.last)+spell+'</div>'
       +(contact.length?'<div class="meta">'+contact.join(' &middot; ')+'</div>':'')+'</div>'
-      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">Pisah per game</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
+      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
     if(form&&form.mode==='edit'&&form.id===p.id)row+=viewForm();
     if(splitFor&&splitFor.kind==='reg'&&splitFor.id===p.id&&hasSeats)row+=seatPanel(p.seats);
     return row;

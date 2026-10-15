@@ -534,3 +534,16 @@ Yang berubah:
   sub-baris lama. Tidak ada langkah manual dan tidak ada data yang hilang.
 - Tidak ada perubahan database dan tidak ada berkas aset baru. File berubah dari v25: `scoreboard.html`,
   `index.html`, `functions/_tables.js`, `functions/_players.js`, `functions/api/overview.js`.
+
+## Update terbaru (v27): atur satu game yang tertaut keliru
+
+- Sebelumnya tombol "Pisah per game" hanya muncul untuk pemain dengan dua game atau lebih, sehingga satu game
+  yang tertaut ke orang yang salah (dua orang bernama sama) tidak bisa dipindahkan. Sekarang **setiap pemain
+  terdaftar yang punya game** mendapat tombol: "Atur game" bila satu game, "Pisah per game" bila lebih.
+- Di panel itu pilih: **Ikuti nama** (tautan awal), **Guest (tidak dihitung)**, atau pemain terdaftar yang
+  benar. Game aslinya tidak diubah.
+- Cara lain yang selalu bisa dipakai: Edit pemain, hapus ejaan yang salah (tombol x di samping ejaan). Kalau
+  ejaan itu sama dengan nama panggilan, ubah dulu nama panggilannya, baru ejaan lamanya bisa dihapus.
+- Saat menyetujui pendaftaran lewat link, kotak "Tautkan nama ..." menentukan apakah game dengan nama itu
+  ikut tertaut otomatis. Hilangkan centangnya kalau ragu, lalu atur game-nya satu per satu.
+- Tidak ada perubahan database. File berubah dari v26: `admin-pemain.html`, `functions/api/admin/players.js`.

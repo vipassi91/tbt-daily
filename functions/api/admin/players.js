@@ -22,8 +22,8 @@ export async function onRequestGet({ request, env }) {
         id: pl.id, fullName: pl.fullName, nickname: pl.nickname, whatsapp: pl.whatsapp, instagram: pl.instagram,
         names: (keysOf[pl.id] || []).slice().sort(), games: rs.length, first: dr.first, last: dr.last,
         incomplete: !pl.fullName || !pl.whatsapp,
-        // a person with two or more games, or with any game that was set by hand, can be reviewed game by game
-        seats: (rs.length >= 2 || rs.some(function (r) { return r.override; })) ? rs.map(view) : [],
+        // every game of a registered person can be reviewed one by one, even when there is only one: it may belong to someone else with the same name
+        seats: rs.length >= 1 ? rs.map(view) : [],
       };
     }).sort(function (a, b) { return a.nickname.toLowerCase() < b.nickname.toLowerCase() ? -1 : 1; });
     const similar = similarRegistered(reg, typed);
