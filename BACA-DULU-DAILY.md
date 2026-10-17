@@ -547,3 +547,31 @@ Yang berubah:
 - Saat menyetujui pendaftaran lewat link, kotak "Tautkan nama ..." menentukan apakah game dengan nama itu
   ikut tertaut otomatis. Hilangkan centangnya kalau ragu, lalu atur game-nya satu per satu.
 - Tidak ada perubahan database. File berubah dari v26: `admin-pemain.html`, `functions/api/admin/players.js`.
+
+## Update terbaru (v28): halaman utama baru (filter periode dan mode, dua kolom di desktop)
+
+- **Pertama dibuka** halaman menampilkan **musim berjalan** (bulan ini, misalnya "October 2026") dan mode **Default**.
+  Kalau mode Default belum punya game pada periode itu, halaman membuka "All modes" supaya tidak kosong.
+  Kalau hanya satu mode yang pernah dimainkan, tombol mode tidak muncul.
+- **Dua dropdown** di bawah judul (di desktop di kanan judul):
+  - **Periode:** musim (bulan yang punya data, dan bulan berjalan), Today, This week (Senin sampai Minggu),
+    All time, dan **Custom range** (dua tanggal lalu Apply).
+  - **Mode:** Default, Casual, Tournament, Custom, All modes, dengan jumlah meja per mode pada periode terpilih.
+  - Di layar sempit menu muncul sebagai lembar dari bawah, di layar lebar sebagai menu kecil di bawah tombol.
+    Bisa dipakai dengan keyboard (panah, Enter, Escape) dan membaca keadaan lewat pembaca layar.
+- **Garis kemajuan musim** (hanya untuk musim yang sedang berjalan): "Day 17 of 31" dan "Ends 31 Oct".
+- **Satu baris angka** menggantikan tiga kartu: Wind rounds, Sessions, Tables, Players. Angka Players
+  **menyertakan guest**, sedangkan papan hanya memeringkat pemain terdaftar (keterangan ada di atas papan).
+- **Tab Total dan Sessions** berupa teks bergaris bawah. Tab Sessions juga mengikuti periode dan mode.
+  Sesi yang belum dimulai tetap terdaftar ("Not started") supaya mejanya tetap bisa ditemukan.
+- **Desktop:** dua kolom. Papan di kiri, "Latest sessions" yang menempel saat digulir di kanan. Halaman sesi:
+  papan di kiri, daftar meja di kanan. Halaman sesi tidak ikut filter mode utama; bila sesinya punya beberapa
+  mode, ada menu mode sendiri di halaman itu.
+- **Alamat halaman menyimpan filter**, jadi tautan yang dibagikan membuka tampilan yang sama:
+  `?p=2026-09` (musim), `?p=today`, `?p=week`, `?p=all`, `?p=2026-10-03_2026-10-10` (custom),
+  dan `m=casual`, `m=default`, `m=tournament`, `m=custom`, `m=all`. Tampilan bawaan menjaga alamat tetap bersih.
+  Mengubah filter tidak menambah langkah Back.
+- Kartu **Share top 10** memakai periode dan mode yang sedang tampil.
+- "This month" dibuang dari daftar (sama dengan musim berjalan). **Wawasan** (pemimpin, pendaki, dan sebagainya)
+  belum dibuat; menunggu keputusan.
+- Tidak ada perubahan database. File berubah dari v27: `index.html`.

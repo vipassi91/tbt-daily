@@ -56,20 +56,11 @@ h1,h2,h3{font-family:var(--display);margin:0;color:var(--text);font-variant-nume
 button{font:inherit;cursor:pointer;color:inherit}
 a{color:inherit}
 .han{font-family:var(--kai);font-weight:400;-webkit-text-stroke:.03em currentColor;color:var(--red)}
-.wrap{max-width:560px;margin:0 auto;padding:0 18px 60px}
-.top{text-align:left;padding:22px 0 6px}
-.top h1{font-size:30px;font-weight:900;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 60px}
 .upd{font-size:12px;color:var(--muted);margin-top:6px;min-height:15px}
 .seg{display:flex;gap:6px;margin:14px 0}
 .seg button{flex:1;border-radius:999px;padding:10px 12px;border:1px solid var(--line);background:transparent;font-weight:500;font-size:14px}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:700}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
-.chips button{border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--field);font-size:14px}
-.chips button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
-.stat .l{font-size:12px;color:var(--muted)}
-.stat .v{font-family:var(--display);font-weight:900;font-size:26px;margin-top:2px;font-variant-numeric:lining-nums tabular-nums}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 16px;margin-bottom:12px;overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .row:first-child{border-top:0}
@@ -118,8 +109,6 @@ a{color:inherit}
 .row.r1 .rn{background:var(--mc);color:#2B2108}
 .rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rname .crown{flex:none;width:16px;height:11px;color:var(--gold)}
-.sharebar{display:flex;justify-content:flex-end;margin:2px 0 8px}
-.sharebar button{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:700}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -137,19 +126,58 @@ a{color:inherit}
 .t10acts button.pri{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
 .t10acts button[hidden]{display:none}
 .t10st{min-height:18px;font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
-
-/* navigation: a way into a table from the leaderboard, comfortable tap sizes */
-.chips button{padding:10px 14px}
-.sharebar button{min-height:40px}
 .back{display:inline-flex;align-items:center;min-height:40px;padding:0;margin-bottom:4px}
 
 /* the same slim bar as the scoreboard: small logo and name on the left, a way into a table on the right */
 .brandbar{border-bottom:1px solid var(--line);background:var(--surface)}
-.brandin{max-width:560px;margin:0 auto;padding:9px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brandin{max-width:1120px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brandmark{display:flex;align-items:center;gap:10px;min-width:0;min-height:40px;text-decoration:none;color:inherit}
 .brandmark img{height:28px;width:auto;display:block;flex:none}
 .brandname{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .backlink{display:inline-flex;align-items:center;gap:7px;min-height:40px;flex:none;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
+/* header: title on the left, the two filters on the right (under the title on phones) */
+.n-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t f";align-items:start;gap:14px;padding:20px 0 12px}
+.n-head .t{grid-area:t}.n-head h1{font-size:30px;font-weight:900}
+.n-filters{grid-area:f;display:flex;gap:10px}
+.n-anchor{position:relative;display:block}
+.n-dd{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0 12px 0 14px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-size:14px;font-weight:600;white-space:nowrap}
+.n-dd .l{display:flex;align-items:center;gap:8px;min-width:0}.n-dd .l span{overflow:hidden;text-overflow:ellipsis}
+.n-dd.act{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.n-dd:focus-visible,.n-o:focus-visible,.n-tabs button:focus-visible,.n-share:focus-visible,.n-ls:focus-visible,.dcard:focus-visible,.n-cust .go:focus-visible,.n-cust input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.n-clear{position:fixed;left:0;top:0;right:0;bottom:0;z-index:19}
+.n-menu{position:absolute;right:0;top:50px;width:310px;max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);padding:8px;z-index:20}.n-menu.md{width:270px}
+.n-g{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:10px 12px 4px;font-weight:700}
+.n-o{display:flex;align-items:center;width:100%;min-height:44px;padding:0 12px;border:0;background:none;border-radius:10px;font-size:15px;text-align:left}
+.n-o.on{background:var(--field);font-weight:700}.n-o .c{margin-left:auto;padding-left:12px;font-size:12.5px;color:var(--muted);font-weight:400}.n-o .ck{margin-left:10px;color:var(--accent);display:flex}
+.n-cur{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-left:8px}
+.n-sep{height:1px;background:var(--line);margin:6px 8px}
+.n-cust{padding:6px 12px 10px}.n-cust .r{display:grid;grid-template-columns:1fr 1fr;gap:10px}.n-cust label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.n-cust input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--text);padding:0 10px;font:inherit;font-size:15px;color-scheme:light dark}
+.n-cust .err{margin-top:8px;font-size:13px;color:var(--red)}.n-cust .go{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:0;background:var(--accent);color:var(--onaccent);font-weight:700;font-size:15px}
+.n-dim{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.58);z-index:30}
+.n-sheet{position:fixed;left:0;right:0;bottom:0;max-height:85vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:10px 14px calc(24px + env(safe-area-inset-bottom,0px));z-index:31}
+.n-grab{width:42px;height:4px;border-radius:9px;background:var(--line);margin:2px auto 8px}.n-st{font-family:var(--display);font-weight:900;font-size:19px;padding:6px 12px 2px}
+/* season progress, the numbers strip, tabs */
+.n-prog{margin:0 0 14px}.n-prog .bar{height:4px;border-radius:9px;background:var(--line);overflow:hidden}.n-prog .bar i{display:block;height:100%;border-radius:9px;background:var(--accent)}
+.n-prog .lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.n-strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.n-strip>div{padding:10px 6px 9px;text-align:center;border-left:1px solid var(--line);min-width:0}.n-strip>div:first-child{border-left:0}
+.n-strip b{display:block;font-family:var(--display);font-weight:900;font-size:21px;line-height:1.1;font-variant-numeric:lining-nums tabular-nums}.n-strip span{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.25}
+.n-tabs{display:flex;gap:24px;margin:16px 0 12px;border-bottom:1px solid var(--line)}
+.n-tabs button{background:none;border:0;padding:0 2px;min-height:44px;font-size:15px;font-weight:600;color:var(--muted);position:relative}
+.n-tabs button.on{color:var(--text)}.n-tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--accent)}
+.n-ch{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 8px;font-size:13px;color:var(--muted)}
+.n-share{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:13px;font-weight:600;color:var(--text);flex:none}
+/* sessions and the side column */
+.n-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}.n-dl .dcard{margin:0}
+.n-side .card{padding:14px 16px}.n-side h3{font-size:16px;margin:0 0 4px}
+.n-ls{display:flex;align-items:center;gap:12px;width:100%;padding:11px 0;border:0;border-top:1px solid var(--line);background:none;text-align:left}.n-side h3+.n-ls{border-top:0}
+.n-ls .d{flex:none;width:46px;text-align:center;font-size:12px;color:var(--muted);line-height:1.2}.n-ls .d b{display:block;font-family:var(--display);font-size:20px;color:var(--text);font-weight:900;font-variant-numeric:lining-nums}
+.n-ls .t{flex:1;min-width:0}.n-ls .t b{display:block;font-size:15px}.n-ls .t span{font-size:12.5px;color:var(--muted)}.n-ls .w{font-size:12.5px;color:var(--muted);text-align:right;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.n-ls .w b{display:block;color:var(--text);font-size:14px;overflow:hidden;text-overflow:ellipsis}
+.n-dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.n-dhead .n-filters{min-width:170px}
+@media(max-width:979px){.n-head{grid-template-columns:minmax(0,1fr);grid-template-areas:"t" "f"}.n-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr))}.n-side{display:none}.n-dhead .n-filters{display:block}}
+@media(min-width:980px){.n-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}.n-grid.one{display:block}.n-grid.d{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.n-side{position:sticky;top:16px}}
+@media(max-width:380px){.n-strip b{font-size:19px}.n-strip span{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -158,10 +186,12 @@ a{color:inherit}
 var LOGO='/assets/i/cfad30e8e7.png';
 var WINDS=[['\u6771','East'],['\u5357','South'],['\u897F','West'],['\u5317','North']];
 var DATA={days:[],tables:[]};
-var S={tab:'total',period:'all',metric:'net',mode:'all',day:null,loaded:false,failed:false,updated:null};
+var DEFAULT_MODE='default';   // the board opens on the Default mode and on the current season
+var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:'all',day:null,loaded:false,failed:false,updated:null,menu:null,from:'',to:'',cust:{open:false,err:''},autoDone:false};
 // The rating (formerly League Score) is hidden until its formula is settled. Set SHOW_RATING to true to bring the toggle back.
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
+var MODE_ORDER=['default','casual','tournament','custom'];
 function modeOf(t){return t.mode||'casual';}
 // one short line describing how a table was played
 function rulesLine(t){
@@ -172,35 +202,74 @@ function rulesLine(t){
   if(r.deadwall)p.push('deadwall');
   return p.join(' \u00b7 ');
 }
-function modeOk(t){return S.mode==='all'||modeOf(t)===S.mode;}
-// mode filter chips: shown when more than one mode has been played (or while a filter is active, so it can be cleared)
-function modeChips(){
-  var seen={};DATA.tables.forEach(function(t){if(t.events>0)seen[modeOf(t)]=true;});
-  var keys=['casual','default','tournament','custom'].filter(function(k){return seen[k];});
-  if(keys.length<2&&S.mode==='all')return '';
-  return chips('mode',[['all','All modes']].concat(keys.map(function(k){return [k,MODE_LABEL[k]];})),S.mode);
-}
-try{
-  var q=new URLSearchParams(location.search);
-  if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');}
-  else if(q.get('tab')==='sessions')S.tab='sessions';
-}catch(e){}
 
+// ---- dates and periods ----
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function pad2(n){return ('0'+n).slice(-2);}
+function localISO(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function todayStr(){return window.TBT_TODAY||localISO(new Date());}   // TBT_TODAY: a fixed date, used by tests
+function currentSeason(){return todayStr().slice(0,7);}   // a season is a calendar month for now
+function monthLabel(ym){return (MONTHS[+ym.slice(5,7)-1]||ym)+' '+ym.slice(0,4);}
+function shortDate(ds,withYear){return (+ds.slice(8,10))+' '+MONTHS[+ds.slice(5,7)-1].slice(0,3)+(withYear?' '+ds.slice(0,4):'');}
+function daysInMonth(ym){return new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();}
+function addDays(ds,n){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localISO(d);}
+function mondayOf(ds){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return localISO(d);}   // weeks start on Monday
+function periodOk(ds){
+  var p=S.period;
+  if(p==='all')return true;
+  if(p==='today')return ds===todayStr();
+  if(p==='week'){var m=mondayOf(todayStr());return ds>=m&&ds<=addDays(m,6);}
+  if(p==='custom')return (!S.from||ds>=S.from)&&(!S.to||ds<=S.to);
+  return ds.slice(0,7)===p;
+}
+function seasons(){   // months that have games, newest first, and always the current one
+  var seen={};seen[currentSeason()]=1;
+  DATA.tables.forEach(function(t){if(t.events>0){var d=dayOf(t.day_id);if(d&&/^\d{4}-\d{2}/.test(d.date))seen[d.date.slice(0,7)]=1;}});
+  return Object.keys(seen).sort().reverse();
+}
+function periodLabel(){
+  var p=S.period;
+  if(p==='all')return 'All time';if(p==='today')return 'Today';if(p==='week')return 'This week';
+  if(p==='custom'){return shortDate(S.from,S.from.slice(0,4)!==S.to.slice(0,4))+' \u2013 '+shortDate(S.to,true);}
+  return monthLabel(p);
+}
+function periodParam(){return S.period==='custom'?S.from+'_'+S.to:S.period;}
+function setPeriodParam(v){
+  if(v==='all'||v==='today'||v==='week'){S.period=v;return true;}
+  if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v)){S.period=v;return true;}
+  var m=/^(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})$/.exec(v);
+  if(m&&m[1]<=m[2]){S.period='custom';S.from=m[1];S.to=m[2];return true;}
+  return false;
+}
+// ---- modes ----
+function modesInData(){var seen={};DATA.tables.forEach(function(t){if(t.events>0)seen[modeOf(t)]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
+function effMode(){return modesInData().length<2?'all':S.mode;}   // with a single mode played there is nothing to filter
+function modeOk(t){var m=effMode();return m==='all'||modeOf(t)===m;}
+function modeLabel(){var m=effMode();return m==='all'?'All modes':(MODE_LABEL[m]||m);}
+// the Default mode may have no games yet in the period: open on all modes rather than on an empty board
+function autoMode(){
+  if(!S.loaded||S.modeSet||S.mode!==DEFAULT_MODE)return;
+  var has=DATA.tables.some(function(t){var d=dayOf(t.day_id);return t.events>0&&modeOf(t)==='default'&&d&&periodOk(d.date);});
+  if(!has)S.mode='all';
+}
+// ---- the address keeps the filters, so a shared link opens the same view ----
+function readUrl(){
+  try{
+    var q=new URLSearchParams(location.search);
+    S.tab='total';S.day=null;S.menu=null;
+    if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');S.dmode='all';}
+    else if(q.get('tab')==='sessions')S.tab='sessions';
+    S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);
+    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+  }catch(e){S.period=currentSeason();}
+}
+readUrl();
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function keyOf(n){return String(n).trim().toLowerCase().replace(/\s+/g,' ');}
 function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}}
 function fmtNet(n){var r=Math.round(n*10)/10;return (r>0?'+':r<0?'\u2212':'')+Math.abs(r);}
 function fmtLg(n){return (Math.round(n*10)/10).toFixed(1);}
 function dayOf(id){for(var i=0;i<DATA.days.length;i++)if(DATA.days[i].id===id)return DATA.days[i];return null;}
-function inPeriod(dateStr,p){
-  if(p==='all')return true;
-  var d=new Date(dateStr+'T00:00:00'),now=new Date();
-  if(p==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
-  var start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  start.setDate(start.getDate()-((start.getDay()+6)%7));   // weeks start on Monday
-  var end=new Date(start);end.setDate(end.getDate()+7);
-  return d>=start&&d<end;
-}
 // one entry per person across the given tables; names match ignoring case and extra spaces
 function aggregate(tables){
   var map={};
@@ -238,16 +307,21 @@ function board(list,session){
   });
   return '<div class="card">'+html+'</div>';
 }
-// What the Share top 10 card shows: the top ten of the board that is on screen right now.
-var PERIOD_LABEL={week:'This week',month:'This month',all:'All time'};
-function modeLabel(){return S.mode==='all'?'All modes':(MODE_LABEL[S.mode]||S.mode);}
-function shareBar(list,sub,sub2,session){
-  if(!list.length){S.card=null;return '';}
+
+function setCard(list,sub,sub2,session){
+  if(!list.length){S.card=null;return false;}
   S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,meta:session?sessionSub(p):'',rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
-  return '<div class="sharebar"><button type="button" data-share="1"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>Share top 10</button></div>';
+  return true;
 }
+var ICON={
+  cal:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  mode:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+  share:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>'
+};
+function shareBtn(){return S.card?'<button type="button" class="n-share" data-share="1">'+ICON.share+'Share top 10</button>':'';}
 function seg(name,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
-function chips(name,opts,cur){return '<div class="chips">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
 function played(fn){return DATA.tables.filter(function(t){return t.events>0&&fn(t);});}
 function progress(t){
   if(!t.events)return 'Not started';
@@ -257,18 +331,6 @@ function progress(t){
   return 'In progress \u00b7 <span class="han">'+w[0]+'</span> '+w[1];
 }
 
-function viewTotal(){
-  var ts=played(function(t){var d=dayOf(t.day_id);return d&&inPeriod(d.date,S.period)&&modeOk(t);});
-  var agg=aggregate(ts),ids={};ts.forEach(function(t){ids[t.day_id]=1;});
-  return '<div class="stats"><div class="stat"><div class="l">Sessions</div><div class="v">'+Object.keys(ids).length+'</div></div>'
-    +'<div class="stat"><div class="l">Tables</div><div class="v">'+ts.length+'</div></div>'
-    +'<div class="stat"><div class="l">Players</div><div class="v">'+agg.length+'</div></div></div>'
-    +chips('period',[['week','This week'],['month','This month'],['all','All time']],S.period)
-    +modeChips()
-    +(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')
-    +shareBar(agg,PERIOD_LABEL[S.period],modeLabel()+(SHOW_RATING&&S.metric==='league'?' \u00b7 '+RATING_LABEL:''))
-    +board(agg);
-}
 function tableCard(t){
   var h='<div class="card tcard"><div class="thead"><div class="tname">'+esc(t.label)+'<span class="mbadge">'+esc(MODE_LABEL[modeOf(t)]||'Casual')+'</span></div><div class="tprog">'+progress(t)+'</div></div>';
   if(t.rules)h+='<div class="dmeta" style="margin-bottom:6px">'+esc(rulesLine(t))+'</div>';
@@ -280,56 +342,186 @@ function tableCard(t){
   if(t.view_code)h+='<a class="btn primary" href="scoreboard.html?view='+encodeURIComponent(t.view_code)+'&from='+encodeURIComponent(t.day_id)+'">Open table</a>';
   return h+'</div>';
 }
-function viewDay(id){
-  var d=dayOf(id);
-  if(!d)return '<button type="button" class="back" data-back="1">\u2039 All sessions</button><p class="empty">Session not found.</p>';
-  var ts=DATA.tables.filter(function(t){return t.day_id===id;});
-  return '<button type="button" class="back" data-back="1">\u2039 All sessions</button><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta" style="margin-bottom:6px">'+esc(fmtDate(d.date))+'</div>'
-    +modeChips()
-    +(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')
-    +(function(){var dl=aggregate(ts.filter(function(t){return t.events>0&&modeOk(t);}));return shareBar(dl,d.label,fmtDate(d.date)+(S.mode==='all'?'':' \u00b7 '+modeLabel()),true)+board(dl,true);})()
-    +'<h3 class="sub">Tables</h3>'
-    +(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>');
+
+function isWide(){try{if(window.matchMedia)return window.matchMedia('(min-width:980px)').matches;}catch(e){}return window.innerWidth>=980;}
+// ---- the two filter menus: a small menu under the button on wide screens, a sheet from the bottom on phones ----
+function optBtn(opt,label,on,extra){
+  return '<button type="button" role="option" class="n-o'+(on?' on':'')+'" data-opt="'+esc(opt)+'" aria-selected="'+(on?'true':'false')+'"><span>'+label+'</span>'+(extra?'<span class="c">'+extra+'</span>':'')+(on?'<span class="ck">'+ICON.check+'</span>':'')+'</button>';
 }
-function viewSessions(){
-  if(S.day)return viewDay(S.day);
-  if(!DATA.days.length)return '<p class="empty">No sessions yet.</p>';
-  return DATA.days.map(function(d){
-    var n=DATA.tables.filter(function(t){return t.day_id===d.id;}).length;
-    return '<button type="button" class="dcard" data-day="'+esc(d.id)+'"><div><div class="dname">'+esc(d.label)+'</div><div class="dmeta">'+esc(fmtDate(d.date))+' \u00b7 '+n+(n===1?' table':' tables')+'</div></div><span class="chev">\u203a</span></button>';
-  }).join('');
+function tablesWord(n){return n+(n===1?' table':' tables');}
+function periodMenu(){
+  var cur=currentSeason(),html='<div class="n-g">Season</div>';
+  seasons().forEach(function(ym){html+=optBtn('period|'+ym,esc(monthLabel(ym))+(ym===cur?' <span class="n-cur">Current</span>':''),S.period===ym);});
+  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|week','This week',S.period==='week')+optBtn('period|all','All time',S.period==='all');
+  html+='<div class="n-g">Custom</div>';
+  if(!S.cust.open)html+='<button type="button" class="n-o'+(S.period==='custom'?' on':'')+'" data-cust="1"><span>Custom range\u2026</span><span class="c">\u203A</span></button>';
+  else{var t=todayStr();html+='<div class="n-cust"><div class="r"><div><label for="cFrom">From</label><input type="date" id="cFrom" value="'+esc(S.from||'')+'" max="'+t+'"></div><div><label for="cTo">To</label><input type="date" id="cTo" value="'+esc(S.to||'')+'" max="'+t+'"></div></div>'+(S.cust.err?'<div class="err" role="alert">'+esc(S.cust.err)+'</div>':'')+'<button type="button" class="go" data-apply="1">Apply range</button></div>';}
+  return html;
+}
+function modeMenu(){   // counts follow the period that is selected
+  var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
+  var html='';
+  modesInData().forEach(function(k){var n=inP.filter(function(t){return modeOf(t)===k;}).length;html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(n));});
+  return html+'<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',tablesWord(inP.length));
+}
+function dayModeMenu(id){
+  var ts=DATA.tables.filter(function(t){return t.day_id===id&&t.events>0;});var html='';
+  MODE_ORDER.filter(function(k){return ts.some(function(t){return modeOf(t)===k;});}).forEach(function(k){html+=optBtn('dmode|'+k,esc(MODE_LABEL[k]),S.dmode===k,tablesWord(ts.filter(function(t){return modeOf(t)===k;}).length));});
+  return html+'<div class="n-sep"></div>'+optBtn('dmode|all','All modes',S.dmode==='all',tablesWord(ts.length));
+}
+var MENU_TITLE={period:'Period',mode:'Mode',dmode:'Mode'};
+function menuInner(which){return which==='period'?periodMenu():(which==='mode'?modeMenu():dayModeMenu(S.day));}
+function menuPop(which){
+  return '<div class="n-clear" data-close="1"></div><div class="n-menu'+(which==='period'?'':' md')+'" role="listbox" aria-label="'+MENU_TITLE[which]+'">'+menuInner(which)+'</div>';
+}
+function menuSheet(which){
+  return '<div class="n-dim" data-close="1"></div><div class="n-sheet" role="listbox" aria-label="'+MENU_TITLE[which]+'"><div class="n-grab"></div><div class="n-st">'+MENU_TITLE[which]+'</div>'+menuInner(which)+'</div>';
+}
+function ddButton(which,label,icon,active){
+  return '<span class="n-anchor"><button type="button" class="n-dd'+(active?' act':'')+'" data-menu="'+which+'" aria-haspopup="listbox" aria-expanded="'+(S.menu===which)+'"><span class="l">'+icon+'<span>'+esc(label)+'</span></span>'+ICON.chev+'</button>'+(S.menu===which&&isWide()?menuPop(which):'')+'</span>';
+}
+// ---- the page ----
+function statsOf(ts){
+  var pl={},ds={},winds=0;
+  ts.forEach(function(t){
+    ds[t.day_id]=1;
+    winds+=t.winds!==undefined?t.winds:(t.progress&&t.progress.done?4:((t.progress&&t.progress.wind)||0)+1);   // a table not renewed yet: estimated from where it stands
+    t.players.forEach(function(p){if(!p.placeholder)pl[p.key||keyOf(p.name)]=1;});   // guests count here; the board ranks registered players only
+  });
+  return {winds:winds,sessions:Object.keys(ds).length,tables:ts.length,players:Object.keys(pl).length};
+}
+function stripHtml(st){
+  function c(n,l){return '<div><b>'+n+'</b><span>'+l+'</span></div>';}
+  return '<div class="n-strip">'+c(st.winds,'Wind rounds')+c(st.sessions,'Sessions')+c(st.tables,'Tables')+c(st.players,'Players')+'</div>';
+}
+function seasonBar(){   // only for the season that is running now: how far through it we are, in days
+  var cur=currentSeason();if(S.period!==cur)return '';
+  var d=+todayStr().slice(8,10),n=daysInMonth(cur);
+  return '<div class="n-prog"><div class="bar" role="progressbar" aria-label="Season progress" aria-valuemin="1" aria-valuemax="'+n+'" aria-valuenow="'+d+'"><i style="width:'+Math.round(d/n*100)+'%"></i></div><div class="lab"><span>Day '+d+' of '+n+'</span><span>Ends '+shortDate(cur+'-'+pad2(n))+'</span></div></div>';
+}
+function headHtml(){
+  var upd=S.updated?'Updated '+pad2(S.updated.getHours())+':'+pad2(S.updated.getMinutes()):'';
+  var f=ddButton('period',periodLabel(),ICON.cal,false);
+  if(S.loaded&&modesInData().length>=2)f+=ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all');
+  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+'</div></div><div class="n-filters">'+f+'</div></div>';
+}
+function tabsHtml(){return '<div class="n-tabs" role="tablist">'+[['total','Total'],['sessions','Sessions']].map(function(o){return '<button type="button" role="tab" data-set="tab" data-v="'+o[0]+'" aria-selected="'+(S.tab===o[0])+'" class="'+(S.tab===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>';}
+function sideCard(ts){
+  var by={};ts.forEach(function(t){(by[t.day_id]=by[t.day_id]||[]).push(t);});
+  var ds=Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);}).slice(0,5);
+  if(!ds.length)return '';
+  return '<aside class="n-side"><div class="card"><h3>Latest sessions</h3>'+ds.map(function(d){
+    var x=by[d.id],net={};x.forEach(function(t){t.players.forEach(function(p){if(!p.placeholder&&!p.guest)net[p.name]=(net[p.name]||0)+p.netTotal;});});
+    var w=Object.keys(net).sort(function(a,b){return net[b]-net[a];})[0];
+    return '<button type="button" class="n-ls" data-day="'+esc(d.id)+'"><div class="d"><b>'+(+d.date.slice(8,10))+'</b>'+MONTHS[+d.date.slice(5,7)-1].slice(0,3)+'</div><div class="t"><b>'+esc(d.label)+'</b><span>'+tablesWord(x.length)+'</span></div>'+(w?'<div class="w"><b>'+esc(w)+'</b>'+fmtNet(net[w])+'</div>':'')+'</button>';
+  }).join('')+'</div></aside>';
+}
+function sessionsGrid(ts){
+  var by={};ts.forEach(function(t){(by[t.day_id]=by[t.day_id]||[]).push(t);});
+  // sessions that have not started yet stay listed (in the period), so a table can still be found before its first hand
+  DATA.days.forEach(function(d){
+    if(by[d.id]||!periodOk(d.date))return;
+    var mine=DATA.tables.filter(function(t){return t.day_id===d.id;});
+    if(mine.length&&!mine.some(function(t){return t.events>0;}))by[d.id]=[];
+  });
+  var ds=Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);});
+  if(!ds.length)return '<p class="empty">No sessions in this period and mode yet.<br>Try another period or mode.</p>';
+  return '<div class="n-dl">'+ds.map(function(d){
+    var n=by[d.id].length;
+    return '<button type="button" class="dcard" data-day="'+esc(d.id)+'"><div><div class="dname">'+esc(d.label)+'</div><div class="dmeta">'+esc(fmtDate(d.date))+' \u00b7 '+(n?tablesWord(n):'Not started')+'</div></div><span class="chev">\u203A</span></button>';
+  }).join('')+'</div>';
+}
+function viewMain(){
+  var ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date)&&modeOk(t);});
+  var st=statsOf(ts),inner,side='';
+  if(S.tab==='total'){
+    var agg=aggregate(ts);setCard(agg,periodLabel(),modeLabel()+(SHOW_RATING&&S.metric==='league'?' \u00b7 '+RATING_LABEL:''));
+    inner=ts.length?'<div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(agg):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>';
+    side=sideCard(ts);
+  }else inner=sessionsGrid(ts);
+  return seasonBar()+'<div class="n-grid'+(S.tab==='total'&&side?'':' one')+'"><div>'+stripHtml(st)+tabsHtml()+inner+'</div>'+side+'</div>';
+}
+function viewDay(id){
+  var d=dayOf(id),back='<button type="button" class="back" data-back="1">\u2039 All sessions</button>';
+  if(!d)return back+'<p class="empty">Session not found.</p>';
+  var ts=DATA.tables.filter(function(t){return t.day_id===id;}),pl=ts.filter(function(t){return t.events>0;});
+  var many=MODE_ORDER.filter(function(k){return pl.some(function(t){return modeOf(t)===k;});}).length>=2,dm=many?S.dmode:'all';
+  var dl=aggregate(pl.filter(function(t){return dm==='all'||modeOf(t)===dm;}));
+  setCard(dl,d.label,fmtDate(d.date)+(dm==='all'?'':' \u00b7 '+(MODE_LABEL[dm]||dm)),true);
+  return back+'<div class="n-dhead"><div><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta">'+esc(fmtDate(d.date))+'</div></div>'+(many?'<div class="n-filters one">'+ddButton('dmode',dm==='all'?'All modes':MODE_LABEL[dm],ICON.mode,dm!=='all')+'</div>':'')+'</div>'
+    +'<div class="n-grid d"><div><div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(dl,true)+'</div>'
+    +'<div><h3 class="sub" style="margin-top:0">Tables</h3>'+(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>')+'</div></div>';
 }
 var NAV=false;   // set when the visitor moves to another view, so Back can step back through the views
-function viewUrl(){return S.tab==='sessions'?(S.day?'?sesi='+encodeURIComponent(S.day):'?tab=sessions'):location.pathname;}
+function viewUrl(){
+  if(S.tab==='sessions'&&S.day)return '?sesi='+encodeURIComponent(S.day);
+  var qs=[];
+  if(S.tab==='sessions')qs.push('tab=sessions');
+  if(S.period!==currentSeason())qs.push('p='+periodParam());
+  if(S.modeSet&&S.mode!==DEFAULT_MODE&&modesInData().length>=2)qs.push('m='+S.mode);   // only a mode the visitor chose; the automatic fallback leaves the address clean
+  return qs.length?'?'+qs.join('&'):location.pathname;
+}
 function render(){
   var body;
-  if(!S.loaded&&S.failed)body='<p class="empty">Can\u2019t load the leaderboard right now.</p><div style="text-align:center"><button type="button" class="btn primary" data-refresh="1">Try again</button></div>';
-  else if(!S.loaded)body='<p class="empty">Loading\u2026</p>';
-  else body=S.tab==='total'?viewTotal():viewSessions();
-  var upd=S.updated?'Updated '+('0'+S.updated.getHours()).slice(-2)+':'+('0'+S.updated.getMinutes()).slice(-2):'';
-  document.getElementById('app').innerHTML='<header class="brandbar"><div class="brandin"><a class="brandmark" href="index.html" aria-label="Tiles by Tiles leaderboard"><img src="'+LOGO+'" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a><a class="backlink" href="masuk.html"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enter table code</a></div></header><div class="wrap"><div class="top"><h1>Leaderboard</h1><div class="upd">'+upd+'</div></div>'
-    +seg('tab',[['total','Total'],['sessions','Sessions']],S.tab)+body+'</div>';
+  if(!S.loaded&&S.failed)body='<div class="n-head"><div class="t"><h1>Leaderboard</h1></div></div><p class="empty">Can\u2019t load the leaderboard right now.</p><div style="text-align:center"><button type="button" class="btn primary" data-refresh="1">Try again</button></div>';
+  else if(!S.loaded)body='<div class="n-head"><div class="t"><h1>Leaderboard</h1></div></div><p class="empty">Loading\u2026</p>';
+  else if(S.tab==='sessions'&&S.day)body=viewDay(S.day);
+  else body=headHtml()+viewMain();
+  var sheet=(S.menu&&!isWide()&&S.loaded)?menuSheet(S.menu):'';
+  document.getElementById('app').innerHTML='<header class="brandbar"><div class="brandin"><a class="brandmark" href="index.html" aria-label="Tiles by Tiles leaderboard"><img src="'+LOGO+'" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a><a class="backlink" href="masuk.html"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enter table code</a></div></header><div class="wrap n">'+body+'</div>'+sheet;
+  // the page scroll is locked only while the sheet is open, and only unlocked by whoever locked it (the share card has its own lock)
+  if(sheet&&!S.locked){document.body.style.overflow='hidden';S.locked=true;}else if(!sheet&&S.locked){document.body.style.overflow='';S.locked=false;}
   try{var nu=viewUrl();if(NAV&&nu!==location.pathname+location.search)history.pushState({v:1},'',nu);else history.replaceState(history.state,'',nu);}catch(e){}
   NAV=false;
 }
+function focusMenu(sel){setTimeout(function(){var el=sel?document.querySelector(sel):(document.querySelector('.n-menu [aria-selected="true"], .n-sheet [aria-selected="true"]')||document.querySelector('.n-menu .n-o, .n-sheet .n-o'));if(el&&el.focus)el.focus();},0);}
+function closeMenu(){var w=S.menu;S.menu=null;S.cust.open=false;S.cust.err='';render();if(w){var b=document.querySelector('[data-menu="'+w+'"]');if(b&&b.focus)b.focus();}}
+function toggleMenu(w){if(S.menu===w){closeMenu();return;}S.menu=w;S.cust.open=false;S.cust.err='';render();focusMenu();}
+function pickOpt(v){
+  var i=v.indexOf('|'),k=v.slice(0,i),val=v.slice(i+1);
+  if(k==='period')S.period=val;
+  else if(k==='mode'){S.mode=val;S.modeSet=true;}
+  else if(k==='dmode')S.dmode=val;
+  closeMenu();
+}
+function applyCustom(){
+  var f=document.getElementById('cFrom'),t=document.getElementById('cTo'),a=f?f.value:'',b=t?t.value:'';
+  S.from=a;S.to=b;
+  if(!a||!b){S.cust.err='Pick a start and an end date.';render();focusMenu(a?'#cTo':'#cFrom');return;}
+  if(a>b){S.cust.err='The start date is after the end date.';render();focusMenu('#cFrom');return;}
+  S.period='custom';closeMenu();
+}
 document.getElementById('app').addEventListener('click',function(e){
-  var b=e.target.closest?e.target.closest('button'):null;if(!b)return;
+  var t=e.target;
+  if(t.closest&&t.closest('[data-close]')){closeMenu();return;}
+  var b=t.closest?t.closest('button'):null;if(!b)return;
+  if(b.dataset.menu){toggleMenu(b.dataset.menu);return;}
+  if(b.dataset.opt){pickOpt(b.dataset.opt);return;}
+  if(b.dataset.cust){S.cust.open=true;S.cust.err='';render();focusMenu('#cFrom');return;}
+  if(b.dataset.apply){applyCustom();return;}
   if(b.dataset.set){var moved=(b.dataset.set==='tab'&&S.tab!==b.dataset.v);S[b.dataset.set]=b.dataset.v;if(b.dataset.set==='tab')S.day=null;NAV=moved;render();}
-  else if(b.dataset.day){S.day=b.dataset.day;NAV=true;render();window.scrollTo(0,0);}
+  else if(b.dataset.day){S.day=b.dataset.day;S.tab='sessions';S.dmode='all';NAV=true;render();window.scrollTo(0,0);}
   else if(b.dataset.back){if(history.state&&history.state.v)history.back();else{S.day=null;render();}}
   else if(b.dataset.share){if(window.openTop10Card&&S.card)window.openTop10Card(S.card);}
   else if(b.dataset.refresh){load();}
 });
+document.addEventListener('keydown',function(e){
+  if(!S.menu)return;
+  if(e.key==='Escape'){e.preventDefault();closeMenu();return;}
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    var os=[].slice.call(document.querySelectorAll('.n-menu .n-o, .n-sheet .n-o'));if(!os.length)return;
+    e.preventDefault();var i=os.indexOf(document.activeElement);i=e.key==='ArrowDown'?(i+1)%os.length:(i-1+os.length)%os.length;os[i].focus();
+  }
+});
+window.addEventListener('resize',function(){if(S.menu)render();});
 function load(){
   return fetch('/api/overview').then(function(r){if(!r.ok)throw new Error('bad');return r.json();}).then(function(o){
-    DATA=o;S.loaded=true;S.failed=false;S.updated=new Date();render();
+    DATA=o;S.loaded=true;S.failed=false;S.updated=new Date();
+    if(!S.autoDone){S.autoDone=true;autoMode();}
+    if(!S.menu)render();   // an open menu stays as it is; the new numbers show when it closes
   }).catch(function(){S.failed=true;if(!S.loaded)render();});
 }
-window.addEventListener('popstate',function(){
-  try{var qq=new URLSearchParams(location.search);S.tab='total';S.day=null;
-    if(qq.get('sesi')){S.tab='sessions';S.day=qq.get('sesi');}else if(qq.get('tab')==='sessions')S.tab='sessions';}catch(e){}
-  render();window.scrollTo(0,0);
-});
+window.addEventListener('popstate',function(){readUrl();autoMode();render();window.scrollTo(0,0);});
 render();load();
 setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on a venue screen
 </script>
