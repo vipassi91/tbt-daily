@@ -135,6 +135,11 @@ a{color:inherit}
 .brandmark img{height:28px;width:auto;display:block;flex:none}
 .brandname{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .backlink{display:inline-flex;align-items:center;gap:7px;min-height:40px;flex:none;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
+/* small round choice buttons (used by the format choice of the share window) */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
+.chips button{border-radius:999px;padding:10px 14px;min-height:44px;border:1px solid var(--line);background:var(--field);font-size:14px}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:700}
+.chips button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 /* header: title on the left, the two filters on the right (under the title on phones) */
 .n-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t f";align-items:start;gap:14px;padding:20px 0 12px}
 .n-head .t{grid-area:t}.n-head h1{font-size:30px;font-weight:900}
@@ -285,6 +290,12 @@ function aggregate(tables){
   });
   return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx};});
 }
+// On the main board: the wind rounds a player has played and how many of them they finished first.
+// (A table whose statistics are not renewed yet has no wind-round facts: it shows the old games line until its turn comes.)
+function totalSub(p){
+  if(p.facts&&p.winds)return p.winds+(p.winds===1?' wind round':' wind rounds')+' \u00b7 '+p.windFirsts+(p.windFirsts===1?' first place':' first places');
+  return p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places');
+}
 // On a session's board: in how many of the wind rounds the player finished first, and the share of hands won.
 function sessionSub(p){
   if(!p.facts||!p.winds||!p.hands)return '';
@@ -303,14 +314,14 @@ function board(list,session){
   var html='';
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||(p.games+(p.games===1?' game':' games')+' \u00b7 '+p.firsts+(p.firsts===1?' first place':' first places')))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
   });
   return '<div class="card">'+html+'</div>';
 }
 
 function setCard(list,sub,sub2,session){
   if(!list.length){S.card=null;return false;}
-  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,meta:session?sessionSub(p):'',rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
+  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,meta:session?sessionSub(p):totalSub(p),rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
   return true;
 }
 var ICON={
@@ -646,19 +657,19 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
     ctx.textBaseline='alphabetic';ctx.textAlign='left';spacing(0);
 
     // the same frame as the scoreboard card: header pinned to the top safe zone, footer to the bottom
-    var TOP=isStory?256:64,tH=isStory?204:132,headerGap=isStory?46:30;
-    var footLh=56,FOOT_TOP=isStory?1468:H-(footLh+58+56);
+    var TOP=isStory?256:64,tH=isStory?176:122,headerGap=isStory?38:26;
+    var footLh=isStory?72:48,FOOT_TOP=isStory?1500:H-(footLh+58+56);   // a slimmer header and footer give the ten rows room to breathe
     var tW=tH*LOGO_ASPECT;
     if(logoImg)ctx.drawImage(logoImg,mx,TOP,tW,tH);
     var tx=mx+tW+(isStory?44:34),tmax=W-mx-tx;
     var title=card.title||'Top 10',sub=card.sub||'',sub2=card.sub2||'';
     if(isStory){
-      var b1=TOP+69,b2=TOP+134,b3=TOP+189;
-      fit(title,tmax,900,PLAY,76,38);
+      var b1=TOP+60,b2=TOP+114,b3=TOP+160;
+      fit(title,tmax,900,PLAY,66,34);
       ctx.fillStyle=t.text;ctx.fillText(title,tx,b1);
       var ly=b2;
-      if(sub){fit(sub,tmax,400,PLAY,34,22);ctx.fillStyle=t.muted;ctx.fillText(sub,tx,b2);ly=b3;}
-      if(sub2){fit(sub2,tmax,400,PLAY,34,22);ctx.fillStyle=sub?t.text:t.muted;ctx.fillText(sub2,tx,ly);}
+      if(sub){fit(sub,tmax,400,PLAY,30,20);ctx.fillStyle=t.muted;ctx.fillText(sub,tx,b2);ly=b3;}
+      if(sub2){fit(sub2,tmax,400,PLAY,30,20);ctx.fillStyle=sub?t.text:t.muted;ctx.fillText(sub2,tx,ly);}
     }else{
       var ts=fit(title,tmax,900,PLAY,60,26);
       var lh2=ts+30,by2=TOP+tH/2-lh2/2+ts*0.78;
@@ -668,13 +679,13 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
     }
 
     // the ranking: a fixed row height so the card always has the same rhythm, centred when fewer than ten
-    var zoneTop=TOP+tH+headerGap,zoneBottom=FOOT_TOP-(isStory?36:30);
+    var zoneTop=TOP+tH+headerGap,zoneBottom=FOOT_TOP-(isStory?30:24);
     hline(mx,x1,zoneTop-14,t.text,2.5,.95);
     var rowH=Math.min(100,Math.floor((zoneBottom-zoneTop-12)/10));
     var by=zoneTop+6+Math.max(0,((zoneBottom-zoneTop-12)-rowH*n)/2);
     var pal=t.light?['#B8912E','#8A94A3','#A8703E','#2D6A4F']:['#E5C36B','#C7CFDA','#D79B68','#7CCBA0'];
     rows.forEach(function(r,i){
-      var y=by+i*rowH,cy=y+rowH/2,top4=r.rank<=4,col=top4?pal[r.rank-1]:null,bx=mx+34,br=26;
+      var y=by+i*rowH,cy=y+rowH/2,offN=Math.round(rowH*0.155),offM=Math.round(rowH*0.225),top4=r.rank<=4,col=top4?pal[r.rank-1]:null,bx=mx+34,br=25;
       // the same hairline between every row
       if(i>0)hline(mx,x1,y,t.text,2,.14);
       if(top4){
@@ -689,32 +700,32 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
       if(top4){if(r.rank===1){ctx.fillStyle=col;ctx.fill();}ctx.lineWidth=3;ctx.strokeStyle=col;ctx.stroke();}
       else{ctx.lineWidth=2.5;ctx.strokeStyle=t.line;ctx.stroke();}
       ctx.textAlign='center';ctx.textBaseline='middle';spacing(0);
-      ctx.font='700 '+(r.rank>=10?27:32)+'px '+INTER;
+      ctx.font='700 '+(r.rank>=10?24:28)+'px '+INTER;
       ctx.fillStyle=r.rank===1?'#2B2108':(top4?t.text:t.muted);
       ctx.fillText(String(r.rank),bx,cy+1);
       // net score at the right, name and games to its left, a small crown after the champion's name
-      var nx=bx+br+26;
+      var nx=bx+br+32;
       ctx.textAlign='right';ctx.textBaseline='middle';
-      ctx.font='700 44px '+INTER;
+      ctx.font='700 40px '+INTER;
       var sw=ctx.measureText(r.text).width;
       ctx.fillStyle=r.neg?t.loss:t.text;ctx.fillText(r.text,x1-8,cy);
-      var maxW=(x1-8-sw)-nx-28-(r.rank===1?46:0);
+      var maxW=(x1-8-sw)-nx-36-(r.rank===1?44:0);
       var meta=r.meta||(r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places'));
       ctx.textAlign='left';
-      fit(r.name,maxW,700,INTER,38,20);
+      fit(r.name,maxW,700,INTER,34,20);
       var nw=ctx.measureText(r.name).width;
-      ctx.fillStyle=t.text;ctx.fillText(r.name,nx,cy-14);
-      if(r.rank===1)crown(nx+nw+26,cy-14-11,34,col);
-      fit(meta,maxW,400,INTER,25,16);
-      ctx.fillStyle=t.muted;ctx.fillText(meta,nx,cy+23);
+      ctx.fillStyle=t.text;ctx.fillText(r.name,nx,cy-offN);
+      if(r.rank===1)crown(nx+nw+24,cy-offN-10,30,col);
+      fit(meta,maxW,400,INTER,22,15);
+      ctx.fillStyle=t.muted;ctx.fillText(meta,nx,cy+offM);
     });
 
     // footer, as on the scoreboard card
     if(isStory){
-      if(logoImg)ctx.drawImage(logoImg,cx-92*LOGO_ASPECT/2,FOOT_TOP,92*LOGO_ASPECT,92);
+      if(logoImg)ctx.drawImage(logoImg,cx-72*LOGO_ASPECT/2,FOOT_TOP,72*LOGO_ASPECT,72);
       ctx.textAlign='center';ctx.textBaseline='middle';
-      if(HANDLE){ctx.font='400 34px '+INTER;spacing(2);ctx.fillStyle=t.text;ctx.fillText(HANDLE,cx,FOOT_TOP+92+42);spacing(0);}
-      if(TAGLINE){fit(TAGLINE,W-2*mx,400,INTER,34,20);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+92+88);}
+      if(HANDLE){ctx.font='400 32px '+INTER;spacing(2);ctx.fillStyle=t.text;ctx.fillText(HANDLE,cx,FOOT_TOP+72+38);spacing(0);}
+      if(TAGLINE){fit(TAGLINE,W-2*mx,400,INTER,30,20);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+72+80);}
     }else{
       ctx.font='400 34px '+INTER;spacing(2);
       var fw=HANDLE?ctx.measureText(HANDLE).width:0,gapL=HANDLE?16:0,lw=footLh*LOGO_ASPECT,rowW=lw+gapL+fw,x0=cx-rowW/2;
