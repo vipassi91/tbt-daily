@@ -278,6 +278,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   .duo>#tab-rank>h1{font-size:24px;margin:22px 0 12px}
   .duo>#tab-rank #ghist{margin-top:14px}
 }
+
+/* the seating note: where to sit when a new wind round starts */
+.seatnote{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--accent);border-radius:12px;background:var(--field);font-size:13px;line-height:1.45}
+.seatnote b{display:block;margin-bottom:2px;font-size:14px}
+.seatnote .so{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.seatnote .so>span{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:600}
 </style>
 </head>
 <body>
@@ -307,7 +313,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   <details class="card" id="gsetup" open>
     <summary>Players and options</summary>
     <p class="hint" id="setupNote" style="margin:6px 0 10px"></p>
-    <div class="names" id="gnames"></div>
+    <p class="hint" id="seatHint" hidden style="margin:0 0 10px">Seat rotation is on: enter the players in seating order, East first, then counter-clockwise (South, West, North).</p>
+<div class="names" id="gnames"></div>
     <div class="field" style="margin-top:12px"><label for="gtitle">Title</label><input id="gtitle" maxlength="30" autocomplete="off"></div>
     <div class="field"><label for="gdate">Date / time</label><input id="gdate" maxlength="40" autocomplete="off"></div>
     <div class="field"><label>Scoring mode</label><div class="seg" id="gmode"></div></div>
@@ -1966,13 +1973,32 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     f.patterns=Object.assign({},ev.patterns||{});
   }
 
-  function playerChips(action,selected,allowed,multi){
-    var h='<div class="chips">';
-    for(var i=0;i<4;i++){
-      if(allowed&&allowed.indexOf(i)<0)continue;
-      var on=multi?selected.indexOf(i)>=0:selected===i;
-      h+='<button type="button" class="chip" data-a="'+action+'" data-v="'+i+'" aria-pressed="'+on+'"><span class="han">'+ROUNDS[i].h+'</span> '+esc(gname(i))+'</button>';
+  // Seating. curOrder lists the players box by box; curWind[i] is the wind player i holds now.
+    // With seat rotation on, a wind round is played in the MCR seating order (SEAT_ORDER): the players change seats when a new
+    // wind round starts, and the dealer moves along the seats. Without it the players keep their places and the dealer moves.
+    // Either way the seat wind is counted from the dealer: the dealer is East, the next seat South, and so on.
+    var curOrder=[0,1,2,3],curWind=[0,1,2,3];
+    function setSeatView(wind,dealer,cfg){
+      var order=cfg.seatRotation?SEAT_ORDER[wind]:[0,1,2,3],kd=order.indexOf(dealer);
+      curOrder=order;curWind=[0,0,0,0];
+      order.forEach(function(p,k){curWind[p]=(k-kd+4)%4;});
     }
+    function seatNote(rp,cfg){
+      if(!cfg.seatRotation||rp.done)return '';
+      var inRound=rp.hands.filter(function(x){return x.wind===rp.wind&&!x.late;}).length;
+      var start=game.events.length===0,roundStart=rp.wind>0&&inRound===0;
+      if(!start&&!roundStart)return '';
+      var items=SEAT_ORDER[rp.wind].map(function(p,k){return '<span><span class="han">'+ROUNDS[k].h+'</span> '+esc(gname(p))+'</span>';}).join('');
+      return '<div class="seatnote"><b>'+(start?'Seating':ROUNDS[rp.wind].en+' round: change seats')+'</b>Sit in this order, counter-clockwise from East:<div class="so">'+items+'</div></div>';
+    }
+    function playerChips(action,selected,allowed,multi){
+      var h='<div class="chips">';
+      for(var k=0;k<4;k++){
+        var i=curOrder[k];
+        if(allowed&&allowed.indexOf(i)<0)continue;
+        var on=multi?selected.indexOf(i)>=0:selected===i;
+        h+='<button type="button" class="chip" data-a="'+action+'" data-v="'+i+'" aria-pressed="'+on+'"><span class="han">'+ROUNDS[curWind[i]].h+'</span> '+esc(gname(i))+'</button>';
+      }
     return h+'</div>';
   }
   function ptsGrid(p,selected,label){
@@ -1996,6 +2022,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
   function renderGame(){
     var cfg=modeConfig();var rp=replay(game.events,cfg),tot=gTotals(rp);
+    setSeatView(rp.wind,rp.dealer,cfg);
     // status
     var w=ROUNDS[rp.wind];
     var top=rp.done
@@ -2003,10 +2030,11 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       :'<div class="stop"><span class="wtile han">'+w.h+'</span><div><b>'+w.en+' round</b><div class="sub">Dealer: '+esc(gname(rp.dealer))+', streak '+rp.streak+' of '+cfg.maxStreak+'. Scores reset each wind round.</div></div></div>';
     var mx=Math.max.apply(null,tot),ov=gOverall(rp,rp.wind);
     var g='<div class="tots">';
-    for(var i=0;i<4;i++){
-      g+='<div class="tcell'+(game.events.length&&tot[i]===mx?' lead':'')+'"><div class="tn"><span class="han">'+ROUNDS[i].h+'</span> '+esc(gname(i))+'</div><div class="tv2">'+plainNum(tot[i])+'</div><div class="ov">Overall '+sgn(Math.round(ov[i]*100)/100)+'</div>'+(!rp.done&&i===rp.dealer?'<div class="bdg">Dealer</div>':'')+'</div>';
+    for(var kk=0;kk<4;kk++){
+      var i=curOrder[kk];
+      g+='<div class="tcell'+(game.events.length&&tot[i]===mx?' lead':'')+'"><div class="tn"><span class="han">'+ROUNDS[curWind[i]].h+'</span> '+esc(gname(i))+'</div><div class="tv2">'+plainNum(tot[i])+'</div><div class="ov">Overall '+sgn(Math.round(ov[i]*100)/100)+'</div>'+(!rp.done&&i===rp.dealer?'<div class="bdg">Dealer</div>':'')+'</div>';
     }
-    $('gstatus').innerHTML=top+g+'</div>';
+    $('gstatus').innerHTML=top+seatNote(rp,cfg)+g+'</div>';
 
     // entry form
     var box=$('gentry');
@@ -2014,6 +2042,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       box.innerHTML='<h2>Record hand</h2><p class="hint">The game is finished. Open the Story tab to make the scoreboards.</p>';
     }else{
       var dealer=editIdx>=0?rp.hands[editIdx].dealer:rp.dealer;
+      if(editIdx>=0)setSeatView(rp.hands[editIdx].wind,rp.hands[editIdx].dealer,cfg);
       var h='<h2>'+(editIdx>=0?'Edit hand '+(editIdx+1):'Record hand')+'</h2><div class="lbl">What happened?</div><div class="chips">';
       KINDS.forEach(function(k){h+='<button type="button" class="chip" data-a="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>';});
       h+='</div>';
@@ -2190,6 +2219,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var isCustom=game.mode==='custom';
     var seatable=game.mode==='tournament'||isCustom;
     $('gseatWrap').hidden=!seatable;
+    $('seatHint').hidden=!(seatable&&game.seatRotation);
     if(seatable)$('gseat').checked=!!game.seatRotation;
     $('gcustom').hidden=!isCustom;
     if(isCustom){
