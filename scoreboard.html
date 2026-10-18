@@ -268,6 +268,16 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .rkgrid .k{font-size:12px;color:var(--muted)}
 .rkgrid .v{font-weight:700;font-size:18px}
 .rkgrid .u{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* wide screens: the scoring on the left, the standings and the hands on the right (a phone keeps the tabs) */
+@media (min-width:1100px){
+  .duo{display:grid;grid-template-columns:minmax(0,620px) minmax(0,480px);gap:28px;justify-content:center;align-items:start;padding:0 24px}
+  .duo>.play{max-width:none;margin:0;padding:22px 0 64px}
+  .tabs .tab[data-tab="rank"]{display:none}
+  .duo>#tab-rank>.pill,.duo>#tab-rank>.lede,.duo>#tab-rank>#rankRules,.duo>#tab-rank>.row-actions{display:none}
+  .duo>#tab-rank>h1{font-size:24px;margin:22px 0 12px}
+  .duo>#tab-rank #ghist{margin-top:14px}
+}
 </style>
 </head>
 <body>
@@ -288,6 +298,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 <button class="tab" type="button" data-tab="story" aria-pressed="false">Story</button>
 </div>
 
+<div class="duo" id="duo">
 <div class="play" id="tab-play">
   <span class="pill" id="syncBadge" style="background:var(--field);color:var(--accent);display:none"></span>
   <h1>Score the game</h1>
@@ -343,6 +354,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   <div class="row-actions"><button class="btn primary" id="rkStory" type="button">Make story image</button></div>
 </div>
 
+</div>
 <div class="app" id="tab-story" hidden>
   <section class="panel" aria-label="Scoreboard details">
     <h1>Tiles by Tiles scoreboard</h1>
@@ -2235,14 +2247,32 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
   /* tabs and hand-off to the story designer */
   var storyRound=-1;
-  function showTab(name){
-    $('tab-play').hidden=name!=='play';
-    $('tab-rank').hidden=name!=='rank';
-    $('tab-story').hidden=name!=='story';
-    document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-pressed',t.dataset.tab===name?'true':'false');});
-    if(name==='story'){if(state.round===4)loadOverall();else refresh();}
-    window.scrollTo(0,0);
-  }
+  // Wide screens: the scoring and the standings sit side by side, so "Standings" is not a tab of its own there,
+    // and the hands move under the standings. A phone keeps exactly the tabs it has always had.
+    function isDuo(){try{if(window.matchMedia)return window.matchMedia('(min-width:1100px)').matches;}catch(e){}return window.innerWidth>=1100;}
+    function placeHistory(){
+      var g=$('ghist'),rk=$('tab-rank');if(!g||!rk)return;
+      if(isDuo()){if(g.parentNode!==rk)rk.insertBefore(g,rk.querySelector('.row-actions'));}
+      else if(g.parentNode!==$('tab-play'))$('tab-play').insertBefore(g,$('lockBanner'));
+    }
+    var curTab='play';
+    function applyTabs(name){
+      var duo=isDuo();if(duo&&name==='rank')name='play';
+      $('tab-play').hidden=name!=='play';
+      $('tab-rank').hidden=duo?name!=='play':name!=='rank';
+      $('tab-story').hidden=name!=='story';
+      document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-pressed',t.dataset.tab===name?'true':'false');});
+      return name;
+    }
+    function showTab(name){
+      placeHistory();curTab=applyTabs(name);
+      if(curTab==='story'){if(state.round===4)loadOverall();else refresh();}
+      window.scrollTo(0,0);
+    }
+    function onLayout(){placeHistory();curTab=applyTabs(curTab);}
+    window.addEventListener('resize',onLayout);
+    try{var mq=window.matchMedia&&window.matchMedia('(min-width:1100px)');if(mq&&mq.addEventListener)mq.addEventListener('change',onLayout);}catch(e){}
+    onLayout();
   document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){showTab(t.dataset.tab);});});
 
   function renderRoundChips(rp){
