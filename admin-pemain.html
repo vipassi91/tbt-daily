@@ -118,9 +118,6 @@ main{padding:22px 0 70px}
 main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padding:8px}
 main .meta .lnk{padding:8px 6px!important}
 main .meta a{display:inline-flex;align-items:center;min-height:38px}
-
-/* wide screens: the players on the left, the tools on the right */
-@media(min-width:1100px){.topbar .wrap,main.wrap{max-width:1180px}.anav{max-width:460px}main.wrap.pm{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}.pm-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
 </style>
 </head>
 <body>
@@ -164,7 +161,7 @@ function needSetup(){if(!data.ready){alert('Aktifkan registry pemain dulu.');ret
 
 function viewSetup(){
   if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Registry pemain belum aktif</h3><p class="note">Registry adalah daftar pemain resmi yang diisi admin: nama lengkap, nama panggilan (yang tampil di leaderboard), WhatsApp, dan Instagram. Nama yang tidak terdaftar menjadi guest dan tidak masuk leaderboard. Daftar nama di bawah sudah bisa dipakai untuk memeriksa nama. Aktifkan satu kali, aman kalau terpencet lagi.</p><button class="btn primary" data-a="setup">Aktifkan registry pemain</button></div>';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
   h+=data.ruleOn
     ?'<p class="note" style="margin-top:0">Hanya pemain terdaftar yang masuk leaderboard. Guest tetap tampil di meja dan sesinya, dan nama ganda (memuat "/", "&amp;", "+" atau "dan") juga guest.</p>'
     :'<p class="note" style="margin-top:0">Aturan guest belum berlaku karena belum ada pemain terdaftar, jadi semua nama masih dihitung di leaderboard. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard. Centang nama yang mau didaftarkan di daftar guest di bawah. Yang tidak dicentang tetap guest.</p>';
@@ -247,6 +244,7 @@ function viewGuests(){
     return row;
   }).join('');
 }
+function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
 function viewRegistered(){
   var needle=q.trim().toLowerCase();
   var list=data.registered.filter(function(p){return matches(needle,[p.nickname,p.fullName,p.instagram,p.whatsapp].concat(p.names));});
@@ -258,10 +256,10 @@ function viewRegistered(){
     if(p.instagram)contact.push('Instagram <a href="https://instagram.com/'+esc(p.instagram)+'" target="_blank" rel="noopener">@'+esc(p.instagram)+'</a>');
     var spell=p.names.length>1?' &middot; ejaan: '+p.names.map(esc).join(', '):'';
     var hasSeats=p.seats&&p.seats.length;
-    var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">data belum lengkap</span>':'')
+    var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">data belum lengkap</span>':'')+(p.hidden?'<span class="tag">halaman disembunyikan</span>':'')
       +'<div class="meta">'+(p.fullName?esc(p.fullName)+' &middot; ':'')+p.games+' game &middot; terakhir '+fmtDate(p.last)+spell+'</div>'
       +(contact.length?'<div class="meta">'+contact.join(' &middot; ')+'</div>':'')+'</div>'
-      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
+      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(p.hidden?'':'<a class="btn sm" href="/player/'+esc(slugOf(p.nickname))+'-'+esc(p.id)+'" target="_blank" rel="noopener">Halaman</a>')+(data.pageReady===false?'':'<button class="btn sm" data-a="hide" data-id="'+esc(p.id)+'" data-v="'+(p.hidden?'0':'1')+'">'+(p.hidden?'Tampilkan halaman':'Sembunyikan halaman')+'</button>')+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
     if(form&&form.mode==='edit'&&form.id===p.id)row+=viewForm();
     if(splitFor&&splitFor.kind==='reg'&&splitFor.id===p.id&&hasSeats)row+=seatPanel(p.seats);
     return row;
@@ -277,9 +275,6 @@ function updatePick(){
 function pickBar(){
   return '<div class="pickbar"><button class="btn sm" data-a="pickall">Pilih semua yang tampil</button><button class="btn sm" data-a="pickclear">Kosongkan</button><button class="btn sm primary" id="pickGo" data-a="pickgo" disabled>Daftarkan yang dipilih (0)</button></div><p class="note" style="margin-top:0">Yang tidak dicentang tetap guest dan tidak masuk leaderboard. Nama ganda tidak bisa dicentang.</p>';
 }
-function isWide(){try{if(window.matchMedia)return window.matchMedia('(min-width:1100px)').matches;}catch(e){}return window.innerWidth>=1100;}
-var wasWide=isWide();
-window.addEventListener('resize',function(){var w=isWide();if(w!==wasWide){wasWide=w;if(authed&&data)render();}});
 function render(){
   var app=document.getElementById('app');
   if(!authed){
@@ -288,14 +283,10 @@ function render(){
     return;
   }
   app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Keluar</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sesi</a><a href="/admin-pemain.html" aria-current="page">Pemain</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
-    +(function(){
-      var setup=viewSetup()+viewSignup();
-      var search='<div class="card"><input class="search" id="q" placeholder="Cari nama, nama lengkap, atau Instagram" value="'+esc(q)+'"></div>';
-      var guests='<div class="card"><h3 style="margin-bottom:10px">Guest, belum terdaftar ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>';
-      var regd='<div class="card"><h3 style="margin-bottom:10px">Pemain terdaftar ('+data.registered.length+')</h3><div id="rlist">'+viewRegistered()+'</div></div>';
-      // wide screens: the players on the left, the tools (registry, sign-up link, waiting list, guests) on the right; a phone keeps one column in the usual order
-      return isWide()?'<main class="wrap pm"><div class="pm-main">'+search+regd+'</div><div class="pm-side">'+setup+guests+'</div></main>':'<main class="wrap">'+setup+search+guests+regd+'</main>';
-    })();
+    +'<main class="wrap">'+viewSetup()+viewSignup()
+    +'<div class="card"><input class="search" id="q" placeholder="Cari nama, nama lengkap, atau Instagram" value="'+esc(q)+'"></div>'
+    +'<div class="card"><h3 style="margin-bottom:10px">Guest, belum terdaftar ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>'
+    +'<div class="card"><h3 style="margin-bottom:10px">Pemain terdaftar ('+data.registered.length+')</h3><div id="rlist">'+viewRegistered()+'</div></div></main>';
   updatePick();
   var qi=document.getElementById('q');qi.oninput=function(){q=this.value;document.getElementById('glist').innerHTML=viewGuests();document.getElementById('rlist').innerHTML=viewRegistered();};
 }
@@ -309,7 +300,8 @@ document.addEventListener('click',function(e){
   var a=b.dataset.a,p,g;
   if(a==='login'){doLogin();}
   else if(a==='logout'){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;data=null;render();}
-  else if(a==='setup'){post({action:'setup'}).then(function(r){if(!r.ok){alert(r.body&&r.body.error||'Gagal mengaktifkan.');return;}toast('Registry aktif');return reload();});}
+  else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Sembunyikan halaman "'+p.nickname+'"?\n\nNamanya tetap tampil di leaderboard, tetapi halaman pribadinya tertutup untuk semua orang.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Halaman disembunyikan':'Halaman ditampilkan');}
+    else if(a==='setup'){post({action:'setup'}).then(function(r){if(!r.ok){alert(r.body&&r.body.error||'Gagal mengaktifkan.');return;}toast('Registry aktif');return reload();});}
   else if(a==='newplayer'){if(needSetup())return;form={mode:'new'};linkFor=null;render();}
   else if(a==='reg'){if(needSetup())return;g=guest(b.dataset.k);if(!g)return;form={mode:'register',key:g.key,name:g.name};linkFor=null;render();}
   else if(a==='edit'){form={mode:'edit',id:b.dataset.id};linkFor=null;render();}

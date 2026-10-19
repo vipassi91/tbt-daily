@@ -86,9 +86,6 @@ main{padding:22px 0 70px}
 main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padding:8px}
 main .meta .lnk{padding:8px 6px!important}
 main .meta a{display:inline-flex;align-items:center;min-height:38px}
-
-/* wide screens: the sessions on the left, the chosen session on the right */
-@media(min-width:1000px){.topbar .wrap,main.wrap{max-width:1180px}.anav{max-width:460px}main.wrap.ms{display:grid;grid-template-columns:380px minmax(0,1fr);gap:26px;align-items:start}.ms-l{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}.dayrow.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}}
 </style>
 </head>
 <body>
@@ -121,7 +118,7 @@ function loadNames(){
 }
 function openDay(id){
   return fetch('/api/days/'+encodeURIComponent(id),{headers:H()}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    day=d;nt={label:d?'Meja '+(d.tables.length+1):'',p:['','','','']};render();if(!isWide())window.scrollTo(0,0);
+    day=d;nt={label:d?'Meja '+(d.tables.length+1):'',p:['','','','']};render();window.scrollTo(0,0);
   });
 }
 function progText(t){
@@ -150,9 +147,6 @@ function copyLink(kind,code){
   else prompt('Salin link ini:',url);
 }
 
-function isWide(){try{if(window.matchMedia)return window.matchMedia('(min-width:1000px)').matches;}catch(e){}return window.innerWidth>=1000;}
-var wasWide=isWide();
-window.addEventListener('resize',function(){var w=isWide();if(w!==wasWide){wasWide=w;if(authed)render();}});
 function render(){
   var app=document.getElementById('app');
   if(!authed){
@@ -160,7 +154,7 @@ function render(){
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
     return;
   }
-  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Keluar</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html" aria-current="page">Sesi</a><a href="/admin-pemain.html">Pemain</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'+(isWide()?'<main class="wrap ms"><div class="ms-l">'+viewDays()+'</div><div class="ms-r">'+(day?viewDay(true):'<div class="empty">Pilih sesi di kiri.</div>')+'</div></main>':'<main class="wrap">'+(day?viewDay():viewDays())+'</main>');
+  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Keluar</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html" aria-current="page">Sesi</a><a href="/admin-pemain.html">Pemain</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div><main class="wrap">'+(day?viewDay():viewDays())+'</main>';
 }
 function doLogin(){
   password=document.getElementById('pw').value;
@@ -175,7 +169,7 @@ function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=f
 function viewDays(){
   return '<div class="card"><h3 style="margin-bottom:12px">Sesi baru</h3><div class="frow"><div class="field"><label>Nama sesi</label><input id="ndl" placeholder="Fun Tournament" value="'+esc(nd.label)+'" oninput="nd.label=this.value"></div><div class="field"><label>Tanggal</label><input id="ndd" type="date" value="'+esc(nd.date)+'" oninput="nd.date=this.value"></div></div><button class="btn primary" onclick="createDay()">Buat sesi</button></div>'
     +'<h3 style="margin:22px 0 4px">Semua sesi</h3>'
-    +(days.length?days.map(function(d){return '<div class="dayrow'+(day&&day.id===d.id?' sel':'')+'" onclick="openDay(\''+esc(d.id)+'\')"><div><strong>'+esc(d.label)+'</strong><div class="meta">'+esc(fmtDate(d.date))+' \u00b7 '+d.table_count+' meja</div></div><span class="meta">\u203a</span></div>';}).join(''):'<div class="empty">Belum ada sesi.</div>');
+    +(days.length?days.map(function(d){return '<div class="dayrow" onclick="openDay(\''+esc(d.id)+'\')"><div><strong>'+esc(d.label)+'</strong><div class="meta">'+esc(fmtDate(d.date))+' \u00b7 '+d.table_count+' meja</div></div><span class="meta">\u203a</span></div>';}).join(''):'<div class="empty">Belum ada sesi.</div>');
 }
 function createDay(){
   if(!nd.label.trim()||!nd.date){alert('Nama sesi dan tanggal wajib diisi');return;}
@@ -183,9 +177,9 @@ function createDay(){
     nd={label:'',date:''};return loadDays().then(function(){return d.id?openDay(d.id):render();});
   });
 }
-function viewDay(pane){
+function viewDay(){
   var d=day;
-  return (pane?'':'<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 Semua sesi</button>')
+  return '<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 Semua sesi</button>'
     +'<h2>'+esc(d.label)+'</h2><div class="meta" style="margin-bottom:14px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">Lihat halaman publik sesi ini</a> \u00b7 <button class="lnk" style="padding:0;color:var(--red)" onclick="delDay()">Hapus sesi</button></div>'
     +'<datalist id="pnames">'+names.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>'
     +'<div class="card"><h3 style="margin-bottom:12px">Tambah meja</h3><div class="field"><label>Nama meja</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Nama pemain boleh dikosongin, host bisa isi sendiri nanti dari scoreboard</div><div class="frow">'
@@ -221,7 +215,7 @@ function delDay(){
   if(!password){render();return;}
   checkLogin().then(function(ok){
     if(!ok){sessionStorage.removeItem('tbt-admin-pw');render();return;}
-    authed=true;return Promise.all([loadDays(),loadNames()]).then(function(){if(isWide()&&days.length&&!day)return openDay(days[0].id);render();});
+    authed=true;return Promise.all([loadDays(),loadNames()]).then(render);
   });
 })();
 </script>

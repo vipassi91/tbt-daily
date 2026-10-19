@@ -135,6 +135,10 @@ a{color:inherit}
 .brandmark img{height:28px;width:auto;display:block;flex:none}
 .brandname{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .backlink{display:inline-flex;align-items:center;gap:7px;min-height:40px;flex:none;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
+/* a row of the board opens that player's page (only players who have an open page) */
+.rlink{position:absolute;left:0;top:0;right:0;bottom:0;border-radius:12px}
+.rlink:hover{background:rgba(127,127,127,.07)}
+.rlink:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 /* small round choice buttons (used by the format choice of the share window) */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
 .chips button{border-radius:999px;padding:10px 14px;min-height:44px;border:1px solid var(--line);background:var(--field);font-size:14px}
@@ -282,13 +286,14 @@ function aggregate(tables){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
       if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
-      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false});
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:''});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
+      if(p.reg)m.pid=p.key;   // a registered player whose page is open: the key is the id that opens it
       if(p.windFirsts===undefined||t.winds===undefined)m.nofx=true;else{m.hands+=t.hands;m.wf+=p.windFirsts;m.winds+=t.winds;}   // a table whose statistics are not renewed yet has no wind-round facts
     });
   });
-  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx};});
+  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid};});
 }
 // On the main board: the wind rounds a player has played and how many of them they finished first.
 // (A table whose statistics are not renewed yet has no wind-round facts: it shows the old games line until its turn comes.)
@@ -309,12 +314,14 @@ function rankList(list){
 }
 var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" d="M8 48L4 20L28 38L50 8L72 38L96 20L92 48Z"/><circle cx="4" cy="18" r="6" fill="currentColor"/><circle cx="50" cy="5" r="6" fill="currentColor"/><circle cx="96" cy="18" r="6" fill="currentColor"/><rect x="8" y="55" width="84" height="11" rx="4" fill="currentColor"/></svg>';
 // Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
+// the readable part of a player's address: the nickname as plain letters, numbers and hyphens (only the id after it matters)
+function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
 function board(list,session){
   if(!list.length)return '<p class="empty">No games recorded yet.</p>';
   var html='';
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div></div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/player/'+slugOf(p.name)+'-'+esc(p.pid)+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }

@@ -19,7 +19,7 @@ export async function onRequestGet({ request, env }) {
     const registered = Array.from(reg.players.values()).map(function (pl) {
       const rs = byOwner[pl.id] || [], dr = dateRange(rs);
       return {
-        id: pl.id, fullName: pl.fullName, nickname: pl.nickname, whatsapp: pl.whatsapp, instagram: pl.instagram,
+        id: pl.id, fullName: pl.fullName, nickname: pl.nickname, whatsapp: pl.whatsapp, instagram: pl.instagram, hidden: !!pl.hidden,
         names: (keysOf[pl.id] || []).slice().sort(), games: rs.length, first: dr.first, last: dr.last,
         incomplete: !pl.fullName || !pl.whatsapp,
         // every game of a registered person can be reviewed one by one, even when there is only one: it may belong to someone else with the same name
@@ -46,7 +46,7 @@ export async function onRequestGet({ request, env }) {
         };
       });
     }
-    return json({ ready: reg.ready, seatsReady: reg.seatsReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
+    return json({ ready: reg.ready, seatsReady: reg.seatsReady, pageReady: reg.hiddenReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
       signup: { ready: sg.ready, enabled: sg.enabled, token: sg.token, requests: requests } });
   } catch (err) {
     return json({ error: String(err) }, 500);
@@ -185,6 +185,12 @@ async function handlePost({ request, env }) {
     const pl = reg.players.get(id);
     if (!pl) return json({ error: 'Pemain tidak ditemukan' }, 400);
 
+    if (action === 'setHidden') {
+      // a player hides their page (or shows it again); the leaderboard keeps showing their name either way
+      if (!reg.hiddenReady) return json({ error: 'page_needs_db', message: 'Database belum diperbarui untuk halaman pemain. Tekan "Perbarui registry" atau jalankan migrate-v3.sql.' }, 409);
+      await env.DB.prepare('UPDATE registry SET hidden=?, updated_at=? WHERE id=?').bind(body.hidden ? 1 : 0, now, id).run();
+      return json({ ok: true });
+    }
     if (action === 'update') {
       const r = readFields(body, true); if (r.error) return json({ error: r.error }, 400);
       const f = Object.assign({ nickname: pl.nickname, fullName: pl.fullName, whatsapp: pl.whatsapp, instagram: pl.instagram }, r.fields);

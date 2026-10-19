@@ -575,3 +575,107 @@ Yang berubah:
 - "This month" dibuang dari daftar (sama dengan musim berjalan). **Wawasan** (pemimpin, pendaki, dan sebagainya)
   belum dibuat; menunggu keputusan.
 - Tidak ada perubahan database. File berubah dari v27: `index.html`.
+
+## Update terbaru (v29): scoreboard dan halaman admin menyesuaikan layar lebar
+
+Di layar lebar (laptop, tablet besar, layar venue) ruang tambahan dipakai. **Di ponsel dan tablet kecil tidak ada
+yang berubah**: aku membandingkan 33 tampilan (ponsel sampai 1099px) antara versi sebelumnya dan versi ini,
+semuanya identik piksel demi piksel.
+
+- **Scoreboard** (lebar 1100px ke atas): pencatatan di kiri, **Standings dan riwayat hand di kanan**, tampil
+  bersamaan. Tab "Standings" disembunyikan di layar lebar karena isinya sudah terlihat; tab Story tetap terpisah
+  dan memakai seluruh layar. Tombol Edit, Delete, dan Share pada hand tetap berfungsi seperti biasa. Tampilan
+  pemain (hanya melihat) memakai pola yang sama. Mengubah ukuran jendela menyusun ulang halaman, jadi memperkecil
+  jendela mengembalikan susunan ponsel (riwayat hand kembali ke kolom Play).
+- **Admin sesi** (1000px ke atas): daftar sesi di kiri, sesi terpilih di kanan. Sesi terbaru terbuka sendiri.
+  Tombol "Semua sesi" tidak diperlukan dan tidak ditampilkan di layar lebar. Di bawah 1000px tetap daftar dulu,
+  lalu detail dengan tombol kembali.
+- **Admin pemain** (1100px ke atas): pencarian dan daftar pemain terdaftar di kiri, alat (registry, tautan
+  pendaftaran, antrean persetujuan, guest) di kanan yang menempel saat digulir. Di bawah 1100px tetap satu kolom
+  dengan urutan yang sama seperti sebelumnya.
+- Pil navigasi admin (Sesi, Pemain, Leaderboard) dibatasi lebarnya di layar lebar supaya tidak melebar penuh.
+- Halaman masukkan kode dan formulir daftar tidak berubah (sudah berupa kartu di tengah).
+- Tidak ada perubahan database. File berubah dari v28: `scoreboard.html`, `admin-daily.html`, `admin-pemain.html`.
+
+## Update terbaru (v30): rotasi kursi dan huruf angin di papan ronde
+
+- **Seat rotation (Tournament atau Custom dengan kotak "Seat rotation" dicentang; di Tournament bawaannya sudah
+  tercentang):** kotak pemain di papan ronde kini **berurutan menurut kursi** pada wind round itu, yaitu East,
+  South, West, North berlawanan arah jarum jam. Urutannya mengikuti tabel rotasi MCR: East `1-2-3-4`,
+  South `2-1-4-3`, West `3-4-2-1`, North `4-3-1-2` (angka = urutan nama yang diisi di pengaturan). Pemain
+  pindah kursi saat wind round baru dimulai (setiap 4 hand); di dalam satu round urutan kotak tetap dan
+  lencana Dealer berjalan dari kotak ke kotak.
+- **Petunjuk "change seats":** di awal tiap wind round baru (sebelum hand pertama round itu dicatat) muncul
+  kotak kecil berisi urutan duduk baru. Di awal game dengan seat rotation muncul "Seating" berisi urutan awal.
+- **Pilihan pemain di form pencatatan** (pemenang, pembuang, dan sebagainya) mengikuti urutan yang sama. Saat
+  mengedit hand lama, pilihannya mengikuti kursi pada hand itu.
+- **Di pengaturan**, bila seat rotation aktif, ada petunjuk: isi nama pemain menurut urutan duduk awal (East
+  dulu, lalu berlawanan arah jarum jam).
+- **Huruf angin di kotak pemain** sekarang menunjukkan **angin kursi saat ini** (dealer = East, kursi
+  berikutnya South, dan seterusnya), dan ikut bergeser bersama dealer. Ini berlaku di semua mode, termasuk
+  Casual dan Default; bedanya, di mode tanpa seat rotation kotak tetap di tempatnya (hanya huruf anginnya yang
+  bergeser). Sebelumnya huruf angin menempel pada nomor pemain dan tidak berubah.
+- Tampilan di ponsel tidak berubah selain baris huruf angin di papan ronde. Halaman lain tidak tersentuh.
+- Tidak ada perubahan database. File berubah dari v29: `scoreboard.html`.
+
+## Update terbaru (v31): tombol format, kartu Top 10 lebih lega, keterangan baris di leaderboard utama
+
+- **Tombol format** (Story 9:16 dan Post 4:5) di jendela Share top 10 kembali berbentuk pil dengan pilihan aktif
+  berwarna hijau. Sempat tampil putih di v28 karena gaya `.chips` ikut terhapus saat halaman utama ditulis ulang.
+  Sekarang ada tes yang memeriksa warna dan kontras tombol itu di tema gelap dan terang, serta audit yang
+  memastikan tidak ada kelas di halaman yang kehilangan gayanya.
+- **Kartu Top 10 lebih lega:** tiap baris lebih tinggi (sekitar 98px di Story, sebelumnya 91px), huruf nama,
+  keterangan, skor, dan nomor peringkat sedikit lebih kecil, dan jarak teks di dalam baris mengikuti tinggi baris.
+  Kepala dan kaki kartu Story dirampingkan sedikit untuk memberi ruang, tanpa masuk area aman Instagram.
+  Post 4:5 mendapat penyesuaian huruf dan jarak yang sama.
+- **Keterangan di bawah nama pada leaderboard utama** (dan di kartu Top 10): kini "**N wind rounds · M first places**",
+  yaitu jumlah wind round yang dimainkan pemain dan berapa kali ia first place di wind round itu (bukan
+  seluruh game). Wind round dihitung dari putaran yang sudah punya minimal satu hand. Meja yang statistiknya belum
+  diperbarui sementara memakai keterangan lama ("N games · N first places") sampai gilirannya tiba. Halaman sesi
+  tetap memakai "1st in X/Y rounds · Z% win rate".
+- Tidak ada perubahan database. File berubah dari v30: `index.html`.
+
+## Update terbaru (v32): halaman admin kembali satu kolom
+
+- **Admin sesi dan admin pemain kembali satu kolom di semua ukuran layar**, persis seperti sebelum v29 (daftar sesi
+  dulu lalu detail dengan tombol "Semua sesi"; kartu pemain bertumpuk ke bawah). Tampilan dua panel dan dua kolom di
+  layar lebar dari v29 dicabut untuk kedua halaman itu. Kedua file kini identik byte demi byte dengan versi sebelum
+  tampilan dua kolom itu.
+- **Scoreboard tetap dua kolom di layar lebar** (1100px ke atas): pencatatan di kiri, Standings dan riwayat hand di kanan.
+  Catatan v29 tentang halaman admin di atas tidak berlaku lagi.
+- Tidak ada perubahan database. File berubah dari v31: `admin-daily.html` dan `admin-pemain.html`.
+
+## Update terbaru (v33): halaman pemain
+
+**Satu langkah database (sekali saja):** jalankan `migrate-v3.sql` di konsol D1, atau buka halaman admin pemain dan
+tekan **"Perbarui registry"** (tombolnya muncul di kartu Registry selama langkah ini belum dilakukan). Langkah itu
+menambah satu kolom `hidden` di tabel `registry`. Sebelum itu dilakukan, semua tetap berjalan: halaman pemain
+terbuka untuk semua pemain terdaftar, dan tombol sembunyikan memberi tahu bahwa database perlu diperbarui.
+Instalasi baru memakai `schema-players.sql` yang sudah memuat kolom itu.
+
+- **Alamat:** `/player/<nama>-<id>`, misalnya `/player/ricky-b316433126`. Server hanya memakai `id` di ujung (10
+  karakter, acak, tidak berubah walau nama panggilan diganti). Bagian nama hanya agar mudah dibaca; tautan lama tetap
+  bekerja setelah ganti nama, dan halaman merapikan alamatnya sendiri. Satu berkas (`player.html`) melayani semua
+  pemain lewat aturan di `_redirects`.
+- **Isi:** nama, sejak kapan terdaftar dan terakhir main kapan, filter periode dan mode (bawaan musim berjalan dan
+  mode Default; bila mode Default kosong pada periode itu, halaman membuka semua mode), baris ringkas (Games, Wind
+  rounds, 1st in wind rounds, Win rate), statistik (Avg points / win, Best hand, Self-draws, Deal-ins, dihitung seperti
+  di halaman Standing), dan riwayat game (sesi, meja, mode, peringkat, skor, first place di wind rounds, win rate).
+  Kartu game bisa diketuk untuk membuka mejanya. Pilihan filter ikut tersimpan di alamat (`?p=` dan `?m=`).
+- **Dari leaderboard:** baris pemain terdaftar yang halamannya terbuka bisa diketuk (juga di halaman sesi).
+- **Tanpa kontak:** WhatsApp, Instagram, dan nama lengkap tidak pernah dikirim atau ditampilkan.
+- **Privasi:** halaman publik secara bawaan. Di admin pemain tiap pemain punya tombol **"Sembunyikan halaman"** /
+  **"Tampilkan halaman"** (dan tautan "Halaman"). Pemain yang disembunyikan tetap tampil di leaderboard dengan
+  namanya, tetapi tanpa tautan, dan halamannya tertutup di server. Pesan untuk halaman tersembunyi, ID salah, dan
+  alamat yang bukan ID sama persis ("This page is not available"), jadi tidak ketahuan siapa yang menyembunyikan.
+  Untuk pemain tersembunyi, data publik leaderboard juga tidak lagi memuat ID mereka (diganti kunci buram yang
+  tidak bisa dikembalikan ke ID, sama di semua meja). Perubahan di leaderboard bisa tertunda sampai 30 detik
+  karena cache; halaman pemainnya sendiri langsung tertutup.
+- **Form pendaftaran:** kalimat persetujuan kini menyebut bahwa nama panggilan, hasil permainan, dan statistik
+  ditampilkan di leaderboard dan di halaman pemain (bisa disembunyikan lewat admin).
+- **Mesin pencari:** halaman pemain diberi `noindex` (tag dan header). Pratinjau saat tautannya dibagikan di aplikasi
+  chat menampilkan pratinjau umum situs, bukan per pemain.
+- **Tombol Share** di halaman membuka menu bagikan di ponsel, atau menyalin tautan bila tidak ada.
+- **File baru:** `player.html`, `functions/api/player/[id].js`, `migrate-v3.sql` (folder `functions/api/player/` baru).
+  **Berubah dari v32:** `index.html`, `admin-pemain.html`, `daftar.html`, `schema-players.sql`, `_redirects`, `_headers`,
+  `functions/_players.js`, `functions/api/admin/players.js`. Total 86 file (di bawah batas 100 per unggahan).

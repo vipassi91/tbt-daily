@@ -45,3 +45,9 @@
   X-Robots-Tag: noindex
 /masuk.html
   X-Robots-Tag: noindex
+
+# player pages: public by choice, but not for search engines to list
+/player/*
+  X-Robots-Tag: noindex, nofollow
+/player.html
+  X-Robots-Tag: noindex, nofollow

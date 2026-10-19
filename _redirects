@@ -1,3 +1,6 @@
 # short addresses for the admin pages
 /admin /admin-daily 200
 /pemain /admin-pemain 200
+
+# a player's own page: one page serves every player, the id is read from the address
+/player/* /player.html 200

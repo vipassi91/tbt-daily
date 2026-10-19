@@ -27,7 +27,7 @@ export function normInstagram(s) {
 }
 
 export const REGISTRY_SQL = [
-  'CREATE TABLE IF NOT EXISTS registry (id TEXT PRIMARY KEY, full_name TEXT, nickname TEXT NOT NULL, whatsapp TEXT, instagram TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)',
+  'CREATE TABLE IF NOT EXISTS registry (id TEXT PRIMARY KEY, full_name TEXT, nickname TEXT NOT NULL, whatsapp TEXT, instagram TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0)',
   'CREATE TABLE IF NOT EXISTS registry_names (name_key TEXT PRIMARY KEY, registry_id TEXT NOT NULL, created_at TEXT NOT NULL)',
   'CREATE INDEX IF NOT EXISTS idx_registry_names_id ON registry_names(registry_id)',
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_registry_whatsapp ON registry(whatsapp) WHERE whatsapp IS NOT NULL AND whatsapp != ''",
@@ -42,15 +42,29 @@ export const REGISTRY_SQL = [
 ];
 export async function ensureRegistryTables(env) {
   for (const s of REGISTRY_SQL) await env.DB.prepare(s).run();
+  // a registry made before player pages: add the switch that lets a player hide their page (an error just means it is already there)
+  try { await env.DB.prepare('ALTER TABLE registry ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0').run(); } catch (e) { /* already there */ }
+}
+// For a player who hides their page, the public data carries this instead of their id: the same person gets the same
+// value at every table, but nobody can turn it back into the id that opens the page.
+async function opaqueKey(env, id) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String((env && env.ADMIN_PASSWORD) || '') + ':hidden:' + id));
+  return 'h' + Array.from(new Uint8Array(buf)).slice(0, 5).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
 }
 
 // Without the tables everything still works as before: the registry is just empty.
 export async function loadRegistry(env) {
   try {
-    const p = await env.DB.prepare('SELECT id, full_name, nickname, whatsapp, instagram FROM registry').all();
+    // the switch to hide a page is a newer column: a registry without it keeps working, with every page shown
+    let p, hiddenReady = true;
+    try { p = await env.DB.prepare('SELECT id, full_name, nickname, whatsapp, instagram, created_at, hidden FROM registry').all(); }
+    catch (e) { hiddenReady = false; p = await env.DB.prepare('SELECT id, full_name, nickname, whatsapp, instagram, created_at FROM registry').all(); }
     const n = await env.DB.prepare('SELECT name_key, registry_id FROM registry_names').all();
-    const players = new Map(), names = new Map();
-    p.results.forEach(function (r) { players.set(r.id, { id: r.id, fullName: r.full_name || '', nickname: r.nickname, whatsapp: r.whatsapp || '', instagram: r.instagram || '' }); });
+    const players = new Map(), names = new Map(), opaque = new Map();
+    for (const r of p.results) {
+      players.set(r.id, { id: r.id, fullName: r.full_name || '', nickname: r.nickname, whatsapp: r.whatsapp || '', instagram: r.instagram || '', createdAt: r.created_at || '', hidden: !!r.hidden });
+      if (r.hidden) opaque.set(r.id, await opaqueKey(env, r.id));
+    }
     n.results.forEach(function (r) { names.set(r.name_key, r.registry_id); });
     const seats = new Map();
     let seatsReady = false;
@@ -59,9 +73,9 @@ export async function loadRegistry(env) {
       s.results.forEach(function (r) { seats.set(r.table_id + ':' + r.seat, { key: r.name_key, to: r.registry_id }); });
       seatsReady = true;
     } catch (e) { /* a registry switched on before per-game assignment: it keeps working by name only */ }
-    return { ready: true, players: players, names: names, seats: seats, seatsReady: seatsReady };
+    return { ready: true, players: players, names: names, seats: seats, seatsReady: seatsReady, hiddenReady: hiddenReady, opaque: opaque };
   } catch (e) {
-    return { ready: false, players: new Map(), names: new Map(), seats: new Map(), seatsReady: false };
+    return { ready: false, players: new Map(), names: new Map(), seats: new Map(), seatsReady: false, hiddenReady: false, opaque: new Map() };
   }
 }
 // The guest rule only starts once someone is registered, so switching this on never empties the board by itself.
@@ -76,7 +90,9 @@ export function applyRegistry(reg, players, tableId) {
     const k = nameKey(p.name);
     const o = seatOwner(reg, tableId, p.seat, k);
     const pl = o.id && reg.players.get(o.id);
-    if (pl) return Object.assign({}, p, { name: pl.nickname, key: pl.id });
+    // reg: this is a registered person whose page is open (the key is their id, which is what opens it);
+    // hid: their page is hidden, so the key is the opaque one and no link is offered
+    if (pl) return pl.hidden ? Object.assign({}, p, { name: pl.nickname, key: reg.opaque.get(pl.id) || pl.id, hid: true }) : Object.assign({}, p, { name: pl.nickname, key: pl.id, reg: true });
     return Object.assign({}, p, { guest: true, key: k });
   });
 }
