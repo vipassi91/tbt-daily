@@ -2,5 +2,6 @@
 /admin /admin-daily 200
 /pemain /admin-pemain 200
 
-# a player's own page: one page serves every player, the id is read from the address
-/player/* /player.html 200
+# a player's own page: one page serves every player, the id is read from the address.
+# The destination must NOT end in .html: Cloudflare Pages answers such a rule with a redirect to the clean address and drops the rest of the path.
+/player/* /player 200

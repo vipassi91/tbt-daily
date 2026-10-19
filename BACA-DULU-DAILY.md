@@ -723,3 +723,18 @@ dibutuhkan:
   `old-service` (server masih memakai overview lama), atau kode status server.
 - Tidak ada perubahan database. File berubah dari v34: `functions/_players.js`, `functions/api/overview.js`,
   `player.html`, `admin-pemain.html`. File yang dihapus dari paket: `functions/api/player/[id].js`.
+
+## Update terbaru (v36): penyebab sebenarnya halaman pemain tertutup
+
+Penyebabnya ditemukan dengan menjalankan situs di emulator resmi Cloudflare Pages (bukan di simulasi): aturan di
+`_redirects` yang mengarahkan `/player/*` ke `/player.html` dijawab Cloudflare dengan **pengalihan 308 ke `/player`**
+(alamat bersih), dan jalur aslinya (yang memuat ID pemain) hilang. Halaman terbuka tanpa ID, sehingga menampilkan
+"This page is not available" tanpa pernah memanggil server. Itu sebabnya semua halaman pemain tertutup padahal
+layanan di server sehat.
+
+- **Perbaikan:** `_redirects` kini berisi `/player/* /player 200` (tujuan tanpa `.html`, seperti aturan admin
+  `/admin /admin-daily 200` yang sudah berjalan). Hanya file `_redirects` yang berubah dari v35.
+- **Aturan umum:** tujuan aturan `200` di `_redirects` tidak boleh berakhiran `.html`. Pemeriksaan paket sekarang
+  menolak aturan seperti itu, dan server ujinya meniru perilaku Cloudflare ini.
+- Setelah deploy, uji dengan mengetuk nama pemain di leaderboard. Alamatnya harus tetap `/player/<id>/<nama>`
+  dan halamannya terbuka.
