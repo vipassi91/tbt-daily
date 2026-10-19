@@ -699,3 +699,27 @@ Dua masalah di v33 diperbaiki:
   `functions/api/player/[id].js` belum terunggah). Bila semuanya baik, tidak ada catatan.
 - Tidak ada perubahan database dari v33. File berubah dari v33: `player.html`, `functions/api/player/[id].js`,
   `index.html`, `admin-pemain.html`.
+
+## Update terbaru (v35): layanan halaman pemain pindah ke file yang sudah ada
+
+Di v33 dan v34, data halaman pemain dilayani oleh file baru di folder baru (`functions/api/player/[id].js`). Bila
+file itu tidak ikut terpasang di deploy, semua halaman pemain gagal. Sekarang tidak ada folder atau file baru yang
+dibutuhkan:
+
+- Data satu pemain diminta lewat **`/api/overview?player=<id>`**, dilayani oleh `functions/api/overview.js` dan
+  `functions/_players.js`, dua file yang sudah ada di repo. Permintaan itu tidak pernah memakai atau mengisi cache
+  leaderboard yang dibagi bersama.
+- **Folder `functions/api/player/` dan file `[id].js` tidak dipakai lagi.** Bila sudah terlanjur terunggah ke GitHub,
+  hapus saja (tidak berbahaya kalau dibiarkan, hanya tidak terpakai).
+- **Unggah keempat file ini sekaligus dalam satu commit:** `functions/_players.js`, `functions/api/overview.js`,
+  `player.html`, `admin-pemain.html`. (`overview.js` memakai fungsi baru di `_players.js`, jadi keduanya harus
+  berpasangan.)
+- **Pemeriksaan mandiri di admin pemain sekarang menyebut penyebabnya.** Admin mengirim kata sandinya, dan server
+  menjawab dengan alasan yang hanya diberikan kepada admin: `not_found` (ID tidak ada di registry; ditampilkan
+  juga jumlah pemain di registry), `hidden`, `registry_not_ready`, `bad_id`; atau, bila `overview.js` belum
+  versi terbaru, kode `old`. Orang lain tetap mendapat jawaban polos yang sama untuk semua kasus, jadi tidak ketahuan
+  siapa yang menyembunyikan halamannya.
+- Halaman pemain yang gagal dimuat menampilkan kode: `404-no-service` (alamat layanan tidak ditemukan),
+  `old-service` (server masih memakai overview lama), atau kode status server.
+- Tidak ada perubahan database. File berubah dari v34: `functions/_players.js`, `functions/api/overview.js`,
+  `player.html`, `admin-pemain.html`. File yang dihapus dari paket: `functions/api/player/[id].js`.

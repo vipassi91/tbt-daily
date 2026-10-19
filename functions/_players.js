@@ -1,4 +1,5 @@
 import { statsFor, summarizePlayers } from './_tables.js';
+import { json } from './_auth.js';
 
 // The player registry. An admin registers people by hand: full name, nickname (the only name shown
 // publicly), WhatsApp and Instagram (both private, admin pages only). A name typed at a table counts as
@@ -279,4 +280,63 @@ export function clearRegistryCache() { regCache = { at: 0, db: null, value: null
 // Never lets a problem with the registry get in the way of showing a table.
 export async function safeDisplay(env, tableId, typedNames, storedNames) {
   try { return displayNames(await loadRegistryCached(env), tableId, typedNames, storedNames); } catch (e) { return ['', '', '', '']; }
+}
+
+// A registered player's own page: who they are and every game they played, with the statistics kept for each game.
+// Asked as /api/overview?player=<id>, public, no login. A player who hid their page, an id nobody has, and a badly written id
+// all get the very same answer, so nobody can find out who chose to hide. Only an admin asking is told which of these it is.
+export async function playerPage(env, rawId, admin) {
+  const no = function (reason, reg) {
+    const body = { error: 'not_available' };
+    if (admin) { body.reason = reason; body.registryPlayers = reg ? reg.players.size : 0; }
+    return json(body, 404);
+  };
+  try {
+    // An id is whatever the registry holds: ids made by older versions look different from today's, so only the characters are checked.
+    const raw = String(rawId || '');
+    if (!/^[A-Za-z0-9_-]{4,80}$/.test(raw)) return no('bad_id', null);
+    const reg = await loadRegistryCached(env);
+    if (!reg.ready) return no('registry_not_ready', reg);
+    let pl = null;
+    const tries = [raw, raw.toLowerCase()], dash = raw.lastIndexOf('-');
+    if (dash > 0) tries.push(raw.slice(dash + 1));   // the first address style was <nickname>-<id>
+    for (const k of tries) { pl = reg.players.get(k) || null; if (pl) break; }
+    if (!pl) return no('not_found', reg);
+    if (pl.hidden) return no('hidden', reg);
+    const id = pl.id;
+
+    // the tables where this person sat, by the same rule the leaderboard uses (the name written, or a choice made for that seat)
+    const rows = (await env.DB.prepare('SELECT id, day_id, label, players, view_code FROM tables').all()).results;
+    const mine = [];
+    rows.forEach(function (t) {
+      let names = []; try { names = JSON.parse(t.players); } catch (e) { names = []; }
+      names.forEach(function (n, seat) { if (n && seatOwner(reg, t.id, seat, nameKey(n)).id === id) mine.push({ t: t, seat: seat }); });
+    });
+    const days = {};
+    (await env.DB.prepare('SELECT id, label, date FROM days').all()).results.forEach(function (d) { days[d.id] = d; });
+
+    const games = [];
+    for (let i = 0; i < mine.length; i += 40) {   // the database takes a limited number of values per question
+      const part = mine.slice(i, i + 40), ids = part.map(function (m) { return m.t.id; });
+      const full = (await env.DB.prepare('SELECT id, day_id, label, view_code, players, stats, rounds, updated_at FROM tables WHERE id IN (' + ids.map(function () { return '?'; }).join(',') + ')').bind(...ids).all()).results;
+      const byId = {}; full.forEach(function (r) { byId[r.id] = r; });
+      for (const m of part) {
+        const row = byId[m.t.id]; if (!row) continue;
+        const stats = await statsFor(env, row);   // renews an old table's statistics when its turn comes, so the facts are there
+        if (!stats.events) continue;
+        const me = summarizePlayers(stats)[m.seat], f = (stats.facts && stats.facts[stats.names[m.seat]]) || null;
+        if (!me || !f) continue;
+        const d = days[row.day_id] || {};
+        games.push({
+          view: row.view_code, table: row.label, session: d.label || '', date: d.date || '', mode: stats.mode || 'casual', locked: !!stats.locked,
+          rank: me.rank, net: me.netTotal, hands: stats.hands, winds: stats.winds, won: f.won, windFirsts: f.windFirsts,
+          ptsSum: f.ptsSum, best: f.best, zimo: f.zimo, dealIns: f.dealIns,
+        });
+      }
+    }
+    games.sort(function (a, b) { return b.date < a.date ? -1 : b.date > a.date ? 1 : (a.table < b.table ? -1 : 1); });
+    return json({ player: { id: id, nickname: pl.nickname, since: (pl.createdAt || '').slice(0, 10) }, games: games });
+  } catch (err) {
+    return json({ error: 'server' }, 500);
+  }
 }

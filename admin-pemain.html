@@ -146,12 +146,24 @@ function load(){
 }
 // Once per visit: can the server open the page of a registered player? If not, say why, so a missing file is not a mystery.
 var pageChecked=false,pageCheck=null;
+function pageCheckText(){
+  var c=pageCheck,code=' (kode: '+c.status+(c.reason?'/'+c.reason:c.old?'/old':'')+')';
+  if(c.old)return 'Halaman pemain belum aktif di server: file functions/api/overview.js dan functions/_players.js belum versi terbaru. Unggah keduanya, lalu tunggu deploy selesai.'+code;
+  if(c.reason==='not_found')return 'Server tidak menemukan pemain ini di registry (ID '+c.id+', registry berisi '+c.n+' pemain). Kirim kode ini ke pembuat situs.'+code;
+  if(c.reason==='registry_not_ready')return 'Server menganggap registry belum aktif di database. Kirim kode ini ke pembuat situs.'+code;
+  if(c.reason==='hidden')return 'Server mencatat halaman pemain ini disembunyikan, padahal tidak di daftar admin. Kirim kode ini ke pembuat situs.'+code;
+  if(c.reason==='bad_id')return 'Server menolak bentuk ID '+c.id+'. Kirim kode ini ke pembuat situs.'+code;
+  return 'Halaman pemain belum bisa dibuka dari server'+code+'. Pastikan semua file versi terbaru sudah terunggah ke GitHub, lalu tunggu deploy selesai.';
+}
 function checkPages(){
   var p=(data.registered||[]).filter(function(x){return !x.hidden;})[0];
   if(!p)return;
-  fetch('/api/player/'+encodeURIComponent(p.id),{cache:'no-store'}).then(function(r){
-    if(r.status===200)return;
-    return r.text().then(function(tx){var j=null;try{j=JSON.parse(tx);}catch(e){}pageCheck={status:r.status,own:!!(j&&j.error)};render();});
+  fetch('/api/overview?player='+encodeURIComponent(p.id),{headers:H(),cache:'no-store'}).then(function(r){
+    return r.text().then(function(tx){
+      var j=null;try{j=JSON.parse(tx);}catch(e){}
+      if(r.status===200&&j&&j.player)return;
+      pageCheck={status:r.status,id:p.id,reason:j&&j.reason||'',n:j&&j.registryPlayers,old:r.status===200&&!(j&&j.player),own:!!(j&&j.error)};render();
+    });
   }).catch(function(){});
 }
 function post(body){
@@ -171,7 +183,7 @@ function needSetup(){if(!data.ready){alert('Aktifkan registry pemain dulu.');ret
 
 function viewSetup(){
   if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Registry pemain belum aktif</h3><p class="note">Registry adalah daftar pemain resmi yang diisi admin: nama lengkap, nama panggilan (yang tampil di leaderboard), WhatsApp, dan Instagram. Nama yang tidak terdaftar menjadi guest dan tidak masuk leaderboard. Daftar nama di bawah sudah bisa dipakai untuk memeriksa nama. Aktifkan satu kali, aman kalau terpencet lagi.</p><button class="btn primary" data-a="setup">Aktifkan registry pemain</button></div>';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">Halaman pemain belum bisa dibuka dari server (kode '+pageCheck.status+(pageCheck.own?', server tidak mengenali pemain ini':', jawabannya bukan dari layanan halaman pemain')+'). '+(pageCheck.own?'Hubungi pembuat situs dengan kode ini.':'Pastikan file functions/api/player/[id].js ikut terunggah ke GitHub, lalu tunggu deploy selesai.')+'</p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">'+pageCheckText()+'</p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
   h+=data.ruleOn
     ?'<p class="note" style="margin-top:0">Hanya pemain terdaftar yang masuk leaderboard. Guest tetap tampil di meja dan sesinya, dan nama ganda (memuat "/", "&amp;", "+" atau "dan") juga guest.</p>'
     :'<p class="note" style="margin-top:0">Aturan guest belum berlaku karena belum ada pemain terdaftar, jadi semua nama masih dihitung di leaderboard. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard. Centang nama yang mau didaftarkan di daftar guest di bawah. Yang tidak dicentang tetap guest.</p>';

@@ -393,11 +393,15 @@ function load(){
   if(!ID){S.status='closed';render();return;}
   S.err='';
   // only the server's own "not available" answer closes the page; any other failure (a 404 from a missing service, an error, no connection) is shown as a failure
-  fetch('/api/player/'+encodeURIComponent(ID)).then(function(r){
+  fetch('/api/overview?player='+encodeURIComponent(ID)).then(function(r){
     if(r.status===404)return r.json().then(function(j){if(j&&j.error==='not_available'){S.status='closed';render();return null;}S.err='404-no-service';throw new Error('x');},function(){S.err='404-no-service';throw new Error('x');});
     if(!r.ok){S.err=String(r.status);throw new Error('x');}
     return r.json();
-  }).then(function(d){if(!d)return;S.data=d;S.status='ok';readUrl();autoMode();render();}).catch(function(){if(!S.err)S.err='network';S.status='error';render();});
+  }).then(function(d){
+    if(!d)return;
+    if(!d.player){S.err='old-service';throw new Error('x');}   // the server answered with the whole leaderboard: it does not have the player service yet
+    S.data=d;S.status='ok';readUrl();autoMode();render();
+  }).catch(function(){if(!S.err)S.err='network';S.status='error';render();});
 }
 readUrl();load();
 })();

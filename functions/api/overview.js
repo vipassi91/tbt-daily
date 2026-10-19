@@ -1,6 +1,6 @@
-import { json } from '../_auth.js';
+import { json, isAdmin } from '../_auth.js';
 import { statsFor, summarizePlayers } from '../_tables.js';
-import { loadRegistry, applyRegistry } from '../_players.js';
+import { loadRegistry, applyRegistry, playerPage } from '../_players.js';
 
 // GET /api/overview: everything the public leaderboard needs, from stored results.
 // Never includes edit codes.
@@ -11,6 +11,9 @@ import { loadRegistry, applyRegistry } from '../_players.js';
 const FRESH_SECONDS = 30;
 export async function onRequestGet(context) {
   const { request, env } = context;
+  // /api/overview?player=<id> is one player's own page (see playerPage): never taken from, or put into, the shared cache below
+  const asked = new URL(request.url).searchParams.get('player');
+  if (asked !== null) return playerPage(env, asked, isAdmin(request, env));
   let cache = null;
   try { cache = typeof caches !== 'undefined' ? caches.default : null; } catch (e) { cache = null; }
   const key = new Request(new URL(request.url).origin + '/api/overview');
