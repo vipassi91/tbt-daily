@@ -3,5 +3,8 @@
 /pemain /admin-pemain 200
 
 # a player's own page: one page serves every player, the id is read from the address.
+# /players/<id>/<nickname> is the address in use. /player/... is the older one and still works: browsers that opened it while it
+# was broken remember a redirect forever, which is why the address in use is a different one.
 # The destination must NOT end in .html: Cloudflare Pages answers such a rule with a redirect to the clean address and drops the rest of the path.
+/players/* /player 200
 /player/* /player 200

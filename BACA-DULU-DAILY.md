@@ -759,3 +759,21 @@ Beberapa penyebab nyata yang membuat halaman seorang pemain tampak tidak bisa di
 - Tidak ada perubahan database. File berubah dari v36: `index.html`, `player.html`, `admin-pemain.html`,
   `functions/_players.js`, `functions/api/overview.js`. Unggah semuanya dalam satu commit (`overview.js` dan
   `_players.js` berpasangan).
+
+## Update terbaru (v38): alamat halaman pemain baru, karena browser menyimpan pengalihan yang salah
+
+Selama v33 sampai v35, alamat halaman pemain dijawab server dengan pengalihan **permanen** (308) yang salah (lihat v36).
+Browser menyimpan pengalihan permanen tanpa batas waktu. Akibatnya, di browser yang pernah membuka alamat itu saat bug
+(bukan incognito, bukan perangkat lain), alamat yang sama tetap dialihkan ke `/player` tanpa ID dan menampilkan
+"This page is not available", bahkan setelah server diperbaiki. Server tidak bisa memperbaiki ini karena permintaannya
+tidak pernah sampai ke server.
+
+- **Alamat yang dipakai sekarang: `/players/<id>/<nama>`** (dengan "s"), alamat yang belum pernah ada di cache siapa pun.
+  Tautan dari leaderboard, tautan "Halaman" di admin, dan alamat yang ditampilkan halaman memakai bentuk ini, jadi
+  muat ulang (F5) juga aman. Alamat lama `/player/...` (kedua gayanya) tetap bisa dibuka dan dirapikan ke alamat baru,
+  kecuali di browser yang sudah menyimpan pengalihan yang salah.
+- **Bila alamat lama masih terjebak di suatu browser:** bersihkan file cache situs itu (Chrome: Ctrl+Shift+Delete,
+  pilih "Cached images and files", Clear data), atau tekan Ctrl+Shift+R pada alamat itu, atau pakai incognito.
+  Ini sudah diuji: setelah cache dibersihkan, alamat lama langsung terbuka.
+- Hanya `_redirects`, `_headers`, `index.html`, `player.html`, dan `admin-pemain.html` yang berubah dari v37.
+  Tidak ada perubahan database.

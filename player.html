@@ -283,13 +283,14 @@ function autoMode(){   // the Default mode may have no games in the period: open
 function readUrl(){
   try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
 }
-// the address is /player/<id>/<nickname>: the id comes first, the nickname is only for reading (the first style, <nickname>-<id>, still opens)
-function parseId(){var parts=location.pathname.replace(/\/+$/,'').split('/'),i=parts.indexOf('player'),seg=i>=0?parts[i+1]:'';try{seg=decodeURIComponent(seg||'');}catch(e){seg='';}return /^[A-Za-z0-9_-]{4,80}$/.test(seg)?seg:'';}
+// the address is /players/<id>/<nickname>: the id comes first, the nickname is only for reading.
+// The older /player/... addresses (also /player/<id>/<nickname> and /player/<nickname>-<id>) still open and are tidied to this one.
+function parseId(){var parts=location.pathname.replace(/\/+$/,'').split('/'),i=parts.indexOf('players');if(i<0)i=parts.indexOf('player');var seg=i>=0?parts[i+1]:'';try{seg=decodeURIComponent(seg||'');}catch(e){seg='';}return /^[A-Za-z0-9_-]{4,80}$/.test(seg)?seg:'';}
 var ID=parseId();
 function syncUrl(){
   try{
     var path=location.pathname;
-    if(S.data&&S.data.player)path='/player/'+encodeURIComponent(S.data.player.id)+'/'+slugOf(S.data.player.nickname);
+    if(S.data&&S.data.player)path='/players/'+encodeURIComponent(S.data.player.id)+'/'+slugOf(S.data.player.nickname);
     var qs=[];if(S.period!==currentSeason())qs.push('p='+periodParam());
     if(S.modeSet&&S.mode!==DEFAULT_MODE&&modesIn().length>=2)qs.push('m='+S.mode);
     history.replaceState(null,'',path+(qs.length?'?'+qs.join('&'):''));
