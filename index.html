@@ -316,12 +316,19 @@ var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill
 // Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
 // the readable part of a player's address: the nickname as plain letters, numbers and hyphens (only the id after it matters)
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
+// the player's page opens with the same period and mode the visitor is looking at (nothing is added for the usual view)
+function playerQuery(){
+  var qs=[];
+  if(S.period!==currentSeason())qs.push('p='+periodParam());
+  if(S.mode!==DEFAULT_MODE&&modesInData().length>=2)qs.push('m='+S.mode);
+  return qs.length?'?'+qs.join('&'):'';
+}
 function board(list,session){
   if(!list.length)return '<p class="empty">No games recorded yet.</p>';
-  var html='';
+  var html='',pq=session?'':playerQuery();
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/player/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/player/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }

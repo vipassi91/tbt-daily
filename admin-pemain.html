@@ -145,7 +145,35 @@ function load(){
   }).then(function(d){data=d;authed=true;if(!pageChecked){pageChecked=true;checkPages();}});
 }
 // Once per visit: can the server open the page of a registered player? If not, say why, so a missing file is not a mystery.
-var pageChecked=false,pageCheck=null;
+var pageChecked=false,pageCheck=null,pageReport=null;
+// On request: ask the server for every open player page, one after another, and report which ones cannot be opened and which are empty.
+function checkAll(){
+  if(pageReport&&pageReport.running)return;
+  var ps=(data.registered||[]).filter(function(x){return !x.hidden;});
+  pageReport={running:true,done:0,total:ps.length,fails:[],empty:[],skipped:[]};render();
+  var i=0;
+  function next(){
+    if(i>=ps.length){pageReport.running=false;render();return;}
+    var p=ps[i++];
+    fetch('/api/overview?player='+encodeURIComponent(p.id),{headers:H(),cache:'no-store'}).then(function(r){
+      return r.text().then(function(tx){
+        var j=null;try{j=JSON.parse(tx);}catch(e){}
+        if(r.status===200&&j&&j.player){if(!j.games.length)pageReport.empty.push(p.nickname);if(j.skipped)pageReport.skipped.push(p.nickname+' ('+j.skipped+')');}
+        else pageReport.fails.push(p.nickname+' (kode '+r.status+(j&&(j.reason||j.detail)?': '+(j.reason||j.detail):'')+')');
+      });
+    },function(){pageReport.fails.push(p.nickname+' (tidak ada koneksi)');}).then(function(){pageReport.done++;if(pageReport.done%6===0||pageReport.done===pageReport.total)render();next();});
+  }
+  next();
+}
+function pageReportHtml(){
+  var r=pageReport;if(!r)return '';
+  if(r.running)return '<p class="note" style="margin-top:0">Memeriksa halaman pemain\u2026 '+r.done+' dari '+r.total+'</p>';
+  var ok=r.total-r.fails.length,h='<p class="note" style="margin-top:0'+(r.fails.length?';color:var(--red)':'')+'"><b>'+ok+' dari '+r.total+' halaman pemain bisa dibuka.</b>';
+  if(r.fails.length)h+=' Gagal: '+r.fails.map(esc).join(', ')+'.';
+  if(r.empty.length)h+=' Belum punya game (halamannya kosong): '+r.empty.map(esc).join(', ')+'.';
+  if(r.skipped.length)h+=' Ada game yang dilewati karena datanya tidak terbaca: '+r.skipped.map(esc).join(', ')+'.';
+  return h+'</p>';
+}
 function pageCheckText(){
   var c=pageCheck,code=' (kode: '+c.status+(c.reason?'/'+c.reason:c.old?'/old':'')+')';
   if(c.old)return 'Halaman pemain belum aktif di server: file functions/api/overview.js dan functions/_players.js belum versi terbaru. Unggah keduanya, lalu tunggu deploy selesai.'+code;
@@ -183,7 +211,7 @@ function needSetup(){if(!data.ready){alert('Aktifkan registry pemain dulu.');ret
 
 function viewSetup(){
   if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Registry pemain belum aktif</h3><p class="note">Registry adalah daftar pemain resmi yang diisi admin: nama lengkap, nama panggilan (yang tampil di leaderboard), WhatsApp, dan Instagram. Nama yang tidak terdaftar menjadi guest dan tidak masuk leaderboard. Daftar nama di bawah sudah bisa dipakai untuk memeriksa nama. Aktifkan satu kali, aman kalau terpencet lagi.</p><button class="btn primary" data-a="setup">Aktifkan registry pemain</button></div>';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">'+pageCheckText()+'</p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">'+pageCheckText()+'</p>':'')+(data.registered.length?'<p class="note" style="margin-top:0"><button class="btn sm" data-a="checkpages">Cek halaman pemain</button> Memeriksa halaman semua pemain yang tidak disembunyikan.</p>':'')+pageReportHtml()+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
   h+=data.ruleOn
     ?'<p class="note" style="margin-top:0">Hanya pemain terdaftar yang masuk leaderboard. Guest tetap tampil di meja dan sesinya, dan nama ganda (memuat "/", "&amp;", "+" atau "dan") juga guest.</p>'
     :'<p class="note" style="margin-top:0">Aturan guest belum berlaku karena belum ada pemain terdaftar, jadi semua nama masih dihitung di leaderboard. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard. Centang nama yang mau didaftarkan di daftar guest di bawah. Yang tidak dicentang tetap guest.</p>';
@@ -322,7 +350,8 @@ document.addEventListener('click',function(e){
   var a=b.dataset.a,p,g;
   if(a==='login'){doLogin();}
   else if(a==='logout'){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;data=null;render();}
-  else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Sembunyikan halaman "'+p.nickname+'"?\n\nNamanya tetap tampil di leaderboard, tetapi halaman pribadinya tertutup untuk semua orang.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Halaman disembunyikan':'Halaman ditampilkan');}
+  else if(a==='checkpages'){checkAll();}
+    else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Sembunyikan halaman "'+p.nickname+'"?\n\nNamanya tetap tampil di leaderboard, tetapi halaman pribadinya tertutup untuk semua orang.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Halaman disembunyikan':'Halaman ditampilkan');}
     else if(a==='setup'){post({action:'setup'}).then(function(r){if(!r.ok){alert(r.body&&r.body.error||'Gagal mengaktifkan.');return;}toast('Registry aktif');return reload();});}
   else if(a==='newplayer'){if(needSetup())return;form={mode:'new'};linkFor=null;render();}
   else if(a==='reg'){if(needSetup())return;g=guest(b.dataset.k);if(!g)return;form={mode:'register',key:g.key,name:g.name};linkFor=null;render();}

@@ -43,15 +43,18 @@ async function build(env) {
     const reg = await loadRegistry(env);   // admin decisions about who is who; empty until the registry is enabled
     const tables = [];
     const budget = { left: 12 };   // see statsFor: old statistics are renewed a dozen tables per request
+    let skipped = 0;
     for (const t of tblRes.results) {
-      const stats = await statsFor(env, t, budget);
-      tables.push({
-        id: t.id, day_id: t.day_id, label: t.label, view_code: t.view_code,
-        events: stats.events, hands: stats.hands, winds: stats.winds, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null,
-        updatedAt: t.updated_at, players: applyRegistry(reg, summarizePlayers(stats), t.id),
-      });
+      try {   // one table whose saved data is damaged is left out; it must not take the whole leaderboard down
+        const stats = await statsFor(env, t, budget);
+        tables.push({
+          id: t.id, day_id: t.day_id, label: t.label, view_code: t.view_code,
+          events: stats.events, hands: stats.hands, winds: stats.winds, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null,
+          updatedAt: t.updated_at, players: applyRegistry(reg, summarizePlayers(stats), t.id),
+        });
+      } catch (e) { skipped++; }
     }
-    return json({ days: dayRes.results, tables: tables });
+    return json(skipped ? { days: dayRes.results, tables: tables, skipped: skipped } : { days: dayRes.results, tables: tables });
   } catch (err) {
     return json({ error: String(err) }, 500);
   }

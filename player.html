@@ -230,7 +230,7 @@ a{color:inherit}
 var LOGO='/assets/i/cfad30e8e7.png';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'},MODE_ORDER=['default','casual','tournament','custom'],DEFAULT_MODE='default';
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-var S={period:'',mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,locked:false};
+var S={period:'',periodSet:false,mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,locked:false};
 var SHOWN=20;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function pad2(n){return ('0'+n).slice(-2);}
@@ -238,7 +238,8 @@ function localISO(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.
 function todayStr(){return window.TBT_TODAY||localISO(new Date());}
 function currentSeason(){return todayStr().slice(0,7);}
 function monthLabel(ym){return (MONTHS[+ym.slice(5,7)-1]||ym)+' '+ym.slice(0,4);}
-function shortDate(ds,withYear){return (+ds.slice(8,10))+' '+MONTHS[+ds.slice(5,7)-1].slice(0,3)+(withYear?' '+ds.slice(0,4):'');}
+function validDate(ds){return /^\d{4}-(0[1-9]|1[0-2])-\d{2}/.test(String(ds||''));}
+function shortDate(ds,withYear){return validDate(ds)?(+ds.slice(8,10))+' '+MONTHS[+ds.slice(5,7)-1].slice(0,3)+(withYear?' '+ds.slice(0,4):''):'';}
 function addDays(ds,n){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localISO(d);}
 function mondayOf(ds){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return localISO(d);}
 function sgn(n){n=Math.round(n);return n>0?'+'+n:n<0?'\u2212'+Math.abs(n):'0';}
@@ -271,12 +272,16 @@ function modesIn(){var seen={};games().forEach(function(g){seen[g.mode]=true;});
 function effMode(){return modesIn().length<2?'all':S.mode;}
 function modeOk(g){var m=effMode();return m==='all'||g.mode===m;}
 function modeLabel(){var m=effMode();return m==='all'?'All modes':(MODE_LABEL[m]||m);}
+function autoPeriod(){   // nothing played this month: open on all time rather than on an empty page
+  if(S.periodSet||S.period!==currentSeason()||!games().length)return;
+  if(!games().some(function(g){return validDate(g.date)&&g.date.slice(0,7)===S.period;}))S.period='all';
+}
 function autoMode(){   // the Default mode may have no games in the period: open on all modes rather than on an empty page
   if(S.modeSet||S.mode!==DEFAULT_MODE)return;
   if(!games().some(function(g){return g.mode==='default'&&periodOk(g.date);}))S.mode='all';
 }
 function readUrl(){
-  try{var q=new URLSearchParams(location.search);S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
+  try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
 }
 // the address is /player/<id>/<nickname>: the id comes first, the nickname is only for reading (the first style, <nickname>-<id>, still opens)
 function parseId(){var parts=location.pathname.replace(/\/+$/,'').split('/'),i=parts.indexOf('player'),seg=i>=0?parts[i+1]:'';try{seg=decodeURIComponent(seg||'');}catch(e){seg='';}return /^[A-Za-z0-9_-]{4,80}$/.test(seg)?seg:'';}
@@ -326,7 +331,7 @@ function totals(){
 }
 function gameCard(g){
   var rk=g.rank,sub=g.winds?'1st in '+g.windFirsts+'/'+g.winds+' rounds \u00b7 '+(g.hands?Math.round(g.won/g.hands*100):0)+'% win rate':'';
-  var inner='<div class="d"><b>'+(+g.date.slice(8,10))+'</b>'+MONTHS[+g.date.slice(5,7)-1].slice(0,3)+'</div><div class="t"><b>'+esc(g.session||'Session')+'</b><span>'+esc(g.table)+' \u00b7 '+esc(MODE_LABEL[g.mode]||g.mode)+'</span>'+(sub?'<span>'+sub+'</span>':'')+'</div><div class="r"><span class="pp-rk r'+Math.min(rk,4)+'">'+rk+'</span><b class="num'+(g.net<0?' neg':'')+'">'+sgn(g.net)+'</b></div>';
+  var inner='<div class="d">'+(validDate(g.date)?'<b>'+(+g.date.slice(8,10))+'</b>'+MONTHS[+g.date.slice(5,7)-1].slice(0,3):'<b>\u2013</b>no date')+'</div><div class="t"><b>'+esc(g.session||'Session')+'</b><span>'+esc(g.table)+' \u00b7 '+esc(MODE_LABEL[g.mode]||g.mode)+'</span>'+(sub?'<span>'+sub+'</span>':'')+'</div><div class="r"><span class="pp-rk r'+Math.min(rk,4)+'">'+rk+'</span><b class="num'+(g.net<0?' neg':'')+'">'+sgn(g.net)+'</b></div>';
   return g.view?'<a class="pp-game" href="/scoreboard.html?view='+encodeURIComponent(g.view)+'">'+inner+'</a>':'<div class="pp-game">'+inner+'</div>';
 }
 function brandbar(){return '<header class="brandbar"><div class="brandin"><a class="brandmark" href="/index.html" aria-label="Tiles by Tiles leaderboard"><img src="'+LOGO+'" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a><a class="backlink" href="/masuk.html"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enter table code</a></div></header>';}
@@ -334,9 +339,9 @@ function content(){
   if(S.status==='loading')return '<p class="empty">Loading\u2026</p>';
   if(S.status==='error')return '<p class="empty">Can\u2019t load this page right now.'+(S.err?'<br><span style="font-size:12px">Code: '+esc(S.err)+'</span>':'')+'</p><div style="text-align:center"><button type="button" class="btn primary" data-retry="1">Try again</button></div>';
   if(S.status==='closed')return '<div class="card pp-closed"><h2>This page is not available</h2><p>The player may have chosen to keep their page private, or the link is not right.</p><a class="btn primary" href="/index.html" style="display:inline-block;text-decoration:none">Back to the leaderboard</a></div>';
-  var P=S.data.player,t=totals(),all=games(),last=all.length?all.map(function(g){return g.date;}).sort().pop():'';
+  var P=S.data.player,t=totals(),all=games(),last=all.length?all.map(function(g){return g.date;}).filter(validDate).sort().pop()||'':'';
   var since=P.since?'Registered '+MONTHS[+P.since.slice(5,7)-1]+' '+P.since.slice(0,4):'';
-  var meta=[since,last?'Last played '+shortDate(last):'No games yet'].filter(Boolean).join(' \u00b7 ');
+  var meta=[since,last?'Last played '+shortDate(last):(all.length?'':'No games yet')].filter(Boolean).join(' \u00b7 ');
   var filters=ddButton('period',periodLabel(),ICON.cal,false)+(modesIn().length>=2?ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all'):'');
   var avg=t.won?(Math.round(t.pts/t.won*10)/10)+'<span class="u"> pts</span>':'-';
   var left='<div class="pp-head"><div><h1>'+esc(P.nickname)+'</h1><div class="upd">'+esc(meta)+'</div></div><button type="button" class="pp-share" data-share="1">'+ICON.share+'Share</button></div>'
@@ -400,7 +405,8 @@ function load(){
   }).then(function(d){
     if(!d)return;
     if(!d.player){S.err='old-service';throw new Error('x');}   // the server answered with the whole leaderboard: it does not have the player service yet
-    S.data=d;S.status='ok';readUrl();autoMode();render();
+    S.data=d;S.status='ok';readUrl();autoPeriod();autoMode();
+    try{render();}catch(e){S.err='render';S.status='error';try{console.error(e);}catch(x){}render();}
   }).catch(function(){if(!S.err)S.err='network';S.status='error';render();});
 }
 readUrl();load();

@@ -738,3 +738,24 @@ layanan di server sehat.
   menolak aturan seperti itu, dan server ujinya meniru perilaku Cloudflare ini.
 - Setelah deploy, uji dengan mengetuk nama pemain di leaderboard. Alamatnya harus tetap `/player/<id>/<nama>`
   dan halamannya terbuka.
+
+## Update terbaru (v37): halaman pemain untuk pemain yang "tidak bisa dibuka"
+
+Beberapa penyebab nyata yang membuat halaman seorang pemain tampak tidak bisa dibuka kini ditutup:
+
+- **Pemain tanpa game bulan ini:** halaman tidak lagi terbuka kosong. Bila pemain tidak punya game di bulan berjalan,
+  halaman terbuka di "All time". Alamat yang menyebut periode (`?p=...`) tetap dihormati.
+- **Tautan dari leaderboard membawa periode dan mode yang sedang dilihat**, jadi halaman pemain terbuka dengan
+  tampilan yang sama (tidak ada yang ditambahkan untuk tampilan biasa, dan halaman sesi tidak menambahkan apa pun).
+- **Pemain tanpa game sama sekali** punya halaman dengan keterangan "No games yet".
+- **Game tanpa tanggal sesi yang sah** tetap tergambar (tanggalnya diganti "no date"), tidak lagi membuat halaman gagal.
+- **Satu meja yang datanya rusak tidak lagi menjatuhkan apa pun:** meja itu dilewati di halaman pemain, di leaderboard,
+  dan di halaman admin pemain (sebelumnya satu meja rusak membuat seluruh leaderboard dan halaman admin pemain gagal
+  dimuat). Hanya admin yang diberi tahu bahwa ada game yang dilewati.
+- **Tombol "Cek halaman pemain" di admin pemain** (kartu Registry): memeriksa halaman semua pemain yang tidak
+  disembunyikan, lalu melaporkan berapa yang bisa dibuka, pemain mana yang gagal (dengan kode dan alasan), pemain
+  yang belum punya game, dan pemain yang gamenya ada yang dilewati.
+- Bila halaman gagal tergambar, kodenya `render` (bukan `network`).
+- Tidak ada perubahan database. File berubah dari v36: `index.html`, `player.html`, `admin-pemain.html`,
+  `functions/_players.js`, `functions/api/overview.js`. Unggah semuanya dalam satu commit (`overview.js` dan
+  `_players.js` berpasangan).

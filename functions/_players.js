@@ -119,11 +119,10 @@ export async function gatherNames(env) {
   let played = 0;
   const budget = { left: 12 };   // old statistics are renewed a dozen tables per request (see statsFor)
   for (const t of tblRes.results) {
-    const stats = await statsFor(env, t, budget);
-    if (!stats.events) continue;
+    let stats, ps;
+    try { stats = await statsFor(env, t, budget); if (!stats.events) continue; ps = summarizePlayers(stats); } catch (e) { continue; }   // a table whose saved data is damaged is left out here too, so the admin pages still open
     played++;
     const date = dayDate[t.day_id] || '';
-    const ps = summarizePlayers(stats);
     const named = ps.filter(function (q) { return !q.placeholder; }).map(function (q) { return q.name; });
     ps.forEach(function (p) {
       if (p.placeholder) return;
@@ -315,28 +314,32 @@ export async function playerPage(env, rawId, admin) {
     const days = {};
     (await env.DB.prepare('SELECT id, label, date FROM days').all()).results.forEach(function (d) { days[d.id] = d; });
 
-    const games = [];
+    const games = []; let skipped = 0;
     for (let i = 0; i < mine.length; i += 40) {   // the database takes a limited number of values per question
       const part = mine.slice(i, i + 40), ids = part.map(function (m) { return m.t.id; });
       const full = (await env.DB.prepare('SELECT id, day_id, label, view_code, players, stats, rounds, updated_at FROM tables WHERE id IN (' + ids.map(function () { return '?'; }).join(',') + ')').bind(...ids).all()).results;
       const byId = {}; full.forEach(function (r) { byId[r.id] = r; });
       for (const m of part) {
-        const row = byId[m.t.id]; if (!row) continue;
-        const stats = await statsFor(env, row);   // renews an old table's statistics when its turn comes, so the facts are there
-        if (!stats.events) continue;
-        const me = summarizePlayers(stats)[m.seat], f = (stats.facts && stats.facts[stats.names[m.seat]]) || null;
-        if (!me || !f) continue;
-        const d = days[row.day_id] || {};
-        games.push({
-          view: row.view_code, table: row.label, session: d.label || '', date: d.date || '', mode: stats.mode || 'casual', locked: !!stats.locked,
-          rank: me.rank, net: me.netTotal, hands: stats.hands, winds: stats.winds, won: f.won, windFirsts: f.windFirsts,
-          ptsSum: f.ptsSum, best: f.best, zimo: f.zimo, dealIns: f.dealIns,
-        });
+        try {   // a table whose saved data is damaged is left out of this page; it must not take the page down for everyone who sat there
+          const row = byId[m.t.id]; if (!row) continue;
+          const stats = await statsFor(env, row);   // renews an old table's statistics when its turn comes, so the facts are there
+          if (!stats.events) continue;
+          const me = summarizePlayers(stats)[m.seat], f = (stats.facts && stats.facts[stats.names[m.seat]]) || null;
+          if (!me || !f) { skipped++; continue; }
+          const d = days[row.day_id] || {};
+          games.push({
+            view: row.view_code, table: row.label, session: d.label || '', date: d.date || '', mode: stats.mode || 'casual', locked: !!stats.locked,
+            rank: me.rank, net: me.netTotal, hands: stats.hands, winds: stats.winds, won: f.won, windFirsts: f.windFirsts,
+            ptsSum: f.ptsSum, best: f.best, zimo: f.zimo, dealIns: f.dealIns,
+          });
+        } catch (e) { skipped++; }
       }
     }
     games.sort(function (a, b) { return b.date < a.date ? -1 : b.date > a.date ? 1 : (a.table < b.table ? -1 : 1); });
-    return json({ player: { id: id, nickname: pl.nickname, since: (pl.createdAt || '').slice(0, 10) }, games: games });
+    const out = { player: { id: id, nickname: pl.nickname, since: (pl.createdAt || '').slice(0, 10) }, games: games };
+    if (admin && skipped) out.skipped = skipped;   // games left out because their saved data could not be read
+    return json(out);
   } catch (err) {
-    return json({ error: 'server' }, 500);
+    return json(admin ? { error: 'server', detail: String((err && err.message) || err).slice(0, 200) } : { error: 'server' }, 500);
   }
 }
