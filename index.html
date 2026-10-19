@@ -136,7 +136,7 @@ a{color:inherit}
 .brandname{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:.07em;text-transform:uppercase;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .backlink{display:inline-flex;align-items:center;gap:7px;min-height:40px;flex:none;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}
 /* a row of the board opens that player's page (only players who have an open page) */
-.rlink{position:absolute;left:0;top:0;right:0;bottom:0;border-radius:12px}
+.rlink,.row>.rlink,.row.m>.rlink{position:absolute;left:0;top:0;right:0;bottom:0;z-index:2;border-radius:12px}   /* .row.m>* makes the children of the top rows relative: this must win over it */
 .rlink:hover{background:rgba(127,127,127,.07)}
 .rlink:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 /* small round choice buttons (used by the format choice of the share window) */
@@ -321,7 +321,7 @@ function board(list,session){
   var html='';
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/player/'+slugOf(p.name)+'-'+esc(p.pid)+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/player/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }

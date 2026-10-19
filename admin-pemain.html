@@ -142,7 +142,17 @@ function load(){
     if(r.status===401){authed=false;sessionStorage.removeItem('tbt-admin-pw');throw new Error('auth');}
     if(!r.ok)throw new Error('server');
     return r.json();
-  }).then(function(d){data=d;authed=true;});
+  }).then(function(d){data=d;authed=true;if(!pageChecked){pageChecked=true;checkPages();}});
+}
+// Once per visit: can the server open the page of a registered player? If not, say why, so a missing file is not a mystery.
+var pageChecked=false,pageCheck=null;
+function checkPages(){
+  var p=(data.registered||[]).filter(function(x){return !x.hidden;})[0];
+  if(!p)return;
+  fetch('/api/player/'+encodeURIComponent(p.id),{cache:'no-store'}).then(function(r){
+    if(r.status===200)return;
+    return r.text().then(function(tx){var j=null;try{j=JSON.parse(tx);}catch(e){}pageCheck={status:r.status,own:!!(j&&j.error)};render();});
+  }).catch(function(){});
 }
 function post(body){
   return fetch('/api/admin/players',{method:'POST',headers:H(),body:JSON.stringify(body)}).then(function(r){
@@ -161,7 +171,7 @@ function needSetup(){if(!data.ready){alert('Aktifkan registry pemain dulu.');ret
 
 function viewSetup(){
   if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Registry pemain belum aktif</h3><p class="note">Registry adalah daftar pemain resmi yang diisi admin: nama lengkap, nama panggilan (yang tampil di leaderboard), WhatsApp, dan Instagram. Nama yang tidak terdaftar menjadi guest dan tidak masuk leaderboard. Daftar nama di bawah sudah bisa dipakai untuk memeriksa nama. Aktifkan satu kali, aman kalau terpencet lagi.</p><button class="btn primary" data-a="setup">Aktifkan registry pemain</button></div>';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">Halaman pemain belum bisa dibuka dari server (kode '+pageCheck.status+(pageCheck.own?', server tidak mengenali pemain ini':', jawabannya bukan dari layanan halaman pemain')+'). '+(pageCheck.own?'Hubungi pembuat situs dengan kode ini.':'Pastikan file functions/api/player/[id].js ikut terunggah ke GitHub, lalu tunggu deploy selesai.')+'</p>':'')+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
   h+=data.ruleOn
     ?'<p class="note" style="margin-top:0">Hanya pemain terdaftar yang masuk leaderboard. Guest tetap tampil di meja dan sesinya, dan nama ganda (memuat "/", "&amp;", "+" atau "dan") juga guest.</p>'
     :'<p class="note" style="margin-top:0">Aturan guest belum berlaku karena belum ada pemain terdaftar, jadi semua nama masih dihitung di leaderboard. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard. Centang nama yang mau didaftarkan di daftar guest di bawah. Yang tidak dicentang tetap guest.</p>';
@@ -259,7 +269,7 @@ function viewRegistered(){
     var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">data belum lengkap</span>':'')+(p.hidden?'<span class="tag">halaman disembunyikan</span>':'')
       +'<div class="meta">'+(p.fullName?esc(p.fullName)+' &middot; ':'')+p.games+' game &middot; terakhir '+fmtDate(p.last)+spell+'</div>'
       +(contact.length?'<div class="meta">'+contact.join(' &middot; ')+'</div>':'')+'</div>'
-      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(p.hidden?'':'<a class="btn sm" href="/player/'+esc(slugOf(p.nickname))+'-'+esc(p.id)+'" target="_blank" rel="noopener">Halaman</a>')+(data.pageReady===false?'':'<button class="btn sm" data-a="hide" data-id="'+esc(p.id)+'" data-v="'+(p.hidden?'0':'1')+'">'+(p.hidden?'Tampilkan halaman':'Sembunyikan halaman')+'</button>')+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
+      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(p.hidden?'':'<a class="btn sm" href="/player/'+encodeURIComponent(p.id)+'/'+esc(slugOf(p.nickname))+'" target="_blank" rel="noopener">Halaman</a>')+(data.pageReady===false?'':'<button class="btn sm" data-a="hide" data-id="'+esc(p.id)+'" data-v="'+(p.hidden?'0':'1')+'">'+(p.hidden?'Tampilkan halaman':'Sembunyikan halaman')+'</button>')+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
     if(form&&form.mode==='edit'&&form.id===p.id)row+=viewForm();
     if(splitFor&&splitFor.kind==='reg'&&splitFor.id===p.id&&hasSeats)row+=seatPanel(p.seats);
     return row;

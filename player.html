@@ -278,12 +278,13 @@ function autoMode(){   // the Default mode may have no games in the period: open
 function readUrl(){
   try{var q=new URLSearchParams(location.search);S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
 }
-function parseId(){var seg=decodeURIComponent(location.pathname.replace(/\/+$/,'').split('/').pop()||'').toLowerCase();var m=/([0-9a-f]{10})$/.exec(seg);return m?m[1]:'';}
+// the address is /player/<id>/<nickname>: the id comes first, the nickname is only for reading (the first style, <nickname>-<id>, still opens)
+function parseId(){var parts=location.pathname.replace(/\/+$/,'').split('/'),i=parts.indexOf('player'),seg=i>=0?parts[i+1]:'';try{seg=decodeURIComponent(seg||'');}catch(e){seg='';}return /^[A-Za-z0-9_-]{4,80}$/.test(seg)?seg:'';}
 var ID=parseId();
 function syncUrl(){
   try{
     var path=location.pathname;
-    if(S.data&&S.data.player)path='/player/'+slugOf(S.data.player.nickname)+'-'+S.data.player.id;
+    if(S.data&&S.data.player)path='/player/'+encodeURIComponent(S.data.player.id)+'/'+slugOf(S.data.player.nickname);
     var qs=[];if(S.period!==currentSeason())qs.push('p='+periodParam());
     if(S.modeSet&&S.mode!==DEFAULT_MODE&&modesIn().length>=2)qs.push('m='+S.mode);
     history.replaceState(null,'',path+(qs.length?'?'+qs.join('&'):''));
@@ -331,7 +332,7 @@ function gameCard(g){
 function brandbar(){return '<header class="brandbar"><div class="brandin"><a class="brandmark" href="/index.html" aria-label="Tiles by Tiles leaderboard"><img src="'+LOGO+'" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a><a class="backlink" href="/masuk.html"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enter table code</a></div></header>';}
 function content(){
   if(S.status==='loading')return '<p class="empty">Loading\u2026</p>';
-  if(S.status==='error')return '<p class="empty">Can\u2019t load this page right now.</p><div style="text-align:center"><button type="button" class="btn primary" data-retry="1">Try again</button></div>';
+  if(S.status==='error')return '<p class="empty">Can\u2019t load this page right now.'+(S.err?'<br><span style="font-size:12px">Code: '+esc(S.err)+'</span>':'')+'</p><div style="text-align:center"><button type="button" class="btn primary" data-retry="1">Try again</button></div>';
   if(S.status==='closed')return '<div class="card pp-closed"><h2>This page is not available</h2><p>The player may have chosen to keep their page private, or the link is not right.</p><a class="btn primary" href="/index.html" style="display:inline-block;text-decoration:none">Back to the leaderboard</a></div>';
   var P=S.data.player,t=totals(),all=games(),last=all.length?all.map(function(g){return g.date;}).sort().pop():'';
   var since=P.since?'Registered '+MONTHS[+P.since.slice(5,7)-1]+' '+P.since.slice(0,4):'';
@@ -390,11 +391,13 @@ window.addEventListener('resize',function(){if(S.menu)render();});
 function load(){
   S.status='loading';render();
   if(!ID){S.status='closed';render();return;}
-  fetch('/api/player/'+ID).then(function(r){
-    if(r.status===404){S.status='closed';render();return null;}
-    if(!r.ok)throw new Error('bad');
+  S.err='';
+  // only the server's own "not available" answer closes the page; any other failure (a 404 from a missing service, an error, no connection) is shown as a failure
+  fetch('/api/player/'+encodeURIComponent(ID)).then(function(r){
+    if(r.status===404)return r.json().then(function(j){if(j&&j.error==='not_available'){S.status='closed';render();return null;}S.err='404-no-service';throw new Error('x');},function(){S.err='404-no-service';throw new Error('x');});
+    if(!r.ok){S.err=String(r.status);throw new Error('x');}
     return r.json();
-  }).then(function(d){if(!d)return;S.data=d;S.status='ok';readUrl();autoMode();render();}).catch(function(){S.status='error';render();});
+  }).then(function(d){if(!d)return;S.data=d;S.status='ok';readUrl();autoMode();render();}).catch(function(){if(!S.err)S.err='network';S.status='error';render();});
 }
 readUrl();load();
 })();

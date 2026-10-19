@@ -9,11 +9,18 @@ const NOT_AVAILABLE = function () { return json({ error: 'not_available' }, 404)
 
 export async function onRequestGet({ params, env }) {
   try {
-    const id = String(params.id || '').toLowerCase();
-    if (!/^[0-9a-f]{10}$/.test(id)) return NOT_AVAILABLE();
+    // An id is whatever the registry holds: ids made by older versions look different from today's, so only the characters are checked.
+    const raw = String(params.id || '');
+    if (!/^[A-Za-z0-9_-]{4,80}$/.test(raw)) return NOT_AVAILABLE();
     const reg = await loadRegistryCached(env);
-    const pl = reg.ready ? reg.players.get(id) : null;
+    let pl = null;
+    if (reg.ready) {
+      const tries = [raw, raw.toLowerCase()], dash = raw.lastIndexOf('-');
+      if (dash > 0) tries.push(raw.slice(dash + 1));   // the first address style was <nickname>-<id>
+      for (const k of tries) { pl = reg.players.get(k) || null; if (pl) break; }
+    }
     if (!pl || pl.hidden) return NOT_AVAILABLE();
+    const id = pl.id;
 
     // the tables where this person sat, by the same rule the leaderboard uses (the name written, or a choice made for that seat)
     const rows = (await env.DB.prepare('SELECT id, day_id, label, players, view_code FROM tables').all()).results;

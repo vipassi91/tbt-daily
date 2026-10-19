@@ -679,3 +679,23 @@ Instalasi baru memakai `schema-players.sql` yang sudah memuat kolom itu.
 - **File baru:** `player.html`, `functions/api/player/[id].js`, `migrate-v3.sql` (folder `functions/api/player/` baru).
   **Berubah dari v32:** `index.html`, `admin-pemain.html`, `daftar.html`, `schema-players.sql`, `_redirects`, `_headers`,
   `functions/_players.js`, `functions/api/admin/players.js`. Total 86 file (di bawah batas 100 per unggahan).
+
+## Update terbaru (v34): perbaikan halaman pemain
+
+Dua masalah di v33 diperbaiki:
+
+- **Halaman pemain terbaca "tidak tersedia" untuk semua pemain.** Server dan halaman hanya menerima ID tepat 10
+  karakter heksadesimal, padahal ID di registry yang dibuat versi lama bisa berformat lain. Sekarang ID dalam format
+  apa pun diterima (huruf besar, garis bawah, strip, panjang berapa pun). Halaman juga tidak lagi menganggap setiap
+  jawaban 404 sebagai "disembunyikan": hanya jawaban resmi server ("not available") yang menutup halaman. Bila
+  layanan halaman pemain tidak ada atau error, halaman menampilkan "Can't load this page right now" beserta kode
+  (misalnya `404-no-service`) dan tombol coba lagi.
+- **Baris peringkat 1 sampai 4 di leaderboard tidak bisa diklik.** Aturan gaya baris teratas membuat tautan
+  menyusut jadi lebar nol. Sekarang seluruh baris, termasuk peringkat 1 sampai 4, bisa diklik.
+- **Alamat baru:** `/player/<id>/<nama>` (ID di depan, nama hanya agar mudah dibaca). Alamat gaya v33
+  (`/player/<nama>-<id>`) tetap terbuka, dan halaman merapikan alamatnya sendiri.
+- **Pemeriksaan mandiri di admin pemain:** sekali tiap kunjungan, halaman admin mencoba membuka halaman satu pemain.
+  Bila server tidak bisa, muncul catatan merah dengan kode dan penyebab yang mungkin (misalnya file
+  `functions/api/player/[id].js` belum terunggah). Bila semuanya baik, tidak ada catatan.
+- Tidak ada perubahan database dari v33. File berubah dari v33: `player.html`, `functions/api/player/[id].js`,
+  `index.html`, `admin-pemain.html`.
