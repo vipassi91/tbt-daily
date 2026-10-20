@@ -199,12 +199,18 @@ var DEFAULT_MODE='default';   // the board opens on the Default mode and on the 
 var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:'all',day:null,loaded:false,failed:false,updated:null,menu:null,from:'',to:'',cust:{open:false,err:''},autoDone:false};
 // The rating (formerly League Score) is hidden until its formula is settled. Set SHOW_RATING to true to bring the toggle back.
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
-var MODE_ORDER=['default','casual','tournament','custom'];
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'};
+var MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8'];
+function isMcrMode(k){return k==='mcr4'||k==='mcr8';}
+// Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
+// them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
+function modeMatch(t,m){var k=modeOf(t);return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
+function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
 function modeOf(t){return t.mode||'casual';}
 // one short line describing how a table was played
 function rulesLine(t){
   var r=t.rules;if(!r)return '';
+  if(r.base!=null){var q=[MODE_LABEL[modeOf(t)]||'MCR','base '+r.base,'min '+r.minPoint+' pts','dealer never repeats'];if(r.seatRotation)q.push('seat rotation');return q.join(' \u00b7 ');}   // an MCR table
   var p=[MODE_LABEL[modeOf(t)]||'Casual',r.minPoint+'+ pts to win','streak '+r.maxStreak,r.start==null?'no start score':'start '+r.start];
   if(r.bankrupt)p.push('bankrupt');
   if(r.seatRotation)p.push('seat rotation');
@@ -227,7 +233,9 @@ function periodOk(ds){
   var p=S.period;
   if(p==='all')return true;
   if(p==='today')return ds===todayStr();
+  if(p==='yesterday')return ds===addDays(todayStr(),-1);
   if(p==='week'){var m=mondayOf(todayStr());return ds>=m&&ds<=addDays(m,6);}
+  if(p==='lastweek'){var m0=mondayOf(todayStr());return ds>=addDays(m0,-7)&&ds<=addDays(m0,-1);}   // the Monday to Sunday before this one
   if(p==='custom')return (!S.from||ds>=S.from)&&(!S.to||ds<=S.to);
   return ds.slice(0,7)===p;
 }
@@ -238,13 +246,13 @@ function seasons(){   // months that have games, newest first, and always the cu
 }
 function periodLabel(){
   var p=S.period;
-  if(p==='all')return 'All time';if(p==='today')return 'Today';if(p==='week')return 'This week';
+  if(p==='all')return 'All time';if(p==='today')return 'Today';if(p==='yesterday')return 'Yesterday';if(p==='week')return 'This week';if(p==='lastweek')return 'Last week';
   if(p==='custom'){return shortDate(S.from,S.from.slice(0,4)!==S.to.slice(0,4))+' \u2013 '+shortDate(S.to,true);}
   return monthLabel(p);
 }
 function periodParam(){return S.period==='custom'?S.from+'_'+S.to:S.period;}
 function setPeriodParam(v){
-  if(v==='all'||v==='today'||v==='week'){S.period=v;return true;}
+  if(v==='all'||v==='today'||v==='yesterday'||v==='week'||v==='lastweek'){S.period=v;return true;}
   if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v)){S.period=v;return true;}
   var m=/^(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})$/.exec(v);
   if(m&&m[1]<=m[2]){S.period='custom';S.from=m[1];S.to=m[2];return true;}
@@ -252,14 +260,16 @@ function setPeriodParam(v){
 }
 // ---- modes ----
 function modesInData(){var seen={};DATA.tables.forEach(function(t){if(t.events>0)seen[modeOf(t)]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
-function effMode(){return modesInData().length<2?'all':S.mode;}   // with a single mode played there is nothing to filter
-function modeOk(t){var m=effMode();return m==='all'||modeOf(t)===m;}
-function modeLabel(){var m=effMode();return m==='all'?'All modes':(MODE_LABEL[m]||m);}
+function effMode(){var ms=modesInData();if(ms.length<2)return ms.length&&isMcrMode(ms[0])?'mcr':'all';return S.mode;}   // with a single mode played there is nothing to filter
+function modeOk(t){return modeMatch(t,effMode());}
+function modeLabel(){return filterLabel(effMode());}
 // the Default mode may have no games yet in the period: open on all modes rather than on an empty board
 function autoMode(){
   if(!S.loaded||S.modeSet||S.mode!==DEFAULT_MODE)return;
-  var has=DATA.tables.some(function(t){var d=dayOf(t.day_id);return t.events>0&&modeOf(t)==='default'&&d&&periodOk(d.date);});
-  if(!has)S.mode='all';
+  var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
+  if(inP.some(function(t){return modeOf(t)==='default';}))return;
+  // nothing in Default: all modes, unless only MCR tables were played in the period, which is then what opens
+  S.mode=(!inP.some(function(t){return !isMcrMode(modeOf(t));})&&inP.some(function(t){return isMcrMode(modeOf(t));}))?'mcr':'all';
 }
 // ---- the address keeps the filters, so a shared link opens the same view ----
 function readUrl(){
@@ -269,7 +279,7 @@ function readUrl(){
     if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');S.dmode='all';}
     else if(q.get('tab')==='sessions')S.tab='sessions';
     S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);
-    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
   }catch(e){S.period=currentSeason();}
 }
 readUrl();
@@ -377,22 +387,34 @@ function tablesWord(n){return n+(n===1?' table':' tables');}
 function periodMenu(){
   var cur=currentSeason(),html='<div class="n-g">Season</div>';
   seasons().forEach(function(ym){html+=optBtn('period|'+ym,esc(monthLabel(ym))+(ym===cur?' <span class="n-cur">Current</span>':''),S.period===ym);});
-  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|week','This week',S.period==='week')+optBtn('period|all','All time',S.period==='all');
+  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|yesterday','Yesterday',S.period==='yesterday')+optBtn('period|week','This week',S.period==='week')+optBtn('period|lastweek','Last week',S.period==='lastweek')+optBtn('period|all','All time',S.period==='all');
   html+='<div class="n-g">Custom</div>';
   if(!S.cust.open)html+='<button type="button" class="n-o'+(S.period==='custom'?' on':'')+'" data-cust="1"><span>Custom range\u2026</span><span class="c">\u203A</span></button>';
   else{var t=todayStr();html+='<div class="n-cust"><div class="r"><div><label for="cFrom">From</label><input type="date" id="cFrom" value="'+esc(S.from||'')+'" max="'+t+'"></div><div><label for="cTo">To</label><input type="date" id="cTo" value="'+esc(S.to||'')+'" max="'+t+'"></div></div>'+(S.cust.err?'<div class="err" role="alert">'+esc(S.cust.err)+'</div>':'')+'<button type="button" class="go" data-apply="1">Apply range</button></div>';}
   return html;
 }
+// the mode choices: the usual modes and "All modes" (without MCR), then a group for the MCR modes
+function modeChoices(list,pick,cur,countOf){
+  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&list.some(function(t){return modeOf(t)===k;})});
+  var mcr=['mcr4','mcr8'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
+  var html='';
+  std.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
+  if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return !isMcrMode(modeOf(t));})));
+  if(mcr.length){
+    html+='<div class="n-g">MCR</div>';
+    if(mcr.length>1)html+=optBtn(pick+'|mcr','MCR',cur==='mcr',tablesWord(countOf(function(t){return isMcrMode(modeOf(t));})));
+    mcr.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
+  }
+  return html;
+}
 function modeMenu(){   // counts follow the period that is selected
   var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
-  var html='';
-  modesInData().forEach(function(k){var n=inP.filter(function(t){return modeOf(t)===k;}).length;html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(n));});
-  return html+'<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',tablesWord(inP.length));
+  var all=DATA.tables.filter(function(t){return t.events>0;});
+  return modeChoices(all,'mode',S.mode,function(f){return inP.filter(f).length;});
 }
 function dayModeMenu(id){
-  var ts=DATA.tables.filter(function(t){return t.day_id===id&&t.events>0;});var html='';
-  MODE_ORDER.filter(function(k){return ts.some(function(t){return modeOf(t)===k;});}).forEach(function(k){html+=optBtn('dmode|'+k,esc(MODE_LABEL[k]),S.dmode===k,tablesWord(ts.filter(function(t){return modeOf(t)===k;}).length));});
-  return html+'<div class="n-sep"></div>'+optBtn('dmode|all','All modes',S.dmode==='all',tablesWord(ts.length));
+  var ts=DATA.tables.filter(function(t){return t.day_id===id&&t.events>0;});
+  return modeChoices(ts,'dmode',S.dmode,function(f){return ts.filter(f).length;});
 }
 var MENU_TITLE={period:'Period',mode:'Mode',dmode:'Mode'};
 function menuInner(which){return which==='period'?periodMenu():(which==='mode'?modeMenu():dayModeMenu(S.day));}
@@ -471,9 +493,9 @@ function viewDay(id){
   if(!d)return back+'<p class="empty">Session not found.</p>';
   var ts=DATA.tables.filter(function(t){return t.day_id===id;}),pl=ts.filter(function(t){return t.events>0;});
   var many=MODE_ORDER.filter(function(k){return pl.some(function(t){return modeOf(t)===k;});}).length>=2,dm=many?S.dmode:'all';
-  var dl=aggregate(pl.filter(function(t){return dm==='all'||modeOf(t)===dm;}));
-  setCard(dl,d.label,fmtDate(d.date)+(dm==='all'?'':' \u00b7 '+(MODE_LABEL[dm]||dm)),true);
-  return back+'<div class="n-dhead"><div><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta">'+esc(fmtDate(d.date))+'</div></div>'+(many?'<div class="n-filters one">'+ddButton('dmode',dm==='all'?'All modes':MODE_LABEL[dm],ICON.mode,dm!=='all')+'</div>':'')+'</div>'
+  var dl=aggregate(pl.filter(function(t){return !many||modeMatch(t,dm);}));
+  setCard(dl,d.label,fmtDate(d.date)+(!many||dm==='all'?'':' \u00b7 '+filterLabel(dm)),true);
+  return back+'<div class="n-dhead"><div><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta">'+esc(fmtDate(d.date))+'</div></div>'+(many?'<div class="n-filters one">'+ddButton('dmode',filterLabel(dm),ICON.mode,dm!=='all')+'</div>':'')+'</div>'
     +'<div class="n-grid d"><div><div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(dl,true)+'</div>'
     +'<div><h3 class="sub" style="margin-top:0">Tables</h3>'+(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>')+'</div></div>';
 }

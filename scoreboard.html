@@ -284,6 +284,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .seatnote b{display:block;margin-bottom:2px;font-size:14px}
 .seatnote .so{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .seatnote .so>span{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:600}
+.warn{margin-top:8px;padding:10px 12px;border:1px solid var(--red);border-left-width:4px;border-radius:10px;background:var(--field);font-size:13px;line-height:1.45}
+.warn[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -1454,7 +1456,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
         var g=Object.assign(defaultGame(),s);
         g.names=[0,1,2,3].map(function(i){return String(g.names[i]||'');});
         g.useStart=!!g.useStart;g.start=String(g.start==null?'200':g.start);
-        if(['casual','default','tournament','custom'].indexOf(g.mode)<0)g.mode='casual';
+        if(['casual','default','tournament','custom','mcr4','mcr8'].indexOf(g.mode)<0)g.mode='casual';
         g.seatRotation=g.seatRotation!==false;
         g.bankrupt=!!g.bankrupt&&g.useStart;
         var gc=(g.custom&&typeof g.custom==='object')?g.custom:{};
@@ -1635,7 +1637,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   /* ---------- rules of this game, always readable (host, player, saved or not) ---------- */
   function renderRules(){
     var cfg=modeConfig();
-    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'}[game.mode||'casual']||'Casual';
+    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'}[game.mode||'casual']||'Casual';
     var onoff=function(b){return b?'On':'Off';};
     var rows=[
       ['Minimum to win',cfg.minPoint+(cfg.minPoint===1?' point':' points')],
@@ -1645,6 +1647,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       ['Starting score',game.useStart?String(game.start):'Not used'],
       ['Bankrupt',onoff(cfg.bankrupt)]
     ];
+    if(cfg.mcr)rows=[['Base point',String(cfg.basePoint)],['Minimum hand points',String(cfg.basePoint)],['Dealer','never repeats'],['Seat rotation',onoff(cfg.seatRotation)],['Invalid win','\u221224, others +8 each'],['False win','\u221248, others +16 each']];
     var h='<div class="rhead"><b>Game rules</b><span class="pill">'+esc(label)+'</span></div><div class="rules">';
     rows.forEach(function(x){h+='<div><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>';});
     h+='</div>';
@@ -1819,10 +1822,15 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
   // Hu: base x 2, and x 1.5 when the dealer is the winner or the discarder
   function huAmt(pts,winner,disc,dealer){var a=BASE[pts]*2;return (winner===dealer||disc===dealer)?a*1.5:a;}
+  // MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed, not picked
+  var MCR_BASE={mcr4:4,mcr8:8};
+  function isMcr(m){return m==='mcr4'||m==='mcr8';}
   function modeConfig(){
-    var seat=(game.mode==='tournament'||game.mode==='custom')&&!!game.seatRotation;
+    var mcr=isMcr(game.mode);
+    var seat=(game.mode==='tournament'||game.mode==='custom'||mcr)&&!!game.seatRotation;
     var cfg;
-    if(game.mode==='default')cfg={minPoint:2,maxStreak:4,deadwall:false,seatRotation:false};
+    if(mcr)cfg={mcr:true,basePoint:MCR_BASE[game.mode],minPoint:MCR_BASE[game.mode],maxStreak:1,deadwall:false,seatRotation:seat};
+    else if(game.mode==='default')cfg={minPoint:2,maxStreak:4,deadwall:false,seatRotation:false};
     else if(game.mode==='tournament')cfg={minPoint:2,maxStreak:1,deadwall:false,seatRotation:seat};
     else if(game.mode==='custom'){
       var c=game.custom||{};
@@ -1830,13 +1838,34 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     }
     else cfg={minPoint:1,maxStreak:4,deadwall:false,seatRotation:false};   // casual
     // bankrupt-ends-the-round only makes sense once there's a starting score to run out of
-    cfg.bankrupt=!!(game.useStart&&game.bankrupt);
-    cfg.startBase=game.useStart?(num(game.start)||0):0;
+    cfg.bankrupt=!mcr&&!!(game.useStart&&game.bankrupt);
+    cfg.startBase=(!mcr&&game.useStart)?(num(game.start)||0):0;   // MCR modes have no starting score
     return cfg;
   }
 
+  function kindsFor(){
+    return modeConfig().mcr?[['hu','Hu'],['zimo','Zi Mo'],['invalid','Invalid win'],['false','False win'],['draw','Draw']]:KINDS;
+  }
   function scoreEvent(ev,dealer,cfg){
     var d=[0,0,0,0],dealerWon=false,desc='',i,w,p,mult=cfg.minPoint*(cfg.deadwall?2:1);
+    if(cfg.mcr){   // base + typed hand points; no dealer bonus, no multiple winners, no tenpai payout
+      var BP=cfg.basePoint;
+      if(ev.kind==='hu'){
+        w=ev.winner;var hp=Math.max(0,num(ev.pts[w]));
+        d[w]+=BP+hp;d[ev.disc]-=BP+hp;
+        for(i=0;i<4;i++){if(i!==w&&i!==ev.disc){d[i]-=BP;d[w]+=BP;}}
+        desc=gname(w)+' wins '+(3*BP+hp)+' off '+gname(ev.disc);
+      }else if(ev.kind==='zimo'){
+        w=ev.winner;var hp2=Math.max(0,num(ev.pts[w])),tot2=BP+hp2;
+        for(i=0;i<4;i++){if(i===w)continue;d[i]-=tot2;d[w]+=tot2;}
+        desc=gname(w)+' Zi Mo, '+(3*tot2);
+      }else if(ev.kind==='invalid'||ev.kind==='false'){
+        var pen=ev.kind==='invalid'?24:48;
+        for(i=0;i<4;i++)d[i]=(i===ev.who)?-pen:pen/3;
+        desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
+      }else if(ev.kind==='draw'){desc='Draw, no score';}
+      return {d:d,dealerWon:false,desc:desc};
+    }
     if(ev.kind==='hu'){
       w=ev.winner;p=ev.pts[w];
       var a=huAmt(p,w,ev.disc,dealer);d[w]+=a;d[ev.disc]-=a;dealerWon=(w===dealer);
@@ -1933,6 +1962,19 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
   function eventFromForm(){
     var k=f.kind,ev,ws;
+    if(modeConfig().mcr){   // typed points (0 is allowed: it is flagged below the minimum, not refused); a draw carries no tenpai
+      if(k==='hu'){
+        if(f.winner<0||f.disc<0||f.pts[f.winner]==null)return null;
+        ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+      }
+      if(k==='zimo'){
+        if(f.winner<0||f.pts[f.winner]==null)return null;
+        ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+      }
+      if(k==='invalid'||k==='false')return f.who<0?null:{kind:k,who:f.who};
+      if(k==='draw')return {kind:'draw',tenpai:[]};
+      return null;
+    }
     if(k==='hu'){
       if(f.winner<0||f.disc<0||!f.pts[f.winner])return null;
       ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];
@@ -2001,7 +2043,23 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       }
     return h+'</div>';
   }
+  var typedDealer=0;
+  function ptsWarnHtml(base){
+    return 'Hand points are below the minimum of '+base+', so this hand can\u2019t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
+  }
+  function ptsTyped(p,selected,label){
+    var base=modeConfig().basePoint,low=(selected!=null&&selected<base);
+    return '<div class="lbl">'+esc(label||'Hand points')+'</div>'
+      +'<input type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Hand points" placeholder="Hand points (at least '+base+', on top of the base '+base+')" data-a="ptsinput" data-p="'+p+'" value="'+(selected!=null?selected:'')+'">'
+      +'<div class="warn" id="ptsWarn" role="alert"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
+  }
+  function scorePrevHtml(ev,dealer){
+    if(!ev)return '';
+    var pv=scoreEvent(ev,dealer,modeConfig());
+    return '<div class="lbl">Score changes</div><div class="dls">'+deltaChips(pv.d)+'</div>';
+  }
   function ptsGrid(p,selected,label){
+    if(modeConfig().mcr)return ptsTyped(p,selected,label);
     var min=modeConfig().minPoint;
     var pkMode=(f.patterns&&f.patterns[p])?'pattern':'points';
     var h='<div class="lbl">'+esc(label||'Points')+'</div>'
@@ -2044,7 +2102,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var dealer=editIdx>=0?rp.hands[editIdx].dealer:rp.dealer;
       if(editIdx>=0)setSeatView(rp.hands[editIdx].wind,rp.hands[editIdx].dealer,cfg);
       var h='<h2>'+(editIdx>=0?'Edit hand '+(editIdx+1):'Record hand')+'</h2><div class="lbl">What happened?</div><div class="chips">';
-      KINDS.forEach(function(k){h+='<button type="button" class="chip" data-a="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>';});
+      kindsFor().forEach(function(k){h+='<button type="button" class="chip" data-a="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>';});
       h+='</div>';
       var k=f.kind;
       if(k==='hu'){
@@ -2069,13 +2127,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       }else if(k==='invalid'||k==='false'){
         h+='<div class="lbl">'+(k==='invalid'?'Who declared an invalid win?':'Who declared a false win?')+'</div>'+playerChips('who',f.who);
       }else if(k==='draw'){
-        h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
+        if(cfg.mcr)h+='<p class="hint">A draw scores nothing in this mode. Save it to move the dealer on.</p>';
+        else h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
       }
       var ev=eventFromForm();
-      if(ev){
-        var pv=scoreEvent(ev,dealer,modeConfig());
-        h+='<div class="lbl">Score changes</div><div class="dls">'+deltaChips(pv.d)+'</div>';
-      }
+      typedDealer=dealer;
+      h+='<div id="scorePrev">'+scorePrevHtml(ev,dealer)+'</div>';
       h+='<div class="row-actions"><button type="button" class="btn primary" data-a="save"'+(ev?'':' disabled')+'>'+(editIdx>=0?'Save changes':'Save hand')+'</button>';
       if(editIdx>=0)h+='<button type="button" class="btn" data-a="cancel">Cancel</button>';
       h+='</div>';
@@ -2124,6 +2181,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(VIEW_ONLY||game.lockedAt)return;
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
     var a=b.dataset.a,v=b.dataset.v;
+    if(a==='ptsinput')return;   // a typed field, not a button: clicking it just focuses it
     if(a==='kind'){var ei=editIdx;resetForm();editIdx=ei;f.kind=v;}
     else if(a==='win'){f.winner=+v;if(f.disc===f.winner)f.disc=-1;}
     else if(a==='disc'){f.disc=+v;if(f.winner===f.disc)f.winner=-1;f.winners=f.winners.filter(function(x){return x!==f.disc;});}
@@ -2149,6 +2207,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       },prev);
       return;
     }
+    else if(a==='suggestinvalid'){var who0=f.winner,ei3=editIdx;resetForm();editIdx=ei3;f.kind='invalid';f.who=who0;}
     else if(a==='who'){f.who=+v;}
     else if(a==='tp'){var tv=+v,tx=f.tenpai.indexOf(tv);if(tx>=0)f.tenpai.splice(tx,1);else f.tenpai.push(tv);}
     else if(a==='cancel'){resetForm();}
@@ -2158,6 +2217,17 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       resetForm();saveGame();
     }
     renderGame();
+  });
+  // typed hand points (MCR modes): update the hand on every keystroke without re-drawing the form, so the cursor stays put
+  $('gentry').addEventListener('input',function(e){
+    if(VIEW_ONLY||game.lockedAt)return;
+    var el=e.target;if(!el.matches||!el.matches('[data-a="ptsinput"]'))return;
+    var p=+el.dataset.p,v=el.value;
+    if(v==='')delete f.pts[p];else f.pts[p]=Math.min(999,Math.max(0,Math.round(num(v))));
+    var base=modeConfig().basePoint,low=(v!==''&&f.pts[p]<base),wr=$('ptsWarn');
+    if(wr){wr.hidden=!low;if(low)wr.innerHTML=ptsWarnHtml(base);}
+    var ev=eventFromForm(),sp=$('scorePrev');if(sp)sp.innerHTML=scorePrevHtml(ev,typedDealer);
+    var sv=$('gentry').querySelector('[data-a="save"]');if(sv)sv.disabled=!ev;
   });
   $('ghist').addEventListener('click',function(e){
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
@@ -2208,6 +2278,10 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   }
   function modeHint(){
     var cfg=modeConfig();
+    if(cfg.mcr){
+      var b=cfg.basePoint;
+      return 'MCR-'+b+': no pattern picker, just type the hand\u2019s points (at least '+b+'). Every hand pays a base of '+b+' on top of the hand points. On a Hu, everyone pays the base and the discarder pays the base plus the hand\u2019s points on top, so the winner ends up with base \u00d73 plus the hand\u2019s points. Zi Mo pays (base + points) from each of the other three. An invalid win costs the offender 24 and a false win 48, split evenly between the other three. A draw scores nothing. The dealer never repeats.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.');
+    }
     if(game.mode==='casual')return 'Any hand of 1 point or more can win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
     if(game.mode==='default')return 'A hand needs at least 2 points to win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
     if(game.mode==='tournament')return 'A hand needs at least 2 points to win. The dealer never repeats \u2014 streak caps at 1.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.')+' A draw pays tenpai '+drawWord(cfg)+'.';
@@ -2216,8 +2290,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   function syncGameMode(){
     $('gmode').querySelectorAll('.btn').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===game.mode?'true':'false');});
     $('gmodeHint').textContent=modeHint();
-    var isCustom=game.mode==='custom';
-    var seatable=game.mode==='tournament'||isCustom;
+    var isCustom=game.mode==='custom',mcr=isMcr(game.mode);
+    var seatable=game.mode==='tournament'||isCustom||mcr;
+    // MCR modes have no starting score: the controls go away and the options are cleared
+    if(mcr&&(game.useStart||game.bankrupt)){game.useStart=false;game.bankrupt=false;$('guse').checked=false;$('gstart').disabled=true;}
+    var st=$('guse').closest('.start');if(st)st.style.display=mcr?'none':'';
+    if(mcr){$('gbkWrap').hidden=true;$('gbkHint').hidden=true;}
     $('gseatWrap').hidden=!seatable;
     $('seatHint').hidden=!(seatable&&game.seatRotation);
     if(seatable)$('gseat').checked=!!game.seatRotation;
@@ -2231,11 +2309,15 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   var MODE_START={casual:'200','default':'200',tournament:'240'};
   function buildGameMode(){
     var box=$('gmode');box.textContent='';
-    [['casual','Casual'],['default','Default'],['tournament','Tournament'],['custom','Custom']].forEach(function(o){
+    [['casual','Casual'],['default','Default'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8']].forEach(function(o){
       var b=document.createElement('button');
       b.type='button';b.className='btn';b.dataset.k=o[0];b.textContent=o[1];
       b.addEventListener('click',function(){
+        var wasMcr=isMcr(game.mode);
         game.mode=o[0];
+        // MCR modes start with seat rotation off and no starting score; going back to Tournament or Custom restores their own default
+        if(isMcr(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;}
+        else if(wasMcr){game.seatRotation=true;}
         // each preset brings its own starting score (still editable); Custom leaves yours alone
         if(MODE_START[o[0]]!=null){game.start=MODE_START[o[0]];$('gstart').value=game.start;}
         syncGameMode();

@@ -777,3 +777,43 @@ tidak pernah sampai ke server.
   Ini sudah diuji: setelah cache dibersihkan, alamat lama langsung terbuka.
 - Hanya `_redirects`, `_headers`, `index.html`, `player.html`, dan `admin-pemain.html` yang berubah dari v37.
   Tidak ada perubahan database.
+
+## Update terbaru (v39): filter waktu Yesterday dan Last week
+
+- Menu periode di halaman utama (dan di halaman pemain, yang memakai menu yang sama) kini punya dua pilihan baru di
+  "Quick range": **Yesterday** (kemarin) dan **Last week** (minggu lalu). Urutannya: Today, Yesterday, This week,
+  Last week, All time.
+- **Last week** adalah Senin sampai Minggu pekan sebelum pekan ini (pekan dimulai hari Senin, sama dengan "This
+  week"). Pada hari Senin, Last week adalah pekan yang baru berakhir kemarin; pada hari Minggu, Last week tetap
+  pekan sebelum pekan yang sedang berjalan.
+- Alamatnya `?p=yesterday` dan `?p=lastweek`. Tautan dari leaderboard ke halaman pemain meneruskan periode itu,
+  jadi halaman pemain terbuka dengan periode yang sama.
+- Kartu share Top 10 memakai nama periode apa adanya ("Yesterday", "Last week"), seperti "Today" dan "This week".
+- Tidak ada perubahan database. File berubah dari v38: `index.html` dan `player.html`.
+
+## Update terbaru (v40): mode MCR-4 dan MCR-8
+
+Dua mode skor baru untuk MCR, berdasarkan "Trick or Tile". Bedanya dengan mode lain: poin hand **diketik**, bukan dipilih
+dari tabel 1 sampai 13, dan ada **base** yang melekat pada nama mode (4 untuk MCR-4, 8 untuk MCR-8, tidak bisa diubah).
+
+- **Aturan skor:** Hu: pembuang membayar base + poin, dua pemain lain membayar base masing-masing, jadi pemenang
+  menerima 3×base + poin. Zi Mo: tiga pemain lain masing-masing membayar base + poin. Invalid win: pelaku -24, tiga
+  pemain lain +8 masing-masing. False win: pelaku -48, tiga pemain lain +16 masing-masing (keduanya tetap, tidak ikut
+  base). Draw: tidak ada skor, tanpa tenpai. Dealer tidak pernah mengulang, tanpa bonus dealer. Tidak ada Double atau
+  Triple Hu. Tidak ada skor awal dan tidak ada aturan bangkrut.
+- **Poin yang diketik:** bilangan bulat 0 sampai 999. Poin di bawah base diberi peringatan (hand itu tidak bisa dihitung
+  sebagai kemenangan) dengan tombol untuk mencatatnya sebagai Invalid win, tetapi masih bisa disimpan.
+- **Rotasi kursi MCR** tersedia untuk kedua mode, bawaannya mati. Kembali ke Tournament atau Custom mengembalikan
+  bawaan mereka (rotasi kursi menyala).
+- **Mode terkunci begitu hand pertama tercatat** (aturan lama di server, `setup_locked`, kini berlaku juga untuk mode
+  baru; tombol mode di scoreboard dimatikan). Sebelum itu mode bebas diganti.
+- **Filter di halaman utama, halaman pemain, dan halaman sesi:** "All modes" tidak memuat meja MCR (skalanya berbeda),
+  "MCR" menjumlahkan MCR-4 dan MCR-8, dan MCR-4 serta MCR-8 berdiri sendiri, masing-masing dengan jumlah meja atau game.
+  Alamatnya `?m=mcr`, `?m=mcr4`, `?m=mcr8`. Bila di suatu periode hanya ada meja MCR, halaman terbuka di "MCR".
+  Bila hanya satu mode yang pernah dimainkan dan itu MCR, filter disembunyikan dan meja MCR tampil.
+- **Server menolak** Double dan Triple Hu di mode MCR, poin di luar 0 sampai 999, poin bukan bilangan bulat, kursi di
+  luar 0 sampai 3, pembuang yang sama dengan pemenang, dan mode yang tidak dikenal.
+- Statistik (menang, poin diketik, best hand, self-draw, deal-in, first place di wind round) bekerja untuk mode ini.
+  Versi statistik tidak diubah, jadi meja lama tidak dihitung ulang.
+- Tidak ada perubahan database. File berubah dari v39: `scoreboard.html`, `index.html`, `player.html`,
+  `admin-daily.html`, `functions/_scoring.js`, dan `functions/_tables.js`. Unggah semuanya dalam satu commit.

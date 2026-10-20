@@ -228,7 +228,11 @@ a{color:inherit}
 <script>
 (function(){
 var LOGO='/assets/i/cfad30e8e7.png';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'},MODE_ORDER=['default','casual','tournament','custom'],DEFAULT_MODE='default';
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'},MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8'],DEFAULT_MODE='default';
+function isMcrMode(k){return k==='mcr4'||k==='mcr8';}
+// "All modes" leaves the MCR modes out (another scale of scores), "MCR" is both of them, MCR-4 and MCR-8 stand alone: as on the main page
+function modeMatch(g,m){var k=g.mode;return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
+function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var S={period:'',periodSet:false,mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,locked:false};
 var SHOWN=20;
@@ -248,19 +252,21 @@ function periodOk(ds){
   var p=S.period;
   if(p==='all')return true;
   if(p==='today')return ds===todayStr();
+  if(p==='yesterday')return ds===addDays(todayStr(),-1);
   if(p==='week'){var m=mondayOf(todayStr());return ds>=m&&ds<=addDays(m,6);}
+  if(p==='lastweek'){var m0=mondayOf(todayStr());return ds>=addDays(m0,-7)&&ds<=addDays(m0,-1);}   // the Monday to Sunday before this one
   if(p==='custom')return (!S.from||ds>=S.from)&&(!S.to||ds<=S.to);
   return ds.slice(0,7)===p;
 }
 function periodLabel(){
   var p=S.period;
-  if(p==='all')return 'All time';if(p==='today')return 'Today';if(p==='week')return 'This week';
+  if(p==='all')return 'All time';if(p==='today')return 'Today';if(p==='yesterday')return 'Yesterday';if(p==='week')return 'This week';if(p==='lastweek')return 'Last week';
   if(p==='custom')return shortDate(S.from,S.from.slice(0,4)!==S.to.slice(0,4))+' \u2013 '+shortDate(S.to,true);
   return monthLabel(p);
 }
 function periodParam(){return S.period==='custom'?S.from+'_'+S.to:S.period;}
 function setPeriodParam(v){
-  if(v==='all'||v==='today'||v==='week'){S.period=v;return true;}
+  if(v==='all'||v==='today'||v==='yesterday'||v==='week'||v==='lastweek'){S.period=v;return true;}
   if(/^\d{4}-(0[1-9]|1[0-2])$/.test(v)){S.period=v;return true;}
   var m=/^(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})$/.exec(v);
   if(m&&m[1]<=m[2]){S.period='custom';S.from=m[1];S.to=m[2];return true;}
@@ -269,19 +275,21 @@ function setPeriodParam(v){
 function games(){return S.data?S.data.games:[];}
 function seasons(){var seen={};seen[currentSeason()]=1;games().forEach(function(g){if(/^\d{4}-\d{2}/.test(g.date))seen[g.date.slice(0,7)]=1;});return Object.keys(seen).sort().reverse();}
 function modesIn(){var seen={};games().forEach(function(g){seen[g.mode]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
-function effMode(){return modesIn().length<2?'all':S.mode;}
-function modeOk(g){var m=effMode();return m==='all'||g.mode===m;}
-function modeLabel(){var m=effMode();return m==='all'?'All modes':(MODE_LABEL[m]||m);}
+function effMode(){var ms=modesIn();if(ms.length<2)return ms.length&&isMcrMode(ms[0])?'mcr':'all';return S.mode;}
+function modeOk(g){return modeMatch(g,effMode());}
+function modeLabel(){return filterLabel(effMode());}
 function autoPeriod(){   // nothing played this month: open on all time rather than on an empty page
   if(S.periodSet||S.period!==currentSeason()||!games().length)return;
   if(!games().some(function(g){return validDate(g.date)&&g.date.slice(0,7)===S.period;}))S.period='all';
 }
-function autoMode(){   // the Default mode may have no games in the period: open on all modes rather than on an empty page
+function autoMode(){   // the Default mode may have no games in the period: open on all modes (or on MCR, if that is all there is) rather than on an empty page
   if(S.modeSet||S.mode!==DEFAULT_MODE)return;
-  if(!games().some(function(g){return g.mode==='default'&&periodOk(g.date);}))S.mode='all';
+  var inP=games().filter(function(g){return periodOk(g.date);});
+  if(inP.some(function(g){return g.mode==='default';}))return;
+  S.mode=(!inP.some(function(g){return !isMcrMode(g.mode);})&&inP.some(function(g){return isMcrMode(g.mode);}))?'mcr':'all';
 }
 function readUrl(){
-  try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
+  try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
 }
 // the address is /players/<id>/<nickname>: the id comes first, the nickname is only for reading.
 // The older /player/... addresses (also /player/<id>/<nickname> and /player/<nickname>-<id>) still open and are tidied to this one.
@@ -309,16 +317,24 @@ function gamesWord(n){return n+(n===1?' game':' games');}
 function periodMenu(){
   var cur=currentSeason(),html='<div class="n-g">Season</div>';
   seasons().forEach(function(ym){html+=optBtn('period|'+ym,esc(monthLabel(ym))+(ym===cur?' <span class="n-cur">Current</span>':''),S.period===ym);});
-  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|week','This week',S.period==='week')+optBtn('period|all','All time',S.period==='all');
+  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|yesterday','Yesterday',S.period==='yesterday')+optBtn('period|week','This week',S.period==='week')+optBtn('period|lastweek','Last week',S.period==='lastweek')+optBtn('period|all','All time',S.period==='all');
   html+='<div class="n-g">Custom</div>';
   if(!S.cust.open)html+='<button type="button" class="n-o'+(S.period==='custom'?' on':'')+'" data-cust="1"><span>Custom range\u2026</span><span class="c">\u203A</span></button>';
   else{var t=todayStr();html+='<div class="n-cust"><div class="r"><div><label for="cFrom">From</label><input type="date" id="cFrom" value="'+esc(S.from||'')+'" max="'+t+'"></div><div><label for="cTo">To</label><input type="date" id="cTo" value="'+esc(S.to||'')+'" max="'+t+'"></div></div>'+(S.cust.err?'<div class="err" role="alert">'+esc(S.cust.err)+'</div>':'')+'<button type="button" class="go" data-apply="1">Apply range</button></div>';}
   return html;
 }
 function modeMenu(){
-  var inP=games().filter(function(g){return periodOk(g.date);}),html='';
-  modesIn().forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(inP.filter(function(g){return g.mode===k;}).length));});
-  return html+'<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',gamesWord(inP.length));
+  var inP=games().filter(function(g){return periodOk(g.date);}),all=games(),n=function(f){return inP.filter(f).length;};
+  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&all.some(function(g){return g.mode===k;});}),mcr=['mcr4','mcr8'].filter(function(k){return all.some(function(g){return g.mode===k;});});
+  var html='';
+  std.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
+  if(std.length)html+='<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',gamesWord(n(function(g){return !isMcrMode(g.mode);})));
+  if(mcr.length){
+    html+='<div class="n-g">MCR</div>';
+    if(mcr.length>1)html+=optBtn('mode|mcr','MCR',S.mode==='mcr',gamesWord(n(function(g){return isMcrMode(g.mode);})));
+    mcr.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
+  }
+  return html;
 }
 var MENU_TITLE={period:'Period',mode:'Mode'};
 function menuInner(w){return w==='period'?periodMenu():modeMenu();}

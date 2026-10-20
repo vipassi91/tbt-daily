@@ -12,10 +12,16 @@ function huAmt(pts, winner, disc, dealer) {
 
 // Same shape modeConfig() produces client-side, from the table's stored
 // mode/custom/seatRotation/bankrupt/useStart/start fields.
+// MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed in, not picked from a table.
+const MCR_BASE = { mcr4: 4, mcr8: 8 };
+export function isMcr(mode) { return mode === 'mcr4' || mode === 'mcr8'; }
+
 export function modeConfig(game) {
-  const seat = (game.mode === 'tournament' || game.mode === 'custom') && !!game.seatRotation;
+  const mcr = isMcr(game.mode);
+  const seat = (game.mode === 'tournament' || game.mode === 'custom' || mcr) && !!game.seatRotation;
   let cfg;
-  if (game.mode === 'default') cfg = { minPoint: 2, maxStreak: 4, deadwall: false, seatRotation: false };
+  if (mcr) cfg = { mcr: true, basePoint: MCR_BASE[game.mode], minPoint: MCR_BASE[game.mode], maxStreak: 1, deadwall: false, seatRotation: seat };
+  else if (game.mode === 'default') cfg = { minPoint: 2, maxStreak: 4, deadwall: false, seatRotation: false };
   else if (game.mode === 'tournament') cfg = { minPoint: 2, maxStreak: 1, deadwall: false, seatRotation: seat };
   else if (game.mode === 'custom') {
     const c = game.custom || {};
@@ -25,8 +31,8 @@ export function modeConfig(game) {
       deadwall: !!c.deadwall, seatRotation: seat,
     };
   } else cfg = { minPoint: 1, maxStreak: 4, deadwall: false, seatRotation: false }; // casual
-  cfg.bankrupt = !!(game.useStart && game.bankrupt);
-  cfg.startBase = game.useStart ? (num(game.start) || 0) : 0;
+  cfg.bankrupt = !mcr && !!(game.useStart && game.bankrupt);
+  cfg.startBase = (!mcr && game.useStart) ? (num(game.start) || 0) : 0;   // MCR modes have no starting score
   return cfg;
 }
 
@@ -40,6 +46,25 @@ export function scoreEvent(ev, dealer, cfg) {
   const d = [0,0,0,0];
   let dealerWon = false, winners = [];
   const mult = cfg.minPoint * (cfg.deadwall ? 2 : 1);
+  if (cfg.mcr) {   // base + typed hand points; no dealer bonus, one winner at most, no tenpai payout
+    const BP = cfg.basePoint;
+    if (ev.kind === 'hu') {
+      const w = ev.winner, hp = Math.max(0, num(ev.pts && ev.pts[w]));
+      d[w] += BP + hp; d[ev.disc] -= BP + hp;
+      for (let i = 0; i < 4; i++) if (i !== w && i !== ev.disc) { d[i] -= BP; d[w] += BP; }
+      return { d, dealerWon: false, winners: [w], disc: ev.disc };
+    }
+    if (ev.kind === 'zimo') {
+      const w = ev.winner, pay = BP + Math.max(0, num(ev.pts && ev.pts[w]));
+      for (let i = 0; i < 4; i++) if (i !== w) { d[i] -= pay; d[w] += pay; }
+      return { d, dealerWon: false, winners: [w], disc: ev.disc };
+    }
+    if (ev.kind === 'invalid' || ev.kind === 'false') {
+      const pen = ev.kind === 'invalid' ? 24 : 48;
+      for (let i = 0; i < 4; i++) d[i] = (i === ev.who) ? -pen : pen / 3;
+    }
+    return { d, dealerWon: false, winners: [], disc: ev.disc };   // a draw scores nothing
+  }
   if (ev.kind === 'hu') {
     const w = ev.winner, p = ev.pts[w];
     const a = huAmt(p, w, ev.disc, dealer);

@@ -127,9 +127,10 @@ function progText(t){
   if(t.progress.done)return t.events+' hand, selesai';
   return t.events+' hand, ronde '+['East','South','West','North'][t.progress.wind];
 }
-var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom'};
+var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'};
 function rulesLine(t){
   var r=t.rules;if(!r)return '';
+  if(r.base!=null){var q=[modeLabel(t.mode),'base '+r.base,'min '+r.minPoint+' poin','dealer tidak mengulang'];if(r.seatRotation)q.push('rotasi kursi');return q.join(' \u00b7 ');}   // meja MCR
   var p=[modeLabel(t.mode),'min '+r.minPoint+' poin','streak '+r.maxStreak,r.start==null?'tanpa skor awal':'skor awal '+r.start];
   if(r.bankrupt)p.push('bankrupt');
   if(r.seatRotation)p.push('rotasi kursi');

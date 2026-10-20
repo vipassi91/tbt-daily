@@ -1,8 +1,19 @@
 import { genCode } from './_auth.js';
-import { scoreGame, modeConfig } from './_scoring.js';
+import { scoreGame, modeConfig, isMcr } from './_scoring.js';
 
 const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
-const MODES = ['casual', 'default', 'tournament', 'custom'];
+const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8'];
+const MCR_KINDS = ['hu', 'zimo', 'invalid', 'false', 'draw'];   // MCR modes: one winner at most, no double or triple
+const seatOk = function (v) { return Number.isInteger(v) && v >= 0 && v <= 3; };
+// A hand recorded under an MCR mode: seats are 0 to 3, and the typed hand points are a whole number from 0 to 999.
+function validMcrEvent(ev) {
+  if (!ev || MCR_KINDS.indexOf(ev.kind) < 0) return false;
+  const ptsOk = function (w) { return ev.pts && typeof ev.pts === 'object' && Number.isInteger(ev.pts[w]) && ev.pts[w] >= 0 && ev.pts[w] <= 999; };
+  if (ev.kind === 'hu') return seatOk(ev.winner) && seatOk(ev.disc) && ev.winner !== ev.disc && ptsOk(ev.winner);
+  if (ev.kind === 'zimo') return seatOk(ev.winner) && ptsOk(ev.winner);
+  if (ev.kind === 'invalid' || ev.kind === 'false') return seatOk(ev.who);
+  return true;
+}
 // Bump this whenever buildStats starts storing something new. Stored results with an older
 // version are rebuilt from the saved game the next time they are read (see statsFor).
 export const STATS_VERSION = 4;
@@ -11,7 +22,7 @@ export const STATS_VERSION = 4;
 function rulesOf(g) {
   const cfg = modeConfig(g || {});
   const start = (g && g.useStart) ? (parseFloat(g.start) || 0) : null;
-  return { minPoint: cfg.minPoint, maxStreak: cfg.maxStreak, deadwall: !!cfg.deadwall, seatRotation: !!cfg.seatRotation, bankrupt: !!cfg.bankrupt, start: start };
+  return { minPoint: cfg.minPoint, maxStreak: cfg.maxStreak, deadwall: !!cfg.deadwall, seatRotation: !!cfg.seatRotation, bankrupt: !!cfg.bankrupt, start: cfg.mcr ? null : start, base: cfg.mcr ? cfg.basePoint : null };
 }
 
 export function validGame(g) {
@@ -23,6 +34,7 @@ export function validGame(g) {
     // values, so only a wrong shape is refused here, never a number that is merely out of range.
     if (typeof g.custom !== 'object' || g.custom === null || Array.isArray(g.custom)) return false;
   }
+  if (isMcr(g.mode)) return g.events.every(validMcrEvent);
   return g.events.every(function (ev) { return ev && KINDS.indexOf(ev.kind) >= 0; });
 }
 
@@ -137,10 +149,11 @@ export function setupOf(g) {
     names: [0, 1, 2, 3].map(function (i) { return String(names[i] == null ? '' : names[i]).trim(); }),
     mode: mode,
     custom: mode === 'custom' ? { minPoint: String(c.minPoint == null ? 2 : c.minPoint).trim(), maxStreak: String(c.maxStreak == null ? 4 : c.maxStreak).trim(), deadwall: !!c.deadwall } : null,
-    seatRotation: (mode === 'tournament' || mode === 'custom') ? (g.seatRotation === undefined ? true : !!g.seatRotation) : null,
-    useStart: useStart,
-    start: useStart ? String(g.start == null ? '200' : g.start).trim() : null,
-    bankrupt: useStart ? !!g.bankrupt : null,
+    // MCR modes offer seat rotation too, but start with it off; they have no starting score
+    seatRotation: (mode === 'tournament' || mode === 'custom') ? (g.seatRotation === undefined ? true : !!g.seatRotation) : isMcr(mode) ? !!g.seatRotation : null,
+    useStart: isMcr(mode) ? false : useStart,
+    start: (useStart && !isMcr(mode)) ? String(g.start == null ? '200' : g.start).trim() : null,
+    bankrupt: (useStart && !isMcr(mode)) ? !!g.bankrupt : null,
   };
 }
 export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.stringify(setupOf(b)); }
