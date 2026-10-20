@@ -14,13 +14,21 @@ function huAmt(pts, winner, disc, dealer) {
 // mode/custom/seatRotation/bankrupt/useStart/start fields.
 // MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed in, not picked from a table.
 const MCR_BASE = { mcr4: 4, mcr8: 8 };
-export function isMcr(mode) { return mode === 'mcr4' || mode === 'mcr8'; }
+export const MCR_CUSTOM_DEFAULT = 3;
+export function isMcr(mode) { return mode === 'mcr4' || mode === 'mcr8' || mode === 'mcrc'; }
+// MCR-Custom: the host types the base point (0 to 99). It is typed into a box, so it can arrive as text or half-typed:
+// anything that is not a number falls back to the default, and a number is rounded and kept inside the range.
+export function mcrBaseOf(game) {
+  if (game.mode !== 'mcrc') return MCR_BASE[game.mode];
+  const n = parseFloat(game.mcrBase);
+  return isNaN(n) ? MCR_CUSTOM_DEFAULT : Math.min(99, Math.max(0, Math.round(n)));
+}
 
 export function modeConfig(game) {
   const mcr = isMcr(game.mode);
   const seat = (game.mode === 'tournament' || game.mode === 'custom' || mcr) && !!game.seatRotation;
   let cfg;
-  if (mcr) cfg = { mcr: true, basePoint: MCR_BASE[game.mode], minPoint: MCR_BASE[game.mode], maxStreak: 1, deadwall: false, seatRotation: seat };
+  if (mcr) cfg = { mcr: true, basePoint: mcrBaseOf(game), minPoint: mcrBaseOf(game), maxStreak: 1, deadwall: false, seatRotation: seat };
   else if (game.mode === 'default') cfg = { minPoint: 2, maxStreak: 4, deadwall: false, seatRotation: false };
   else if (game.mode === 'tournament') cfg = { minPoint: 2, maxStreak: 1, deadwall: false, seatRotation: seat };
   else if (game.mode === 'custom') {

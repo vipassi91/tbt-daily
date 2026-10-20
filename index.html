@@ -199,9 +199,9 @@ var DEFAULT_MODE='default';   // the board opens on the Default mode and on the 
 var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:'all',day:null,loaded:false,failed:false,updated:null,menu:null,from:'',to:'',cust:{open:false,err:''},autoDone:false};
 // The rating (formerly League Score) is hidden until its formula is settled. Set SHOW_RATING to true to bring the toggle back.
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'};
-var MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8'];
-function isMcrMode(k){return k==='mcr4'||k==='mcr8';}
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
+var MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8','mcrc'];
+function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
 // Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
 // them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
 function modeMatch(t,m){var k=modeOf(t);return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
@@ -396,7 +396,7 @@ function periodMenu(){
 // the mode choices: the usual modes and "All modes" (without MCR), then a group for the MCR modes
 function modeChoices(list,pick,cur,countOf){
   var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&list.some(function(t){return modeOf(t)===k;})});
-  var mcr=['mcr4','mcr8'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
+  var mcr=['mcr4','mcr8','mcrc'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
   if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return !isMcrMode(modeOf(t));})));

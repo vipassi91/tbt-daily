@@ -1,8 +1,8 @@
 import { genCode } from './_auth.js';
-import { scoreGame, modeConfig, isMcr } from './_scoring.js';
+import { scoreGame, modeConfig, isMcr, mcrBaseOf } from './_scoring.js';
 
 const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
-const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8'];
+const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
 const MCR_KINDS = ['hu', 'zimo', 'invalid', 'false', 'draw'];   // MCR modes: one winner at most, no double or triple
 const seatOk = function (v) { return Number.isInteger(v) && v >= 0 && v <= 3; };
 // A hand recorded under an MCR mode: seats are 0 to 3, and the typed hand points are a whole number from 0 to 999.
@@ -28,6 +28,8 @@ function rulesOf(g) {
 export function validGame(g) {
   if (!g || typeof g !== 'object' || !Array.isArray(g.events) || g.events.length > 400) return false;
   if (g.mode !== undefined && MODES.indexOf(g.mode) < 0) return false;
+  // MCR-Custom's base point is typed into a box: text or a number is fine (the engine keeps it in range), any other shape is not
+  if (g.mcrBase !== undefined && g.mcrBase !== null && typeof g.mcrBase !== 'number' && typeof g.mcrBase !== 'string') return false;
   if (g.custom !== undefined) {
     // The Custom fields are typed into text boxes, so they arrive as strings and can pass through
     // half-typed values ("" or "1" on the way to "13"). The scoring engine clamps them to sane
@@ -151,6 +153,7 @@ export function setupOf(g) {
     custom: mode === 'custom' ? { minPoint: String(c.minPoint == null ? 2 : c.minPoint).trim(), maxStreak: String(c.maxStreak == null ? 4 : c.maxStreak).trim(), deadwall: !!c.deadwall } : null,
     // MCR modes offer seat rotation too, but start with it off; they have no starting score
     seatRotation: (mode === 'tournament' || mode === 'custom') ? (g.seatRotation === undefined ? true : !!g.seatRotation) : isMcr(mode) ? !!g.seatRotation : null,
+    mcrBase: mode === 'mcrc' ? mcrBaseOf(g) : null,   // the base point of MCR-Custom locks with the rest once a hand is recorded
     useStart: isMcr(mode) ? false : useStart,
     start: (useStart && !isMcr(mode)) ? String(g.start == null ? '200' : g.start).trim() : null,
     bankrupt: (useStart && !isMcr(mode)) ? !!g.bankrupt : null,

@@ -228,8 +228,8 @@ a{color:inherit}
 <script>
 (function(){
 var LOGO='/assets/i/cfad30e8e7.png';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8'},MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8'],DEFAULT_MODE='default';
-function isMcrMode(k){return k==='mcr4'||k==='mcr8';}
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'},MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8','mcrc'],DEFAULT_MODE='default';
+function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
 // "All modes" leaves the MCR modes out (another scale of scores), "MCR" is both of them, MCR-4 and MCR-8 stand alone: as on the main page
 function modeMatch(g,m){var k=g.mode;return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
 function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
@@ -325,7 +325,7 @@ function periodMenu(){
 }
 function modeMenu(){
   var inP=games().filter(function(g){return periodOk(g.date);}),all=games(),n=function(f){return inP.filter(f).length;};
-  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&all.some(function(g){return g.mode===k;});}),mcr=['mcr4','mcr8'].filter(function(k){return all.some(function(g){return g.mode===k;});});
+  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&all.some(function(g){return g.mode===k;});}),mcr=['mcr4','mcr8','mcrc'].filter(function(k){return all.some(function(g){return g.mode===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
   if(std.length)html+='<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',gamesWord(n(function(g){return !isMcrMode(g.mode);})));

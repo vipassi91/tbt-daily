@@ -817,3 +817,23 @@ dari tabel 1 sampai 13, dan ada **base** yang melekat pada nama mode (4 untuk MC
   Versi statistik tidak diubah, jadi meja lama tidak dihitung ulang.
 - Tidak ada perubahan database. File berubah dari v39: `scoreboard.html`, `index.html`, `player.html`,
   `admin-daily.html`, `functions/_scoring.js`, dan `functions/_tables.js`. Unggah semuanya dalam satu commit.
+
+## Update terbaru (v41): mode MCR-Custom
+
+Mode ketiga di keluarga MCR, untuk base point yang ditentukan sendiri.
+
+- **Aturan skor sama dengan MCR-4 dan MCR-8** (poin diketik, Hu, Zi Mo, Invalid win -24/+8, False win -48/+16, Draw tanpa
+  skor, dealer tidak mengulang, tanpa skor awal). Bedanya, base point-nya diisi sendiri lewat kolom **Base point** yang
+  muncul saat MCR-Custom dipilih.
+- **Base point: bilangan bulat 0 sampai 99, bawaan 3.** Angka di luar jangkauan dibulatkan ke 0 atau 99 saat kotaknya
+  ditinggalkan; kotak kosong dianggap 3. Poin hand minimal sama dengan base (di bawahnya diberi peringatan, seperti
+  mode MCR lain). Penalti Invalid win dan False win tetap 24 dan 48, tidak ikut base.
+- **Base ikut terkunci begitu hand pertama tercatat**, bersama mode dan rotasi kursi (aturan lama `setup_locked`).
+  Menulis base yang sama sebagai teks (misalnya "6" dan 6) tidak dihitung sebagai perubahan.
+- **Rotasi kursi MCR** tersedia dan bawaannya mati. Pindah ke mode MCR lain tidak menghapus base yang sudah diketik.
+- **Filter:** "MCR-Custom" muncul di grup MCR pada halaman utama, halaman pemain, dan halaman sesi, dengan jumlah meja.
+  Filter "MCR" sekarang menjumlahkan **MCR-4, MCR-8, dan MCR-Custom** (apa pun base-nya). "All modes" tetap tidak memuat
+  meja MCR apa pun. Alamatnya `?m=mcrc`. Kartu meja menampilkan base yang dipakai, misalnya
+  "MCR-Custom · base 6 · min 6 pts · dealer never repeats".
+- Tidak ada perubahan database. File berubah dari v40: `scoreboard.html`, `index.html`, `player.html`,
+  `admin-daily.html`, `functions/_scoring.js`, dan `functions/_tables.js`. Unggah semuanya dalam satu commit.
