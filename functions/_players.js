@@ -331,6 +331,8 @@ export async function playerPage(env, rawId, admin) {
             view: row.view_code, table: row.label, session: d.label || '', date: d.date || '', mode: stats.mode || 'casual', locked: !!stats.locked,
             rank: me.rank, net: me.netTotal, hands: stats.hands, winds: stats.winds, won: f.won, windFirsts: f.windFirsts,
             ptsSum: f.ptsSum, best: f.best, zimo: f.zimo, dealIns: f.dealIns,
+            zimoLost: f.zimoLost || 0, penalties: f.penalties || 0, low: f.low === undefined ? null : f.low, dealPts: f.dealPts || 0, patterns: f.patterns || {}, streak: f.streak || 0,
+            windsDone: stats.windsDone || 0, windHigh: f.windHigh === undefined ? null : f.windHigh, windLow: f.windLow === undefined ? null : f.windLow, windPlaceSum: f.windPlaceSum || 0,
           });
         } catch (e) { skipped++; }
       }

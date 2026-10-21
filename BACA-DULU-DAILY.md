@@ -837,3 +837,70 @@ Mode ketiga di keluarga MCR, untuk base point yang ditentukan sendiri.
   "MCR-Custom · base 6 · min 6 pts · dealer never repeats".
 - Tidak ada perubahan database. File berubah dari v40: `scoreboard.html`, `index.html`, `player.html`,
   `admin-daily.html`, `functions/_scoring.js`, dan `functions/_tables.js`. Unggah semuanya dalam satu commit.
+
+## Update terbaru (v42): statistik lengkap di halaman pemain
+
+Dua kartu menggantikan kartu statistik kecil di halaman pemain, dan mengikuti filter periode dan mode seperti sebelumnya.
+
+**Hand statistics**
+- Total hands played, total hands won, win rate per hands (menang / hands played).
+- Self draws, self draw rate (self draw / hands won). Hu (menang dari buangan, termasuk double dan triple hu) dan Hu rate
+  (Hu / hands won).
+- Lose by discard dan Lose by self draw (hand yang dimenangkan pemain lain dengan self draw), masing-masing dengan rate
+  terhadap hands not won (hands played dikurangi hands won).
+- Best hand: skor tertinggi yang didapat dari satu hand yang dimenangkan. **Lowest hand: skor paling rendah yang
+  diterima dari satu hand mana pun** (misalnya kena double hu), bukan hand menang yang terendah.
+- Average points / win dan average points / deal in: poin hand sebelum dikonversi menjadi skor. Untuk double atau triple
+  hu, poin para pemenang dirata-rata, dan satu buangan dihitung satu kali.
+- Highest win streak: rangkaian terpanjang hand berturut-turut yang dimenangkan pemain dalam satu game. Seri atau
+  kemenangan orang lain memutus rangkaiannya.
+- Pattern counter: setiap pola yang dimenangkan beserta jumlahnya, diurutkan dari yang paling sering (sepuluh teratas,
+  sisanya lewat tombol "Show all"). **Hanya hand yang dicatat lewat pemilih pola yang punya pola**; hand yang dicatat dengan
+  poin saja dan mode MCR (poin diketik) tidak punya.
+
+**Wind round statistics**
+- Total wind rounds played (minimal satu hand) dan total wind rounds completed (keempat giliran dealer sudah selesai).
+- Total net score memakai semua wind round. Highest net score, lowest net score, dan average placement per wind round
+  hanya dari wind round yang completed. Average placement per game memakai peringkat akhir tiap game (seri berbagi peringkat).
+- Bila penyebut nol (misalnya pemain belum pernah menang), nilainya tampil "-", bukan 0 atau NaN.
+
+**Data:** fakta baru per pemain di tiap meja (hand terendah, kalah karena self draw, rata-rata poin deal in, pola, streak,
+net tertinggi dan terendah per wind round, jumlah peringkat) disimpan di statistik meja. Versi statistik naik dari 4 ke 5,
+sehingga meja lama dihitung ulang otomatis dari hand mentahnya (12 meja per permintaan di leaderboard, dan langsung untuk
+meja si pemain saat halamannya dibuka). Tidak ada SQL yang perlu dijalankan. Pola hanya bisa dihitung ulang bila memang
+tercatat di hand.
+- File berubah dari v41: `player.html`, `functions/_tables.js`, `functions/_players.js`. Unggah ketiganya dalam satu commit.
+
+## Update terbaru (v43): statistik halaman pemain diringkas
+
+Isi statistik tetap sama persis (angka dan rumusnya tidak berubah); yang berubah hanya tampilannya, supaya tidak terlalu panjang.
+
+- Angka disusun **berpasangan dalam kotak dua kolom**, dan tiap rate ditulis di bawah angkanya (misalnya "Self draws 3, 21.4% of wins"),
+  bukan sebagai baris sendiri. Tujuh belas baris Hand statistics menjadi sebelas kotak, tujuh baris Wind round statistics menjadi tujuh kotak.
+- **Pattern counter terlipat** secara bawaan: satu tombol "Pattern counter, N patterns" yang membuka daftarnya (sepuluh teratas, sisanya lewat "Show all").
+- Di ponsel kartu statistik turun dari sekitar 1617 menjadi 1000 piksel, dan game pertama muncul sekitar 600 piksel lebih ke atas.
+- **Tampilan statistik di Standings pada scoreboard tidak diubah** (`scoreboard.html` tidak berubah dari paket sebelumnya).
+- File berubah dari v42: hanya `player.html`.
+
+## Update terbaru (v44): statistik halaman pemain bertab, dengan segmen Penalty
+
+Tampilan statistik di halaman pemain ditata ulang. Rumus dan angkanya sama dengan v42, kecuali satu tambahan: **Penalty**.
+
+- **Satu kartu dengan tiga tab:** Hands, Wind rounds, dan Patterns (judul panel "Pattern collection"). Hanya satu panel terlihat sekaligus,
+  dan tab yang dipilih tetap saat filter periode atau mode diganti.
+- **Tab Hands:** empat angka utama (win rate, highest win streak, best hand, lowest hand), satu bar yang menunjukkan bagaimana hand berakhir
+  dengan legenda, lalu pasangan angka berkelompok: "Of N hands won" (self draw dan hu, masing-masing rate dan jumlahnya),
+  "Of M not won" (lost by discard dan lost by self draw), dan "Average points" (per win dan per deal in). Semua sel: satu angka, satu baris label.
+- **Bar hasil hand** punya enam segmen yang tidak saling tumpang tindih dan selalu berjumlah total hand: **Hu**, **Self draw**,
+  **Lost to discard**, **Lost to self draw**, **Penalty** (invalid win atau false win yang dilakukan pemain itu sendiri), dan **Neutral**
+  (seri termasuk tenpai, penalti pemain lain, dan hu dari buangan orang lain). Segmen yang jumlahnya nol tidak digambar.
+- **Tab Wind rounds:** total net score, net tertinggi dan terendah dalam satu wind round yang completed, dan rata-rata peringkat per wind round
+  serta per game. **Tab Patterns:** daftar pola yang dimenangkan dengan bar kecil (sepuluh teratas, sisanya lewat "Show all").
+- **Warna** mengikuti palet A: hijau (token aksen brand) untuk menang, emas (token gold brand) untuk kalah, merah untuk penalty, krem untuk neutral;
+  nuansa lebih muda dan lebih tua ditetapkan di bagian `statistics card` pada CSS `player.html` (variabel `--k-sd`, `--k-ls`, `--k-pe`, `--k-nu`).
+  Hijau, emas, dan merah mengikuti token brand otomatis; nuansa turunannya diturunkan dari palet TBT, jadi brand lain perlu menyesuaikannya.
+- **Data:** satu fakta baru per pemain di tiap meja (`penalties`). Versi statistik naik dari 5 ke 6, sehingga semua meja dihitung ulang otomatis dari
+  hand mentahnya (12 meja per permintaan di leaderboard, dan langsung untuk meja si pemain saat halamannya dibuka). Tidak ada SQL yang perlu dijalankan.
+- File berubah dari v43: `player.html`, `functions/_tables.js`, `functions/_players.js`. Unggah ketiganya dalam satu commit.
+  Tampilan statistik di Standings pada scoreboard tidak berubah.
+

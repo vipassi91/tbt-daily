@@ -16,7 +16,7 @@ function validMcrEvent(ev) {
 }
 // Bump this whenever buildStats starts storing something new. Stored results with an older
 // version are rebuilt from the saved game the next time they are read (see statsFor).
-export const STATS_VERSION = 4;
+export const STATS_VERSION = 6;
 
 // The rule set a table is played under, in the same terms the scoring engine uses.
 function rulesOf(g) {
@@ -62,29 +62,61 @@ export function buildStats(game, fallbackPlayers) {
   //  - ptsSum: the points of the hands the player won (the hand's points, not the score it was turned into)
   //  - best: the biggest score gained from one hand the player won (null if none)
   //  - zimo / dealIns: self-draws won, and times the player's discard was used for a hu (hu, double or triple)
+  //  - zimoLost: hands another player won by self-draw
+  //  - penalties: the player's own invalid wins and false wins (never a hand won, lost to a discard or lost to a self-draw)
+  //  - low: the worst score the player took from a single hand (null if no hands), best's counterpart over every hand
+  //  - dealPts: for each hand the player's discard was used, the average points of its winner(s); summed (a double hu counts once)
+  //  - patterns: how many times each pattern (by its name) was counted in hands the player won
+  //  - streak: the most hands in a row the player won in this game (a draw or anyone else's win breaks it)
+  //  - windHigh / windLow / windPlaceSum: over the wind rounds that are COMPLETE: best and worst net score in one wind round,
+  //    and the sum of the places finished in them (a tie shares the place). windsDone, below, is how many wind rounds are complete.
+  const windsDone = s.done ? 4 : s.wind;
   const facts = {};
   names.forEach(function (n, idx) {
     let ptsSum = 0, best = null, zimo = 0, dealIns = 0, windFirsts = 0;
+    let zimoLost = 0, penalties = 0, low = null, dealPts = 0, run = 0, streak = 0, windHigh = null, windLow = null, windPlaceSum = 0;
+    const patterns = {};
     s.rounds.forEach(function (r) {
       if (r.totalHands > 0 && r.places[n] === 1) windFirsts++;
+      if (r.totalHands > 0 && r.wind < windsDone) {
+        const net = r.totals[n];
+        if (windHigh === null || net > windHigh) windHigh = net;
+        if (windLow === null || net < windLow) windLow = net;
+        windPlaceSum += r.places[n];
+      }
       r.hands.forEach(function (h) {
-        const ev = events[h.i];
+        const ev = events[h.i], d = h.deltas[idx];
+        if (low === null || d < low) low = d;
         if (h.winners.includes(idx)) {
           const p = ev && ev.pts ? Number(ev.pts[idx]) : 0;
           if (isFinite(p)) ptsSum += p;
-          const d = h.deltas[idx];
           if (best === null || d > best) best = d;
           if (h.kind === 'zimo') zimo++;
+          run++; if (run > streak) streak = run;
+          const pk = ev && ev.patterns && ev.patterns[idx];
+          if (pk && Array.isArray(pk.counted)) pk.counted.forEach(function (it) {
+            const label = String((it && it.label) || '').trim().slice(0, 80);
+            if (label) patterns[label] = (patterns[label] || 0) + 1;
+          });
+        } else run = 0;
+        if (h.kind === 'zimo' && !h.winners.includes(idx)) zimoLost++;
+        if ((h.kind === 'invalid' || h.kind === 'false') && ev && ev.who === idx) penalties++;
+        if (h.disc === idx && (h.kind === 'hu' || h.kind === 'double' || h.kind === 'triple')) {
+          dealIns++;
+          const pts = h.winners.map(function (w) { return ev && ev.pts ? Number(ev.pts[w]) : NaN; }).filter(isFinite);
+          if (pts.length) dealPts += pts.reduce(function (a, b) { return a + b; }, 0) / pts.length;
         }
-        if (h.disc === idx && (h.kind === 'hu' || h.kind === 'double' || h.kind === 'triple')) dealIns++;
       });
     });
-    facts[n] = { won: wins[n], ptsSum: Math.round(ptsSum * 100) / 100, best: best, zimo: zimo, dealIns: dealIns, windFirsts: windFirsts };
+    facts[n] = { won: wins[n], ptsSum: Math.round(ptsSum * 100) / 100, best: best, zimo: zimo, dealIns: dealIns, windFirsts: windFirsts,
+      zimoLost: zimoLost, penalties: penalties, low: low, dealPts: Math.round(dealPts * 100) / 100, patterns: patterns, streak: streak,
+      windHigh: windHigh, windLow: windLow, windPlaceSum: windPlaceSum };
   });
   return {
     v: STATS_VERSION, mode: g.mode || 'casual', locked: !!g.lockedAt, rules: rulesOf(g), names: names, rank: rank, wins: wins, aggregates: s.aggregates,
     hands: s.totalHands, events: events.length,
     winds: s.rounds.filter(function (r) { return r.totalHands > 0; }).length,
+    windsDone: windsDone,
     facts: facts,
     progress: { wind: s.wind, dealer: s.dealer, done: s.done },
   };

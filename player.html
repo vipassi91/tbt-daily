@@ -198,11 +198,6 @@ a{color:inherit}
 .pp-strip>div{padding:10px 6px 9px;text-align:center;border-left:1px solid var(--line);min-width:0}.pp-strip>div:first-child{border-left:0}
 .pp-strip b{display:block;font-family:var(--display);font-weight:900;font-size:21px;line-height:1.1;font-variant-numeric:lining-nums tabular-nums}
 .pp-strip span{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.25}
-.pp-stats{margin-top:12px;padding:16px}
-.pp-sg{display:grid;grid-template-columns:1fr 1fr;gap:16px 12px}
-.pp-sg .k{font-size:12px;color:var(--muted)}
-.pp-sg .v{font-family:var(--display);font-weight:900;font-size:24px;font-variant-numeric:lining-nums tabular-nums;margin-top:2px}
-.pp-sg .u{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted)}
 .pp-h{display:flex;justify-content:space-between;align-items:baseline;margin:22px 2px 8px}.pp-h h3{font-size:18px}.pp-h span{font-size:12.5px;color:var(--muted)}
 .pp-game{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:10px;text-decoration:none;color:inherit}
 .pp-game .d{flex:none;width:44px;text-align:center;font-size:12px;color:var(--muted);line-height:1.2}
@@ -220,6 +215,29 @@ a{color:inherit}
 @media(max-width:380px){.pp-strip b{font-size:19px}.pp-strip span{font-size:10.5px}.pp-head h1{font-size:28px}}
 /* the filters sit in a narrow column: the first menu opens from the left edge of its button so it never leaves the screen */
 .pp-filters .n-anchor:first-child .n-menu{left:0;right:auto}
+.pp-pats{padding-top:6px}
+/* statistics card */
+:root{--k-sd:#74B093;--k-ls:#DCC585;--k-pe:var(--red);--k-nu:var(--line)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k-sd:#CDEBDB;--k-ls:#8F7F4F;--k-pe:#E5564F;--k-nu:rgba(237,230,212,.40)}}
+.k-hu{background:var(--accent)}.k-sd{background:var(--k-sd)}.k-ld{background:var(--gold)}.k-ls{background:var(--k-ls)}.k-pe{background:var(--k-pe)}.k-nu{background:var(--k-nu)}
+.t-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 16px 20px;margin-top:12px}
+.t-seg{display:flex;gap:4px;padding:4px;background:var(--field);border:1px solid var(--line);border-radius:999px;margin-bottom:20px}
+.t-seg button{flex:1;min-width:0;min-height:38px;padding:0 6px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:13.5px;font-weight:600;white-space:nowrap}
+.t-seg button.on{background:var(--accent);color:var(--onaccent)}.t-seg button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.t-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 18px}.t-head h3{font-size:19px}.t-head span{font-size:12.5px;color:var(--muted);white-space:nowrap}.t-head span b{color:var(--text);font-weight:700}
+.t-hero{display:grid;grid-template-columns:1fr 1fr;gap:18px 14px}.t-hero.one{grid-template-columns:1fr}
+.t-heroc .v,.t-cell .v{display:block;font-family:var(--display);font-weight:900;line-height:1.05;font-variant-numeric:lining-nums tabular-nums}.t-heroc .v{font-size:31px}.t-cell .v{font-size:23px}
+.t-heroc>span,.t-cell>span{display:block;margin-top:5px;font-size:12px;color:var(--muted);white-space:nowrap}   /* only the label itself is a block: a count written inside it stays on the same line */
+.t-bar{display:flex;height:9px;border-radius:6px;overflow:hidden;gap:2px;margin:22px 0 12px}.t-bar i{display:block;height:100%}
+.t-leg{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;font-size:12.5px;color:var(--muted)}.t-leg span{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.t-leg b{color:var(--text);font-weight:700;min-width:1.2em}.t-leg em{flex:none;width:8px;height:8px;border-radius:50%}
+.t-note{margin:12px 0 0;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.t-grp{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.t-cap{margin:0 0 13px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.t-cap b{font-weight:700}
+.t-pair,.t-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.t-col{display:flex;flex-direction:column;gap:17px}.t-col .t-cap{margin-bottom:0}
+.t-pat{margin-bottom:15px}.t-pat .r{display:flex;justify-content:space-between;gap:12px;font-size:14px}.t-pat .r span{min-width:0;overflow-wrap:anywhere}.t-pat .r b{font-variant-numeric:tabular-nums;flex:none}
+.t-pat .tk{height:4px;border-radius:3px;background:var(--line);margin-top:7px;overflow:hidden}.t-pat .tk i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.t-none{font-size:13px;color:var(--muted);line-height:1.45;margin:6px 0 0}
 </style>
 <meta name="robots" content="noindex,nofollow">
 </head>
@@ -234,8 +252,8 @@ function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
 function modeMatch(g,m){var k=g.mode;return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
 function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-var S={period:'',periodSet:false,mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,locked:false};
-var SHOWN=20;
+var S={period:'',periodSet:false,mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,allPatterns:false,tab:'hands',locked:false};
+var SHOWN=20,PAT_SHOWN=10;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function pad2(n){return ('0'+n).slice(-2);}
 function localISO(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
@@ -309,6 +327,7 @@ var ICON={
   cal:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   mode:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>',
   chev:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  up:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
   check:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
   share:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>'
 };
@@ -342,9 +361,57 @@ function menuPop(w){return '<div class="n-clear" data-close="1"></div><div class
 function menuSheet(w){return '<div class="n-dim" data-close="1"></div><div class="n-sheet" role="listbox" aria-label="'+MENU_TITLE[w]+'"><div class="n-grab"></div><div class="n-st">'+MENU_TITLE[w]+'</div>'+menuInner(w)+'</div>';}
 function ddButton(w,label,icon,active){return '<span class="n-anchor"><button type="button" class="n-dd'+(active?' act':'')+'" data-menu="'+w+'" aria-haspopup="listbox" aria-expanded="'+(S.menu===w)+'"><span class="l">'+icon+'<span>'+esc(label)+'</span></span>'+ICON.chev+'</button>'+(S.menu===w&&isWide()?menuPop(w):'')+'</span>';}
 function totals(){
-  var gs=games().filter(function(g){return periodOk(g.date)&&modeOk(g);}),t={gs:gs,games:gs.length,winds:0,wf:0,hands:0,won:0,pts:0,best:null,zimo:0,deal:0};
-  gs.forEach(function(g){t.winds+=g.winds;t.wf+=g.windFirsts;t.hands+=g.hands;t.won+=g.won;t.pts+=g.ptsSum;if(g.best!==null&&(t.best===null||g.best>t.best))t.best=g.best;t.zimo+=g.zimo;t.deal+=g.dealIns;});
+  var gs=games().filter(function(g){return periodOk(g.date)&&modeOk(g);}),t={gs:gs,games:gs.length,winds:0,wf:0,hands:0,won:0,pts:0,best:null,zimo:0,deal:0,zlost:0,low:null,dealPts:0,streak:0,patterns:{},windsDone:0,windHigh:null,windLow:null,placeSum:0,net:0,rankSum:0,pen:0};
+  gs.forEach(function(g){
+    t.winds+=g.winds;t.wf+=g.windFirsts;t.hands+=g.hands;t.won+=g.won;t.pts+=g.ptsSum;if(g.best!==null&&(t.best===null||g.best>t.best))t.best=g.best;t.zimo+=g.zimo;t.deal+=g.dealIns;
+    t.zlost+=g.zimoLost||0;t.dealPts+=g.dealPts||0;if(g.low!=null&&(t.low===null||g.low<t.low))t.low=g.low;if((g.streak||0)>t.streak)t.streak=g.streak;
+    Object.keys(g.patterns||{}).forEach(function(k){t.patterns[k]=(t.patterns[k]||0)+g.patterns[k];});
+    t.windsDone+=g.windsDone||0;t.placeSum+=g.windPlaceSum||0;if(g.windHigh!=null&&(t.windHigh===null||g.windHigh>t.windHigh))t.windHigh=g.windHigh;if(g.windLow!=null&&(t.windLow===null||g.windLow<t.windLow))t.windLow=g.windLow;
+    t.net+=g.net;t.rankSum+=g.rank;t.pen+=g.penalties||0;
+  });
   return t;
+}
+// the two statistics cards: figures in pairs, each rate beside its count, the pattern counter folded away
+function pct(a,b){return b>0?(Math.round(a/b*1000)/10)+'%':'-';}
+function dec1(n){return (Math.round(n*10)/10).toString();}
+// The statistics: one card with three tabs. Every figure is a number and one short label, so the cells line up; what a rate is
+// "of" is said once in a small caption above its pair. Colours of the bar: green for won, gold for lost, red for the player's own penalties.
+var TABS=[['hands','Hands'],['wind','Wind rounds'],['patterns','Patterns']];
+function hero(k,big,label){return '<div class="t-heroc" data-k="'+k+'"><b class="v">'+big+'</b><span>'+label+'</span></div>';}
+function cell(k,big,label){return '<div class="t-cell" data-k="'+k+'"><b class="v">'+big+'</b><span>'+label+'</span></div>';}
+function grp(cap,cells){return '<div class="t-grp"><p class="t-cap">'+cap+'</p><div class="t-pair">'+cells+'</div></div>';}
+function handsPanel(t){
+  var lost=t.hands-t.won,hu=t.won-t.zimo,neutral=Math.max(0,t.hands-t.won-t.deal-t.zlost-t.pen),dash='-';
+  var segs=[['hu',hu],['sd',t.zimo],['ld',t.deal],['ls',t.zlost],['pe',t.pen],['nu',neutral]];
+  var live=segs.filter(function(s){return s[1]>0;});
+  var bar='<div class="t-bar">'+(live.length?live.map(function(s){return '<i class="k-'+s[0]+'" style="flex:'+s[1]+'"></i>';}).join(''):'<i class="k-nu" style="flex:1"></i>')+'</div>';
+  var leg='<div class="t-leg">'+[['hu','legHu',hu,'Hu'],['sd','legSelfDraw',t.zimo,'Self draw'],['ld','legLostDiscard',t.deal,'Lost to discard'],['ls','legLostSelfDraw',t.zlost,'Lost to self draw'],['pe','legPenalty',t.pen,'Penalty'],['nu','legNeutral',neutral,'Neutral']].map(function(x){return '<span><em class="k-'+x[0]+'"></em><b data-k="'+x[1]+'">'+x[2]+'</b>'+x[3]+'</span>';}).join('')+'</div>';
+  return '<div class="t-head"><h3>Hands</h3><span><b data-k="handsWon">'+t.won+'</b> won of <b data-k="handsPlayed">'+t.hands+'</b></span></div>'
+    +'<div class="t-hero">'+hero('winRate',pct(t.won,t.hands),'Win rate')+hero('streak',t.streak?String(t.streak):dash,'Highest win streak')+hero('best',t.best===null?dash:sgn(t.best),'Best hand')+hero('lowest',t.low===null?dash:sgn(t.low),'Lowest hand')+'</div>'
+    +bar+leg+'<p class="t-note">Penalty is your own invalid or false wins. Neutral is draws, other players\u2019 penalties and hu off someone else\u2019s discard.</p>'
+    +'<div class="t-grp"><div class="t-two">'
+      +'<div class="t-col"><p class="t-cap">Of <b data-k="capWon">'+t.won+'</b> hands won</p>'+cell('selfDrawRate',pct(t.zimo,t.won),'<span data-k="selfDraw">'+t.zimo+'</span> self draws')+cell('huRate',pct(hu,t.won),'<span data-k="hu">'+hu+'</span> hu')+'</div>'
+      +'<div class="t-col"><p class="t-cap">Of <b data-k="capLost">'+lost+'</b> not won</p>'+cell('loseDiscardRate',pct(t.deal,lost),'<span data-k="loseDiscard">'+t.deal+'</span> lost by discard')+cell('loseSelfDrawRate',pct(t.zlost,lost),'<span data-k="loseSelfDraw">'+t.zlost+'</span> lost by self draw')+'</div>'
+    +'</div></div>'
+    +grp('Average points',cell('avgWin',t.won?dec1(t.pts/t.won):dash,'per win')+cell('avgDeal',t.deal?dec1(t.dealPts/t.deal):dash,'per deal in'));
+}
+function windPanel(t){
+  var dash='-';
+  return '<div class="t-head"><h3>Wind rounds</h3><span><b data-k="windsPlayed">'+t.winds+'</b> played \u00b7 <b data-k="windsDone">'+t.windsDone+'</b> completed</span></div>'
+    +'<div class="t-hero one">'+hero('netTotal',sgn(t.net),'Total net score')+'</div>'
+    +grp('Net score in one completed round',cell('windHigh',t.windHigh===null?dash:sgn(t.windHigh),'highest')+cell('windLow',t.windLow===null?dash:sgn(t.windLow),'lowest'))
+    +grp('Average placement',cell('placeWind',t.windsDone?dec1(t.placeSum/t.windsDone):dash,'per wind round')+cell('placeGame',t.games?dec1(t.rankSum/t.games):dash,'per game'));
+}
+function patternsPanel(t){
+  var pats=Object.keys(t.patterns).sort(function(a,b){return t.patterns[b]-t.patterns[a]||(a<b?-1:1);}),shown=S.allPatterns?pats:pats.slice(0,PAT_SHOWN),top=pats.length?t.patterns[pats[0]]:1;
+  return '<div class="t-head"><h3>Pattern collection</h3><span><b data-k="patternCount">'+pats.length+'</b> won</span></div>'
+    +(pats.length?shown.map(function(k){return '<div class="t-pat"><div class="r"><span>'+esc(k)+'</span><b>'+t.patterns[k]+'</b></div><div class="tk"><i style="width:'+(t.patterns[k]/top*100)+'%"></i></div></div>';}).join('')+(pats.length>shown.length?'<button type="button" class="pp-more" data-patmore="1">Show all '+pats.length+' patterns</button>':'')
+      :'<p class="t-none">No patterns recorded in these games. Patterns are only kept for hands entered with the pattern picker.</p>');
+}
+function statsCard(t){
+  var tab=S.tab||'hands';
+  return '<div class="t-card"><div class="t-seg" role="tablist">'+TABS.map(function(x){return '<button type="button" role="tab" data-tab="'+x[0]+'" aria-selected="'+(tab===x[0])+'" class="'+(tab===x[0]?'on':'')+'">'+x[1]+'</button>';}).join('')+'</div>'
+    +(tab==='wind'?windPanel(t):tab==='patterns'?patternsPanel(t):handsPanel(t))+'</div>';
 }
 function gameCard(g){
   var rk=g.rank,sub=g.winds?'1st in '+g.windFirsts+'/'+g.winds+' rounds \u00b7 '+(g.hands?Math.round(g.won/g.hands*100):0)+'% win rate':'';
@@ -360,11 +427,10 @@ function content(){
   var since=P.since?'Registered '+MONTHS[+P.since.slice(5,7)-1]+' '+P.since.slice(0,4):'';
   var meta=[since,last?'Last played '+shortDate(last):(all.length?'':'No games yet')].filter(Boolean).join(' \u00b7 ');
   var filters=ddButton('period',periodLabel(),ICON.cal,false)+(modesIn().length>=2?ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all'):'');
-  var avg=t.won?(Math.round(t.pts/t.won*10)/10)+'<span class="u"> pts</span>':'-';
-  var left='<div class="pp-head"><div><h1>'+esc(P.nickname)+'</h1><div class="upd">'+esc(meta)+'</div></div><button type="button" class="pp-share" data-share="1">'+ICON.share+'Share</button></div>'
+    var left='<div class="pp-head"><div><h1>'+esc(P.nickname)+'</h1><div class="upd">'+esc(meta)+'</div></div><button type="button" class="pp-share" data-share="1">'+ICON.share+'Share</button></div>'
     +'<div class="pp-filters">'+filters+'</div>'
     +'<div class="pp-strip"><div><b>'+t.games+'</b><span>Games</span></div><div><b>'+t.winds+'</b><span>Wind rounds</span></div><div><b>'+t.wf+'</b><span>1st in wind rounds</span></div><div><b>'+(t.hands?Math.round(t.won/t.hands*100)+'%':'-')+'</b><span>Win rate</span></div></div>'
-    +'<div class="card pp-stats"><div class="pp-sg"><div><div class="k">Avg points / win</div><div class="v">'+avg+'</div></div><div><div class="k">Best hand</div><div class="v">'+(t.best===null?'-':sgn(t.best))+'</div></div><div><div class="k">Self-draws</div><div class="v">'+t.zimo+'</div></div><div><div class="k">Deal-ins</div><div class="v">'+t.deal+'</div></div></div></div>';
+    +statsCard(t);
   var shown=S.showAll?t.gs:t.gs.slice(0,SHOWN);
   var right='<div class="pp-h"><h3>Games ('+t.games+')</h3><span>Newest first</span></div>'+(t.games?shown.map(gameCard).join('')+(t.games>shown.length?'<button type="button" class="pp-more" data-more="1">Show all '+t.games+' games</button>':''):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>');
   return '<div class="pp-two"><div>'+left+'</div><div>'+right+'</div></div>';
@@ -378,7 +444,7 @@ function render(){
 function focusMenu(sel){setTimeout(function(){var el=sel?document.querySelector(sel):(document.querySelector('.n-menu [aria-selected="true"], .n-sheet [aria-selected="true"]')||document.querySelector('.n-menu .n-o, .n-sheet .n-o'));if(el&&el.focus)el.focus();},0);}
 function closeMenu(){var w=S.menu;S.menu=null;S.cust.open=false;S.cust.err='';render();if(w){var b=document.querySelector('[data-menu="'+w+'"]');if(b&&b.focus)b.focus();}}
 function toggleMenu(w){if(S.menu===w){closeMenu();return;}S.menu=w;S.cust.open=false;S.cust.err='';render();focusMenu();}
-function pickOpt(v){var i=v.indexOf('|'),k=v.slice(0,i),val=v.slice(i+1);if(k==='period')S.period=val;else if(k==='mode'){S.mode=val;S.modeSet=true;}S.showAll=false;closeMenu();}
+function pickOpt(v){var i=v.indexOf('|'),k=v.slice(0,i),val=v.slice(i+1);if(k==='period')S.period=val;else if(k==='mode'){S.mode=val;S.modeSet=true;}S.showAll=false;S.allPatterns=false;closeMenu();}
 function applyCustom(){
   var f=document.getElementById('cFrom'),t=document.getElementById('cTo'),a=f?f.value:'',b=t?t.value:'';S.from=a;S.to=b;
   if(!a||!b){S.cust.err='Pick a start and an end date.';render();focusMenu(a?'#cTo':'#cFrom');return;}
@@ -401,6 +467,8 @@ document.getElementById('app').addEventListener('click',function(e){
   if(b.dataset.cust){S.cust.open=true;S.cust.err='';render();focusMenu('#cFrom');return;}
   if(b.dataset.apply){applyCustom();return;}
   if(b.dataset.more){S.showAll=true;render();return;}
+  if(b.dataset.patmore){S.allPatterns=true;render();return;}
+  if(b.dataset.tab){S.tab=b.dataset.tab;S.allPatterns=false;render();return;}
   if(b.dataset.share){share();return;}
   if(b.dataset.retry){load();return;}
 });
