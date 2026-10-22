@@ -25,6 +25,29 @@ function rulesOf(g) {
   return { minPoint: cfg.minPoint, maxStreak: cfg.maxStreak, deadwall: !!cfg.deadwall, seatRotation: !!cfg.seatRotation, bankrupt: !!cfg.bankrupt, start: cfg.mcr ? null : start, base: cfg.mcr ? cfg.basePoint : null };
 }
 
+// Tiles kept with a won hand (numbers only). A record that does not hold together is dropped, the hand itself is kept.
+const TILE_COND = ['last', 'replacement', 'double', 'robbing'];
+function okTileRecord(r) {
+  if (!r || typeof r !== 'object' || !Array.isArray(r.h) || !Array.isArray(r.m) || !Array.isArray(r.f)) return false;
+  const isT = x => Number.isInteger(x) && x >= 0 && x <= 33;
+  if (r.m.length > 4 || r.f.length > 8 || r.h.length + 3 * r.m.length !== 14) return false;
+  if (!r.h.every(isT) || !isT(r.w) || r.h.indexOf(r.w) < 0) return false;
+  const count = new Array(34).fill(0); r.h.forEach(x => { count[x]++; });
+  for (const m of r.m) {
+    if (!Array.isArray(m) || m.length !== 3 || ['c', 'p', 'k'].indexOf(m[0]) < 0 || !isT(m[1]) || (m[2] !== 0 && m[2] !== 1)) return false;
+    if (m[0] === 'c') { if (m[1] >= 27 || m[1] % 9 > 6) return false; count[m[1]]++; count[m[1] + 1]++; count[m[1] + 2]++; } else count[m[1]] += m[0] === 'k' ? 4 : 3;
+  }
+  if (count.some(x => x > 4)) return false;
+  if (!r.f.every(x => Number.isInteger(x) && x >= 0 && x <= 7) || new Set(r.f).size !== r.f.length) return false;
+  if (r.c !== undefined && (!Array.isArray(r.c) || !r.c.every(x => TILE_COND.indexOf(x) >= 0))) return false;
+  return true;
+}
+export function cleanTiles(ev) {
+  if (!ev || ev.tiles === undefined) return;
+  const winners = ev.winner != null ? [ev.winner] : (Array.isArray(ev.winners) ? ev.winners : []), out = {};
+  if (ev.tiles && typeof ev.tiles === 'object') for (const k of Object.keys(ev.tiles)) { if (winners.indexOf(+k) < 0 || !okTileRecord(ev.tiles[k])) continue; const r = ev.tiles[k]; out[k] = { h: r.h.slice(), m: r.m.map(x => x.slice()), w: r.w, f: r.f.slice(), c: (r.c || []).slice() }; }
+  if (Object.keys(out).length) ev.tiles = out; else delete ev.tiles;
+}
 export function validGame(g) {
   if (!g || typeof g !== 'object' || !Array.isArray(g.events) || g.events.length > 400) return false;
   if (g.mode !== undefined && MODES.indexOf(g.mode) < 0) return false;

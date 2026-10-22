@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
+import { buildStats, validGame, nextStamp, sameSetup, cleanTiles } from '../../_tables.js';
 import { safeDisplay } from '../../_players.js';
 
 // GET /api/tables/:code: the host's edit code. Returns the raw game object
@@ -29,6 +29,7 @@ export async function onRequestPatch({ request, env, params }) {
     let game;
     try { game = await request.json(); } catch (e) { return json({ error: 'Invalid game data' }, 400); }
     if (!validGame(game)) return json({ error: 'Invalid game data' }, 400);
+    game.events.forEach(cleanTiles);
 
     const t = await env.DB.prepare('SELECT id, players, rounds, updated_at FROM tables WHERE code=?').bind(code).first();
     if (!t) return json({ error: 'Table code not found' }, 404);

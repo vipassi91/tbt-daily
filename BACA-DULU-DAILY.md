@@ -921,3 +921,25 @@ Bila ada hand yang terlupa dicatat dan baru disadari kemudian (misalnya hand ke-
   "(after the game ended)" dan tidak dihitung, sebagai tanda urutannya perlu diperiksa.
 - Tidak ada perubahan server atau database. File berubah dari v44: hanya `scoreboard.html`.
 
+## Update terbaru (v46): Pick Tiles, poin dari tile yang dipilih
+
+Pilihan ketiga di langkah poin untuk hand Hu, Zi Mo, Double Hu, dan Triple Hu di mode Casual, Default, Tournament, dan Custom: **Points | Pick Patterns | Pick Tiles**.
+Mode MCR tidak berubah (poin tetap diketik).
+
+- **Alur:** tekan Pick Tiles, pilih tile pemenang (dengan meld: Chi, Exposed pong, Exposed kong, Concealed kong), tekan tile yang menang, isi bunga dan musim yang
+  dipegang serta kondisi menang bila ada. Jendela langsung mengusulkan poin. **Check patterns** membuka pemilih pola yang sudah ada dengan pola usulan terisi, dan
+  host mengonfirmasi atau mengubahnya, lalu **Use total**. Usulan hanyalah usulan: yang menentukan skor tetap pola yang dikonfirmasi host.
+- **Terisi otomatis dari permainan:** nama pemenang, cara menang (Zi Mo atau Hu, dari jenis hand yang dipilih), seat wind pemenang (dihitung dari dealer, mengikuti rotasi
+  kursi dan hand lama yang diedit atau disisipi), dan prevailing wind (putaran angin hand itu). Host tidak perlu mengisinya.
+- **Aturan hitung** diambil kata demi kata dari pemilih pola scoreboard saat pemasangan (mesin tidak punya salinan aturan sendiri yang bisa berbeda). Aturan yang sudah
+  dikonfirmasi: concealed kong tetap concealed; pong yang dilengkapi tile buangan yang menang tidak dihitung concealed (Four Concealed Pong hanya sah kalau buangannya
+  melengkapi pasangan); Thirteen Orphans, Nine Gates, dan Seven Stars harus self draw; Split Straight hanya boleh dilengkapi buangan pada set atau pasangannya;
+  Half Outside, Half Flush, dan Half Terminals butuh minimal tiga dari lima kelompok; Ruby, Jade, dan Pearl Dragon butuh pure straight satu suit dengan pasangan.
+- **Tile disimpan sebagai data, bukan gambar:** tiap hand yang dimenangkan dengan tile menyimpan `tiles` berisi angka saja (tile concealed, meld, tile menang, bunga,
+  kondisi), sekitar 80 sampai 120 byte per hand. Kartu **Share hand** otomatis memuat tile itu: bunga di baris sendiri, lalu meld dan tangan, tile menang paling akhir.
+  Pada double hu setiap pemenang punya tile sendiri. Hand tanpa tile tetap memakai pemilih tile dekoratif seperti biasa.
+- **Server memeriksa data tile:** nomor harus 0 sampai 33, tidak lebih dari empat salinan, jumlah tile sesuai, bunga 0 sampai 7 tanpa ganda, dan hanya milik pemenang.
+  Data yang tidak masuk akal dibuang, hand-nya tetap tersimpan. Tidak ada SQL baru.
+- Menutup pemilih pola tanpa memakainya membawa kembali ke jendela tile dengan tangan yang sama. Cancel tidak mengubah apa pun.
+- **File berubah dari v45:** `scoreboard.html` (sekitar +67 KB), `functions/_tables.js`, dan `functions/api/tables/[code].js`. Unggah ketiganya dalam satu commit.
+

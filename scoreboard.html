@@ -287,6 +287,35 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .warn{margin-top:8px;padding:10px 12px;border:1px solid var(--red);border-left-width:4px;border-radius:10px;background:var(--field);font-size:13px;line-height:1.45}
 .warn[hidden]{display:none}
 .hitem.inserting{box-shadow:0 3px 0 0 var(--accent)}   /* the line a new hand will go on, below the hand it goes in front of (the newest hand is at the top) */
+
+/* Pick Tiles */
+.patmodal-note{padding:10px 16px;background:var(--field);border-bottom:1px solid var(--line);font-size:13px;line-height:1.45;color:var(--text)}.patmodal-note[hidden]{display:none}
+.tm-info{font-size:13px;line-height:1.5;color:var(--muted);margin-bottom:14px}.tm-info b{color:var(--text)}
+.tm-cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 8px}.tm-cap h3{margin:0;font-family:var(--display);font-size:17px}.tm-count{font-size:12.5px;color:var(--muted);white-space:nowrap}.tm-count b{color:var(--text)}
+.tm-tray{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.tm-slot{display:block;aspect-ratio:174/220;border:1.5px dashed var(--line);border-radius:5px}
+.tm-tb,.tm-pt,.tm-wb,.tm-fb{padding:0;border:0;background:none;border-radius:5px;position:relative}
+.tm-tb,.tm-pt{aspect-ratio:174/220}.tm-tb:active,.tm-pt:active{transform:scale(.95)}
+.tm-t{display:block;width:100%;aspect-ratio:174/220;background-size:100% 100%;background-repeat:no-repeat;border-radius:4px}
+.tm-melds{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.tm-meld{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 8px;border:1px solid var(--line);border-radius:12px;background:var(--field);min-height:44px;color:var(--text)}
+.tm-meld .mt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}.tm-meld .tl{display:flex;gap:2px}.tm-meld .tl .tm-t{width:25px}.tm-meld .x{color:var(--muted);font-size:16px;line-height:1}
+.tm-tools{margin-top:10px}.tm-tools .btn{min-height:40px}
+.tm-res{margin:14px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px}
+.tm-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-weight:700;font-size:14px;border:1px solid transparent}
+.tm-pill.ok{background:var(--accent);color:var(--onaccent)}.tm-pill.bad{color:var(--red);border-color:var(--red)}.tm-pill.info{background:var(--field);color:var(--text);border-color:var(--line)}
+.tm-sub{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.tm-modes,.tm-seg{display:flex;flex-wrap:wrap;gap:6px}.tm-modes{margin-top:14px;margin-bottom:8px}
+.tm-hint{font-size:12.5px;color:var(--muted);margin:0 0 12px;min-height:34px;line-height:1.4}
+.tm-pg{margin-bottom:12px}.tm-pr{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
+.tm-pt[disabled]{opacity:.28}
+.tm-pt .bd{position:absolute;right:-3px;top:-4px;min-width:16px;height:16px;border-radius:999px;background:var(--accent);color:var(--onaccent);font-size:10.5px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 4px}.tm-pt.has .bd{display:flex}
+.tm-pl{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:600}
+.tm-wt{display:flex;flex-wrap:wrap;gap:8px}.tm-wb{width:38px}
+.tm-wb[aria-pressed="true"],.tm-fb[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+.tm-fls{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;padding:3px}.tm-fb[aria-pressed="false"]{opacity:.42}
+.tm-foot{display:flex;gap:10px}.tm-foot .btn{flex:1}
+@media (max-width:380px){.tm-pr,.tm-tray{gap:4px}}
 </style>
 </head>
 <body>
@@ -447,13 +476,28 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   </div>
 </div>
 
-<div class="patmodal-overlay" id="patModal" hidden>
+<div class="patmodal-overlay" id="tileModal" hidden role="dialog" aria-modal="true" aria-labelledby="tmTitle">
+    <div class="patmodal-sheet">
+      <div class="patmodal-header"><h2 id="tmTitle">Pick tiles</h2><button type="button" class="patmodal-x" id="tmClose" aria-label="Close">&times;</button></div>
+      <div class="patmodal-body" id="tmBody">
+        <div class="tm-info" id="tmInfo"></div>
+        <div id="tmHand"></div>
+        <div class="tm-tools"><button type="button" class="btn" id="tmClear">Clear tiles</button></div>
+        <div class="tm-res" id="tmRes" aria-live="polite"></div>
+        <div id="tmPal"></div>
+        <div id="tmWin"></div>
+      </div>
+      <div class="patmodal-footer tm-foot"><button type="button" class="btn" id="tmCancelBtn">Cancel</button><button type="button" class="btn primary" id="tmUseBtn" disabled>Check patterns</button></div>
+    </div>
+  </div>
+  <div class="patmodal-overlay" id="patModal" hidden>
   <div class="patmodal-sheet">
     <div class="patmodal-header">
       <h2>Pick patterns</h2>
       <button type="button" class="patmodal-x" id="patModalClose" aria-label="Close">&times;</button>
     </div>
-    <div class="patmodal-body" id="patModalSlot"></div>
+    <div class="patmodal-note" id="patModalNote" hidden></div>
+      <div class="patmodal-body" id="patModalSlot"></div>
     <div class="patmodal-footer">
       <button type="button" class="btn primary" id="patModalUse" style="width:100%">Use total</button>
     </div>
@@ -1962,9 +2006,11 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
   /* entry form state */
   var f,editIdx=-1,insIdx=-1;   // insIdx: a new hand is being put in front of the hand with this number (index), instead of at the end
-  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},who:-1,tenpai:[]};editIdx=-1;insIdx=-1;}
+  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},tiles:{},who:-1,tenpai:[]};editIdx=-1;insIdx=-1;}
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
+  // what is kept with a winner's points: the patterns counted, and the tiles they came from (numbers only)
+  function attachMeta(ev,w){if(f.patterns[w]){if(!ev.patterns)ev.patterns={};ev.patterns[w]=f.patterns[w];}if(f.tiles&&f.tiles[w]){if(!ev.tiles)ev.tiles={};ev.tiles[w]=f.tiles[w];}}
   function eventFromForm(){
     var k=f.kind,ev,ws;
     if(modeConfig().mcr){   // typed points (0 is allowed: it is flagged below the minimum, not refused); a draw carries no tenpai
@@ -1983,13 +2029,13 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(k==='hu'){
       if(f.winner<0||f.disc<0||!f.pts[f.winner])return null;
       ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];
-      if(f.patterns[f.winner]){ev.patterns={};ev.patterns[f.winner]=f.patterns[f.winner];}
+      attachMeta(ev,f.winner);
       return ev;
     }
     if(k==='zimo'){
       if(f.winner<0||!f.pts[f.winner])return null;
       ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];
-      if(f.patterns[f.winner]){ev.patterns={};ev.patterns[f.winner]=f.patterns[f.winner];}
+      attachMeta(ev,f.winner);
       return ev;
     }
     if(k==='double'||k==='triple'){
@@ -2000,7 +2046,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       for(var j=0;j<ws.length;j++){
         if(!f.pts[ws[j]])return null;
         ev.pts[ws[j]]=f.pts[ws[j]];
-        if(f.patterns[ws[j]]){if(!ev.patterns)ev.patterns={};ev.patterns[ws[j]]=f.patterns[ws[j]];}
+        attachMeta(ev,ws[j]);
       }
       return ev;
     }
@@ -2018,14 +2064,16 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(ev.tenpai)f.tenpai=ev.tenpai.slice();
     f.pts=Object.assign({},ev.pts||{});
     f.patterns=Object.assign({},ev.patterns||{});
+    f.tiles=Object.assign({},ev.tiles||{});
   }
 
   // Seating. curOrder lists the players box by box; curWind[i] is the wind player i holds now.
     // With seat rotation on, a wind round is played in the MCR seating order (SEAT_ORDER): the players change seats when a new
     // wind round starts, and the dealer moves along the seats. Without it the players keep their places and the dealer moves.
     // Either way the seat wind is counted from the dealer: the dealer is East, the next seat South, and so on.
-    var curOrder=[0,1,2,3],curWind=[0,1,2,3];
+    var curOrder=[0,1,2,3],curWind=[0,1,2,3],curRoundWind=0;
     function setSeatView(wind,dealer,cfg){
+      curRoundWind=wind;
       var order=cfg.seatRotation?SEAT_ORDER[wind]:[0,1,2,3],kd=order.indexOf(dealer);
       curOrder=order;curWind=[0,0,0,0];
       order.forEach(function(p,k){curWind[p]=(k-kd+4)%4;});
@@ -2066,11 +2114,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   function ptsGrid(p,selected,label){
     if(modeConfig().mcr)return ptsTyped(p,selected,label);
     var min=modeConfig().minPoint;
-    var pkMode=(f.patterns&&f.patterns[p])?'pattern':'points';
+    var pkMode=(f.tiles&&f.tiles[p])?'tiles':(f.patterns&&f.patterns[p])?'pattern':'points';
     var h='<div class="lbl">'+esc(label||'Points')+'</div>'
       +'<div class="chips" style="margin-bottom:10px">'
       +'<button type="button" class="chip" aria-pressed="'+(pkMode==='points')+'" data-a="ptsmode" data-p="'+p+'">Points</button>'
       +'<button type="button" class="chip" aria-pressed="'+(pkMode==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button>'
+      +'<button type="button" class="chip" aria-pressed="'+(pkMode==='tiles')+'" data-a="tilepick" data-p="'+p+'">Pick Tiles</button>'
       +'</div>';
     h+='<div class="pts">';
     for(var n=min;n<=13;n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
@@ -2198,7 +2247,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     else if(a==='pts'){f.pts[+b.dataset.p]=+v;}
     else if(a==='ptsmode'){
       var ppm=+b.dataset.p;
-      if(f.patterns[ppm]){delete f.patterns[ppm];delete f.pts[ppm];renderGame();}
+      if(f.patterns[ppm]||f.tiles[ppm]){delete f.patterns[ppm];delete f.tiles[ppm];delete f.pts[ppm];renderGame();}
       return;
     }
     else if(a==='patpick'){
@@ -2211,6 +2260,20 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
         f.patterns[pp]=r;
         renderGame();
       },prev);
+      return;
+    }
+    else if(a==='tilepick'){
+      // the winner's seat wind, the prevailing wind and how the hand was won all come from the game: nothing is asked twice
+      var tp=+b.dataset.p;
+      var saved=f.tiles[tp]||null;
+      delete f.pts[tp];
+      renderGame();
+      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),saved:saved},function(r){
+        f.pts[tp]=r.patterns.total;
+        f.patterns[tp]=r.patterns;
+        f.tiles[tp]=r.tiles;
+        renderGame();
+      });
       return;
     }
     else if(a==='suggestinvalid'){var who0=f.winner,ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=who0;}
@@ -2919,7 +2982,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   // Lets other parts of the app (the Play tab's points entry) pop this same picker up as a
   // modal instead of navigating to the Patterns tab. Moves the picker's own cards into the
   // modal rather than duplicating any state or rendering logic, then moves them back on close.
-  var patModalOnUse=null;
+  var patModalOnUse=null,patModalOnCancel=null;
   function patCards(){return [$('pkCard1'),$('pkCard2')];}
   function movePatCardsToModal(){
     var cards=patCards(),slot=$('patModalSlot');
@@ -2929,13 +2992,16 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var cards=patCards(),tab=document.getElementById('tab-patterns');
     cards.forEach(function(c){tab.appendChild(c);});
   }
-  function closePatternPickerModal(){
+  function closePatternPickerModal(used){
     $('patModal').hidden=true;
     movePatCardsBack();
     patModalOnUse=null;
+    var cb=patModalOnCancel;patModalOnCancel=null;
+    if(used!==true&&cb)cb();
   }
-  window.openPatternPickerModal=function(onUse,restoreState){
-    patModalOnUse=onUse;
+  window.openPatternPickerModal=function(onUse,restoreState,opts){
+    patModalOnUse=onUse;patModalOnCancel=(opts&&opts.onCancel)||null;
+    var nt=$('patModalNote');if(nt){nt.textContent=(opts&&opts.note)||'';nt.hidden=!(opts&&opts.note);}
     pat=restoreState?{sel:Object.assign({},restoreState.sel),flo:Object.assign({},restoreState.flo),win:Object.assign({},restoreState.win)}:{sel:{},flo:{},win:{}};
     movePatCardsToModal();
     $('patModal').hidden=false;
@@ -2950,7 +3016,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       counted:r.counted,
       state:{sel:Object.assign({},pat.sel),flo:Object.assign({},pat.flo),win:Object.assign({},pat.win)}
     });
-    closePatternPickerModal();
+    closePatternPickerModal(true);
   });
 
   sync();
@@ -2962,6 +3028,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   function $(id){return document.getElementById(id);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   var TILE_IMG={0:'/assets/i/d5ff4c2ae4.png',1:'/assets/i/c5c451c5e6.png',2:'/assets/i/b6925115c2.png',3:'/assets/i/f4a31adfcc.png',4:'/assets/i/e741b05bc4.png',5:'/assets/i/da8966bdbc.png',6:'/assets/i/146a1c4697.png',7:'/assets/i/7d164f4ffe.png',8:'/assets/i/826c8659c5.png',9:'/assets/i/339108bfa7.png',10:'/assets/i/3e751031aa.png',11:'/assets/i/cd869cdf07.png',12:'/assets/i/c0c974e457.png',13:'/assets/i/4c00c50924.png',14:'/assets/i/6a8a2ad8de.png',15:'/assets/i/2986734118.png',16:'/assets/i/711f7cc98c.png',17:'/assets/i/827c40841c.png',18:'/assets/i/1919dd2bc6.png',19:'/assets/i/f428b7ccb2.png',20:'/assets/i/ac48bf596b.png',21:'/assets/i/1005240f12.png',22:'/assets/i/7eceb03e69.png',23:'/assets/i/3592a37d6e.png',24:'/assets/i/09a8086fff.png',25:'/assets/i/d626cd9407.png',26:'/assets/i/78cefdd76b.png',27:'/assets/i/dc49a937ef.png',28:'/assets/i/80702ff9df.png',29:'/assets/i/ffdc5d928f.png',30:'/assets/i/c873f47570.png',31:'/assets/i/90689ac1d3.png',32:'/assets/i/8a55ed28c4.png',33:'/assets/i/13c698e532.png',34:'/assets/i/eaed1421c7.png',35:'/assets/i/e5adcad0fc.png',36:'/assets/i/d865851a25.png',37:'/assets/i/aeab9d374e.png',38:'/assets/i/4dbaaf11c1.png',39:'/assets/i/034428eee4.png',40:'/assets/i/0f89bc99fb.png',41:'/assets/i/010b4a32c3.png'};
+  window.TBT_TILE_IMG=TILE_IMG;   // the tile pictures, for the Pick Tiles window
   var PLAY='"Playfair Display",Georgia,"Times New Roman",serif';
   var INTER='"Inter Tight","Helvetica Neue",Arial,sans-serif';
 
@@ -2991,11 +3058,26 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
   function gname2(i){return window.gname?window.gname(i):('Player '+(i+1));}
 
+  // A hand entered with Pick Tiles carries its tiles (numbers only): put them on the card, the winning tile last
+  function prefillTiles(){
+    var tl=S.ev&&S.ev.tiles&&S.ev.tiles[S.winner];if(!tl)return;
+    var main=[];
+    (tl.m||[]).forEach(function(m){if(m[0]==='c'){main.push(m[1],m[1]+1,m[1]+2);}else{for(var k=0;k<(m[0]==='k'?4:3);k++)main.push(m[1]);}});
+    var hand=(tl.h||[]).slice().sort(function(a,b){return a-b;}),wi=hand.indexOf(tl.w);
+    if(wi>=0)hand.splice(wi,1);
+    hand.forEach(function(t){main.push(t);});if(wi>=0)main.push(tl.w);
+    main=main.slice(0,18);
+    var half=Math.ceil(main.length/2);
+    main.forEach(function(t,j){S.tiles.push(t);S.tileRows.push(j<half?2:3);});
+    (tl.f||[]).slice().sort(function(a,b){return a-b;}).forEach(function(id){if(id>=0&&id<8){S.tiles.push(34+id);S.tileRows.push(1);}});
+    tog.tiles=true;
+  }
   window.openShareModal=function(idx){
     var ev=window.game?window.game.events[idx]:null;
     if(!ev)return;
     var winners=ev.winner!=null?[ev.winner]:(ev.winners||[]);
     S={idx:idx,winner:winners[0],winners:winners,ev:ev,tiles:[],tileRows:[],row:2,tilePos:S.tilePos||'bottom',format:S.format||'portrait',theme:S.theme||'forest'};
+    prefillTiles();
     var wrap=$('shareWinnerWrap');
     if(winners.length>1){
       wrap.hidden=false;
@@ -3015,6 +3097,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   $('shareWinnerChips').addEventListener('click',function(e){
     var b=e.target.closest('[data-w]');if(!b)return;
     S.winner=+b.dataset.w;
+    if(S.ev&&S.ev.tiles){S.tiles=[];S.tileRows=[];S.row=2;prefillTiles();renderToggles();renderPicker();}
     $('shareWinnerChips').querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',c===b?'true':'false');});
     drawCard();
   });
@@ -3590,6 +3673,797 @@ document.addEventListener('keydown',function(e){
   if(s&&!s.hidden)document.getElementById('shareModalClose').click();
   else if(p&&!p.hidden)document.getElementById('patModalClose').click();
 });
+</script>
+<script>
+(function(){
+var E=(function(){
+// Tiles by Tiles: tile engine, phase 1 = is this a valid winning hand shape?
+// Tile numbers (same as the scoreboard's tile pictures):
+//   0-8 Dots 1-9 | 9-17 Bamboo 1-9 | 18-26 Characters 1-9 | 27-30 winds E S W N | 31-33 dragons Red Green White
+// Flowers and seasons are bonuses, they are never part of the hand.
+const isHonor = i => i >= 27;
+const suitOf = i => (i < 27 ? Math.floor(i / 9) : 3);       // 0 dots, 1 bamboo, 2 characters, 3 honors
+const rankOf = i => (i < 27 ? (i % 9) + 1 : 0);
+const isTerminal = i => i < 27 && (i % 9 === 0 || i % 9 === 8);
+const ORPHANS = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
+const SUIT_NAME = ['dots', 'bamboo', 'characters'];
+const HONOR_NAME = ['East', 'South', 'West', 'North', 'Red dragon', 'Green dragon', 'White dragon'];
+const tileName = i => (i < 27 ? rankOf(i) + ' ' + SUIT_NAME[suitOf(i)] : HONOR_NAME[i - 27]);
+
+// ---- notation for tests and typing: "123c 456d 789b EEE RR" -------------------------------------------------------
+// digits then a suit letter: c characters, d dots, b bamboo. Honors are letters: E S W N winds, R G P dragons (P = white).
+const SUIT_LETTER = { d: 0, b: 1, c: 2 }, HONOR_LETTER = { E: 27, S: 28, W: 29, N: 30, R: 31, G: 32, P: 33 };
+function parse(str) {
+  const out = []; let digits = '';
+  for (const ch of String(str)) {
+    if (/\s/.test(ch)) continue;
+    const lo = ch.toLowerCase(), up = ch.toUpperCase();   // upper or lower case both work: b c d are suits, e s w n r g p are honors
+    if (/[1-9]/.test(ch)) digits += ch;
+    else if (lo in SUIT_LETTER) { if (!digits) throw new Error('no digits before ' + ch); for (const d of digits) out.push(SUIT_LETTER[lo] * 9 + (+d - 1)); digits = ''; }
+    else if (up in HONOR_LETTER) { if (digits) throw new Error('digits without a suit before ' + ch); out.push(HONOR_LETTER[up]); }
+    else throw new Error('unknown character ' + ch);
+  }
+  if (digits) throw new Error('digits without a suit at the end');
+  return out;
+}
+function show(tiles) {   // compact notation, sorted
+  const t = tiles.slice().sort((a, b) => a - b); let out = '';
+  for (let s = 0; s < 3; s++) { const d = t.filter(i => i < 27 && suitOf(i) === s).map(i => rankOf(i)).join(''); if (d) out += d + 'dbc'[s]; }
+  return out + t.filter(i => i >= 27).map(i => 'ESWNRGP'[i - 27]).join('');
+}
+const countsOf = tiles => { const c = new Array(34).fill(0); tiles.forEach(t => c[t]++); return c; };
+
+// ---- the nine shapes ---------------------------------------------------------------------------------------------
+const SHAPES = {
+  standard:        { name: 'Four sets and a pair', note: '' },
+  sevenPairs:      { name: 'Seven Pairs', note: 'Seven different pairs.' },
+  sevenSteps:      { name: 'Seven Steps', note: 'Seven pairs in a row, in one suit.' },
+  sevenWonders:    { name: 'Seven Wonders', note: 'A pair of each of the seven honors.' },
+  thirteenOrphans: { name: 'Thirteen Orphans', note: 'Must be self drawn.', needs: 'selfDraw' },
+  nineGates:       { name: 'Nine Gates', note: 'Must be self drawn.', needs: 'selfDraw' },
+  splitStraight:   { name: 'Split Straight', note: 'A discard can only complete the grey set, not the split straight.' },
+  scatteredStars:  { name: 'Scattered Stars', note: 'Six or five different honors with eight or nine split straight tiles.' },
+  sevenStars:      { name: 'Seven Stars', note: 'Must be self drawn.', needs: 'selfDraw' },
+};
+const PERMS = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];   // which suit takes which of 1-4-7, 2-5-8, 3-6-9
+const knittedOf = perm => { const t = []; for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) t.push(s * 9 + perm[s] + 3 * k); return t; };
+
+// ---- four sets and a pair: every distinct way to split the tiles (lowest tile first, so no way is found twice) -----
+function decompose(counts, setsNeeded) {
+  const out = [], c = counts.slice();
+  for (let p = 0; p < 34; p++) {
+    if (c[p] < 2) continue;
+    c[p] -= 2; walk(c, 0, setsNeeded, [], p, out, -1); c[p] += 2;
+  }
+  return out;
+}
+// the lowest tile is always in the next set. When it is used for both a pong and a chow (1112 3...), the pong is chosen first,
+// so the same split is never found in two orders (chowAt = the tile where a chow was already taken)
+function walk(c, from, left, groups, pair, out, chowAt) {
+  let i = from; while (i < 34 && c[i] === 0) i++;
+  if (i === 34) { if (left === 0) out.push({ groups: groups.slice(), pair }); return; }
+  if (left === 0) return;
+  if (c[i] >= 3 && chowAt !== i) { c[i] -= 3; groups.push({ kind: 'pong', tiles: [i, i, i], exposed: false }); walk(c, i, left - 1, groups, pair, out, chowAt); groups.pop(); c[i] += 3; }
+  if (i < 27 && i % 9 <= 6 && c[i + 1] > 0 && c[i + 2] > 0) { c[i]--; c[i + 1]--; c[i + 2]--; groups.push({ kind: 'chow', tiles: [i, i + 1, i + 2], exposed: false }); walk(c, i, left - 1, groups, pair, out, i); groups.pop(); c[i]++; c[i + 1]++; c[i + 2]++; }
+}
+// when it does not fit: the split that leaves the fewest tiles over (a hint, not a verdict)
+function closest(counts, setsNeeded) {
+  let best = null; const c = counts.slice();
+  (function go(from, left, pairDone, groups, pair, over) {
+    if (best && over.length > best.over.length) return;
+    let i = from; while (i < 34 && c[i] === 0) i++;
+    if (i === 34) { if (!best || over.length < best.over.length || (over.length === best.over.length && groups.length > best.groups.length)) best = { groups: groups.slice(), pair, over: over.slice() }; return; }
+    if (left > 0 && c[i] >= 3) { c[i] -= 3; groups.push({ kind: 'pong', tiles: [i, i, i] }); go(i, left - 1, pairDone, groups, pair, over); groups.pop(); c[i] += 3; }
+    if (left > 0 && i < 27 && i % 9 <= 6 && c[i + 1] > 0 && c[i + 2] > 0) { c[i]--; c[i + 1]--; c[i + 2]--; groups.push({ kind: 'chow', tiles: [i, i + 1, i + 2] }); go(i, left - 1, pairDone, groups, pair, over); groups.pop(); c[i]++; c[i + 1]++; c[i + 2]++; }
+    if (!pairDone && c[i] >= 2) { c[i] -= 2; go(i, left, true, groups, i, over); c[i] += 2; }
+    c[i]--; over.push(i); go(i, left, pairDone, groups, pair, over); over.pop(); c[i]++;
+  })(0, setsNeeded, false, [], null, []);
+  return best;
+}
+
+// ---- melds the player has declared -------------------------------------------------------------------------------
+// { type: 'chi' | 'pong' | 'kong', tile: n, concealed?: true }   chi: tile is the lowest of the three
+function meldGroup(m) {
+  if (!m || !(m.tile >= 0 && m.tile <= 33)) return { err: 'A meld needs a tile.' };
+  if (m.type === 'pong') return { g: { kind: 'pong', tiles: [m.tile, m.tile, m.tile], exposed: !m.concealed } };
+  if (m.type === 'kong') return { g: { kind: 'kong', tiles: [m.tile, m.tile, m.tile, m.tile], exposed: !m.concealed } };
+  if (m.type === 'chi') { if (m.tile >= 27 || m.tile % 9 > 6) return { err: 'A chi starts at 1 to 7 of a suit.' }; return { g: { kind: 'chow', tiles: [m.tile, m.tile + 1, m.tile + 2], exposed: true } }; }
+  return { err: 'Unknown meld.' };
+}
+
+// ---- analyze: the whole hand ------------------------------------------------------------------------------------
+// input: { hand: [tile numbers, concealed, the winning tile included], melds: [...] }
+// status: 'valid' | 'invalid' | 'short' | 'long' | 'error'
+function analyze({ hand = [], melds = [] }) {
+  const problems = [], mg = [];
+  melds.forEach(m => { const r = meldGroup(m); if (r.err) problems.push({ code: 'meld', msg: r.err }); else mg.push(r.g); });
+  if (melds.length > 4) problems.push({ code: 'meld', msg: 'A hand has at most 4 melds.' });
+  hand.forEach(t => { if (!(t >= 0 && t <= 33)) problems.push({ code: 'tile', msg: 'Not a playing tile.' }); });
+  const all = countsOf(hand.filter(t => t >= 0 && t <= 33)); mg.forEach(g => g.tiles.forEach(t => all[t]++));
+  all.forEach((n, i) => { if (n > 4) problems.push({ code: 'tooMany', tile: i, msg: 'There are only 4 of each tile: ' + tileName(i) + '.' }); });
+  const need = 14 - 3 * melds.length, have = hand.length;
+  const base = { need, have, melds: mg, kongs: mg.filter(g => g.kind === 'kong').length };
+  if (problems.length) return { ...base, status: 'error', problems, readings: [] };
+  if (have < need) return { ...base, status: 'short', missing: need - have, problems, readings: [] };
+  if (have > need) return { ...base, status: 'long', extra: have - need, problems, readings: [] };
+  const c = countsOf(hand), readings = [], free = melds.length === 0;
+  // 1 four sets and a pair (declared melds are fixed sets)
+  decompose(c, 4 - melds.length).forEach(d => readings.push({ shape: 'standard', groups: [...mg, ...d.groups], pair: [d.pair, d.pair], kongs: base.kongs }));
+  if (free) {
+    const kinds = []; for (let i = 0; i < 34; i++) if (c[i]) kinds.push(i);
+    // 2 seven pairs (and its two special cases)
+    if (kinds.length === 7 && kinds.every(i => c[i] === 2)) {
+      readings.push({ shape: 'sevenPairs', pairs: kinds.slice() });
+      if (kinds.every(i => i < 27) && kinds.every(i => suitOf(i) === suitOf(kinds[0])) && kinds[6] - kinds[0] === 6) readings.push({ shape: 'sevenSteps', suit: suitOf(kinds[0]), from: rankOf(kinds[0]) });
+      if (kinds.every(i => i >= 27)) readings.push({ shape: 'sevenWonders' });
+    }
+    // 3 thirteen orphans
+    if (ORPHANS.every(i => c[i] >= 1) && kinds.every(i => ORPHANS.includes(i)) && ORPHANS.filter(i => c[i] === 2).length === 1) readings.push({ shape: 'thirteenOrphans', pair: ORPHANS.find(i => c[i] === 2) });
+    // 4 nine gates
+    if (kinds.every(i => i < 27 && suitOf(i) === suitOf(kinds[0]))) {
+      const s = suitOf(kinds[0]), r = k => c[s * 9 + k - 1];
+      if (r(1) >= 3 && r(9) >= 3 && [2, 3, 4, 5, 6, 7, 8].every(k => r(k) >= 1)) { const want = [3, 1, 1, 1, 1, 1, 1, 1, 3]; const extra = want.findIndex((w, k) => r(k + 1) === w + 1); if (extra >= 0) readings.push({ shape: 'nineGates', suit: s, extra: s * 9 + extra }); }
+    }
+    // 5 scattered stars / seven stars: different honors and tiles of one split straight, nothing twice
+    if (kinds.every(i => c[i] === 1)) {
+      const hon = kinds.filter(i => i >= 27), num = kinds.filter(i => i < 27);
+      const fits = PERMS.filter(p => num.every(i => (rankOf(i) - 1) % 3 === p[suitOf(i)]));
+      if (fits.length && ((hon.length === 6 && num.length === 8) || (hon.length === 5 && num.length === 9))) readings.push({ shape: 'scatteredStars', honors: hon, knitted: num });
+      if (fits.length && hon.length === 7 && num.length === 7) readings.push({ shape: 'sevenStars', honors: hon, knitted: num });
+    }
+  }
+  // 6 split straight: 1-4-7, 2-5-8, 3-6-9 in the three suits, one more set (may be the one declared meld) and a pair
+  if (melds.length <= 1) {
+    PERMS.forEach(p => {
+      const k = knittedOf(p), cc = c.slice(); if (!k.every(i => cc[i] >= 1)) return; k.forEach(i => cc[i]--);
+      decompose(cc, 1 - melds.length).forEach(d => readings.push({ shape: 'splitStraight', perm: p, knitted: k, groups: [...mg, ...d.groups], pair: [d.pair, d.pair] }));
+    });
+  }
+  const out = { ...base, status: readings.length ? 'valid' : 'invalid', problems, readings };
+  if (!readings.length) {
+    out.hint = { closest: closest(c, 4 - melds.length) };
+    if (free) out.hint.pairs = c.filter(n => n >= 2).length;
+  }
+  return out;
+}
+const shapesOf = res => [...new Set(res.readings.map(r => r.shape))];
+
+// ---- the tiles that would finish a hand one tile short (tenpai) ------------------------------------------------
+function waits({ hand = [], melds = [] }) {
+  const out = [], total = countsOf(hand);
+  melds.forEach(m => { const r = meldGroup(m); if (r.g) r.g.tiles.forEach(t => total[t]++); });
+  for (let t = 0; t < 34; t++) {
+    if (total[t] >= 4) continue;
+    const res = analyze({ hand: [...hand, t], melds });
+    if (res.status === 'valid') out.push({ tile: t, shapes: shapesOf(res) });
+  }
+  return out;
+}
+
+return {analyze, waits, parse, show, countsOf, tileName, SHAPES, ORPHANS, suitOf, rankOf, isTerminal, shapesOf};
+})();
+// GENERATED from scoreboard.html by build_rules.py. Do not edit by hand.
+// The scoring rules of the pattern picker, word for word. Only the way in and out is added at the bottom.
+var R = (function () {
+var PATTERNS=[
+    {t:'b',n:'Kong',p:1},{t:'b',n:'Pong Of Dragon',p:1},{t:'b',n:'Pong Of Seat Wind',p:1},{t:'b',n:'Pong Of Prevailing Wind',p:1},
+    {t:'b',n:'All Simples',p:1},{t:'b',n:'All Sequences / Chi',p:1},{t:'b',n:'Concealed Hand',p:1},
+    {t:'a',n:'Half Outside',p:2},{t:'a',n:'All Types',p:2},
+    {t:'a',n:'Full Outside',p:3},{t:'a',n:'Mixed Straight',p:3},{t:'a',n:'Mixed Sequences / Chi',p:3},{t:'a',n:'All Triplets / Pong',p:3},
+    {t:'a',n:'Pure Straight',p:4},{t:'a',n:'Mixed Triplets / Pong',p:4},{t:'a',n:'Three Concealed Triplets / Pong',p:4},{t:'a',n:'Half Flush',p:4},
+    {t:'e',n:'Split Straight',p:4},
+    {t:'e',n:'Pure Triple Sequences / Chi',p:5},{t:'e',n:'Pure Sequential Triplets / Pong',p:5},{t:'e',n:'Seven Pairs',p:5},
+    {t:'e',n:'Full Flush',p:6},
+    {t:'e',n:'Half Terminals',p:7},{t:'e',n:'Three Quadruplets / Kongs',p:7},
+    {t:'e',n:'Scattered Stars',p:8},
+    {t:'m',n:'All Terminals',p:10},{t:'m',n:'All Honors',p:10},
+    {t:'m',n:'Four Concealed Pong',p:11},{t:'m',n:'Ruby Dragon',p:11},{t:'m',n:'Jade Dragon',p:11},{t:'m',n:'Pearl Dragon',p:11},{t:'m',n:'Seven Stars',p:11},
+    {t:'m',n:'Little Three Dragons',p:12},{t:'m',n:'Little Four Winds',p:12},
+    {t:'l',n:'Big Three Dragons',p:13},{t:'l',n:'Big Four Winds',p:13},{t:'l',n:'Thirteen Orphans',p:13},{t:'l',n:'Nine Gates',p:13},{t:'l',n:'Eighteen Arhats',p:13},
+    {t:'l',n:'Seven Steps',p:13},{t:'l',n:'Seven Wonders',p:13}
+  ];
+  var TIER_LABEL={b:'Beginner',a:'Apprentice',e:'Expert',m:'Master',l:'Legendary (limit)'};
+  var FLOWERS_B=[{n:'No Flower / Season',p:1},{n:'Flower In Season',p:1},{n:'Set Of Flowers / Seasons',p:2},{n:'Royal Garden',p:2},{n:'Imperial Garden',p:2},{n:'Win By Royal Garden',p:3},{n:'Win By Imperial Garden',p:4}];
+  var WINB=[{n:'Last Tile',p:1},{n:'Replacement Tile',p:1},{n:'Double Replacement Tile',p:2},{n:'Robbing A Kong',p:1}];
+
+  var pat={sel:{},flo:{},win:{}};
+
+  function isML(i){return PATTERNS[i].t==='m'||PATTERNS[i].t==='l';}
+  function countSel(map,n){var c=0;for(var i=0;i<n;i++)if(map[i])c++;return c;}
+  function patIdxByName(name){for(var i=0;i<PATTERNS.length;i++)if(PATTERNS[i].n===name)return i;return -1;}
+  function floIdxByName(name){for(var i=0;i<FLOWERS_B.length;i++)if(FLOWERS_B[i].n===name)return i;return -1;}
+  var FLOWER_IN_SEASON_IDX=floIdxByName('Flower In Season');
+  // Winning by a garden stands alone: no other pattern, flower or win-condition pick can go with it.
+  var GARDEN_WIN_IDX=[floIdxByName('Win By Royal Garden'),floIdxByName('Win By Imperial Garden')];
+  var IDX={
+    KONG:patIdxByName('Kong'),
+    KONG3:patIdxByName('Three Quadruplets / Kongs'),
+    TCP:patIdxByName('Three Concealed Triplets / Pong'),
+    HALFTERM:patIdxByName('Half Terminals'),
+    MIXEDPONG:patIdxByName('Mixed Triplets / Pong'),
+    PURESEQPONG:patIdxByName('Pure Sequential Triplets / Pong'),
+    ALLPONG:patIdxByName('All Triplets / Pong'),
+    ALLSEQ:patIdxByName('All Sequences / Chi'),
+    MIXEDSTRAIGHT:patIdxByName('Mixed Straight'),
+    MIXEDSEQ:patIdxByName('Mixed Sequences / Chi'),
+    PURETRIPLESEQ:patIdxByName('Pure Triple Sequences / Chi'),
+    PURESTRAIGHT:patIdxByName('Pure Straight'),
+    HALFOUTSIDE:patIdxByName('Half Outside'),
+    FULLOUTSIDE:patIdxByName('Full Outside'),
+    ALLTERM:patIdxByName('All Terminals'),
+    SEVENPAIRS:patIdxByName('Seven Pairs'),
+    ALLSIMPLES:patIdxByName('All Simples'),
+    HALFFLUSH:patIdxByName('Half Flush'),
+    FULLFLUSH:patIdxByName('Full Flush'),
+    ALLTYPES:patIdxByName('All Types'),
+    CONCEALEDHAND:patIdxByName('Concealed Hand'),
+    SPLITSTRAIGHT:patIdxByName('Split Straight'),
+    SCATTEREDSTARS:patIdxByName('Scattered Stars'),
+    PONGDRAGON:patIdxByName('Pong Of Dragon'),
+    PONGSEATWIND:patIdxByName('Pong Of Seat Wind'),
+    PONGPREVAILWIND:patIdxByName('Pong Of Prevailing Wind')
+  };
+
+  // One-directional implications: selecting the more specific pattern automatically subsumes the
+  // general one, so the general one locks (but not the reverse -- picking the general one first
+  // doesn't block the specific one, it only becomes locked once the specific one is also ticked).
+  var IMPLIES_MAP={};
+  IMPLIES_MAP[IDX.HALFTERM]=[IDX.ALLPONG,IDX.HALFOUTSIDE,IDX.FULLOUTSIDE];
+  IMPLIES_MAP[IDX.ALLTERM]=[IDX.ALLPONG,IDX.FULLOUTSIDE]; // already covered by the Master/Legendary lock below, kept for clarity
+  IMPLIES_MAP[IDX.KONG3]=[IDX.KONG]; // already claiming all three melds as kongs, so the basic Kong bonus is redundant
+
+  // Seven Pairs has its own closed whitelist of patterns it can stack with; everything else locks
+  // once it's selected.
+  // Closed whitelists: some patterns can only stack with a short, named list of others (or, for
+  // Scattered Stars, nothing at all besides the flower/win bonuses) -- everything not on the list
+  // locks once the anchor pattern is selected.
+  var WHITELIST_LOCKS={};
+  WHITELIST_LOCKS[IDX.SEVENPAIRS]=[IDX.ALLSIMPLES,IDX.HALFFLUSH,IDX.FULLFLUSH,IDX.HALFTERM];
+  WHITELIST_LOCKS[IDX.SPLITSTRAIGHT]=[IDX.ALLTYPES,IDX.CONCEALEDHAND,IDX.ALLSEQ,IDX.KONG,IDX.PONGDRAGON,IDX.PONGSEATWIND,IDX.PONGPREVAILWIND];
+  WHITELIST_LOCKS[IDX.SCATTEREDSTARS]=[];
+
+  // True mutual exclusions: different hand structure entirely, so picking one disables the other
+  // outright rather than just reducing a value.
+  var EXCLUDE_PAIRS=[
+    [IDX.ALLPONG,IDX.MIXEDSTRAIGHT],[IDX.ALLPONG,IDX.MIXEDSEQ],[IDX.ALLPONG,IDX.PURETRIPLESEQ],[IDX.ALLPONG,IDX.PURESTRAIGHT],
+    [IDX.ALLSEQ,IDX.MIXEDPONG],[IDX.ALLSEQ,IDX.TCP],[IDX.ALLSEQ,IDX.PURESEQPONG],
+    [IDX.PURESTRAIGHT,IDX.HALFOUTSIDE],[IDX.PURESTRAIGHT,IDX.ALLTYPES],[IDX.PURESTRAIGHT,IDX.FULLOUTSIDE],
+    [IDX.PURESTRAIGHT,IDX.MIXEDSTRAIGHT],[IDX.PURESTRAIGHT,IDX.MIXEDSEQ],[IDX.PURESTRAIGHT,IDX.MIXEDPONG],[IDX.PURESTRAIGHT,IDX.TCP],
+    [IDX.MIXEDSTRAIGHT,IDX.HALFOUTSIDE],[IDX.MIXEDSTRAIGHT,IDX.FULLOUTSIDE],[IDX.MIXEDSTRAIGHT,IDX.MIXEDSEQ],
+    [IDX.MIXEDSTRAIGHT,IDX.MIXEDPONG],[IDX.MIXEDSTRAIGHT,IDX.TCP],[IDX.MIXEDSTRAIGHT,IDX.HALFFLUSH],
+    [IDX.HALFOUTSIDE,IDX.FULLOUTSIDE],[IDX.HALFOUTSIDE,IDX.ALLPONG],[IDX.HALFOUTSIDE,IDX.MIXEDPONG],[IDX.HALFOUTSIDE,IDX.TCP],
+    [IDX.FULLOUTSIDE,IDX.ALLPONG],[IDX.FULLOUTSIDE,IDX.MIXEDPONG],[IDX.FULLOUTSIDE,IDX.TCP],[IDX.FULLOUTSIDE,IDX.HALFFLUSH],
+    [IDX.MIXEDPONG,IDX.MIXEDSEQ],[IDX.MIXEDSEQ,IDX.TCP],[IDX.HALFFLUSH,IDX.MIXEDSEQ],[IDX.HALFFLUSH,IDX.MIXEDPONG],
+    [IDX.HALFFLUSH,IDX.ALLTYPES],
+    [IDX.FULLFLUSH,IDX.ALLTYPES],[IDX.FULLFLUSH,IDX.HALFFLUSH],[IDX.FULLFLUSH,IDX.HALFOUTSIDE],
+    [IDX.FULLFLUSH,IDX.MIXEDSEQ],[IDX.FULLFLUSH,IDX.MIXEDPONG],[IDX.FULLFLUSH,IDX.MIXEDSTRAIGHT],
+    [IDX.FULLFLUSH,IDX.HALFTERM],[IDX.FULLFLUSH,IDX.SPLITSTRAIGHT],[IDX.FULLFLUSH,IDX.PONGDRAGON],
+    [IDX.FULLFLUSH,IDX.PONGSEATWIND],[IDX.FULLFLUSH,IDX.PONGPREVAILWIND],[IDX.FULLFLUSH,IDX.SCATTEREDSTARS],
+    [IDX.ALLSIMPLES,IDX.PONGDRAGON],[IDX.ALLSIMPLES,IDX.PONGSEATWIND],[IDX.ALLSIMPLES,IDX.PONGPREVAILWIND],
+    [IDX.ALLSIMPLES,IDX.HALFOUTSIDE],[IDX.ALLSIMPLES,IDX.FULLOUTSIDE],[IDX.ALLSIMPLES,IDX.ALLTYPES],
+    [IDX.ALLSIMPLES,IDX.PURESTRAIGHT],[IDX.ALLSIMPLES,IDX.MIXEDSTRAIGHT],[IDX.ALLSIMPLES,IDX.HALFFLUSH],
+    [IDX.ALLSIMPLES,IDX.SPLITSTRAIGHT],[IDX.ALLSIMPLES,IDX.HALFTERM],[IDX.ALLSIMPLES,IDX.SCATTEREDSTARS],
+    [IDX.ALLSEQ,IDX.KONG],[IDX.ALLSEQ,IDX.PONGDRAGON],[IDX.ALLSEQ,IDX.PONGSEATWIND],[IDX.ALLSEQ,IDX.PONGPREVAILWIND],
+    [IDX.ALLSEQ,IDX.HALFOUTSIDE],[IDX.ALLSEQ,IDX.ALLTYPES],[IDX.ALLSEQ,IDX.ALLPONG],[IDX.ALLSEQ,IDX.HALFFLUSH],
+    [IDX.ALLSEQ,IDX.SEVENPAIRS],[IDX.ALLSEQ,IDX.KONG3],[IDX.ALLSEQ,IDX.HALFTERM],[IDX.ALLSEQ,IDX.SCATTEREDSTARS],
+    [IDX.PONGDRAGON,IDX.FULLOUTSIDE],[IDX.PONGDRAGON,IDX.SCATTEREDSTARS],[IDX.PONGDRAGON,IDX.SEVENPAIRS],
+    [IDX.PONGSEATWIND,IDX.FULLOUTSIDE],[IDX.PONGSEATWIND,IDX.SCATTEREDSTARS],[IDX.PONGSEATWIND,IDX.SEVENPAIRS],
+    [IDX.PONGPREVAILWIND,IDX.FULLOUTSIDE],[IDX.PONGPREVAILWIND,IDX.SCATTEREDSTARS],[IDX.PONGPREVAILWIND,IDX.SEVENPAIRS],
+    [IDX.KONG,IDX.SEVENPAIRS],[IDX.KONG,IDX.SCATTEREDSTARS],
+    [IDX.CONCEALEDHAND,IDX.SEVENPAIRS],[IDX.CONCEALEDHAND,IDX.SCATTEREDSTARS],
+    [IDX.PURETRIPLESEQ,IDX.ALLTYPES],[IDX.PURESEQPONG,IDX.ALLTYPES],
+    [IDX.PURETRIPLESEQ,IDX.PURESTRAIGHT],[IDX.PURETRIPLESEQ,IDX.MIXEDSTRAIGHT],[IDX.PURETRIPLESEQ,IDX.MIXEDSEQ],
+    [IDX.PURETRIPLESEQ,IDX.MIXEDPONG],[IDX.PURETRIPLESEQ,IDX.TCP],[IDX.PURETRIPLESEQ,IDX.SPLITSTRAIGHT],
+    [IDX.PURETRIPLESEQ,IDX.PURESEQPONG],[IDX.PURETRIPLESEQ,IDX.SEVENPAIRS],[IDX.PURETRIPLESEQ,IDX.HALFTERM],
+    [IDX.PURETRIPLESEQ,IDX.SCATTEREDSTARS],
+    [IDX.PURESEQPONG,IDX.HALFOUTSIDE],[IDX.PURESEQPONG,IDX.FULLOUTSIDE],[IDX.PURESEQPONG,IDX.MIXEDSTRAIGHT],
+    [IDX.PURESEQPONG,IDX.MIXEDSEQ],[IDX.PURESEQPONG,IDX.PURESTRAIGHT],[IDX.PURESEQPONG,IDX.MIXEDPONG],
+    [IDX.PURESEQPONG,IDX.SEVENPAIRS],[IDX.PURESEQPONG,IDX.SPLITSTRAIGHT],[IDX.PURESEQPONG,IDX.HALFTERM],
+    [IDX.PURESEQPONG,IDX.SCATTEREDSTARS],
+    [IDX.HALFOUTSIDE,IDX.SPLITSTRAIGHT],[IDX.HALFOUTSIDE,IDX.SEVENPAIRS],[IDX.HALFOUTSIDE,IDX.SCATTEREDSTARS],[IDX.HALFOUTSIDE,IDX.HALFTERM],
+    [IDX.ALLTYPES,IDX.FULLOUTSIDE],[IDX.ALLTYPES,IDX.SCATTEREDSTARS],[IDX.ALLTYPES,IDX.SEVENPAIRS],
+    [IDX.FULLOUTSIDE,IDX.SPLITSTRAIGHT],[IDX.FULLOUTSIDE,IDX.SEVENPAIRS],[IDX.FULLOUTSIDE,IDX.HALFTERM],[IDX.FULLOUTSIDE,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDSTRAIGHT,IDX.SPLITSTRAIGHT],[IDX.MIXEDSTRAIGHT,IDX.SEVENPAIRS],[IDX.MIXEDSTRAIGHT,IDX.HALFTERM],
+    [IDX.MIXEDSTRAIGHT,IDX.KONG3],[IDX.MIXEDSTRAIGHT,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDSEQ,IDX.SPLITSTRAIGHT],[IDX.MIXEDSEQ,IDX.SEVENPAIRS],[IDX.MIXEDSEQ,IDX.HALFTERM],
+    [IDX.MIXEDSEQ,IDX.KONG3],[IDX.MIXEDSEQ,IDX.SCATTEREDSTARS],
+    [IDX.ALLPONG,IDX.SPLITSTRAIGHT],[IDX.ALLPONG,IDX.SEVENPAIRS],[IDX.ALLPONG,IDX.HALFTERM],[IDX.ALLPONG,IDX.SCATTEREDSTARS],
+    [IDX.PURESTRAIGHT,IDX.SPLITSTRAIGHT],[IDX.PURESTRAIGHT,IDX.SEVENPAIRS],[IDX.PURESTRAIGHT,IDX.HALFTERM],
+    [IDX.PURESTRAIGHT,IDX.KONG3],[IDX.PURESTRAIGHT,IDX.SCATTEREDSTARS],
+    [IDX.MIXEDPONG,IDX.SPLITSTRAIGHT],[IDX.MIXEDPONG,IDX.SEVENPAIRS],[IDX.MIXEDPONG,IDX.SCATTEREDSTARS],
+    [IDX.TCP,IDX.SPLITSTRAIGHT],[IDX.TCP,IDX.SEVENPAIRS],[IDX.TCP,IDX.SCATTEREDSTARS],
+    [IDX.HALFFLUSH,IDX.SPLITSTRAIGHT],[IDX.HALFFLUSH,IDX.HALFTERM],[IDX.HALFFLUSH,IDX.SCATTEREDSTARS],
+    [IDX.HALFTERM,IDX.SPLITSTRAIGHT],[IDX.HALFTERM,IDX.SCATTEREDSTARS],
+    [IDX.KONG3,IDX.SPLITSTRAIGHT],[IDX.KONG3,IDX.SCATTEREDSTARS],[IDX.KONG3,IDX.PURETRIPLESEQ],[IDX.KONG3,IDX.SEVENPAIRS],
+    [IDX.KONG3,IDX.KONG]
+  ];
+  var EXCLUDE_MAP={};
+  EXCLUDE_PAIRS.forEach(function(pr){
+    (EXCLUDE_MAP[pr[0]]=EXCLUDE_MAP[pr[0]]||[]).push(pr[1]);
+    (EXCLUDE_MAP[pr[1]]=EXCLUDE_MAP[pr[1]]||[]).push(pr[0]);
+  });
+  function excludedBySelection(i,selSet){
+    var ex=EXCLUDE_MAP[i];if(!ex)return false;
+    return ex.some(function(j){return selSet[j];});
+  }
+  function lockedOutBySelection(i,selSet){
+    if(excludedBySelection(i,selSet))return true;
+    for(var k in IMPLIES_MAP){if(selSet[k]&&IMPLIES_MAP[k].indexOf(i)>=0)return true;}
+    for(var w in WHITELIST_LOCKS){
+      var wi=+w;
+      if(selSet[wi]&&i!==wi&&WHITELIST_LOCKS[w].indexOf(i)<0)return true;
+    }
+    return false;
+  }
+
+  // Three Quadruplets/Kongs and Three Concealed Triplets/Pong describe overlapping structure (the
+  // same three melds, differing only on whether the fourth tile was ever drawn), so claiming either
+  // one alongside Half Terminals / Mixed Pong / Pure Sequential Pong over-counts that structure and
+  // caps its value. Three Kong outranks Three Concealed Pong, so pairing the two alone never caps
+  // Three Kong; only Three Concealed Pong gives way there.
+  function effectivePoints(selIdx){
+    var selSet={};selIdx.forEach(function(i){selSet[i]=true;});
+    var hasKong3=!!selSet[IDX.KONG3],hasTCP=!!selSet[IDX.TCP];
+    var hasHT=!!selSet[IDX.HALFTERM],hasMP=!!selSet[IDX.MIXEDPONG],hasPSP=!!selSet[IDX.PURESEQPONG];
+    // Kong3 is only capped by Half Terminals/Mixed Pong/Pure Sequential Pong; pairing with Three
+    // Concealed Pong alone never caps it, since Three Kong outranks Three Concealed Pong.
+    var kongCapped=hasKong3&&(hasHT||hasMP||hasPSP);
+    // Three Concealed Pong is never fully accurate when the melds are actually kongs, so pairing it
+    // with Three Kong always caps it.
+    var tcpCapped=hasTCP&&(hasHT||hasMP||hasPSP||hasKong3);
+    return selIdx.map(function(i){
+      var p=PATTERNS[i].p,capped=false;
+      if(i===IDX.KONG3&&kongCapped){p=3;capped=true;}
+      if(i===IDX.TCP&&tcpCapped){p=2;capped=true;}
+      var count=pat.sel[i]||1;
+      if(i===IDX.PONGDRAGON&&selSet[IDX.ALLTYPES])count=Math.min(count,1);   // see selMaxFor
+      return {i:i,label:PATTERNS[i].n,p:p*count,capped:capped,count:count};
+    });
+  }
+
+  // Mirrors the scoring form's exact exclusion rules, so this tab is a faithful place to poke at them:
+  // (1) any Master/Legendary pick makes the hand ONLY those picks, summed and capped at 13; nothing
+  //     else contributes, not even another M/L pick beyond their own sum.
+  // (2) otherwise, non-M/L patterns are sorted highest-first and added until the running total
+  //     reaches 10; whichever pattern crosses that line still counts in full, anything after it doesn't.
+  // (3) flower and win-condition bonuses stack on top the same way patterns do: highest first, added
+  //     while the running total is still below 10. The bonus that crosses 10 still counts in full and
+  //     nothing after it does. Each Flower In Season is its own +1. They stay selectable; the surplus
+  //     just isn't counted. If the pattern points alone are already above 10, no bonus is added at
+  //     all. The grand total is capped at 13.
+  // Pattern-only stacking: sort selected non-M/L patterns highest-first and add until the running
+  // total reaches 10 (whichever pattern crosses that line still counts in full, anything after it
+  // doesn't). Returns this before any flower/win bonus is considered, since whether those bonuses
+  // are even allowed depends on where this number lands.
+  function patternOnlyTotal(selIdx){
+    var pts=effectivePoints(selIdx).sort(function(a,b){return b.p-a.p;});
+    var total=0,counted=[],excluded=[],stopped=false;
+    pts.forEach(function(it){
+      if(stopped){excluded.push(it);return;}
+      total+=it.p;counted.push(it);
+      if(total>=10)stopped=true;
+    });
+    var capNotes=pts.filter(function(it){return it.capped;}).map(function(it){return it.i;});
+    return {total:total,counted:counted,excluded:excluded,stackCutoff:excluded.length>0,capNotes:capNotes};
+  }
+  // Once the pattern-only total above is already above 10, flower and win-condition bonuses can no
+  // longer be added on top of it.
+  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>10;}
+
+  function computeTotal(){
+    var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
+    var gardenIdx=GARDEN_WIN_IDX.filter(function(i){return pat.flo[i];})[0];
+    if(gardenIdx!==undefined){
+      var gp=FLOWERS_B[gardenIdx].p;
+      var others=selIdx.map(function(i){return PATTERNS[i].n;});
+      Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]&&+k!==gardenIdx)others.push(FLOWERS_B[k].n);});
+      Object.keys(pat.win).forEach(function(k){if(pat.win[k])others.push(WINB[k].n);});
+      return {mode:'garden',total:Math.min(13,gp),counted:[{label:FLOWERS_B[gardenIdx].n,p:gp}],excluded:[],lockedOut:others,bonusLockedOut:[],capNotes:[],capped:false};
+    }
+    var mlIdx=selIdx.filter(isML);
+    if(mlIdx.length){
+      var sum=mlIdx.reduce(function(a,i){return a+PATTERNS[i].p;},0);
+      return {
+        mode:'ml',
+        total:Math.min(13,sum),
+        counted:mlIdx.map(function(i){return {label:PATTERNS[i].n,p:PATTERNS[i].p};}),
+        excluded:[],
+        lockedOut:selIdx.filter(function(i){return !isML(i);}).map(function(i){return PATTERNS[i].n;}),
+        bonusLockedOut:[],
+        capNotes:[],
+        capped:sum>13
+      };
+    }
+    var pres=patternOnlyTotal(selIdx);
+    var floItems=[];Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]){var c=pat.flo[k];floItems.push({label:FLOWERS_B[k].n,p:FLOWERS_B[k].p*c,count:c});}});
+    var winItems=[];Object.keys(pat.win).forEach(function(k){if(pat.win[k])winItems.push({label:WINB[k].n,p:WINB[k].p});});
+    var locked=pres.total>10;
+    // Bonuses stack the way patterns do: highest first (flowers before wins on a tie), added while the
+    // running total is still below 10. The bonus that crosses 10 still counts in full; anything after
+    // it does not. Each Flower In Season is its own +1, so two of them can end up half counted.
+    var bonusItems=[],bonusTrimmed=[];
+    if(!locked){
+      var allBonus=floItems.concat(winItems);
+      var units=[];
+      allBonus.forEach(function(it,k){
+        var n=it.count>1?it.count:1;
+        for(var u=0;u<n;u++)units.push({p:it.p/n,k:k});
+      });
+      units.sort(function(a,b){return b.p-a.p||a.k-b.k;});
+      var running=pres.total,got={};
+      units.forEach(function(u){
+        if(running>=10)return;
+        running+=u.p;got[u.k]=(got[u.k]||0)+1;
+      });
+      allBonus.forEach(function(it,k){
+        var n=it.count>1?it.count:1,g=got[k]||0,unit=it.p/n;
+        if(g>0){
+          var c={label:it.label,p:unit*g};
+          if(g>1)c.count=g;
+          bonusItems.push(c);
+        }
+        if(g<n)bonusTrimmed.push({label:it.label,counted:unit*g,of:it.p});
+      });
+    }
+    var bonusSum=bonusItems.reduce(function(a,it){return a+it.p;},0);
+    var grand=pres.total+bonusSum;
+    return {
+      mode:'normal',
+      total:Math.min(13,grand),
+      counted:pres.counted.concat(bonusItems),
+      excluded:pres.excluded,
+      lockedOut:[],
+      bonusLockedOut:locked?floItems.concat(winItems):[],
+      capNotes:pres.capNotes,
+      capped:grand>13,
+      stackCutoff:pres.stackCutoff,
+      bonusLocked:locked,
+      bonusTrimmed:bonusTrimmed
+    };
+  }
+
+  
+var SEL_MAX={};
+  SEL_MAX[IDX.KONG]=2;
+  SEL_MAX[IDX.PONGDRAGON]=2;
+function selMaxFor(i){
+    if(i===IDX.PONGDRAGON&&pat.sel[IDX.ALLTYPES])return 1;
+    return SEL_MAX[i]||1;
+  }
+function normalizeSel(){
+    Object.keys(pat.sel).forEach(function(k){
+      var m=selMaxFor(+k);
+      if(pat.sel[k]>m)pat.sel[k]=m;
+    });
+  }
+
+function setState(s){pat={sel:Object.assign({},s.sel||{}),flo:Object.assign({},s.flo||{}),win:Object.assign({},s.win||{})};normalizeSel();}
+function selIdxOf(s){setState(s);var out=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])out.push(+k);});return out;}
+function total(s){setState(s);return computeTotal();}
+function lockedOut(i,s){var set={};Object.keys(s.sel||{}).forEach(function(k){if(s.sel[k])set[k]=true;});return lockedOutBySelection(i,set);}
+return {PATTERNS:PATTERNS,FLOWERS_B:FLOWERS_B,WINB:WINB,IDX:IDX,TIER_LABEL:TIER_LABEL,SEL_MAX:SEL_MAX,selMaxFor:selMaxFor,setState:setState,total:total,lockedOut:lockedOut,isML:isML,patIdxByName:patIdxByName,floIdxByName:floIdxByName,selIdxOf:selIdxOf,getPat:function(){return pat;}};
+})();
+
+var DET=(function(analyze,suitOf,rankOf,isTerminal,ORPHANS,R){
+// Tiles by Tiles: tile engine, phase 2 = which patterns does this hand score, and how many points?
+// The hand is read (phase 1), every pattern it qualifies for is detected, and the best combination is picked with the
+// pattern picker's own rules (rules.mjs is taken word for word from the scoreboard). The output is a picker state, so the
+// host can open the normal picker with it filled in and confirm or change it.
+
+const P = {}; R.PATTERNS.forEach((p, i) => { P[p.n] = i; });
+const PI = n => { if (!(n in P)) throw new Error('unknown pattern ' + n); return P[n]; };
+const FI = n => { const i = R.floIdxByName(n); if (i < 0) throw new Error('unknown flower bonus ' + n); return i; };
+const WI = n => { const i = R.WINB.findIndex(w => w.n === n); if (i < 0) throw new Error('unknown win bonus ' + n); return i; };
+const N = {
+  kong: PI('Kong'), dragon: PI('Pong Of Dragon'), seat: PI('Pong Of Seat Wind'), prev: PI('Pong Of Prevailing Wind'), simples: PI('All Simples'), allSeq: PI('All Sequences / Chi'), concealed: PI('Concealed Hand'),
+  halfOutside: PI('Half Outside'), allTypes: PI('All Types'), fullOutside: PI('Full Outside'), mixedStraight: PI('Mixed Straight'), mixedSeq: PI('Mixed Sequences / Chi'), allPong: PI('All Triplets / Pong'),
+  pureStraight: PI('Pure Straight'), mixedPong: PI('Mixed Triplets / Pong'), tcp: PI('Three Concealed Triplets / Pong'), halfFlush: PI('Half Flush'), split: PI('Split Straight'),
+  pureTriple: PI('Pure Triple Sequences / Chi'), pureSeqPong: PI('Pure Sequential Triplets / Pong'), sevenPairs: PI('Seven Pairs'), fullFlush: PI('Full Flush'), halfTerm: PI('Half Terminals'), kong3: PI('Three Quadruplets / Kongs'),
+  scattered: PI('Scattered Stars'), allTerm: PI('All Terminals'), allHonors: PI('All Honors'), fourConcealed: PI('Four Concealed Pong'), ruby: PI('Ruby Dragon'), jade: PI('Jade Dragon'), pearl: PI('Pearl Dragon'),
+  sevenStars: PI('Seven Stars'), little3: PI('Little Three Dragons'), little4: PI('Little Four Winds'), big3: PI('Big Three Dragons'), big4: PI('Big Four Winds'), orphans: PI('Thirteen Orphans'),
+  nineGates: PI('Nine Gates'), arhats: PI('Eighteen Arhats'), sevenSteps: PI('Seven Steps'), sevenWonders: PI('Seven Wonders'),
+};
+const NAMED = N;
+const FL = { none: FI('No Flower / Season'), inSeason: FI('Flower In Season'), set: FI('Set Of Flowers / Seasons'), royal: FI('Royal Garden'), imperial: FI('Imperial Garden'), winRoyal: FI('Win By Royal Garden'), winImperial: FI('Win By Imperial Garden') };
+const WB = { last: WI('Last Tile'), replacement: WI('Replacement Tile'), double: WI('Double Replacement Tile'), robbing: WI('Robbing A Kong') };
+
+// ---- groups ------------------------------------------------------------------------------------------------------
+const isTrip = g => g.kind === 'pong' || g.kind === 'kong';
+const honorG = g => g.tiles[0] >= 27;
+const termOnly = g => g.tiles[0] < 27 && g.kind !== 'chow' && isTerminal(g.tiles[0]);
+const termContain = g => g.tiles[0] < 27 && (g.kind === 'chow' ? (rankOf(g.tiles[0]) === 1 || rankOf(g.tiles[2]) === 9) : isTerminal(g.tiles[0]));
+const gSuit = g => suitOf(g.tiles[0]);
+const dragonG = g => g.tiles[0] >= 31, windG = g => g.tiles[0] >= 27 && g.tiles[0] <= 30;
+const has = (groups, fn) => groups.some(fn);
+
+// ---- patterns that follow from the tiles alone (not from how the hand was won) ----------------------------------------
+// groups: the sets (chow/pong/kong) and the pair, as one list. sets: only the sets. For seven pairs every pair is a group.
+function structure(sets, pair, ctx, conc) {
+  const all = pair ? sets.concat([pair]) : sets, sel = {}; const trips = sets.filter(isTrip);
+  const sel1 = i => { sel[i] = 1; };
+  const kongs = sets.filter(g => g.kind === 'kong').length; if (kongs >= 1) sel[N.kong] = Math.min(kongs, 2); if (kongs >= 3) sel1(N.kong3);
+  const dr = trips.filter(dragonG).length; if (dr >= 1) sel[N.dragon] = Math.min(dr, 2);
+  if (trips.some(g => g.tiles[0] === 27 + ctx.seat)) sel1(N.seat); if (trips.some(g => g.tiles[0] === 27 + ctx.prevailing)) sel1(N.prev);
+  if (all.every(g => g.tiles.every(t => t < 27 && rankOf(t) >= 2 && rankOf(t) <= 8))) sel1(N.simples);
+  if (sets.length === 4 && sets.every(g => g.kind === 'chow') && pair && !honorG(pair)) sel1(N.allSeq);
+  if (conc.noExposed) sel1(N.concealed);
+  const tc = all.filter(termContain).length, hon = all.filter(honorG).length, to = all.filter(termOnly).length;
+  if (all.every(g => termContain(g) || honorG(g)) && tc >= 3 && hon >= 1) sel1(N.halfOutside);   // at least 3 of the 5 groups hold terminals (2 sets and the pair, or 3 sets), the rest honors
+  if (all.every(termContain)) sel1(N.fullOutside);
+  const types = new Set(); all.forEach(g => g.tiles.forEach(t => types.add(t < 27 ? suitOf(t) : (t <= 30 ? 3 : 4)))); if (types.size === 5) sel1(N.allTypes);
+  const chows = sets.filter(g => g.kind === 'chow'), chowAt = (s, r) => chows.filter(g => gSuit(g) === s && rankOf(g.tiles[0]) === r).length, tripAt = (s, r) => trips.filter(g => g.tiles[0] < 27 && gSuit(g) === s && rankOf(g.tiles[0]) === r).length;
+  for (const [a, b, c] of [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]) if (chowAt(a, 1) && chowAt(b, 4) && chowAt(c, 7)) sel1(N.mixedStraight);
+  for (let r = 1; r <= 7; r++) if (chowAt(0, r) && chowAt(1, r) && chowAt(2, r)) sel1(N.mixedSeq);
+  if (sets.length === 4 && trips.length === 4) sel1(N.allPong);
+  for (let s = 0; s < 3; s++) if (chowAt(s, 1) && chowAt(s, 4) && chowAt(s, 7)) sel1(N.pureStraight);
+  for (let r = 1; r <= 9; r++) if (tripAt(0, r) && tripAt(1, r) && tripAt(2, r)) sel1(N.mixedPong);
+  if (conc.trips >= 3) sel1(N.tcp);
+  for (let s = 0; s < 3; s++) { const inS = all.filter(g => !honorG(g) && gSuit(g) === s); if (inS.length >= 3 && hon >= 1 && inS.length + hon === all.length) sel1(N.halfFlush); if (inS.length === all.length) sel1(N.fullFlush); }
+  for (let s = 0; s < 3; s++) for (let r = 1; r <= 7; r++) if (chowAt(s, r) >= 3) sel1(N.pureTriple);
+  for (let s = 0; s < 3; s++) for (let r = 1; r <= 7; r++) if (tripAt(s, r) && tripAt(s, r + 1) && tripAt(s, r + 2)) sel1(N.pureSeqPong);
+  if (all.every(g => termOnly(g) || honorG(g)) && to >= 3 && hon >= 1) sel1(N.halfTerm);
+  if (all.every(termOnly)) sel1(N.allTerm);
+  if (all.every(honorG)) sel1(N.allHonors);
+  if (pair && dr === 2 && honorG(pair) && pair.tiles[0] >= 31) sel1(N.little3);
+  if (pair && trips.filter(windG).length === 3 && pair.tiles[0] >= 27 && pair.tiles[0] <= 30) sel1(N.little4);
+  if (dr === 3) sel1(N.big3); if (trips.filter(windG).length === 4) sel1(N.big4);
+  if (sets.length === 4 && conc.trips === 4) sel1(N.fourConcealed);
+  if (kongs === 4) sel1(N.arhats);
+  // the three dragon-and-suit hands: the dragon pong, a pure straight or all pongs, and a pair of the matching suit
+  const dragonHand = (dragonTile, suit) => {
+    if (!pair || pair.tiles[0] >= 27 || gSuit(pair) !== suit) return false;
+    const d = sets.findIndex(g => isTrip(g) && g.tiles[0] === dragonTile); if (d < 0) return false;
+    const rest = sets.filter((_, i) => i !== d);
+    if (rest.length !== 3) return false;
+    if (rest.every(isTrip)) return true;
+    if (rest.every(g => g.kind === 'chow')) { const st = rest.map(g => (gSuit(g) === suit ? rankOf(g.tiles[0]) : -1)).sort((a, b) => a - b); if (st[0] === 1 && st[1] === 4 && st[2] === 7) return true; }   // the straight is in the pair's suit
+    return false;
+  };
+  if (dragonHand(31, 2)) sel1(N.ruby); if (dragonHand(32, 1)) sel1(N.jade); if (dragonHand(33, 0)) sel1(N.pearl);
+  return sel;
+}
+const pairG = t => ({ kind: 'pair', tiles: [t, t], exposed: false });
+
+// ---- flowers, seasons and the win conditions --------------------------------------------------------------------
+// flower / season tiles: 0-3 flowers 1-4, 4-7 seasons 1-4. Seat 0-3 = East South West North, matching number 1-4.
+function bonuses(ctx) {
+  const fl = [...new Set((ctx.flowers || []).filter(t => t >= 0 && t <= 7))], n = fl.length, flo = {}, win = {};
+  const own = (fl.includes(ctx.seat) ? 1 : 0) + (fl.includes(4 + ctx.seat) ? 1 : 0);
+  if (n === 0) flo[FL.none] = 1;
+  else if (n === 8) flo[FL.imperial] = 1;
+  else if (n === 7) flo[FL.royal] = 1;
+  else { const set = [0, 1, 2, 3].every(t => fl.includes(t)) || [4, 5, 6, 7].every(t => fl.includes(t)); if (set) flo[FL.set] = 1; else if (own) flo[FL.inSeason] = own; }
+  const c = ctx.cond || {};
+  if (c.last) win[WB.last] = true; if (c.replacement) win[WB.replacement] = true; if (c.double) win[WB.double] = true; if (c.robbing) win[WB.robbing] = true;
+  return { flo, win, count: n };
+}
+
+// ---- reading + where the winning tile sits -> every pattern that holds ------------------------------------------------
+function candidates(reading, slot, ctx, meldCount) {
+  const sh = reading.shape;
+  if (sh === 'standard') {
+    const groups = reading.groups.map((g, i) => ({ ...g, meld: i < meldCount })), pair = pairG(reading.pair[0]);
+    return structure(groups, pair, ctx, concealInfo(groups, slot, ctx));
+  }
+  if (sh === 'splitStraight') {
+    const groups = reading.groups.map((g, i) => ({ ...g, meld: i < meldCount })), pair = pairG(reading.pair[0]), all = groups.concat([pair]);
+    const sel = {}; sel[N.split] = 1;
+    if (!has(groups, g => g.exposed)) sel[N.concealed] = 1;
+    const types = new Set([0, 1, 2]); all.forEach(g => g.tiles.forEach(t => { if (t >= 27) types.add(t <= 30 ? 3 : 4); })); if (types.size === 5) sel[N.allTypes] = 1;
+    if (groups.every(g => g.kind === 'chow') && !honorG(pair)) sel[N.allSeq] = 1;
+    const kongs = groups.filter(g => g.kind === 'kong').length; if (kongs) sel[N.kong] = Math.min(kongs, 2);
+    const trips = groups.filter(isTrip); const dr = trips.filter(dragonG).length; if (dr) sel[N.dragon] = Math.min(dr, 2);
+    if (trips.some(g => g.tiles[0] === 27 + ctx.seat)) sel[N.seat] = 1; if (trips.some(g => g.tiles[0] === 27 + ctx.prevailing)) sel[N.prev] = 1;
+    return sel;
+  }
+  return {};
+}
+function concealInfo(groups, slot, ctx) {
+  let trips = 0; groups.forEach((g, i) => { if (!isTrip(g)) return; if (g.meld) { if (!g.exposed) trips++; return; } if (ctx.winBy === 'hu' && slot.kind === 'group' && slot.g === i) return; trips++; });
+  return { trips, noExposed: !groups.some(g => g.exposed) };
+}
+
+const PAIR_EXTRAS = [N.simples, N.halfFlush, N.fullFlush, N.halfTerm];   // what seven pairs may be combined with
+function pairShapeCandidates(pairTiles, shape) {
+  const sel = {}; sel[N.sevenPairs] = 1; if (shape === 'sevenSteps') sel[N.sevenSteps] = 1; if (shape === 'sevenWonders') sel[N.sevenWonders] = 1;
+  const all = pairTiles.map(pairG), hon = all.filter(honorG).length, to = all.filter(termOnly).length;
+  if (all.every(g => g.tiles.every(t => t < 27 && rankOf(t) >= 2 && rankOf(t) <= 8))) sel[N.simples] = 1;
+  for (let s = 0; s < 3; s++) { const inS = all.filter(g => !honorG(g) && gSuit(g) === s); if (inS.length >= 3 && hon >= 1 && inS.length + hon === all.length) sel[N.halfFlush] = 1; if (inS.length === all.length) sel[N.fullFlush] = 1; }
+  if (all.every(g => termOnly(g) || honorG(g)) && to >= 3 && hon >= 1) sel[N.halfTerm] = 1;
+  return sel;
+}
+
+// ---- choose the best combination -------------------------------------------------------------------------------
+const subsetsOf = arr => { const out = []; for (let m = 0; m < (1 << arr.length); m++) out.push(arr.filter((_, i) => m & (1 << i))); return out; };
+function validSubset(ids, sel) { const s = {}; ids.forEach(i => { s[i] = 1; }); return ids.every(i => !R.lockedOut(i, { sel: s })); }
+function bestFor(cand, bon) {
+  const ids = Object.keys(cand).map(Number); let best = null;
+  const consider = (subIds) => {
+    const sel = {}; subIds.forEach(i => { sel[i] = cand[i]; });
+    const state = { sel, flo: bon.flo, win: bon.win }, r = R.total(state);
+    const patOnly = R.total({ sel, flo: {}, win: {} }).total;
+    const score = [r.total, subIds.length];
+    if (!best || score[0] > best.score[0] || (score[0] === best.score[0] && score[1] > best.score[1])) best = { state, result: r, patternPoints: patOnly, score, ids: subIds };
+  };
+  const ml = ids.filter(i => R.isML(i)), non = ids.filter(i => !R.isML(i));
+  if (ml.length) consider(ml);                                   // Master and Legendary hands stand alone
+  if (non.length > 14) throw new Error('too many candidates');
+  subsetsOf(non).forEach(sub => { if (validSubset(sub)) consider(sub); });
+  return best;
+}
+
+// ---- the whole thing ---------------------------------------------------------------------------------------------
+// input: { hand, melds }   ctx: { winTile, winBy: 'zimo' | 'hu', seat, prevailing, flowers: [0-7], cond: { last, replacement, double, robbing, gardenWin } }
+function score(input, ctx0) {
+  const ctx = { seat: 0, prevailing: 0, winBy: 'zimo', flowers: [], cond: {}, ...ctx0 };
+  const bon = bonuses(ctx);
+  if (ctx.cond && ctx.cond.gardenWin && (bon.count === 7 || bon.count === 8)) {   // winning by drawing the seventh or eighth flower stands alone
+    const gi = bon.count === 8 ? FL.winImperial : FL.winRoyal, state = { sel: {}, flo: { [gi]: 1 }, win: {} }, r = R.total(state);
+    return { status: 'garden', total: r.total, counted: r.counted, state, notes: ['Winning by the ' + (bon.count === 8 ? 'eighth' : 'seventh') + ' flower or season stands alone.'], validWin: true };
+  }
+  const res = analyze(input);
+  if (res.status !== 'valid') return { status: 'notWinning', analysis: res };
+  if (!(input.hand || []).includes(ctx.winTile)) return { status: 'needWinTile', analysis: res };
+  const meldCount = (input.melds || []).length, options = [], rejected = [];
+  for (const reading of res.readings) {
+    if ((reading.shape === 'thirteenOrphans' || reading.shape === 'nineGates' || reading.shape === 'sevenStars') && ctx.winBy !== 'zimo') { rejected.push({ shape: reading.shape, why: 'must be self drawn' }); continue; }
+    let slots = [{ kind: 'self' }];
+    if ((reading.shape === 'standard' || reading.shape === 'splitStraight') && ctx.winBy === 'hu') {
+      slots = [];
+      reading.groups.forEach((g, i) => { if (i >= meldCount && g.tiles.includes(ctx.winTile)) slots.push({ kind: 'group', g: i }); });
+      if (reading.pair[0] === ctx.winTile) slots.push({ kind: 'pair' });
+      if (!slots.length) { rejected.push({ shape: reading.shape, why: 'a discard cannot complete this part of the hand' }); continue; }
+    }
+    for (const slot of slots) {
+      let cand;
+      if (reading.shape === 'standard' || reading.shape === 'splitStraight') cand = candidates(reading, slot, ctx, meldCount);
+      else if (reading.shape === 'sevenPairs' || reading.shape === 'sevenSteps' || reading.shape === 'sevenWonders') {
+        const pairs = input.hand.slice().sort((a, b) => a - b).filter((t, i, a) => a.indexOf(t) === i); cand = pairShapeCandidates(pairs, reading.shape);
+      } else if (reading.shape === 'thirteenOrphans') cand = { [N.orphans]: 1 };
+      else if (reading.shape === 'nineGates') cand = { [N.nineGates]: 1 };
+      else if (reading.shape === 'scatteredStars') cand = { [N.scattered]: 1 };
+      else if (reading.shape === 'sevenStars') cand = { [N.sevenStars]: 1 };
+      else cand = {};
+      const b = bestFor(cand, bon);
+      options.push({ reading, slot, cand, best: b });
+    }
+  }
+  if (!options.length) {
+    const SHAPE_NAME = { thirteenOrphans: 'Thirteen Orphans', nineGates: 'Nine Gates', sevenStars: 'Seven Stars' };
+    const reason = rejected.length ? (rejected.every(r => r.why === 'must be self drawn') ? [...new Set(rejected.map(r => SHAPE_NAME[r.shape]))].join(' and ') + ' must be self drawn, so this hand cannot win off a discard.' : 'A discard cannot complete the split straight part of this hand. It can only complete the set or the pair.') : '';
+    return { status: 'notWinning', analysis: res, rejected, reason };
+  }
+  options.sort((a, b) => (b.best ? b.best.score[0] : -1) - (a.best ? a.best.score[0] : -1) || (b.best ? b.best.score[1] : 0) - (a.best ? a.best.score[1] : 0));
+  const top = options[0], b = top.best;
+  const detected = Object.keys(top.cand).map(Number).map(i => ({ idx: i, name: R.PATTERNS[i].n, count: top.cand[i], points: R.PATTERNS[i].p }));
+  const anyNames = [...new Set(options.flatMap(o => Object.keys(o.cand).map(Number)))].sort((a, b) => a - b).map(i => R.PATTERNS[i].n);
+  const out = { anyDetected: anyNames, status: b && b.patternPoints >= 1 ? 'scored' : 'invalidWin', total: b ? b.result.total : 0, patternPoints: b ? b.patternPoints : 0, counted: b ? b.result.counted : [], state: b ? b.state : { sel: {}, flo: bon.flo, win: bon.win }, detected, reading: top.reading, slot: top.slot, mode: b ? b.result.mode : 'normal', excluded: b ? b.result.excluded : [], bonusTrimmed: b ? (b.result.bonusTrimmed || []) : [], capped: b ? b.result.capped : false, rejected, readingsTried: options.length, analysis: res };
+  return out;
+}
+
+return {score:score,bonuses:bonuses};
+})(E.analyze,E.suitOf,E.rankOf,E.isTerminal,E.ORPHANS,R);
+/* ---------- Pick Tiles: the window ---------- */
+var MODES = [['hand', 'Hand tile'], ['chi', 'Chi'], ['pong', 'Exposed pong'], ['kong', 'Exposed kong'], ['concealed', 'Concealed kong']];
+var HINT = {
+  hand: 'Tap a tile to add it to the hand. A concealed pong or chow is just tiles in the hand: the tool finds the sets itself.',
+  chi: 'A chi claimed from a discard. Tap the first tile of the chi: 1 to 7 of a suit.',
+  pong: 'An exposed pong: claimed from a discard. Tap the tile.',
+  kong: 'An exposed kong: claimed from a discard, or a pong the fourth tile was added to. Tap the tile.',
+  concealed: 'A concealed kong: all four tiles drawn by the player. It is declared, but stays concealed.'
+};
+var SEATN = ['East', 'South', 'West', 'North'];
+var FLN = ['Plum 1', 'Orchid 2', 'Chrysanthemum 3', 'Bamboo 4', 'Spring 1', 'Summer 2', 'Autumn 3', 'Winter 4'];
+var COND = [['last', 'Last tile'], ['replacement', 'Replacement tile'], ['double', 'Double replacement'], ['robbing', 'Robbing a kong']];
+var M = null, tmUse = null, tmCancel = null, tmButtons = [];
+function $t(id) { return document.getElementById(id); }
+function tesc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function tUrl(i) { var m = window.TBT_TILE_IMG || {}; return m[i] || ''; }
+function T(i, cls) { return '<i class="tm-t' + (cls ? ' ' + cls : '') + '" style="background-image:url(\'' + tUrl(i) + '\')" role="img" aria-label="' + (i < 34 ? E.tileName(i) : FLN[i - 34]) + '"></i>'; }
+function mTiles(m) { return m.type === 'chi' ? [m.tile, m.tile + 1, m.tile + 2] : m.type === 'pong' ? [m.tile, m.tile, m.tile] : [m.tile, m.tile, m.tile, m.tile]; }
+function mUsed() { var c = E.countsOf(M.hand); M.melds.forEach(function (m) { mTiles(m).forEach(function (t) { c[t]++; }); }); return c; }
+function mNeed() { return 14 - 3 * M.melds.length; }
+function mCan(t) {
+  var u = mUsed();
+  if (M.mode === 'hand') return M.hand.length < mNeed() && u[t] < 4;
+  if (M.melds.length >= 4) return false;
+  if (M.mode === 'chi') return t < 27 && t % 9 <= 6 && u[t] < 4 && u[t + 1] < 4 && u[t + 2] < 4;
+  if (M.mode === 'pong') return u[t] <= 1;
+  return u[t] === 0;
+}
+function mLabel(m) { return m.type === 'chi' ? 'Chi' : m.type === 'pong' ? 'Exposed pong' : m.concealed ? 'Concealed kong' : 'Exposed kong'; }
+// what is kept on the hand: only numbers. h concealed tiles, m melds [c|p|k, tile, 1 if concealed], w winning tile, f flowers and seasons 0-7, c win conditions
+function toData() {
+  return { h: M.hand.slice().sort(function (a, b) { return a - b; }), m: M.melds.map(function (m) { return [m.type === 'chi' ? 'c' : m.type === 'pong' ? 'p' : 'k', m.tile, m.concealed ? 1 : 0]; }), w: M.win, f: M.flowers.slice().sort(function (a, b) { return a - b; }), c: COND.filter(function (c) { return M.cond[c[0]]; }).map(function (c) { return c[0]; }) };
+}
+function fromData(d) {
+  var cond = {}; (d.c || []).forEach(function (k) { cond[k] = true; });
+  return { hand: (d.h || []).slice(), melds: (d.m || []).map(function (a) { return { type: a[0] === 'c' ? 'chi' : a[0] === 'p' ? 'pong' : 'kong', tile: a[1], concealed: a[2] ? true : undefined }; }), win: d.w != null ? d.w : null, flowers: (d.f || []).slice(), cond: cond };
+}
+function scoreCtx() { return { winTile: M.win, winBy: M.ctx.by, seat: M.ctx.seat, prevailing: M.ctx.prev, flowers: M.flowers.slice(), cond: { last: !!M.cond.last, replacement: !!M.cond.replacement, double: !!M.cond.double, robbing: !!M.cond.robbing, gardenWin: false } }; }
+function pill(cls, txt) { return '<span class="tm-pill ' + cls + '">' + txt + '</span>'; }
+// the verdict under the tiles, and whether "Check patterns" is allowed
+function verdict() {
+  var an = E.analyze({ hand: M.hand, melds: M.melds }), h = '', ok = false;
+  if (an.status === 'error') h = pill('bad', 'Check the hand') + '<p class="tm-sub">' + an.problems.map(function (p) { return tesc(p.msg); }).join(' ') + '</p>';
+  else if (an.status === 'long') h = pill('info', 'Remove ' + an.extra + ' tile' + (an.extra > 1 ? 's' : '')) + '<p class="tm-sub">With ' + M.melds.length + ' meld' + (M.melds.length === 1 ? '' : 's') + ' the hand holds ' + mNeed() + ' tiles.</p>';
+  else if (an.status === 'short') h = M.hand.length === 0 && M.melds.length === 0 ? pill('info', 'Pick the winning hand') + '<p class="tm-sub">Tap the tiles of the hand that won, melds included.</p>' : pill('info', 'Add ' + an.missing + ' more tile' + (an.missing > 1 ? 's' : '')) + '<p class="tm-sub">A winning hand has ' + mNeed() + ' tiles' + (M.melds.length ? ' besides its melds' : '') + '.</p>';
+  else if (an.status === 'invalid') h = pill('bad', 'Not a winning hand') + '<p class="tm-sub">These tiles do not make a winning hand yet. Check them against the real tiles.</p>';
+  else if (M.win === null) h = pill('info', 'Tap the tile that won') + '<p class="tm-sub">The tool needs it to tell which set the winning tile completed.</p>';
+  else {
+    var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx());
+    if (r.status === 'scored') { ok = true; h = pill('ok', 'Suggested: ' + r.total + ' point' + (r.total === 1 ? '' : 's')) + '<p class="tm-sub">' + r.counted.map(function (c) { return tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' +' + c.p; }).join(', ') + '</p><p class="tm-sub">Next you check this in the pattern picker, and change anything that is wrong.</p>'; }
+    else if (r.status === 'invalidWin') h = pill('bad', 'Invalid win') + '<p class="tm-sub">No pattern points, and bonuses do not count toward the minimum of 1. Close this and record it as an Invalid win.</p>';
+    else h = pill('bad', 'Cannot win this way') + '<p class="tm-sub">' + tesc(r.reason || 'This hand cannot win this way.') + '</p>';
+  }
+  return { html: h, ok: ok };
+}
+function seg(act, items, cur) { return '<div class="tm-seg" role="group">' + items.map(function (it) { return '<button type="button" class="chip" data-tm="' + act + '" data-v="' + it[0] + '" aria-pressed="' + (String(cur) === String(it[0])) + '">' + it[1] + '</button>'; }).join('') + '</div>'; }
+function drawHand() {
+  var n = mNeed(), slots = '';
+  for (var i = 0; i < n; i++) slots += i < M.hand.length ? '<button type="button" class="tm-tb" data-tm="rm" data-i="' + i + '" aria-label="Remove ' + E.tileName(M.hand[i]) + '">' + T(M.hand[i]) + '</button>' : '<span class="tm-slot" aria-hidden="true"></span>';
+  var melds = M.melds.map(function (m, i) { return '<button type="button" class="tm-meld" data-tm="rmMeld" data-i="' + i + '" aria-label="Remove ' + mLabel(m) + ' of ' + E.tileName(m.tile) + '"><span class="mt">' + mLabel(m) + '</span><span class="tl">' + mTiles(m).map(function (t) { return T(t); }).join('') + '</span><span class="x" aria-hidden="true">\u00d7</span></button>'; }).join('');
+  $t('tmHand').innerHTML = '<div class="tm-cap"><h3>Hand</h3><span class="tm-count"><b>' + M.hand.length + '</b> of ' + n + ' tiles' + (M.melds.length ? ' + ' + M.melds.length + ' meld' + (M.melds.length > 1 ? 's' : '') : '') + '</span></div>' + (melds ? '<div class="tm-melds">' + melds + '</div>' : '') + '<div class="tm-tray">' + slots + '</div>';
+}
+function drawWin() {
+  var an = E.analyze({ hand: M.hand, melds: M.melds }), valid = an.status === 'valid', distinct = [];
+  M.hand.forEach(function (t) { if (distinct.indexOf(t) < 0) distinct.push(t); });
+  if (M.win !== null && distinct.indexOf(M.win) < 0) M.win = null;
+  var tiles = valid ? '<div class="tm-wt" role="group" aria-label="Winning tile">' + distinct.map(function (t) { return '<button type="button" class="tm-wb" data-tm="win" data-v="' + t + '" aria-pressed="' + (M.win === t) + '" aria-label="' + E.tileName(t) + '">' + T(t) + '</button>'; }).join('') + '</div>' : '<p class="tm-sub" style="margin:0">Complete a winning hand first, then tap the tile that won.</p>';
+  var nfl = M.flowers.length;
+  var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '" aria-label="' + FLN[id] + '">' + T(34 + id) + '</button>'; }).join('') + '</div><div class="tm-sub" style="margin-top:6px">' + (nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : 'None held: that is a bonus point (No Flower / Season)') + '</div>';
+  var conds = '<div class="tm-seg" role="group" aria-label="Win conditions">' + COND.map(function (c) { return '<button type="button" class="chip" data-tm="cond" data-v="' + c[0] + '" aria-pressed="' + !!M.cond[c[0]] + '">' + c[1] + '</button>'; }).join('') + '</div>';
+  $t('tmWin').innerHTML = '<div class="tm-pl">Winning tile</div>' + tiles + '<div class="tm-pl">Flowers and seasons held</div>' + flowers + '<div class="tm-pl">Win conditions</div>' + conds;
+  if (M.focus) { var f = $t('tmWin').querySelector('[data-tm="' + M.focus[0] + '"][data-v="' + M.focus[1] + '"]'); if (f) f.focus(); M.focus = null; }
+}
+function drawRes() { var v = verdict(); $t('tmRes').innerHTML = v.html; $t('tmUseBtn').disabled = !v.ok; }
+function buildPalette() {
+  var groups = [['Dots', 0, 9], ['Bamboo', 9, 9], ['Characters', 18, 9], ['Winds and dragons', 27, 7]];
+  var h = '<div class="tm-modes" role="group" aria-label="What to add">' + MODES.map(function (m) { return '<button type="button" class="chip" data-tm="mode" data-m="' + m[0] + '" aria-pressed="' + (M.mode === m[0]) + '">' + m[1] + '</button>'; }).join('') + '</div><p class="tm-hint" id="tmHint"></p>';
+  groups.forEach(function (g) { h += '<div class="tm-pg"><div class="tm-pl" style="margin-top:0">' + g[0] + '</div><div class="tm-pr">'; for (var i = 0; i < g[2]; i++) { var t = g[1] + i; h += '<button type="button" class="tm-pt" data-tm="add" data-t="' + t + '" aria-label="' + E.tileName(t) + '">' + T(t) + '<span class="bd"></span></button>'; } h += '</div></div>'; });
+  $t('tmPal').innerHTML = h; tmButtons = [].slice.call($t('tmPal').querySelectorAll('.tm-pt'));
+}
+function updPalette() {
+  var c = mUsed();
+  tmButtons.forEach(function (b) { var t = +b.dataset.t; b.disabled = !mCan(t); b.classList.toggle('has', c[t] > 0); b.querySelector('.bd').textContent = c[t] || ''; });
+  [].slice.call($t('tmPal').querySelectorAll('.chip')).forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === M.mode)); });
+  var hint = HINT[M.mode]; if (M.mode === 'hand' && M.hand.length >= mNeed()) hint = 'The hand is full (' + mNeed() + ' tiles). Tap a tile in the hand to remove it, or add a meld.'; $t('tmHint').textContent = hint;
+}
+function tmUpdate() { drawHand(); drawWin(); drawRes(); updPalette(); }
+function tmClose() { $t('tileModal').hidden = true; document.removeEventListener('keydown', tmKey); }
+function tmKey(e) { if (e.key === 'Escape') { var cb = tmCancel; tmClose(); if (cb) cb(); } }
+function tmShow() { $t('tileModal').hidden = false; document.addEventListener('keydown', tmKey); }
+// opts: { name, seat 0-3 (from the game), prev 0-3 (from the game), by 'zimo' | 'hu' (from the kind of hand), saved: data kept earlier or null }
+window.openTilePickerModal = function (opts, onUse, onCancel) {
+  var st = opts.saved ? fromData(opts.saved) : { hand: [], melds: [], win: null, flowers: [], cond: {} };
+  M = { hand: st.hand, melds: st.melds, win: st.win, flowers: st.flowers, cond: st.cond, mode: 'hand', ctx: opts, focus: null };
+  tmUse = onUse; tmCancel = onCancel || null;
+  $t('tmInfo').innerHTML = '<b>' + tesc(opts.name) + '</b> wins by <b>' + (opts.by === 'zimo' ? 'Zi Mo (self draw)' : 'Hu (discard)') + '</b>. Seat wind <b>' + SEATN[opts.seat] + '</b>, prevailing wind <b>' + SEATN[opts.prev] + '</b>. All three come from the game.';
+  buildPalette(); tmUpdate(); tmShow(); $t('tmBody').scrollTop = 0;
+};
+$t('tmBody').addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('[data-tm]') : null; if (!b || !M) return; var a = b.dataset.tm;
+  if (a === 'add') { var t = +b.dataset.t; if (!mCan(t)) return; if (M.mode === 'hand') { M.hand.push(t); M.hand.sort(function (x, y) { return x - y; }); } else M.melds.push({ type: M.mode === 'chi' ? 'chi' : M.mode === 'pong' ? 'pong' : 'kong', tile: t, concealed: M.mode === 'concealed' || undefined }); tmUpdate(); }
+  else if (a === 'rm') { M.hand.splice(+b.dataset.i, 1); tmUpdate(); }
+  else if (a === 'rmMeld') { M.melds.splice(+b.dataset.i, 1); tmUpdate(); }
+  else if (a === 'mode') { M.mode = b.dataset.m; updPalette(); }
+  else if (a === 'win') { var w = +b.dataset.v; M.win = M.win === w ? null : w; M.focus = [a, b.dataset.v]; tmUpdate(); }
+  else if (a === 'flower') { var id = +b.dataset.v, k = M.flowers.indexOf(id); if (k >= 0) M.flowers.splice(k, 1); else M.flowers.push(id); M.focus = [a, b.dataset.v]; tmUpdate(); }
+  else if (a === 'cond') { M.cond[b.dataset.v] = !M.cond[b.dataset.v]; M.focus = [a, b.dataset.v]; tmUpdate(); }
+});
+$t('tmClear').addEventListener('click', function () { if (!M) return; M.hand = []; M.melds = []; M.win = null; tmUpdate(); });
+$t('tmClose').addEventListener('click', function () { var cb = tmCancel; tmClose(); if (cb) cb(); });
+$t('tmCancelBtn').addEventListener('click', function () { var cb = tmCancel; tmClose(); if (cb) cb(); });
+$t('tileModal').addEventListener('click', function (e) { if (e.target === $t('tileModal')) { var cb = tmCancel; tmClose(); if (cb) cb(); } });
+// "Check patterns": the tiles become a suggestion in the normal pattern picker; the host confirms or changes it there
+$t('tmUseBtn').addEventListener('click', function () {
+  if (!M) return; var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()); if (r.status !== 'scored') return;
+  var data = toData(), keep = M, use = tmUse, cancel = tmCancel; tmClose();
+  window.openPatternPickerModal(function (picked) { if (use) use({ patterns: picked, tiles: data }); },
+    r.state, { note: 'Suggested from the tiles: ' + r.total + ' point' + (r.total === 1 ? '' : 's') + '. Check it, change anything that is wrong, then tap Use total.', onCancel: function () { M = keep; tmUse = use; tmCancel = cancel; tmUpdate(); tmShow(); } });
+});
+
+})();
 </script>
 </body>
 </html>
