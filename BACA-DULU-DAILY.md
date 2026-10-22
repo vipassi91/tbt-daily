@@ -904,3 +904,20 @@ Tampilan statistik di halaman pemain ditata ulang. Rumus dan angkanya sama denga
 - File berubah dari v43: `player.html`, `functions/_tables.js`, `functions/_players.js`. Unggah ketiganya dalam satu commit.
   Tampilan statistik di Standings pada scoreboard tidak berubah.
 
+## Update terbaru (v45): sisipkan hand yang ketinggalan
+
+Bila ada hand yang terlupa dicatat dan baru disadari kemudian (misalnya hand ke-4 dari 17), kini tidak perlu mengedit satu per satu.
+
+- **Tombol "Insert before" di setiap hand pada riwayat** (di samping Edit dan Delete), hanya di scoreboard host dan hanya selama game belum
+  dikunci. Menekannya membuka form berjudul "Insert before hand N", dengan garis hijau yang menandai tempat hand baru akan masuk.
+- Hand baru masuk **di depan hand N**. Hand-hand sesudahnya bergeser satu nomor ke bawah dengan data dan urutannya utuh, dan **dealer, streak,
+  wind round, serta skor semua hand sesudahnya dihitung ulang** dari urutan yang baru. Pratinjau skor di form memakai dealer di posisi itu.
+- Bekerja di semua mode, termasuk MCR-4, MCR-8, dan MCR-Custom (poin diketik).
+- **Cancel** tidak mengubah apa pun. Memilih Edit saat sedang menyisipkan (atau sebaliknya) mengganti mode form, memilih jenis hand
+  tidak membatalkan sisipan, dan menghapus hand saat menyisipkan mengembalikan form ke keadaan biasa karena nomornya berubah.
+- **Meja yang sudah di-Save (terkunci) dan tampilan pemain tidak punya tombol ini.** Untuk meja terkunci: admin menekan **Buka kunci**
+  (halaman admin sesi, pada meja itu), host menyisipkan hand, lalu Save lagi.
+- Game yang sudah selesai juga bisa disisipi. Bila koreksi itu membuat hand di ujung jatuh sesudah game berakhir, hand tersebut ditandai
+  "(after the game ended)" dan tidak dihitung, sebagai tanda urutannya perlu diperiksa.
+- Tidak ada perubahan server atau database. File berubah dari v44: hanya `scoreboard.html`.
+

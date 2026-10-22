@@ -286,6 +286,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .seatnote .so>span{border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:600}
 .warn{margin-top:8px;padding:10px 12px;border:1px solid var(--red);border-left-width:4px;border-radius:10px;background:var(--field);font-size:13px;line-height:1.45}
 .warn[hidden]{display:none}
+.hitem.inserting{box-shadow:0 3px 0 0 var(--accent)}   /* the line a new hand will go on, below the hand it goes in front of (the newest hand is at the top) */
 </style>
 </head>
 <body>
@@ -1960,8 +1961,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   }
 
   /* entry form state */
-  var f,editIdx=-1;
-  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},who:-1,tenpai:[]};editIdx=-1;}
+  var f,editIdx=-1,insIdx=-1;   // insIdx: a new hand is being put in front of the hand with this number (index), instead of at the end
+  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},who:-1,tenpai:[]};editIdx=-1;insIdx=-1;}
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
   function eventFromForm(){
@@ -2100,12 +2101,13 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
     // entry form
     var box=$('gentry');
-    if(rp.done&&editIdx<0){
+    if(rp.done&&editIdx<0&&insIdx<0){
       box.innerHTML='<h2>Record hand</h2><p class="hint">The game is finished. Open the Story tab to make the scoreboards.</p>';
     }else{
-      var dealer=editIdx>=0?rp.hands[editIdx].dealer:rp.dealer;
-      if(editIdx>=0)setSeatView(rp.hands[editIdx].wind,rp.hands[editIdx].dealer,cfg);
-      var h='<h2>'+(editIdx>=0?'Edit hand '+(editIdx+1):'Record hand')+'</h2><div class="lbl">What happened?</div><div class="chips">';
+      var at=editIdx>=0?editIdx:insIdx;   // the hand this form is about: the one being edited, or the one a new hand goes in front of
+      var dealer=at>=0?rp.hands[at].dealer:rp.dealer;
+      if(at>=0)setSeatView(rp.hands[at].wind,rp.hands[at].dealer,cfg);
+      var h='<h2>'+(editIdx>=0?'Edit hand '+(editIdx+1):insIdx>=0?'Insert before hand '+(insIdx+1):'Record hand')+'</h2>'+(insIdx>=0?'<p class="hint">The new hand goes in front of hand '+(insIdx+1)+'. The hands after it move down by one and every dealer is worked out again.</p>':'')+'<div class="lbl">What happened?</div><div class="chips">';
       kindsFor().forEach(function(k){h+='<button type="button" class="chip" data-a="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>';});
       h+='</div>';
       var k=f.kind;
@@ -2137,8 +2139,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var ev=eventFromForm();
       typedDealer=dealer;
       h+='<div id="scorePrev">'+scorePrevHtml(ev,dealer)+'</div>';
-      h+='<div class="row-actions"><button type="button" class="btn primary" data-a="save"'+(ev?'':' disabled')+'>'+(editIdx>=0?'Save changes':'Save hand')+'</button>';
-      if(editIdx>=0)h+='<button type="button" class="btn" data-a="cancel">Cancel</button>';
+      h+='<div class="row-actions"><button type="button" class="btn primary" data-a="save"'+(ev?'':' disabled')+'>'+(editIdx>=0?'Save changes':insIdx>=0?'Insert hand':'Save hand')+'</button>';
+      if(editIdx>=0||insIdx>=0)h+='<button type="button" class="btn" data-a="cancel">Cancel</button>';
       h+='</div>';
       box.innerHTML=h;
     }
@@ -2150,12 +2152,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     // Edit and Delete only for an open game; Share only reads the hand, so players and saved games get it too
     function handButtons(x){
       var b='';
-      if(canEditHands)b+='<button type="button" class="lnk" data-a="edit" data-v="'+x.i+'">Edit</button><button type="button" class="lnk" data-a="del" data-v="'+x.i+'">Delete</button>';
+      if(canEditHands)b+='<button type="button" class="lnk" data-a="edit" data-v="'+x.i+'">Edit</button><button type="button" class="lnk" data-a="ins" data-v="'+x.i+'">Insert before</button><button type="button" class="lnk" data-a="del" data-v="'+x.i+'">Delete</button>';
       if(['hu','zimo','double','triple'].indexOf(x.kind)>=0)b+='<button type="button" class="lnk" data-a="shareHand" data-v="'+x.i+'">Share</button>';
       return b?'<div class="hb">'+b+'</div>':'';
     }
     rp.hands.slice().reverse().forEach(function(x){
-      hh+='<div class="hitem'+(x.i===editIdx?' editing':'')+'"><div class="hm"><b>'+(x.i+1)+'</b> <span class="han">'+ROUNDS[x.wind].h+'</span> '+ROUNDS[x.wind].en+', dealer '+esc(gname(x.dealer))+' x'+x.streak+'</div>'
+      hh+='<div class="hitem'+(x.i===editIdx?' editing':'')+(x.i===insIdx?' inserting':'')+'"><div class="hm"><b>'+(x.i+1)+'</b> <span class="han">'+ROUNDS[x.wind].h+'</span> '+ROUNDS[x.wind].en+', dealer '+esc(gname(x.dealer))+' x'+x.streak+'</div>'
         +'<div class="hd">'+esc(x.desc)+(x.late?' (after the game ended)':'')+'</div><div class="dls">'+deltaChips(x.deltas)+'</div>'
         +patternsReadout(x.patterns)
         +handButtons(x)+'</div>';
@@ -2186,7 +2188,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
     var a=b.dataset.a,v=b.dataset.v;
     if(a==='ptsinput')return;   // a typed field, not a button: clicking it just focuses it
-    if(a==='kind'){var ei=editIdx;resetForm();editIdx=ei;f.kind=v;}
+    if(a==='kind'){var ei=editIdx,ii=insIdx;resetForm();editIdx=ei;insIdx=ii;f.kind=v;}
     else if(a==='win'){f.winner=+v;if(f.disc===f.winner)f.disc=-1;}
     else if(a==='disc'){f.disc=+v;if(f.winner===f.disc)f.winner=-1;f.winners=f.winners.filter(function(x){return x!==f.disc;});}
     else if(a==='winm'){
@@ -2211,13 +2213,13 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       },prev);
       return;
     }
-    else if(a==='suggestinvalid'){var who0=f.winner,ei3=editIdx;resetForm();editIdx=ei3;f.kind='invalid';f.who=who0;}
+    else if(a==='suggestinvalid'){var who0=f.winner,ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=who0;}
     else if(a==='who'){f.who=+v;}
     else if(a==='tp'){var tv=+v,tx=f.tenpai.indexOf(tv);if(tx>=0)f.tenpai.splice(tx,1);else f.tenpai.push(tv);}
     else if(a==='cancel'){resetForm();}
     else if(a==='save'){
       var ev=eventFromForm();if(!ev)return;
-      if(editIdx>=0)game.events[editIdx]=ev;else game.events.push(ev);
+      if(editIdx>=0)game.events[editIdx]=ev;else if(insIdx>=0)game.events.splice(insIdx,0,ev);else game.events.push(ev);
       resetForm();saveGame();
     }
     renderGame();
@@ -2238,7 +2240,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var i=+b.dataset.v;
     if(b.dataset.a==='shareHand'){if(window.openShareModal)window.openShareModal(i);return;}
     if(VIEW_ONLY||game.lockedAt)return;
-    if(b.dataset.a==='edit'){formFromEvent(game.events[i]);editIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
+    if(b.dataset.a==='edit'){insIdx=-1;formFromEvent(game.events[i]);editIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
+    else if(b.dataset.a==='ins'){resetForm();insIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
     else if(b.dataset.a==='del'){
       if(delArm!==i){
         delArm=i;b.textContent='Tap again';
@@ -2247,7 +2250,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       }
       clearTimeout(delTimer);delArm=-1;
       game.events.splice(i,1);
-      if(editIdx>=0)resetForm();
+      if(editIdx>=0||insIdx>=0)resetForm();
       saveGame();renderGame();
     }
   });
