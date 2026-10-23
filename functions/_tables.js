@@ -48,6 +48,26 @@ export function cleanTiles(ev) {
   if (ev.tiles && typeof ev.tiles === 'object') for (const k of Object.keys(ev.tiles)) { if (winners.indexOf(+k) < 0 || !okTileRecord(ev.tiles[k])) continue; const r = ev.tiles[k]; out[k] = { h: r.h.slice(), m: r.m.map(x => x.slice()), w: r.w, f: r.f.slice(), c: (r.c || []).slice() }; }
   if (Object.keys(out).length) ev.tiles = out; else delete ev.tiles;
 }
+// Move the people to new seats. order[j] = the OLD seat of the person who sits in NEW seat j.
+// Every seat number a hand holds (winner, discarder, who, winners, tenpai, and the keys of pts, patterns and tiles) follows its person,
+// so each person keeps their own hands; dealers and winds are then worked out again from the new order by the normal replay.
+export function isSeatOrder(order) { return Array.isArray(order) && order.length === 4 && [0, 1, 2, 3].every(i => order.filter(o => o === i).length === 1); }
+export function permuteGame(game, order) {
+  if (!game || !Array.isArray(game.names) || game.names.length !== 4 || !isSeatOrder(order)) return null;
+  const inv = []; order.forEach((o, j) => { inv[o] = j; });
+  const at = i => inv[i], asc = (a, b) => a - b;
+  const keys = obj => { const out = {}; Object.keys(obj).forEach(k => { out[String(at(+k))] = obj[k]; }); return out; };
+  const g = JSON.parse(JSON.stringify(game));
+  g.names = order.map(o => game.names[o]);
+  g.events = (game.events || []).map(ev => {
+    const e = JSON.parse(JSON.stringify(ev));
+    ['winner', 'disc', 'who'].forEach(f => { if (Number.isInteger(e[f])) e[f] = at(e[f]); });
+    ['winners', 'tenpai'].forEach(f => { if (Array.isArray(e[f])) e[f] = e[f].map(at).sort(asc); });
+    ['pts', 'patterns', 'tiles'].forEach(f => { if (e[f] && typeof e[f] === 'object') e[f] = keys(e[f]); });
+    return e;
+  });
+  return g;
+}
 export function validGame(g) {
   if (!g || typeof g !== 'object' || !Array.isArray(g.events) || g.events.length > 400) return false;
   if (g.mode !== undefined && MODES.indexOf(g.mode) < 0) return false;

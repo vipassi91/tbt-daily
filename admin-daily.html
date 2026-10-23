@@ -86,11 +86,32 @@ main{padding:22px 0 70px}
 main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padding:8px}
 main .meta .lnk{padding:8px 6px!important}
 main .meta a{display:inline-flex;align-items:center;min-height:38px}
+
+/* Perbaiki pemain */
+.fxo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}.fxo[hidden]{display:none}
+.fxs{background:var(--surface);color:var(--text);width:100%;max-width:520px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;border:1px solid var(--line)}
+@media (min-width:700px){.fxo{align-items:center}.fxs{border-radius:18px}}
+.fxh{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 12px 18px;border-bottom:1px solid var(--line)}.fxh h2{margin:0;font-family:var(--display);font-size:19px}
+.fxx{border:0;background:none;font-size:26px;line-height:1;color:var(--muted);min-width:44px;min-height:44px;cursor:pointer}
+.fxb{padding:16px 18px;overflow:auto}.fxb p{margin:0 0 12px;font-size:13.5px;line-height:1.5;color:var(--muted)}.fxb p b{color:var(--text)}
+.fxr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fxn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--field);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.fxc{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.fxin{width:100%;min-width:0;font:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}.fxin:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.fxtags{display:flex;flex-wrap:wrap;gap:4px 8px}.fxtag{font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap}.fxtag.chg{color:var(--muted)}
+.fxm{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:18px;cursor:pointer}.fxm[disabled]{opacity:.3;cursor:default}
+.fxres{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--field)}
+.fxp{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:14px}.fxp b{font-variant-numeric:tabular-nums;white-space:nowrap}.fxp.chg b{color:var(--accent)}
+.fxt{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}.fxt.warn{color:var(--red)}
+.fxerr{margin-top:10px;color:var(--red);font-size:13px}
+.fxf{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}.fxf .btn{flex:1;text-align:center;min-height:44px;cursor:pointer}
+.btn[disabled]{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
+<div class="fxo" id="fixModal" hidden role="dialog" aria-modal="true" aria-labelledby="fxT"></div>
 <script>
 var LOGO='/assets/i/cfad30e8e7.png';
 var password=sessionStorage.getItem('tbt-admin-pw')||'';
@@ -191,7 +212,7 @@ function viewDay(){
 }
 function tableItem(t){
   var base=location.origin+'/scoreboard.html?';
-  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
+  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+(t.events>0?'<button class="lnk" onclick="openFix(\''+t.code+'\')">Perbaiki pemain</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
     +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Salin link</button></div>'
     +'<div class="cr"><span class="cl">Pemain</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Salin link</button></div>'
     +'<div class="meta" style="margin-top:6px">Atau cukup kasih kodenya aja (host atau pemain), tinggal buka <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> terus ketik kodenya</div></div>';
@@ -212,6 +233,70 @@ function delDay(){
   if(!confirm('Hapus sesi ini beserta semua mejanya?'))return;
   fetch('/api/days/'+encodeURIComponent(day.id),{method:'DELETE',headers:H()}).then(function(){day=null;return loadDays();}).then(render);
 }
+
+var fx=null;
+function signed(n){return n>0?'+'+n:n<0?'\u2212'+Math.abs(n):'0';}
+function openFix(code){
+  var t=((day&&day.tables)||[]).filter(function(x){return x.code===code;})[0];if(!t)return;
+  var nm=t.players.map(function(p){return p.name;});
+  fx={code:code,label:t.label,names:nm,edited:nm.slice(),order:[0,1,2,3],preview:null,busy:false,err:''};
+  renderFix();var b=document.getElementById('fxClose');if(b)b.focus();
+}
+function closeFix(){fx=null;renderFix();}
+function fixMove(j,dir){
+  if(!fx||fx.busy)return;var k=j+dir;if(k<0||k>3)return;
+  var o=fx.order,tmp=o[j];o[j]=o[k];o[k]=tmp;fx.preview=null;fx.err='';renderFix();
+  var again=document.querySelector('#fixModal [data-mv="'+k+'|'+dir+'"]');if(again&&!again.disabled)again.focus();
+}
+function fixName(o,v){
+  if(!fx||fx.busy)return;
+  var el=document.querySelector('#fixModal [data-nm="'+o+'"]'),pos=el?el.selectionStart:null;
+  fx.edited[o]=v;fx.preview=null;fx.err='';renderFix();
+  var again=document.querySelector('#fixModal [data-nm="'+o+'"]');if(again){again.focus();if(pos!==null)again.setSelectionRange(pos,pos);}
+}
+function fixCall(apply){
+  fx.busy=true;fx.err='';renderFix();
+  return fetch('/api/admin/table-order',{method:'POST',headers:H(),body:JSON.stringify({code:fx.code,order:fx.order,names:fx.order.map(function(o){return fx.edited[o];}),apply:apply})}).then(function(r){return r.json().then(function(b){return {ok:r.ok,b:b};});}).then(function(x){
+    fx.busy=false;
+    if(!x.ok){fx.err=x.b.message||x.b.error||'Gagal';renderFix();return null;}
+    return x.b;
+  }).catch(function(){fx.busy=false;fx.err='Tidak bisa menghubungi server.';renderFix();return null;});
+}
+function fixPreview(){fixCall(false).then(function(b){if(b){fx.preview=b.summary;renderFix();}});}
+function fixApply(){
+  if(!fx||!fx.preview)return;
+  if(!confirm('Simpan perubahan? Skor dan leaderboard ikut berubah. Meja yang sudah disimpan tetap terkunci.'))return;
+  fixCall(true).then(function(b){if(!b)return;fx=null;renderFix();return openDay(day.id).then(function(){render();toast('Pemain diperbarui');});});
+}
+function renderFix(){
+  var el=document.getElementById('fixModal');
+  if(!fx){el.hidden=true;el.innerHTML='';document.removeEventListener('keydown',fixKey);return;}
+  var namesChanged=fx.names.some(function(n,o){return fx.edited[o]!==n;});
+  var changed=fx.order.join()!=='0,1,2,3'||namesChanged,pv=fx.preview;
+  var rows=fx.order.map(function(o,j){var edited=fx.edited[o]!==fx.names[o];return '<div class="fxr"><span class="fxn">'+(j+1)+'</span><div class="fxc"><input type="text" class="fxin" maxlength="16" autocomplete="off" data-nm="'+o+'" value="'+esc(fx.edited[o])+'" aria-label="Nama kursi '+(j+1)+'" oninput="fixName('+o+',this.value)"'+(fx.busy?' disabled':'')+'>'
+    +(j===0||edited?'<span class="fxtags">'+(j===0?'<span class="fxtag">dealer pertama</span>':'')+(edited?'<span class="fxtag chg">diganti</span>':'')+'</span>':'')+'</div>'
+    +'<button type="button" class="fxm" aria-label="Naikkan '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|-1" onclick="fixMove('+j+',-1)"'+(j===0||fx.busy?' disabled':'')+'>\u2191</button>'
+    +'<button type="button" class="fxm" aria-label="Turunkan '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|1" onclick="fixMove('+j+',1)"'+(j===3||fx.busy?' disabled':'')+'>\u2193</button></div>';}).join('');
+  var res='';
+  if(pv){
+    var d1=pv.dealerChanged===0?'Dealer tidak berubah di hand mana pun.':'Dealer berbeda di <b>'+pv.dealerChanged+'</b> dari '+pv.hands+' hand.';
+    var warn='',rn='';
+    if(pv.renamed&&pv.renamed.length){
+      rn='<p class="fxt" style="margin:10px 0 0"><b>Nama:</b></p>'+pv.renamed.map(function(r){return '<div class="fxp"><span>'+esc(r.from)+' \u2192 '+esc(r.to)+'</span><b style="white-space:normal;text-align:right">'+(pv.registryOn?(r.registered?'pemain terdaftar: '+esc(r.registered):'belum terdaftar, dihitung tamu'):'')+'</b></div>';}).join('');
+      if(pv.linksDropped)rn+='<p class="fxt">'+pv.linksDropped+' tautan kursi ke pemain terdaftar berhenti berlaku karena namanya diganti. Bisa ditautkan lagi di Admin pemain.</p>';
+    }
+    if(pv.firstDealerChanged)warn+='<p class="fxt warn">Dealer pertama berubah dari '+esc(pv.firstDealerBefore)+' ke '+esc(pv.firstDealerAfter)+'.</p>';
+    if(pv.doneBefore&&!pv.doneAfter)warn+='<p class="fxt warn">Dengan urutan ini game tidak lagi selesai. Periksa urutannya.</p>';
+    else if(pv.lateAfter!==pv.lateBefore)warn+='<p class="fxt warn">'+pv.lateAfter+' hand jatuh setelah game berakhir dan tidak dihitung (sebelumnya '+pv.lateBefore+').</p>';
+    res='<div class="fxres"><div class="fxt" style="margin:0 0 6px">Skor bersih tiap orang, sebelum lalu sesudah:</div>'+pv.people.map(function(p){return '<div class="fxp'+(p.before!==p.after?' chg':'')+'"><span>'+esc(p.name)+'</span><b>'+signed(p.before)+' \u2192 '+signed(p.after)+'</b></div>';}).join('')+'<p class="fxt">'+d1+'</p>'+rn+warn+'</div>';
+  }
+  el.innerHTML='<div class="fxs"><div class="fxh"><h2 id="fxT">Perbaiki pemain</h2><button type="button" class="fxx" id="fxClose" aria-label="Tutup" onclick="closeFix()">&times;</button></div>'
+    +'<div class="fxb"><p>Meja <b>'+esc(fx.label)+'</b>. Geser dengan panah untuk memperbaiki urutan duduk (kursi 1 adalah dealer pertama, East), dan ketuk nama untuk mengganti ejaannya. Semua hand ikut berpindah bersama orangnya, lalu dealer, angin, dan skor dihitung ulang dari hand pertama.</p>'
+    +rows+res+(fx.err?'<div class="fxerr" role="alert">'+esc(fx.err)+'</div>':'')+'</div>'
+    +'<div class="fxf"><button type="button" class="btn" onclick="closeFix()">Batal</button><button type="button" class="btn" onclick="fixPreview()"'+(!changed||fx.busy?' disabled':'')+'>Lihat dampak</button><button type="button" class="btn primary" onclick="fixApply()"'+(!pv||fx.busy?' disabled':'')+'>Simpan</button></div></div>';
+  el.hidden=false;document.addEventListener('keydown',fixKey);
+}
+function fixKey(e){if(e.key==='Escape')closeFix();}
 (function(){
   if(!password){render();return;}
   checkLogin().then(function(ok){

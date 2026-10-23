@@ -943,3 +943,34 @@ Mode MCR tidak berubah (poin tetap diketik).
 - Menutup pemilih pola tanpa memakainya membawa kembali ke jendela tile dengan tangan yang sama. Cancel tidak mengubah apa pun.
 - **File berubah dari v45:** `scoreboard.html` (sekitar +67 KB), `functions/_tables.js`, dan `functions/api/tables/[code].js`. Unggah ketiganya dalam satu commit.
 
+## Update terbaru (v47): perbaiki urutan pemain pada meja yang sudah selesai
+
+Kalau urutan duduk salah dimasukkan di scoreboard dan gamenya sudah selesai atau disimpan final: **Admin sesi, buka sesinya, pada kartu meja tekan "Perbaiki pemain"**
+(tombol hanya ada di meja yang sudah punya hand). Host tidak bisa mengubah pemain setelah hand pertama, jadi ini dilakukan oleh admin.
+
+- **Cara pakai:** geser nama dengan panah naik dan turun sampai urutannya benar (kursi 1 adalah dealer pertama, East), tekan **Lihat dampak**, baca hasilnya, lalu **Simpan**.
+  **Simpan** baru aktif setelah dampak untuk urutan itu dilihat. Mengubah urutan lagi menghapus pratinjau dan menonaktifkan Simpan sampai dilihat lagi.
+- **Yang terjadi:** orangnya tetap sama dan setiap hand ikut berpindah bersama orangnya (pemenang, pembuang, pemain yang salah, pemain tenpai, poin, pola, dan tile).
+  Setelah itu dealer, angin, dan skor dihitung ulang dari hand pertama sesuai urutan baru, statistik leaderboard dibangun ulang, dan kursi yang pernah ditautkan ke pemain
+  terdaftar ikut pindah bersama orangnya. Meja yang sudah disimpan final tetap final.
+- **Pratinjau menunjukkan:** skor bersih tiap orang sebelum lalu sesudah, berapa hand yang dealernya berubah, dan peringatan bila dealer pertama berubah, bila game tidak lagi
+  selesai, atau bila ada hand yang jatuh setelah game berakhir (tidak dihitung). Pratinjau tidak mengubah apa pun.
+- **Yang tidak dicakup:** meja tanpa hand (pemainnya masih bisa diubah langsung di scoreboard). Penggantian nama ada di update v48 di bawah. Layar host yang masih terbuka dengan versi lama akan mendapat pemberitahuan konflik, bukan menimpa perbaikannya.
+- Tidak ada SQL baru. **File berubah dari v46:** `admin-daily.html`, `functions/_tables.js`, dan **`functions/api/admin/table-order.js` (file baru)**. Unggah ketiganya dalam satu commit.
+
+## Update terbaru (v48): ganti nama pemain, khusus admin
+
+Jendela **Perbaiki pemain** (v47) sekarang juga bisa **mengganti nama**: setiap kursi punya kolom nama yang bisa diketik langsung, dan panah tetap dipakai untuk urutan. Keduanya bisa diubah
+sekaligus dan dilihat dampaknya dulu sebelum disimpan. Seperti urutan, ini hanya bisa dilakukan admin (host tidak bisa mengubah pemain setelah hand pertama).
+
+- **Aturan nama:** maksimal 16 karakter (sama dengan kolom nama di scoreboard), tidak boleh kosong, dan tidak boleh sama dengan nama pemain lain di meja itu (huruf besar atau kecil dianggap sama).
+  Nama yang tidak diubah dibiarkan persis seperti semula. Pesan penolakan menyebut alasannya.
+- **Hand tetap di kursinya.** Mengganti nama tidak mengubah skor, dealer, atau hand mana pun. Nama yang diganti hanya menggantikan nama di kursi itu (dan orangnya ikut pindah bila urutan juga digeser).
+- **Dampak ke leaderboard:** nama baru diperlakukan seperti nama yang diketik host, jadi bila cocok dengan pemain terdaftar (nama panggilan atau ejaan lain miliknya), hand itu masuk ke halaman pemain tersebut.
+  Pratinjau menyebutnya ("pemain terdaftar: ..." atau "belum terdaftar, dihitung tamu"). Bila nama baru dikenali sebagai pemain terdaftar yang sudah duduk di kursi lain di meja yang sama, perubahan ditolak karena
+  satu orang tidak bisa mengisi dua kursi.
+- **Tautan kursi:** tautan kursi ke pemain terdaftar yang dibuat di Admin pemain dibuat untuk nama lama, jadi untuk kursi yang diganti namanya tautannya dihapus (pratinjau menyebut jumlahnya) dan bisa ditautkan lagi.
+  Kursi lain yang tidak diganti namanya tetap tertaut, ikut berpindah bersama orangnya.
+- Pratinjau tidak mengubah apa pun, dan jumlah "hand dengan dealer berbeda" dihitung per orang, bukan per ejaan nama. Meja yang sudah disimpan final tetap final.
+- Tidak ada SQL baru. **File berubah dari v47:** `admin-daily.html` dan `functions/api/admin/table-order.js`. Unggah keduanya dalam satu commit.
+
