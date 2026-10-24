@@ -40,12 +40,21 @@ function okTileRecord(r) {
   if (count.some(x => x > 4)) return false;
   if (!r.f.every(x => Number.isInteger(x) && x >= 0 && x <= 7) || new Set(r.f).size !== r.f.length) return false;
   if (r.c !== undefined && (!Array.isArray(r.c) || !r.c.every(x => TILE_COND.indexOf(x) >= 0))) return false;
+  if (r.c && r.c.indexOf('replacement') >= 0 && r.c.indexOf('double') >= 0) return false;   // only one of the two replacement conditions
   return true;
 }
 export function cleanTiles(ev) {
   if (!ev || ev.tiles === undefined) return;
   const winners = ev.winner != null ? [ev.winner] : (Array.isArray(ev.winners) ? ev.winners : []), out = {};
   if (ev.tiles && typeof ev.tiles === 'object') for (const k of Object.keys(ev.tiles)) { if (winners.indexOf(+k) < 0 || !okTileRecord(ev.tiles[k])) continue; const r = ev.tiles[k]; out[k] = { h: r.h.slice(), m: r.m.map(x => x.slice()), w: r.w, f: r.f.slice(), c: (r.c || []).slice() }; }
+  // the winners of one hand hold tiles from one set: four of each tile in all, the winning tile is one shared tile and counts once, and a flower exists once
+  const recs = Object.values(out);
+  if (recs.length > 1) {
+    const copies = new Array(34).fill(0), seen = new Set(); let same = true;
+    recs.forEach(r => { if (r.w !== recs[0].w) same = false; r.h.forEach(t => { copies[t]++; }); r.m.forEach(m => { if (m[0] === 'c') { copies[m[1]]++; copies[m[1] + 1]++; copies[m[1] + 2]++; } else copies[m[1]] += m[0] === 'k' ? 4 : 3; }); r.f.forEach(id => { if (seen.has(id)) same = false; seen.add(id); }); });
+    if (same) copies[recs[0].w] -= recs.length - 1;
+    if (!same || copies.some(x => x > 4)) { delete ev.tiles; return; }
+  }
   if (Object.keys(out).length) ev.tiles = out; else delete ev.tiles;
 }
 // Move the people to new seats. order[j] = the OLD seat of the person who sits in NEW seat j.

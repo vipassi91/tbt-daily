@@ -974,3 +974,41 @@ sekaligus dan dilihat dampaknya dulu sebelum disimpan. Seperti urutan, ini hanya
 - Pratinjau tidak mengubah apa pun, dan jumlah "hand dengan dealer berbeda" dihitung per orang, bukan per ejaan nama. Meja yang sudah disimpan final tetap final.
 - Tidak ada SQL baru. **File berubah dari v47:** `admin-daily.html` dan `functions/api/admin/table-order.js`. Unggah keduanya dalam satu commit.
 
+## Update terbaru (v49): Ruby, Jade, dan Pearl Dragon terbaca benar di Pick Tiles
+
+Dua perbaikan pada pembacaan tile, setelah pengujian menemukan hand yang tidak disarankan atau salah dikenali:
+
+- **Definisi yang diberlakukan sekarang:** naga yang sesuai (Ruby = Red, Jade = Green, Pearl = White) sebagai pong atau kong, ditambah **tiga set sisanya yang semuanya berada di suit naga itu**
+  (Ruby = characters, Jade = bamboo, Pearl = dots) dan berbentuk pure straight 1-9 **atau tiga pong**, ditambah pasangan di suit yang sama. Sebelumnya varian tiga pong salah mengizinkan pong dari suit mana pun,
+  sehingga hand dengan pong campuran suit keliru dikenali sebagai Ruby, Jade, atau Pearl. Itu sudah diperbaiki.
+- **(Diganti di v50 di bawah.)** Di v49 pola Master dan Legendary sempat didahulukan; sekarang usulan kembali memilih nilai tertinggi, dengan pola Master yang kalah tetap disebut sebagai alternatif.
+- **Pengujian:** seluruh 30.384 hand sah untuk tiap naga (pure straight dan tiga pong, dengan meld terbuka, kong, kong tertutup, menang Zi Mo dan Hu) terdeteksi dan disarankan, dan puluhan ribu hand yang mendekati syarat tetapi melanggar
+  satu hal (suit pong, suit pasangan, naga yang salah, straight yang bukan 1-9) dibandingkan dengan hitungan independen dari jumlah tile, dan hasilnya sama di setiap hand.
+- Tidak ada SQL baru. **File berubah dari v48:** hanya `scoreboard.html`.
+
+## Update terbaru (v50): nilai tertinggi, minimum poin per mode, saran garden, dan aturan tile pengganti
+
+Hasil pengecekan ulang aturan pada Pick Tiles (jendela tile dan pembacaan pola):
+
+- **Usulan memilih nilai tertinggi.** Bila hand memenuhi pola Master atau Legendary tetapi tumpukan pola biasa bernilai lebih tinggi (misalnya hand Ruby varian tiga pong: 12 melawan 11), yang disarankan adalah yang tertinggi,
+  dan pola Master yang kalah disebut di jendela ("Also qualifies: Ruby Dragon (11 points) ..."). Pada nilai yang sama, pola Master yang dipilih. Tetap bisa diubah di pemilih pola.
+- **Minimum poin untuk menang dibaca dari game**, bukan dikunci 1. Casual 1, Default dan Tournament 2, Custom sesuai pengaturan (1 sampai 13). Bila poin pola (di luar bunga dan bonus kondisi menang) di bawah minimum itu, jendela menampilkan peringatan merah
+  **Invalid win** ("The patterns add up to N points, below the minimum of M"), "Check patterns" dinonaktifkan, dan tombol **Record as Invalid win** langsung mengganti form menjadi Invalid win untuk pemain itu. Bunga dan kondisi menang tidak membantu mencapai minimum.
+  Sebelumnya Default dan Tournament salah menerima hand dengan satu poin pola sebagai menang.
+- **Win by Royal Garden dan Win by Imperial Garden disarankan otomatis** begitu bunga dan musim yang dipegang berjumlah 7 atau 8, walaupun hand belum sah atau belum lengkap (3 poin dan 4 poin, berdiri sendiri). Bila hand yang sah bernilai lebih tinggi, hand itu yang
+  disarankan dan garden win disebut sebagai alternatif; pada nilai yang sama garden win yang dipilih. Pada garden win tanpa hand lengkap, tile tidak disimpan di hand itu. Garden win tidak dikenai minimum poin game.
+- **Rule 14: kemenangan dengan tile pengganti dihitung sebagai Zi Mo.** Bila "Replacement tile" atau "Double replacement" dipilih, hand dibaca sebagai self draw (misalnya pong yang dilengkapi tile pengganti tetap concealed), dan jendela mengingatkan untuk
+  mencatatnya sebagai Zi Mo bila hand dicatat sebagai Hu. Robbing a kong sebaliknya dibaca sebagai Hu, dengan pengingat serupa.
+- **File berubah dari v49:** hanya `scoreboard.html`. Tidak ada SQL baru.
+
+## Update terbaru (v51): tile dibagi antar pemenang pada Double dan Triple Hu, dan satu kondisi pengganti saja
+
+- **Double Hu dan Triple Hu memakai satu set tile.** Di jendela Pick Tiles, tile yang sudah dipegang pemenang lain tidak bisa dipilih lagi oleh pemenang berikutnya (misalnya bila Budi memegang pong East, Citra hanya bisa memegang satu East),
+  dan jendela menuliskan tile apa saja yang sudah terpakai. Bunga dan musim hanya ada satu, jadi yang dipegang pemenang lain tampil abu-abu. **Tile yang menang adalah satu tile bersama** (satu buangan memenangkan semua hand):
+  ia dikunci sama untuk semua pemenang dan dihitung satu kali, bukan dua atau tiga kali. Contoh: bila satu pemenang memegang `555d` dan menang di 5 dots, pemenang lain masih boleh memegang dua 5 dots (termasuk tile bersama itu), tidak satu.
+  Berlaku untuk Double Hu dan Triple Hu, dan pemenang pertama tidak dibatasi apa pun.
+- **Server ikut memeriksa.** Bila tile yang dikirim untuk beberapa pemenang melebihi empat per jenis (dengan tile menang dihitung satu kali), tile yang menang berbeda, atau bunga yang sama dipegang dua pemenang, data tile hand itu dibuang (hand dan poinnya tetap tersimpan).
+- **Replacement Tile dan Double Replacement Tile tidak bisa dipilih bersamaan** (hanya salah satu): di jendela tile, di pemilih pola (chip yang satunya terkunci), di mesin, dan di server. Double Replacement sudah termasuk replacement, jadi keduanya tidak dijumlah.
+- Dikonfirmasi tanpa perubahan: garden win tidak dikenai minimum poin game, dan "No Flower / Season" berarti tidak ada bunga atau musim yang dipegang di hand itu.
+- **File berubah dari v50:** `scoreboard.html` dan `functions/_tables.js` (keduanya ada di zip). Tidak ada SQL baru.
+

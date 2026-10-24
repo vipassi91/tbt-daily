@@ -305,6 +305,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .tm-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-weight:700;font-size:14px;border:1px solid transparent}
 .tm-pill.ok{background:var(--accent);color:var(--onaccent)}.tm-pill.bad{color:var(--red);border-color:var(--red)}.tm-pill.info{background:var(--field);color:var(--text);border-color:var(--line)}
 .tm-sub{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.tm-sub.warn{color:var(--red)}.tm-sub b{color:var(--text)}.tm-res.bad{border-color:var(--red)}.tm-sub .btn{min-height:40px}
 .tm-modes,.tm-seg{display:flex;flex-wrap:wrap;gap:6px}.tm-modes{margin-top:14px;margin-bottom:8px}
 .tm-hint{font-size:12.5px;color:var(--muted);margin:0 0 12px;min-height:34px;line-height:1.4}
 .tm-pg{margin-bottom:12px}.tm-pr{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
@@ -314,6 +315,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .tm-wt{display:flex;flex-wrap:wrap;gap:8px}.tm-wb{width:38px}
 .tm-wb[aria-pressed="true"],.tm-fb[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
 .tm-fls{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;padding:3px}.tm-fb[aria-pressed="false"]{opacity:.42}
+.tm-fb[disabled]{opacity:1;cursor:not-allowed}.tm-fb[disabled]>*{opacity:.3;filter:grayscale(1)}.tm-fb[disabled]::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:3px;background:var(--red);transform:rotate(-35deg);border-radius:2px}.tm-wb[disabled]{opacity:1;cursor:default}
 .tm-foot{display:flex;gap:10px}.tm-foot .btn{flex:1}
 @media (max-width:380px){.tm-pr,.tm-tray{gap:4px}}
 </style>
@@ -2010,6 +2012,20 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
   // what is kept with a winner's points: the patterns counted, and the tiles they came from (numbers only)
+  // Double and Triple Hu: the winners hold tiles from the same set. What the other winners already hold is not available to this one,
+  // flowers and seasons exist once, and the winning tile is one shared tile that counts once.
+  function sharedTiles(tp){
+    var ws=f.kind==='triple'?othersOf(f.disc):(f.kind==='double'?(f.winners||[]):[f.winner]),taken=[],fl=[],win=null,i;
+    for(i=0;i<34;i++)taken.push(0);
+    ws.forEach(function(k){
+      var d=k!==tp&&f.tiles&&f.tiles[k];if(!d)return;
+      (d.h||[]).forEach(function(t){taken[t]++;});
+      (d.m||[]).forEach(function(m){var c=m[0]==='c'?[m[1],m[1]+1,m[1]+2]:(m[0]==='p'?[m[1],m[1],m[1]]:[m[1],m[1],m[1],m[1]]);c.forEach(function(t){taken[t]++;});});
+      if(d.w!=null){taken[d.w]--;win=d.w;}
+      (d.f||[]).forEach(function(id){fl.push(id);});
+    });
+    return {taken:taken,flowers:fl,win:win};
+  }
   function attachMeta(ev,w){if(f.patterns[w]){if(!ev.patterns)ev.patterns={};ev.patterns[w]=f.patterns[w];}if(f.tiles&&f.tiles[w]){if(!ev.tiles)ev.tiles={};ev.tiles[w]=f.tiles[w];}}
   function eventFromForm(){
     var k=f.kind,ev,ws;
@@ -2265,13 +2281,14 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     else if(a==='tilepick'){
       // the winner's seat wind, the prevailing wind and how the hand was won all come from the game: nothing is asked twice
       var tp=+b.dataset.p;
-      var saved=f.tiles[tp]||null;
+      var saved=f.tiles[tp]||null,sh=sharedTiles(tp);
       delete f.pts[tp];
       renderGame();
-      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),saved:saved},function(r){
+      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
+        onInvalid:function(){var ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=tp;renderGame();}},function(r){
         f.pts[tp]=r.patterns.total;
         f.patterns[tp]=r.patterns;
-        f.tiles[tp]=r.tiles;
+        if(r.tiles)f.tiles[tp]=r.tiles;else delete f.tiles[tp];
         renderGame();
       });
       return;
@@ -2590,6 +2607,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   var TIER_LABEL={b:'Beginner',a:'Apprentice',e:'Expert',m:'Master',l:'Legendary (limit)'};
   var FLOWERS_B=[{n:'No Flower / Season',p:1},{n:'Flower In Season',p:1},{n:'Set Of Flowers / Seasons',p:2},{n:'Royal Garden',p:2},{n:'Imperial Garden',p:2},{n:'Win By Royal Garden',p:3},{n:'Win By Imperial Garden',p:4}];
   var WINB=[{n:'Last Tile',p:1},{n:'Replacement Tile',p:1},{n:'Double Replacement Tile',p:2},{n:'Robbing A Kong',p:1}];
+  var WIN_REPL=1,WIN_DOUBLE=2;   // a double replacement is also a replacement: only one of the two can apply
 
   var pat={sel:{},flo:{},win:{}};
 
@@ -2899,7 +2917,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var nWin=countSel(pat.win,WINB.length);
     var winOpen=sectionOpen('win',nWin>0);
     h+='<details class="pattier" data-tier="win"'+(winOpen?' open':'')+'><summary>Win condition bonus'+(nWin?' <span class="pn">'+nWin+' picked</span>':'')+'</summary><div class="chips">';
-    WINB.forEach(function(w,i){var dis=(bonusDis||gardenSel)&&!pat.win[i];h+='<button type="button" class="chip" data-a="win" data-v="'+i+'" aria-pressed="'+(!!pat.win[i])+'"'+(dis?' disabled':'')+'><span>'+esc(w.n)+'</span><span class="ptv">'+w.p+'</span></button>';});
+    WINB.forEach(function(w,i){var twin=(i===WIN_REPL&&!!pat.win[WIN_DOUBLE])||(i===WIN_DOUBLE&&!!pat.win[WIN_REPL]);var dis=((bonusDis||gardenSel)&&!pat.win[i])||twin;h+='<button type="button" class="chip" data-a="win" data-v="'+i+'" aria-pressed="'+(!!pat.win[i])+'"'+(dis?' disabled':'')+(twin?' title="Replacement Tile and Double Replacement Tile cannot be combined"':'')+'><span>'+esc(w.n)+'</span><span class="ptv">'+w.p+'</span></button>';});
     h+='</div></details>';
     if(floSelIdx>=0)h+='<p class="hint">Only one flower/season bonus applies at a time, so picking one locks the others.</p>';
     if(gardenSel)h+='<p class="hint">Win By Royal Garden and Win By Imperial Garden count on their own, so every other pattern and bonus is locked while one of them is picked.</p>';
@@ -2956,6 +2974,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var m=selMaxFor(+k);
       if(pat.sel[k]>m)pat.sel[k]=m;
     });
+    if(pat.win[WIN_REPL]&&pat.win[WIN_DOUBLE])delete pat.win[WIN_REPL];   // the two do not add up: the double replacement stays
   }
 
   function sync(){normalizeSel();renderBox();renderTotal();}
@@ -3865,6 +3884,7 @@ var PATTERNS=[
   var TIER_LABEL={b:'Beginner',a:'Apprentice',e:'Expert',m:'Master',l:'Legendary (limit)'};
   var FLOWERS_B=[{n:'No Flower / Season',p:1},{n:'Flower In Season',p:1},{n:'Set Of Flowers / Seasons',p:2},{n:'Royal Garden',p:2},{n:'Imperial Garden',p:2},{n:'Win By Royal Garden',p:3},{n:'Win By Imperial Garden',p:4}];
   var WINB=[{n:'Last Tile',p:1},{n:'Replacement Tile',p:1},{n:'Double Replacement Tile',p:2},{n:'Robbing A Kong',p:1}];
+  var WIN_REPL=1,WIN_DOUBLE=2;   // a double replacement is also a replacement: only one of the two can apply
 
   var pat={sel:{},flo:{},win:{}};
 
@@ -4135,6 +4155,7 @@ function normalizeSel(){
       var m=selMaxFor(+k);
       if(pat.sel[k]>m)pat.sel[k]=m;
     });
+    if(pat.win[WIN_REPL]&&pat.win[WIN_DOUBLE])delete pat.win[WIN_REPL];   // the two do not add up: the double replacement stays
   }
 
 function setState(s){pat={sel:Object.assign({},s.sel||{}),flo:Object.assign({},s.flo||{}),win:Object.assign({},s.win||{})};normalizeSel();}
@@ -4215,8 +4236,8 @@ function structure(sets, pair, ctx, conc) {
     const d = sets.findIndex(g => isTrip(g) && g.tiles[0] === dragonTile); if (d < 0) return false;
     const rest = sets.filter((_, i) => i !== d);
     if (rest.length !== 3) return false;
-    if (rest.every(isTrip)) return true;
-    if (rest.every(g => g.kind === 'chow')) { const st = rest.map(g => (gSuit(g) === suit ? rankOf(g.tiles[0]) : -1)).sort((a, b) => a - b); if (st[0] === 1 && st[1] === 4 && st[2] === 7) return true; }   // the straight is in the pair's suit
+    if (rest.every(g => isTrip(g) && g.tiles[0] < 27 && gSuit(g) === suit)) return true;   // three pongs (or kongs), all in the suit
+    if (rest.every(g => g.kind === 'chow')) { const st = rest.map(g => (gSuit(g) === suit ? rankOf(g.tiles[0]) : -1)).sort((a, b) => a - b); if (st[0] === 1 && st[1] === 4 && st[2] === 7) return true; }   // or the pure straight 1-9, in the suit
     return false;
   };
   if (dragonHand(31, 2)) sel1(N.ruby); if (dragonHand(32, 1)) sel1(N.jade); if (dragonHand(33, 0)) sel1(N.pearl);
@@ -4276,34 +4297,42 @@ function pairShapeCandidates(pairTiles, shape) {
 // ---- choose the best combination -------------------------------------------------------------------------------
 const subsetsOf = arr => { const out = []; for (let m = 0; m < (1 << arr.length); m++) out.push(arr.filter((_, i) => m & (1 << i))); return out; };
 function validSubset(ids, sel) { const s = {}; ids.forEach(i => { s[i] = 1; }); return ids.every(i => !R.lockedOut(i, { sel: s })); }
+// the best pile of ordinary patterns and the Master / Legendary hand (when there is one): the higher total wins, a tie goes to the named hand
 function bestFor(cand, bon) {
   const ids = Object.keys(cand).map(Number); let best = null;
-  const consider = (subIds) => {
-    const sel = {}; subIds.forEach(i => { sel[i] = cand[i]; });
-    const state = { sel, flo: bon.flo, win: bon.win }, r = R.total(state);
-    const patOnly = R.total({ sel, flo: {}, win: {} }).total;
-    const score = [r.total, subIds.length];
-    if (!best || score[0] > best.score[0] || (score[0] === best.score[0] && score[1] > best.score[1])) best = { state, result: r, patternPoints: patOnly, score, ids: subIds };
-  };
+  const make = (subIds) => { const sel = {}; subIds.forEach(i => { sel[i] = cand[i]; }); const state = { sel, flo: bon.flo, win: bon.win }, r = R.total(state); return { state, result: r, patternPoints: R.total({ sel, flo: {}, win: {} }).total, ids: subIds }; };
   const ml = ids.filter(i => R.isML(i)), non = ids.filter(i => !R.isML(i));
-  if (ml.length) consider(ml);                                   // Master and Legendary hands stand alone
   if (non.length > 14) throw new Error('too many candidates');
-  subsetsOf(non).forEach(sub => { if (validSubset(sub)) consider(sub); });
-  return best;
+  subsetsOf(non).forEach(sub => { if (!validSubset(sub)) return; const c = make(sub); if (!best || c.result.total > best.result.total || (c.result.total === best.result.total && sub.length > best.ids.length)) best = c; });
+  const ordinary = best, master = ml.length ? make(ml) : null;
+  const pick = master && (!ordinary || master.result.total >= ordinary.result.total) ? master : ordinary, other = pick === master ? ordinary : master;
+  if (!pick) return null;
+  const sum = c => c && { total: c.result.total, counted: c.result.counted, ml: c === master, patternPoints: c.patternPoints };
+  return { ...pick, ml: pick === master, score: [pick.result.total, pick.ids.length], alternative: sum(other), masterOption: sum(master) };
 }
 
 // ---- the whole thing ---------------------------------------------------------------------------------------------
-// input: { hand, melds }   ctx: { winTile, winBy: 'zimo' | 'hu', seat, prevailing, flowers: [0-7], cond: { last, replacement, double, robbing, gardenWin } }
+// input: { hand, melds }   ctx: { winTile, winBy: 'zimo' | 'hu', seat, prevailing, flowers: [0-7], minPoints (of the game, default 1), cond: { last, replacement, double, robbing, gardenWin } }
+const GARDEN_NAME = { 7: 'Royal Garden', 8: 'Imperial Garden' };
+function gardenOption(bon) {
+  if (bon.count !== 7 && bon.count !== 8) return null;
+  const gi = bon.count === 8 ? FL.winImperial : FL.winRoyal, state = { sel: {}, flo: { [gi]: 1 }, win: {} }, r = R.total(state);
+  return { total: r.total, counted: r.counted, state, name: 'Win by ' + GARDEN_NAME[bon.count], flowers: bon.count };
+}
 function score(input, ctx0) {
-  const ctx = { seat: 0, prevailing: 0, winBy: 'zimo', flowers: [], cond: {}, ...ctx0 };
-  const bon = bonuses(ctx);
-  if (ctx.cond && ctx.cond.gardenWin && (bon.count === 7 || bon.count === 8)) {   // winning by drawing the seventh or eighth flower stands alone
-    const gi = bon.count === 8 ? FL.winImperial : FL.winRoyal, state = { sel: {}, flo: { [gi]: 1 }, win: {} }, r = R.total(state);
-    return { status: 'garden', total: r.total, counted: r.counted, state, notes: ['Winning by the ' + (bon.count === 8 ? 'eighth' : 'seventh') + ' flower or season stands alone.'], validWin: true };
-  }
+  const ctx = { seat: 0, prevailing: 0, winBy: 'zimo', flowers: [], cond: {}, minPoints: 1, ...ctx0 };
+  if (ctx.cond && ctx.cond.double && ctx.cond.replacement) ctx.cond = { ...ctx.cond, replacement: false };   // a double replacement is also a replacement: only one of the two applies
+  const minPoints = Math.max(1, ctx.minPoints | 0), notes = [], c0 = ctx.cond || {};
+  // rule 14: a win on a replacement tile counts as a self draw. Robbing a kong is a win off someone else's tile.
+  if ((c0.replacement || c0.double) && ctx.winBy === 'hu') { ctx.winBy = 'zimo'; notes.push('replacementIsZimo'); }
+  else if (c0.robbing && ctx.winBy === 'zimo') { ctx.winBy = 'hu'; notes.push('robbingIsHu'); }
+  const bon = bonuses(ctx), garden = gardenOption(bon);
+  const gardenResult = normal => ({ status: 'garden', total: garden.total, patternPoints: 0, counted: garden.counted, state: garden.state, gardenName: garden.name, notes: notes.concat(['gardenStandsAlone']), validWin: true, normal: normal || null, minPoints });
+  if (garden && c0.gardenWin) return gardenResult(null);                               // asked for explicitly
   const res = analyze(input);
-  if (res.status !== 'valid') return { status: 'notWinning', analysis: res };
-  if (!(input.hand || []).includes(ctx.winTile)) return { status: 'needWinTile', analysis: res };
+  // seven or eight flowers: winning by drawing the last one needs no complete hand, so it is suggested even when the hand is not a winning one
+  if (res.status !== 'valid') return garden ? gardenResult({ status: 'notWinning' }) : { status: 'notWinning', analysis: res, notes, minPoints };
+  if (!(input.hand || []).includes(ctx.winTile)) return garden ? gardenResult({ status: 'needWinTile' }) : { status: 'needWinTile', analysis: res, notes, minPoints };
   const meldCount = (input.melds || []).length, options = [], rejected = [];
   for (const reading of res.readings) {
     if ((reading.shape === 'thirteenOrphans' || reading.shape === 'nineGates' || reading.shape === 'sevenStars') && ctx.winBy !== 'zimo') { rejected.push({ shape: reading.shape, why: 'must be self drawn' }); continue; }
@@ -4324,21 +4353,25 @@ function score(input, ctx0) {
       else if (reading.shape === 'scatteredStars') cand = { [N.scattered]: 1 };
       else if (reading.shape === 'sevenStars') cand = { [N.sevenStars]: 1 };
       else cand = {};
-      const b = bestFor(cand, bon);
-      options.push({ reading, slot, cand, best: b });
+      options.push({ reading, slot, cand, best: bestFor(cand, bon) });
     }
   }
   if (!options.length) {
     const SHAPE_NAME = { thirteenOrphans: 'Thirteen Orphans', nineGates: 'Nine Gates', sevenStars: 'Seven Stars' };
     const reason = rejected.length ? (rejected.every(r => r.why === 'must be self drawn') ? [...new Set(rejected.map(r => SHAPE_NAME[r.shape]))].join(' and ') + ' must be self drawn, so this hand cannot win off a discard.' : 'A discard cannot complete the split straight part of this hand. It can only complete the set or the pair.') : '';
-    return { status: 'notWinning', analysis: res, rejected, reason };
+    return garden ? gardenResult({ status: 'notWinning', reason }) : { status: 'notWinning', analysis: res, rejected, reason, notes, minPoints };
   }
-  options.sort((a, b) => (b.best ? b.best.score[0] : -1) - (a.best ? a.best.score[0] : -1) || (b.best ? b.best.score[1] : 0) - (a.best ? a.best.score[1] : 0));
+  // the highest total comes first; at the same total the Master or Legendary hand, then the one with more patterns
+  options.sort((a, b) => (b.best ? b.best.score[0] : -1) - (a.best ? a.best.score[0] : -1) || (b.best && b.best.ml ? 1 : 0) - (a.best && a.best.ml ? 1 : 0) || (b.best ? b.best.score[1] : 0) - (a.best ? a.best.score[1] : 0));
   const top = options[0], b = top.best;
   const detected = Object.keys(top.cand).map(Number).map(i => ({ idx: i, name: R.PATTERNS[i].n, count: top.cand[i], points: R.PATTERNS[i].p }));
-  const anyNames = [...new Set(options.flatMap(o => Object.keys(o.cand).map(Number)))].sort((a, b) => a - b).map(i => R.PATTERNS[i].n);
-  const out = { anyDetected: anyNames, status: b && b.patternPoints >= 1 ? 'scored' : 'invalidWin', total: b ? b.result.total : 0, patternPoints: b ? b.patternPoints : 0, counted: b ? b.result.counted : [], state: b ? b.state : { sel: {}, flo: bon.flo, win: bon.win }, detected, reading: top.reading, slot: top.slot, mode: b ? b.result.mode : 'normal', excluded: b ? b.result.excluded : [], bonusTrimmed: b ? (b.result.bonusTrimmed || []) : [], capped: b ? b.result.capped : false, rejected, readingsTried: options.length, analysis: res };
-  return out;
+  const anyNames = [...new Set(options.flatMap(o => Object.keys(o.cand).map(Number)))].sort((x, y) => x - y).map(i => R.PATTERNS[i].n);
+  // a Master hand that is not the suggestion because ordinary patterns add up to more: say so
+  const masters = options.map(o => o.best && o.best.masterOption).filter(Boolean).sort((x, y) => y.total - x.total), masterAlt = b && !b.ml && masters.length ? masters[0] : null;
+  const patternPoints = b ? b.patternPoints : 0, valid = patternPoints >= minPoints;
+  const normal = { anyDetected: anyNames, status: valid ? 'scored' : 'invalidWin', total: b ? b.result.total : 0, patternPoints, minPoints, counted: b ? b.result.counted : [], state: b ? b.state : { sel: {}, flo: bon.flo, win: bon.win }, detected, reading: top.reading, slot: top.slot, mode: b ? b.result.mode : 'normal', excluded: b ? b.result.excluded : [], bonusTrimmed: b ? (b.result.bonusTrimmed || []) : [], capped: b ? b.result.capped : false, rejected, readingsTried: options.length, analysis: res, notes, alternative: masterAlt };
+  if (garden && (!valid || garden.total >= normal.total)) return { ...gardenResult({ status: normal.status, total: normal.total }), anyDetected: anyNames };
+  return garden ? { ...normal, garden } : normal;
 }
 
 return {score:score,bonuses:bonuses};
@@ -4364,12 +4397,17 @@ function mTiles(m) { return m.type === 'chi' ? [m.tile, m.tile + 1, m.tile + 2] 
 function mUsed() { var c = E.countsOf(M.hand); M.melds.forEach(function (m) { mTiles(m).forEach(function (t) { c[t]++; }); }); return c; }
 function mNeed() { return 14 - 3 * M.melds.length; }
 function mCan(t) {
-  var u = mUsed();
-  if (M.mode === 'hand') return M.hand.length < mNeed() && u[t] < 4;
+  var u = mUsed(), tk = M.taken;   // tk: the copies the other winners of this hand already hold (the shared winning tile counts once)
+  if (M.mode === 'hand') return M.hand.length < mNeed() && u[t] + tk[t] < 4;
   if (M.melds.length >= 4) return false;
-  if (M.mode === 'chi') return t < 27 && t % 9 <= 6 && u[t] < 4 && u[t + 1] < 4 && u[t + 2] < 4;
-  if (M.mode === 'pong') return u[t] <= 1;
-  return u[t] === 0;
+  if (M.mode === 'chi') return t < 27 && t % 9 <= 6 && u[t] + tk[t] < 4 && u[t + 1] + tk[t + 1] < 4 && u[t + 2] + tk[t + 2] < 4;
+  if (M.mode === 'pong') return u[t] + tk[t] <= 1;
+  return u[t] + tk[t] === 0;
+}
+function takenText() {
+  var parts = [], tk = M.taken, t; for (t = 0; t < 34; t++) if (tk[t] > 0) parts.push(E.tileName(t) + ' \u00d7' + tk[t]);
+  if (!parts.length && M.shared === null && !M.takenF.length) return '';
+  return (parts.length ? ' Already in the other winner\u2019s hand: ' + parts.join(', ') + '.' : '') + (M.shared !== null ? ' The winning tile is shared and counts once.' : '');
 }
 function mLabel(m) { return m.type === 'chi' ? 'Chi' : m.type === 'pong' ? 'Exposed pong' : m.concealed ? 'Concealed kong' : 'Exposed kong'; }
 // what is kept on the hand: only numbers. h concealed tiles, m melds [c|p|k, tile, 1 if concealed], w winning tile, f flowers and seasons 0-7, c win conditions
@@ -4380,23 +4418,42 @@ function fromData(d) {
   var cond = {}; (d.c || []).forEach(function (k) { cond[k] = true; });
   return { hand: (d.h || []).slice(), melds: (d.m || []).map(function (a) { return { type: a[0] === 'c' ? 'chi' : a[0] === 'p' ? 'pong' : 'kong', tile: a[1], concealed: a[2] ? true : undefined }; }), win: d.w != null ? d.w : null, flowers: (d.f || []).slice(), cond: cond };
 }
-function scoreCtx() { return { winTile: M.win, winBy: M.ctx.by, seat: M.ctx.seat, prevailing: M.ctx.prev, flowers: M.flowers.slice(), cond: { last: !!M.cond.last, replacement: !!M.cond.replacement, double: !!M.cond.double, robbing: !!M.cond.robbing, gardenWin: false } }; }
+function scoreCtx() { return { winTile: M.win, winBy: M.ctx.by, seat: M.ctx.seat, prevailing: M.ctx.prev, flowers: M.flowers.slice(), minPoints: M.ctx.min || 1, cond: { last: !!M.cond.last, replacement: !!M.cond.replacement, double: !!M.cond.double, robbing: !!M.cond.robbing, gardenWin: false } }; }
 function pill(cls, txt) { return '<span class="tm-pill ' + cls + '">' + txt + '</span>'; }
-// the verdict under the tiles, and whether "Check patterns" is allowed
+function noteHtml(r) {
+  var h = '';
+  if (r.notes && r.notes.indexOf('replacementIsZimo') >= 0 && M.ctx.by === 'hu') h += '<p class="tm-sub"><b>Note:</b> a win on a replacement tile counts as a self draw (Zi Mo), so the hand is read that way. Record it as Zi Mo.</p>';
+  if (r.notes && r.notes.indexOf('robbingIsHu') >= 0 && M.ctx.by === 'zimo') h += '<p class="tm-sub"><b>Note:</b> robbing a kong is a win off someone else\u2019s tile (Hu), so the hand is read that way. Record it as Hu.</p>';
+  return h;
+}
+function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+// what the tiles say: the pill, the reason, and whether the pattern picker can be opened ("Check patterns")
 function verdict() {
-  var an = E.analyze({ hand: M.hand, melds: M.melds }), h = '', ok = false;
-  if (an.status === 'error') h = pill('bad', 'Check the hand') + '<p class="tm-sub">' + an.problems.map(function (p) { return tesc(p.msg); }).join(' ') + '</p>';
+  var an = E.analyze({ hand: M.hand, melds: M.melds }), h = '', ok = false, invalid = false, r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()), min = M.ctx.min || 1;
+  var over = []; (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] + M.taken[q] > 4) over.push(E.tileName(q) + ' (' + (4 - M.taken[q]) + ' left for this hand, ' + u[q] + ' picked)'); })();
+  if (over.length) return { html: pill('bad', 'More tiles than exist') + '<p class="tm-sub warn">The other winner already holds some of these: ' + over.join(', ') + '. Remove the extra tiles from this hand.</p>', ok: false, invalid: false };
+  if (r.status === 'garden') {                                   // seven or eight flowers: winning by drawing the last one needs no complete hand
+    ok = true;
+    h = pill('ok', 'Suggested: ' + r.gardenName + ', ' + plural(r.total, 'point')) + '<p class="tm-sub">You hold ' + M.flowers.length + ' flowers and seasons. Winning by drawing the last one is worth ' + plural(r.total, 'point') + ' on its own, even when the hand is not a winning one.</p>'
+      + (r.normal && r.normal.total ? '<p class="tm-sub">The hand itself would count ' + plural(r.normal.total, 'point') + '.</p>' : '') + '<p class="tm-sub">Next you check this in the pattern picker.</p>' + noteHtml(r);
+  } else if (an.status === 'error') h = pill('bad', 'Check the hand') + '<p class="tm-sub">' + an.problems.map(function (p) { return tesc(p.msg); }).join(' ') + '</p>';
   else if (an.status === 'long') h = pill('info', 'Remove ' + an.extra + ' tile' + (an.extra > 1 ? 's' : '')) + '<p class="tm-sub">With ' + M.melds.length + ' meld' + (M.melds.length === 1 ? '' : 's') + ' the hand holds ' + mNeed() + ' tiles.</p>';
-  else if (an.status === 'short') h = M.hand.length === 0 && M.melds.length === 0 ? pill('info', 'Pick the winning hand') + '<p class="tm-sub">Tap the tiles of the hand that won, melds included.</p>' : pill('info', 'Add ' + an.missing + ' more tile' + (an.missing > 1 ? 's' : '')) + '<p class="tm-sub">A winning hand has ' + mNeed() + ' tiles' + (M.melds.length ? ' besides its melds' : '') + '.</p>';
+  else if (an.status === 'short') h = M.hand.length === 0 && M.melds.length === 0 ? pill('info', 'Pick the winning hand') + '<p class="tm-sub">Tap the tiles of the hand that won, melds included. Holding seven or eight flowers and seasons also counts: pick them below.</p>' : pill('info', 'Add ' + an.missing + ' more tile' + (an.missing > 1 ? 's' : '')) + '<p class="tm-sub">A winning hand has ' + mNeed() + ' tiles' + (M.melds.length ? ' besides its melds' : '') + '.</p>';
   else if (an.status === 'invalid') h = pill('bad', 'Not a winning hand') + '<p class="tm-sub">These tiles do not make a winning hand yet. Check them against the real tiles.</p>';
+  else if (M.win === null && M.shared !== null) h = pill('info', 'Add the shared winning tile') + '<p class="tm-sub">One discard won every hand here, so <b>' + E.tileName(M.shared) + '</b> has to be in this hand too.</p>';
   else if (M.win === null) h = pill('info', 'Tap the tile that won') + '<p class="tm-sub">The tool needs it to tell which set the winning tile completed.</p>';
-  else {
-    var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx());
-    if (r.status === 'scored') { ok = true; h = pill('ok', 'Suggested: ' + r.total + ' point' + (r.total === 1 ? '' : 's')) + '<p class="tm-sub">' + r.counted.map(function (c) { return tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' +' + c.p; }).join(', ') + '</p><p class="tm-sub">Next you check this in the pattern picker, and change anything that is wrong.</p>'; }
-    else if (r.status === 'invalidWin') h = pill('bad', 'Invalid win') + '<p class="tm-sub">No pattern points, and bonuses do not count toward the minimum of 1. Close this and record it as an Invalid win.</p>';
-    else h = pill('bad', 'Cannot win this way') + '<p class="tm-sub">' + tesc(r.reason || 'This hand cannot win this way.') + '</p>';
-  }
-  return { html: h, ok: ok };
+  else if (r.status === 'scored') {
+    ok = true;
+    h = pill('ok', 'Suggested: ' + plural(r.total, 'point')) + '<p class="tm-sub">' + r.counted.map(function (c) { return tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' +' + c.p; }).join(', ') + '</p>'
+      + (r.alternative ? '<p class="tm-sub"><b>Also qualifies:</b> ' + r.alternative.counted.map(function (c) { return tesc(c.label); }).join(', ') + ' (' + plural(r.alternative.total, 'point') + '), a Master or Legendary hand that stands alone. The ordinary patterns add up to more, so they are suggested.</p>' : '')
+      + (r.garden ? '<p class="tm-sub"><b>Also possible:</b> ' + tesc(r.garden.name) + ' (' + plural(r.garden.total, 'point') + '), winning by the last flower. The hand is worth more.</p>' : '')
+      + '<p class="tm-sub">Next you check this in the pattern picker, and change anything that is wrong.</p>' + noteHtml(r);
+  } else if (r.status === 'invalidWin') {
+    invalid = true;
+    h = pill('bad', 'Invalid win') + '<p class="tm-sub warn">The patterns add up to ' + plural(r.patternPoints, 'point') + ', below the minimum of ' + plural(min, 'point') + ' to win in this game. Flowers and win conditions do not count toward the minimum, so this would be an invalid win.</p>' + noteHtml(r)
+      + (M.onInvalid ? '<p class="tm-sub"><button type="button" class="btn" id="tmInvalid">Record as Invalid win</button></p>' : '');
+  } else h = pill('bad', 'Cannot win this way') + '<p class="tm-sub">' + tesc(r.reason || 'This hand cannot win this way.') + '</p>' + noteHtml(r);
+  return { html: h, ok: ok, invalid: invalid };
 }
 function seg(act, items, cur) { return '<div class="tm-seg" role="group">' + items.map(function (it) { return '<button type="button" class="chip" data-tm="' + act + '" data-v="' + it[0] + '" aria-pressed="' + (String(cur) === String(it[0])) + '">' + it[1] + '</button>'; }).join('') + '</div>'; }
 function drawHand() {
@@ -4409,14 +4466,18 @@ function drawWin() {
   var an = E.analyze({ hand: M.hand, melds: M.melds }), valid = an.status === 'valid', distinct = [];
   M.hand.forEach(function (t) { if (distinct.indexOf(t) < 0) distinct.push(t); });
   if (M.win !== null && distinct.indexOf(M.win) < 0) M.win = null;
-  var tiles = valid ? '<div class="tm-wt" role="group" aria-label="Winning tile">' + distinct.map(function (t) { return '<button type="button" class="tm-wb" data-tm="win" data-v="' + t + '" aria-pressed="' + (M.win === t) + '" aria-label="' + E.tileName(t) + '">' + T(t) + '</button>'; }).join('') + '</div>' : '<p class="tm-sub" style="margin:0">Complete a winning hand first, then tap the tile that won.</p>';
+  if (M.shared !== null) M.win = M.hand.indexOf(M.shared) >= 0 ? M.shared : null;   // Double and Triple Hu: one discard won every hand, so the winning tile is the same
+  var tiles = valid ? (M.shared !== null
+      ? (M.win !== null ? '<div class="tm-wt" role="group" aria-label="Winning tile"><button type="button" class="tm-wb" aria-pressed="true" disabled aria-label="' + E.tileName(M.shared) + '">' + T(M.shared) + '</button></div><p class="tm-sub" style="margin:6px 0 0">The same tile won every hand of this Double or Triple Hu, so it is fixed. It counts once.</p>' : '<p class="tm-sub" style="margin:0">The winning tile of this hand is shared with the other winner: <b>' + E.tileName(M.shared) + '</b>. It has to be in this hand too.</p>')
+      : '<div class="tm-wt" role="group" aria-label="Winning tile">' + distinct.map(function (t) { return '<button type="button" class="tm-wb" data-tm="win" data-v="' + t + '" aria-pressed="' + (M.win === t) + '" aria-label="' + E.tileName(t) + '">' + T(t) + '</button>'; }).join('') + '</div>')
+    : '<p class="tm-sub" style="margin:0">Complete a winning hand first, then tap the tile that won.' + (M.shared !== null ? ' It is the one shared with the other winner: <b>' + E.tileName(M.shared) + '</b>.' : '') + '</p>';
   var nfl = M.flowers.length;
-  var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '" aria-label="' + FLN[id] + '">' + T(34 + id) + '</button>'; }).join('') + '</div><div class="tm-sub" style="margin-top:6px">' + (nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : 'None held: that is a bonus point (No Flower / Season)') + '</div>';
+  var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '"' + (M.takenF.indexOf(id) >= 0 ? ' disabled' : '') + ' aria-label="' + FLN[id] + (M.takenF.indexOf(id) >= 0 ? ' (held by the other winner)' : '') + '">' + T(34 + id) + '</button>'; }).join('') + '</div><div class="tm-sub" style="margin-top:6px">' + (nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : 'None held: that is a bonus point (No Flower / Season)') + (M.takenF.length ? '. Greyed out: held by the other winner, each exists once' : '') + '</div>';
   var conds = '<div class="tm-seg" role="group" aria-label="Win conditions">' + COND.map(function (c) { return '<button type="button" class="chip" data-tm="cond" data-v="' + c[0] + '" aria-pressed="' + !!M.cond[c[0]] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   $t('tmWin').innerHTML = '<div class="tm-pl">Winning tile</div>' + tiles + '<div class="tm-pl">Flowers and seasons held</div>' + flowers + '<div class="tm-pl">Win conditions</div>' + conds;
   if (M.focus) { var f = $t('tmWin').querySelector('[data-tm="' + M.focus[0] + '"][data-v="' + M.focus[1] + '"]'); if (f) f.focus(); M.focus = null; }
 }
-function drawRes() { var v = verdict(); $t('tmRes').innerHTML = v.html; $t('tmUseBtn').disabled = !v.ok; }
+function drawRes() { var v = verdict(); $t('tmRes').innerHTML = v.html; $t('tmRes').classList.toggle('bad', !!v.invalid); $t('tmUseBtn').disabled = !v.ok; }
 function buildPalette() {
   var groups = [['Dots', 0, 9], ['Bamboo', 9, 9], ['Characters', 18, 9], ['Winds and dragons', 27, 7]];
   var h = '<div class="tm-modes" role="group" aria-label="What to add">' + MODES.map(function (m) { return '<button type="button" class="chip" data-tm="mode" data-m="' + m[0] + '" aria-pressed="' + (M.mode === m[0]) + '">' + m[1] + '</button>'; }).join('') + '</div><p class="tm-hint" id="tmHint"></p>';
@@ -4427,7 +4488,7 @@ function updPalette() {
   var c = mUsed();
   tmButtons.forEach(function (b) { var t = +b.dataset.t; b.disabled = !mCan(t); b.classList.toggle('has', c[t] > 0); b.querySelector('.bd').textContent = c[t] || ''; });
   [].slice.call($t('tmPal').querySelectorAll('.chip')).forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.m === M.mode)); });
-  var hint = HINT[M.mode]; if (M.mode === 'hand' && M.hand.length >= mNeed()) hint = 'The hand is full (' + mNeed() + ' tiles). Tap a tile in the hand to remove it, or add a meld.'; $t('tmHint').textContent = hint;
+  var hint = HINT[M.mode]; if (M.mode === 'hand' && M.hand.length >= mNeed()) hint = 'The hand is full (' + mNeed() + ' tiles). Tap a tile in the hand to remove it, or add a meld.'; $t('tmHint').textContent = hint + takenText();
 }
 function tmUpdate() { drawHand(); drawWin(); drawRes(); updPalette(); }
 function tmClose() { $t('tileModal').hidden = true; document.removeEventListener('keydown', tmKey); }
@@ -4436,9 +4497,10 @@ function tmShow() { $t('tileModal').hidden = false; document.addEventListener('k
 // opts: { name, seat 0-3 (from the game), prev 0-3 (from the game), by 'zimo' | 'hu' (from the kind of hand), saved: data kept earlier or null }
 window.openTilePickerModal = function (opts, onUse, onCancel) {
   var st = opts.saved ? fromData(opts.saved) : { hand: [], melds: [], win: null, flowers: [], cond: {} };
-  M = { hand: st.hand, melds: st.melds, win: st.win, flowers: st.flowers, cond: st.cond, mode: 'hand', ctx: opts, focus: null };
+  M = { hand: st.hand, melds: st.melds, win: st.win, flowers: st.flowers, cond: st.cond, mode: 'hand', ctx: opts, focus: null, onInvalid: opts.onInvalid || null, taken: opts.taken || new Array(34).fill(0), takenF: opts.takenFlowers || [], shared: opts.sharedWin != null ? opts.sharedWin : null };
+  M.flowers = M.flowers.filter(function (id) { return M.takenF.indexOf(id) < 0; });
   tmUse = onUse; tmCancel = onCancel || null;
-  $t('tmInfo').innerHTML = '<b>' + tesc(opts.name) + '</b> wins by <b>' + (opts.by === 'zimo' ? 'Zi Mo (self draw)' : 'Hu (discard)') + '</b>. Seat wind <b>' + SEATN[opts.seat] + '</b>, prevailing wind <b>' + SEATN[opts.prev] + '</b>. All three come from the game.';
+  $t('tmInfo').innerHTML = '<b>' + tesc(opts.name) + '</b> wins by <b>' + (opts.by === 'zimo' ? 'Zi Mo (self draw)' : 'Hu (discard)') + '</b>. Seat wind <b>' + SEATN[opts.seat] + '</b>, prevailing wind <b>' + SEATN[opts.prev] + '</b>. Minimum to win: <b>' + (opts.min || 1) + ' point' + ((opts.min || 1) === 1 ? '' : 's') + '</b>. All of this comes from the game.' + (M.shared !== null || M.takenF.length || M.taken.some(function (x) { return x > 0; }) ? ' Several players won this hand, so the tiles are shared out: what another winner holds is not available here.' : '');
   buildPalette(); tmUpdate(); tmShow(); $t('tmBody').scrollTop = 0;
 };
 $t('tmBody').addEventListener('click', function (e) {
@@ -4449,19 +4511,23 @@ $t('tmBody').addEventListener('click', function (e) {
   else if (a === 'mode') { M.mode = b.dataset.m; updPalette(); }
   else if (a === 'win') { var w = +b.dataset.v; M.win = M.win === w ? null : w; M.focus = [a, b.dataset.v]; tmUpdate(); }
   else if (a === 'flower') { var id = +b.dataset.v, k = M.flowers.indexOf(id); if (k >= 0) M.flowers.splice(k, 1); else M.flowers.push(id); M.focus = [a, b.dataset.v]; tmUpdate(); }
-  else if (a === 'cond') { M.cond[b.dataset.v] = !M.cond[b.dataset.v]; M.focus = [a, b.dataset.v]; tmUpdate(); }
+  else if (a === 'cond') { var ck = b.dataset.v; M.cond[ck] = !M.cond[ck]; if (M.cond[ck] && ck === 'replacement') M.cond.double = false; if (M.cond[ck] && ck === 'double') M.cond.replacement = false; M.focus = [a, b.dataset.v]; tmUpdate(); }   // a double replacement is also a replacement: only one of the two
 });
 $t('tmClear').addEventListener('click', function () { if (!M) return; M.hand = []; M.melds = []; M.win = null; tmUpdate(); });
 $t('tmClose').addEventListener('click', function () { var cb = tmCancel; tmClose(); if (cb) cb(); });
 $t('tmCancelBtn').addEventListener('click', function () { var cb = tmCancel; tmClose(); if (cb) cb(); });
 $t('tileModal').addEventListener('click', function (e) { if (e.target === $t('tileModal')) { var cb = tmCancel; tmClose(); if (cb) cb(); } });
-// "Check patterns": the tiles become a suggestion in the normal pattern picker; the host confirms or changes it there
+// "Check patterns": the tiles (or the flowers) become a suggestion in the normal pattern picker; the host confirms or changes it there
 $t('tmUseBtn').addEventListener('click', function () {
-  if (!M) return; var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()); if (r.status !== 'scored') return;
-  var data = toData(), keep = M, use = tmUse, cancel = tmCancel; tmClose();
+  if (!M) return; var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()); if (r.status !== 'scored' && r.status !== 'garden') return;
+  var complete = E.analyze({ hand: M.hand, melds: M.melds }).status === 'valid' && M.win !== null, data = complete ? toData() : null;   // a garden win may come without a complete hand: then no tiles are kept
+  var keep = M, use = tmUse, cancel = tmCancel; tmClose();
+  var note = r.status === 'garden' ? 'Suggested from the flowers: ' + r.gardenName + ', ' + plural(r.total, 'point') + '. Check it, then tap Use total.' : 'Suggested from the tiles: ' + plural(r.total, 'point') + '. Check it, change anything that is wrong, then tap Use total.';
   window.openPatternPickerModal(function (picked) { if (use) use({ patterns: picked, tiles: data }); },
-    r.state, { note: 'Suggested from the tiles: ' + r.total + ' point' + (r.total === 1 ? '' : 's') + '. Check it, change anything that is wrong, then tap Use total.', onCancel: function () { M = keep; tmUse = use; tmCancel = cancel; tmUpdate(); tmShow(); } });
+    r.state, { note: note, onCancel: function () { M = keep; tmUse = use; tmCancel = cancel; tmUpdate(); tmShow(); } });
 });
+// an invalid win: the form is switched to "Invalid win" for this player
+$t('tmRes').addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('#tmInvalid') : null; if (!b || !M || !M.onInvalid) return; var f = M.onInvalid; tmClose(); f(); });
 
 })();
 </script>
