@@ -47,6 +47,10 @@
   X-Robots-Tag: noindex
 
 # player pages: public by choice, but not for search engines to list
+/players
+  X-Robots-Tag: noindex, nofollow
+/players.html
+  X-Robots-Tag: noindex, nofollow
 /players/*
   X-Robots-Tag: noindex, nofollow
 /player/*

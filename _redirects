@@ -6,5 +6,7 @@
 # /players/<id>/<nickname> is the address in use. /player/... is the older one and still works: browsers that opened it while it
 # was broken remember a redirect forever, which is why the address in use is a different one.
 # The destination must NOT end in .html: Cloudflare Pages answers such a rule with a redirect to the clean address and drops the rest of the path.
+# the list of all players is the page players.html (served at /players); a trailing slash goes to it too, before the rule below takes it for a player
+/players/ /players 301
 /players/* /player 200
 /player/* /player 200

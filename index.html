@@ -58,6 +58,7 @@ a{color:inherit}
 .han{font-family:var(--kai);font-weight:400;-webkit-text-stroke:.03em currentColor;color:var(--red)}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px 60px}
 .upd{font-size:12px;color:var(--muted);margin-top:6px;min-height:15px}
+.upd .allp{color:var(--accent);font-weight:700;text-decoration:none}.upd .allp:hover{text-decoration:underline}.upd .allp:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .seg{display:flex;gap:6px;margin:14px 0}
 .seg button{flex:1;border-radius:999px;padding:10px 12px;border:1px solid var(--line);background:transparent;font-weight:500;font-size:14px}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:700}
@@ -450,7 +451,7 @@ function headHtml(){
   var upd=S.updated?'Updated '+pad2(S.updated.getHours())+':'+pad2(S.updated.getMinutes()):'';
   var f=ddButton('period',periodLabel(),ICON.cal,false);
   if(S.loaded&&modesInData().length>=2)f+=ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all');
-  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+'</div></div><div class="n-filters">'+f+'</div></div>';
+  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+(upd?' \u00b7 ':'')+'<a class="allp" href="/players'+playerQuery()+'">All players \u203A</a></div></div><div class="n-filters">'+f+'</div></div>';
 }
 function tabsHtml(){return '<div class="n-tabs" role="tablist">'+[['total','Total'],['sessions','Sessions']].map(function(o){return '<button type="button" role="tab" data-set="tab" data-v="'+o[0]+'" aria-selected="'+(S.tab===o[0])+'" class="'+(S.tab===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>';}
 function sideCard(ts){

@@ -1012,3 +1012,16 @@ Hasil pengecekan ulang aturan pada Pick Tiles (jendela tile dan pembacaan pola):
 - Dikonfirmasi tanpa perubahan: garden win tidak dikenai minimum poin game, dan "No Flower / Season" berarti tidak ada bunga atau musim yang dipegang di hand itu.
 - **File berubah dari v50:** `scoreboard.html` dan `functions/_tables.js` (keduanya ada di zip). Tidak ada SQL baru.
 
+## Update terbaru (v52): halaman semua pemain
+
+- **Halaman baru `/players`** menampilkan semua pemain terdaftar dengan statistiknya: net, game, hand menang dari hand dimainkan, win rate, rata-rata poin per kemenangan, hand terbaik, self draw, deal-in, win streak tertinggi, dan juara 1.
+  Angkanya dihitung dengan rumus yang persis sama dengan halaman tiap pemain, jadi keduanya selalu sama.
+- Di ponsel: daftar kartu yang bisa dibuka (ketuk untuk melihat semua angka, lalu "Open page" atau "Compare"), dengan menu urutan. Di desktop: tabel, dan setiap kepala kolom bisa diketuk untuk mengurutkan.
+- Ada pencarian nama, filter **minimal game** (1, 3, 5, 10), dan filter periode serta mode yang sama dengan halaman lain (alamat membawa `?p=` dan `?m=`).
+- **Bandingkan dua pemain:** angka berdampingan (yang lebih baik ditandai), ditambah rekor bertemu di meja yang sama (siapa finis lebih tinggi dan selisih net di meja-meja itu). Pilihan ikut tersimpan di alamat, jadi bisa dibagikan.
+- **Privasi:** pemain yang menyembunyikan halamannya dan tamu (nama tidak terdaftar) tidak tampil. Tidak ada kontak maupun kode edit di data yang dikirim.
+- Halaman utama diberi tautan **All players ›** di bawah judul, yang membawa periode dan mode yang sedang dilihat. Halaman lain tidak berubah.
+- Data diambil dari endpoint baru `/api/players` (publik, di-cache 30 detik di Cloudflare seperti `/api/overview`). Alamat `/players/` dialihkan ke `/players`; alamat halaman pemain tidak berubah.
+- **File berubah dari v51:** `index.html`, `_redirects`, `_headers`, dan dua file baru: `players.html` dan `functions/api/players.js`. Tidak ada SQL baru.
+- Hanya registry yang aktif yang menampilkan pemain: sebelum ada pemain terdaftar, halaman menjelaskan bahwa belum ada pemain.
+
