@@ -1065,3 +1065,14 @@ Winds, dan dua contoh Reversible Tiles); mesin mengikuti gambarnya.
 
 **Perbaikan kartu bagikan:** saat rotasi kursi MCR menyala, angin kursi di kartu bagikan salah di putaran Selatan,
 Barat, dan Utara (28 dari 64 kombinasi pemain dan tangan). Sekarang kartu memakai urutan duduk yang sama dengan tampilan meja.
+
+## Update terbaru (v54): ubah nama sesi
+
+Di halaman admin, layar sebuah sesi sekarang punya opsi **Ubah nama** di samping Hapus sesi. Ketuk, kolom nama muncul
+berisi nama sekarang (langsung terpilih). **Enter** atau **Simpan** menyimpan, **Esc** atau **Batal** membatalkan.
+
+- Yang berubah hanya **nama**. Tanggal dan meja tidak tersentuh, dan tidak ada migrasi database.
+- Nama dirapikan (spasi berlebih dibuang) dan dibatasi **80 huruf**. Nama kosong ditolak.
+- Semua halaman yang menampilkan nama sesi (daftar sesi, halaman sesi publik, halaman pemain, halaman meja) membaca nama
+  dari sesi itu, jadi ikut berubah. Halaman publik di-cache sekitar 30 detik, jadi nama baru bisa baru terlihat setelah itu.
+- Hanya admin yang bisa mengubah. Server menolak permintaan tanpa kata sandi admin.

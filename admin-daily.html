@@ -117,6 +117,7 @@ var LOGO='/assets/i/cfad30e8e7.png';
 var password=sessionStorage.getItem('tbt-admin-pw')||'';
 var authed=false,days=[],day=null,names=[],loginError='';
 var nd={label:'',date:''};
+var renaming=false,rnBusy=false,rnValue='';
 var nt={label:'',p:['','','','']};
 
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -139,7 +140,7 @@ function loadNames(){
 }
 function openDay(id){
   return fetch('/api/days/'+encodeURIComponent(id),{headers:H()}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    day=d;nt={label:d?'Meja '+(d.tables.length+1):'',p:['','','','']};render();window.scrollTo(0,0);
+    day=d;renaming=false;rnBusy=false;nt={label:d?'Meja '+(d.tables.length+1):'',p:['','','','']};render();window.scrollTo(0,0);
   });
 }
 function progText(t){
@@ -202,7 +203,7 @@ function createDay(){
 function viewDay(){
   var d=day;
   return '<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 Semua sesi</button>'
-    +'<h2>'+esc(d.label)+'</h2><div class="meta" style="margin-bottom:14px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">Lihat halaman publik sesi ini</a> \u00b7 <button class="lnk" style="padding:0;color:var(--red)" onclick="delDay()">Hapus sesi</button></div>'
+    +(renaming?renameForm(d):'<h2>'+esc(d.label)+'</h2>')+'<div class="meta" style="margin-bottom:4px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">Lihat halaman publik sesi ini</a></div><div class="meta" style="margin-bottom:12px;display:flex;gap:18px">'+(renaming?'':'<button class="lnk" style="padding:10px 0;color:var(--accent)" onclick="startRename()">Ubah nama</button>')+'<button class="lnk" style="padding:10px 0;color:var(--red)" onclick="delDay()">Hapus sesi</button></div>'
     +'<datalist id="pnames">'+names.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>'
     +'<div class="card"><h3 style="margin-bottom:12px">Tambah meja</h3><div class="field"><label>Nama meja</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Nama pemain boleh dikosongin, host bisa isi sendiri nanti dari scoreboard</div><div class="frow">'
     +[0,1,2,3].map(function(i){return '<div class="field"><label>Pemain '+(i+1)+' (opsional)</label><input id="ntp'+i+'" list="pnames" autocomplete="off" placeholder="Diisi host nanti" value="'+esc(nt.p[i])+'" oninput="nt.p['+i+']=this.value"></div>';}).join('')
@@ -228,6 +229,27 @@ function createTable(){
 function delTable(code){
   if(!confirm('Hapus meja ini beserta semua skornya?'))return;
   fetch('/api/tables/'+code,{method:'DELETE',headers:H()}).then(function(){return Promise.all([openDay(day.id),loadDays()]);}).then(function(){render();});
+}
+// Rename the session. The name lives only on the session, so every page that shows it picks the new one up.
+function renameForm(d){
+  return '<div class="field" style="max-width:420px;margin-bottom:10px"><label for="rnl">Nama sesi</label><input id="rnl" value="'+esc(rnValue)+'" maxlength="80" autocomplete="off" oninput="rnValue=this.value" onkeydown="rnKey(event)"></div>'
+    +'<div style="display:flex;gap:8px;margin:0 0 14px"><button type="button" class="btn primary sm" onclick="saveRename()"'+(rnBusy?' disabled':'')+'>Simpan</button><button type="button" class="btn sm" onclick="cancelRename()">Batal</button></div>';
+}
+function startRename(){renaming=true;rnBusy=false;rnValue=day.label;render();var i=document.getElementById('rnl');if(i){i.focus();i.select();}}
+function cancelRename(){renaming=false;rnBusy=false;render();}
+function rnKey(e){if(e.key==='Enter'){e.preventDefault();saveRename();}else if(e.key==='Escape'){e.preventDefault();cancelRename();}}
+function saveRename(){
+  if(rnBusy)return;var v=rnValue.replace(/\s+/g,' ').trim();
+  if(!v){alert('Nama sesi wajib diisi');return;}
+  if(v===day.label){cancelRename();return;}
+  rnBusy=true;render();
+  fetch('/api/days/'+encodeURIComponent(day.id),{method:'PATCH',headers:H(),body:JSON.stringify({label:v})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(x){
+      rnBusy=false;
+      if(!x.ok){alert((x.j&&x.j.error)||'Gagal mengubah nama sesi');render();var i2=document.getElementById('rnl');if(i2)i2.focus();return;}
+      day.label=x.j.label;days.forEach(function(d){if(d.id===day.id)d.label=x.j.label;});renaming=false;render();toast('Nama sesi diubah');
+    }).catch(function(){rnBusy=false;alert('Koneksi gagal, coba lagi');render();});
 }
 function delDay(){
   if(!confirm('Hapus sesi ini beserta semua mejanya?'))return;

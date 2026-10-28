@@ -33,6 +33,24 @@ export async function onRequestGet({ request, env, params }) {
   }
 }
 
+// PATCH /api/days/:id: admin only. Renames the session: { label }. Only the name changes (the date and the tables stay),
+// and every page that shows the name reads it from this row, so nothing else has to be updated.
+export async function onRequestPatch({ request, env, params }) {
+  if (!isAdmin(request, env)) return unauthorized();
+  try {
+    let d; try { d = await request.json(); } catch (e) { return json({ error: 'Permintaan tidak terbaca' }, 400); }
+    const label = d && typeof d.label === 'string' ? d.label.replace(/\s+/g, ' ').trim() : '';
+    if (!label) return json({ error: 'Nama sesi wajib diisi' }, 400);
+    if (label.length > 80) return json({ error: 'Nama sesi terlalu panjang (maksimal 80 huruf)' }, 400);
+    const day = await env.DB.prepare('SELECT id FROM days WHERE id=?').bind(params.id).first();
+    if (!day) return json({ error: 'Sesi tidak ditemukan' }, 404);
+    await env.DB.prepare('UPDATE days SET label=? WHERE id=?').bind(label, params.id).run();
+    return json({ id: params.id, label: label });
+  } catch (err) {
+    return json({ error: String(err) }, 500);
+  }
+}
+
 // DELETE /api/days/:id: admin only, removes the session and all its tables
 export async function onRequestDelete({ request, env, params }) {
   if (!isAdmin(request, env)) return unauthorized();
