@@ -1994,6 +1994,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var rp=replay(game.events,modeConfig());
     return rp.hands[idx];
   };
+  // a player's seat wind (0 East .. 3 North) in a hand row. It is counted from that hand's dealer along the seats of the wind
+  // round, which with seat rotation on is the MCR seating order (SEAT_ORDER), not the player numbers: the same rule as the table view.
+  window.seatWindIdx=function(player,row){
+    var order=modeConfig().seatRotation?SEAT_ORDER[row.wind]:[0,1,2,3];
+    return (order.indexOf(player)-order.indexOf(row.dealer)+4)%4;
+  };
   function gOverall(rp,w){
     var o=[0,0,0,0];
     rp.hands.forEach(function(h){if(h.wind>w)return;h.deltas.forEach(function(v,i){o[i]+=v;});});
@@ -2032,11 +2038,11 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(modeConfig().mcr){   // typed points (0 is allowed: it is flagged below the minimum, not refused); a draw carries no tenpai
       if(k==='hu'){
         if(f.winner<0||f.disc<0||f.pts[f.winner]==null)return null;
-        ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+        ev={kind:k,winner:f.winner,disc:f.disc,pts:{}};ev.pts[f.winner]=f.pts[f.winner];attachMeta(ev,f.winner);return ev;
       }
       if(k==='zimo'){
         if(f.winner<0||f.pts[f.winner]==null)return null;
-        ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];return ev;
+        ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];attachMeta(ev,f.winner);return ev;
       }
       if(k==='invalid'||k==='false')return f.who<0?null:{kind:k,who:f.who};
       if(k==='draw')return {kind:'draw',tenpai:[]};
@@ -2116,11 +2122,26 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   function ptsWarnHtml(base){
     return 'Hand points are below the minimum of '+base+', so this hand can\u2019t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
   }
-  function ptsTyped(p,selected,label){
+  function ptsTypedField(p,selected){
     var base=modeConfig().basePoint,low=(selected!=null&&selected<base);
-    return '<div class="lbl">'+esc(label||'Hand points')+'</div>'
-      +'<input type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Hand points" placeholder="Hand points (at least '+base+', on top of the base '+base+')" data-a="ptsinput" data-p="'+p+'" value="'+(selected!=null?selected:'')+'">'
-      +'<div class="warn" id="ptsWarn" role="alert"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
+    return '<input type=\"number\" inputmode=\"numeric\" min=\"0\" max=\"999\" step=\"1\" aria-label=\"Hand points\" placeholder=\"Hand points (at least '+base+', on top of the base '+base+')\" data-a=\"ptsinput\" data-p=\"'+p+'\" value=\"'+(selected!=null?selected:'')+'\">'
+      +'<div class=\"warn\" id=\"ptsWarn\" role=\"alert\"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
+  }
+  function ptsTyped(p,selected,label){return '<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'+ptsTypedField(p,selected);}
+  // MCR: type the hand's points, or pick the fans, or pick the tiles and let the tool find the fans
+  function ptsGridMcr(p,selected,label){
+    var base=modeConfig().basePoint,pk=f.patterns&&f.patterns[p],pkMode=(f.tiles&&f.tiles[p])?'tiles':pk?'pattern':'points';
+    var h='<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'
+      +'<div class=\"chips\" style=\"margin-bottom:10px\">'
+      +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='points')+'\" data-a=\"ptsmode\" data-p=\"'+p+'\">Points</button>'
+      +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='pattern')+'\" data-a=\"patpick\" data-p=\"'+p+'\">Pick Patterns</button>'
+      +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='tiles')+'\" data-a=\"tilepick\" data-p=\"'+p+'\">Pick Tiles</button>'
+      +'</div>';
+    if(pkMode==='points')return h+ptsTypedField(p,selected);
+    var low=(selected!=null&&selected<base);
+    if(pk&&pk.counted&&pk.counted.length)h+='<p class=\"hint\" style=\"margin-top:6px\">Patterns: '+pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ')+'</p>';
+    h+='<p class=\"hint\" style=\"margin-top:6px\"><b>'+(selected!=null?selected:0)+'</b> hand point'+(selected===1?'':'s')+(pk&&pk.flowers&&pk.valid!==false?' (flowers included)':'')+'</p>';
+    return h+'<div class=\"warn\" id=\"ptsWarn\" role=\"alert\"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
   }
   function scorePrevHtml(ev,dealer){
     if(!ev)return '';
@@ -2128,7 +2149,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     return '<div class="lbl">Score changes</div><div class="dls">'+deltaChips(pv.d)+'</div>';
   }
   function ptsGrid(p,selected,label){
-    if(modeConfig().mcr)return ptsTyped(p,selected,label);
+    if(modeConfig().mcr)return ptsGridMcr(p,selected,label);
     var min=modeConfig().minPoint;
     var pkMode=(f.tiles&&f.tiles[p])?'tiles':(f.patterns&&f.patterns[p])?'pattern':'points';
     var h='<div class="lbl">'+esc(label||'Points')+'</div>'
@@ -2271,6 +2292,10 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var prev=f.patterns[pp]?f.patterns[pp].state:null;
       delete f.pts[pp];
       renderGame();
+      if(modeConfig().mcr){
+        if(window.openMcrPatternModal)window.openMcrPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:modeConfig().basePoint});
+        return;
+      }
       if(window.openPatternPickerModal)window.openPatternPickerModal(function(r){
         f.pts[pp]=r.total;
         f.patterns[pp]=r;
@@ -2284,7 +2309,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var saved=f.tiles[tp]||null,sh=sharedTiles(tp);
       delete f.pts[tp];
       renderGame();
-      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
+      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,mcr:!!modeConfig().mcr,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
         onInvalid:function(){var ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=tp;renderGame();}},function(r){
         f.pts[tp]=r.patterns.total;
         f.patterns[tp]=r.patterns;
@@ -2367,7 +2392,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var cfg=modeConfig();
     if(cfg.mcr){
       var b=cfg.basePoint;
-      return (game.mode==='mcrc'?'MCR-Custom':'MCR-'+b)+': no pattern picker, just type the hand\u2019s points (at least '+b+'). Every hand pays a base of '+b+' on top of the hand points. On a Hu, everyone pays the base and the discarder pays the base plus the hand\u2019s points on top, so the winner ends up with base \u00d73 plus the hand\u2019s points. Zi Mo pays (base + points) from each of the other three. An invalid win costs the offender 24 and a false win 48, split evenly between the other three. A draw scores nothing. The dealer never repeats.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.');
+      return (game.mode==='mcrc'?'MCR-Custom':'MCR-'+b)+': type the hand\u2019s points, or use Pick Patterns or Pick Tiles to work them out from the green book (at least '+b+' points of patterns; flowers come on top and do not count toward that). Every hand pays a base of '+b+' on top of the hand points. On a Hu, everyone pays the base and the discarder pays the base plus the hand\u2019s points on top, so the winner ends up with base \u00d73 plus the hand\u2019s points. Zi Mo pays (base + points) from each of the other three. An invalid win costs the offender 24 and a false win 48, split evenly between the other three. A draw scores nothing. The dealer never repeats.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.');
     }
     if(game.mode==='casual')return 'Any hand of 1 point or more can win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
     if(game.mode==='default')return 'A hand needs at least 2 points to win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
@@ -3298,12 +3323,12 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   /* ---------- drawing ---------- */
   var canvas=$('shareCanvas'),ctx=canvas.getContext('2d');
   // a player's seat wind for a given hand is relative to that hand's dealer (the dealer is always
-  // East for their own hand), not a fixed per-player assignment \u2014 so it has to be derived from
-  // row.dealer every time, not read off a static player-index table.
-  function seatWindOf(player,dealer){
+  // East for their own hand), not a fixed per-player assignment \u2014 so it is derived from the hand's row
+  // every time, along the seats of that wind round (with seat rotation on the players change seats between rounds).
+  function seatWindOf(player,row){
     var ROUNDS=window.ROUNDS;
-    if(!ROUNDS||dealer==null)return null;
-    return ROUNDS[(player-dealer+4)%4];
+    if(!ROUNDS||!row||row.dealer==null||!window.seatWindIdx)return null;
+    return ROUNDS[window.seatWindIdx(player,row)];
   }
   function rr(x,y,w,h,r){
     ctx.beginPath();
@@ -3467,7 +3492,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
     // ---- seat-wind hanzi + name ----
     if(tog.name){
-      var seatWind=row?seatWindOf(w,row.dealer):null;
+      var seatWind=row?seatWindOf(w,row):null;
       var seatH=seatWind?seatWind.h:'';
       var nameX=leftX;
       if(seatH){
@@ -3500,7 +3525,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       }else{
         ctx.font='600 '+fs(28)+'px '+INTER;ctx.fillText('from ',fx,by+36*K);
         fx+=ctx.measureText('from ').width;
-        var dSeat=row?seatWindOf(ev.disc,row.dealer):null;
+        var dSeat=row?seatWindOf(ev.disc,row):null;
         if(dSeat&&dSeat.h){
           ctx.font='400 '+fs(34)+'px '+KAI;ctx.fillText(dSeat.h,fx,by+37*K);
           fx+=ctx.measureText(dSeat.h).width+10;
@@ -3530,10 +3555,10 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var affected=[];
       for(var pi=0;pi<4;pi++){if(pi!==w&&row.deltas[pi])affected.push(pi);}
       // order by seat wind: East, South, West, North (relative to this hand's dealer)
-      if(row.dealer!=null)affected.sort(function(a,b){return ((a-row.dealer+4)%4)-((b-row.dealer+4)%4);});
+      if(row.dealer!=null&&window.seatWindIdx)affected.sort(function(a,b){return window.seatWindIdx(a,row)-window.seatWindIdx(b,row);});
       affected.forEach(function(pi,ri){
         var gy=BREAKDOWN_Y+ri*BD_ROW_H+24*K;
-        var seatWind2=seatWindOf(pi,row.dealer);
+        var seatWind2=seatWindOf(pi,row);
         var seatH2=seatWind2?seatWind2.h:'';
         var bx2=leftX;
         if(seatH2){
@@ -4376,6 +4401,353 @@ function score(input, ctx0) {
 
 return {score:score,bonuses:bonuses};
 })(E.analyze,E.suitOf,E.rankOf,E.isTerminal,E.ORPHANS,R);
+var MR=(function(){
+// MCR rules for the pattern picker. Authority: the WMO "Green Book" (Mahjong Competition Rules 2006, edition of August 2014, file MCR201408e).
+// 82 entries = the 81 fans of the book + "One Melded Kong and One Concealed Kong" (6 points, written inside the Two Melded Kongs entry).
+// shape: p = needs pungs or kongs, c = needs chows, w = a chow wait, o = needs a standard hand in some other way
+const FANS = [
+  // id, English name (WMO 2014), points, hand shape needed ('sets' = a standard hand of four sets and a pair), max times it can count
+  ['BigFourWinds', 'Big Four Winds', 88, 'p'], ['BigThreeDragons', 'Big Three Dragons', 88, 'p'], ['AllGreen', 'All Green', 88], ['NineGates', 'Nine Gates', 88], ['FourKongs', 'Four Kongs', 88, 'p'], ['SevenShiftedPairs', 'Seven Shifted Pairs', 88], ['ThirteenOrphans', 'Thirteen Orphans', 88],
+  ['AllTerminals', 'All Terminals', 64], ['LittleFourWinds', 'Little Four Winds', 64, 'p'], ['LittleThreeDragons', 'Little Three Dragons', 64, 'p'], ['AllHonors', 'All Honors', 64], ['FourConcealedPungs', 'Four Concealed Pungs', 64, 'p'], ['PureTerminalChows', 'Pure Terminal Chows', 64, 'c'],
+  ['QuadrupleChow', 'Quadruple Chow', 48, 'c'], ['FourPureShiftedPungs', 'Four Pure Shifted Pungs', 48, 'p'],
+  ['FourShiftedChows', 'Four Shifted Chows', 32, 'c'], ['ThreeKongs', 'Three Kongs', 32, 'p'], ['AllTerminalsAndHonors', 'All Terminals and Honors', 32],
+  ['SevenPairs', 'Seven Pairs', 24], ['GreaterHonorsKnitted', 'Greater Honors and Knitted Tiles', 24], ['AllEvenPungs', 'All Even Pungs', 24, 'p'], ['FullFlush', 'Full Flush', 24], ['PureTripleChow', 'Pure Triple Chow', 24, 'c'], ['PureShiftedPungs', 'Pure Shifted Pungs', 24, 'p'], ['UpperTiles', 'Upper Tiles', 24], ['MiddleTiles', 'Middle Tiles', 24], ['LowerTiles', 'Lower Tiles', 24],
+  ['PureStraight', 'Pure Straight', 16, 'c'], ['ThreeSuitedTerminalChows', 'Three-Suited Terminal Chows', 16, 'c'], ['PureShiftedChows', 'Pure Shifted Chows', 16, 'c'], ['AllFives', 'All Fives', 16, 'o'], ['TriplePung', 'Triple Pung', 16, 'p'], ['ThreeConcealedPungs', 'Three Concealed Pungs', 16, 'p'],
+  ['LesserHonorsKnitted', 'Lesser Honors and Knitted Tiles', 12], ['KnittedStraight', 'Knitted Straight', 12, 'c'], ['UpperFour', 'Upper Four', 12], ['LowerFour', 'Lower Four', 12], ['BigThreeWinds', 'Big Three Winds', 12, 'p'],
+  ['MixedStraight', 'Mixed Straight', 8, 'c'], ['ReversibleTiles', 'Reversible Tiles', 8], ['MixedTripleChow', 'Mixed Triple Chow', 8, 'c'], ['MixedShiftedPungs', 'Mixed Shifted Pungs', 8, 'p'], ['ChickenHand', 'Chicken Hand', 8], ['LastTileDraw', 'Last Tile Draw', 8], ['LastTileClaim', 'Last Tile Claim', 8], ['OutWithReplacementTile', 'Out with Replacement Tile', 8], ['RobbingTheKong', 'Robbing the Kong', 8],
+  ['AllPungs', 'All Pungs', 6, 'p'], ['HalfFlush', 'Half Flush', 6], ['MixedShiftedChows', 'Mixed Shifted Chows', 6, 'c'], ['AllTypes', 'All Types', 6], ['MeldedHand', 'Melded Hand', 6, 'o'], ['TwoConcealedKongs', 'Two Concealed Kongs', 8, 'p'], ['TwoDragonPungs', 'Two Dragon Pungs', 6, 'p'],
+  ['MeldedAndConcealedKong', 'One Melded Kong and One Concealed Kong', 6, 'p'],
+  ['OutsideHand', 'Outside Hand', 4, 'o'], ['FullyConcealedHand', 'Fully Concealed Hand', 4], ['TwoMeldedKongs', 'Two Melded Kongs', 4, 'p'], ['LastTile', 'Last Tile', 4],
+  ['DragonPung', 'Dragon Pung', 2, 'p'], ['PrevalentWind', 'Prevalent Wind', 2, 'p'], ['SeatWind', 'Seat Wind', 2, 'p'], ['ConcealedHand', 'Concealed Hand', 2], ['AllChows', 'All Chows', 2, 'c'], ['TileHog', 'Tile Hog', 2], ['DoublePung', 'Double Pung', 2, 'p'], ['TwoConcealedPungs', 'Two Concealed Pungs', 2, 'p'], ['ConcealedKong', 'Concealed Kong', 2, 'p'], ['AllSimples', 'All Simples', 2],
+  ['PureDoubleChow', 'Pure Double Chow', 1, 'c'], ['MixedDoubleChow', 'Mixed Double Chow', 1, 'c'], ['ShortStraight', 'Short Straight', 1, 'c'], ['TwoTerminalChows', 'Two Terminal Chows', 1, 'c'], ['PungOfTerminalsOrHonors', 'Pung of Terminals or Honors', 1, 'p'], ['MeldedKong', 'Melded Kong', 1, 'p'], ['OneVoidedSuit', 'One Voided Suit', 1], ['NoHonors', 'No Honors', 1], ['EdgeWait', 'Edge Wait', 1, 'w'], ['ClosedWait', 'Closed Wait', 1, 'w'], ['SingleWait', 'Single Wait', 1], ['SelfDrawn', 'Self-Drawn', 1], ['FlowerTiles', 'Flower Tiles', 1],
+].map(([id, name, pts, shape]) => ({ id, name, pts, shape: shape || '', sets: !!shape }));
+const BY = Object.fromEntries(FANS.map(f => [f.id, f])), NAME = id => BY[id].name;
+const MAXCOUNT = { PureDoubleChow: 2, MixedDoubleChow: 2, ShortStraight: 2, TwoTerminalChows: 2, DoublePung: 2, PungOfTerminalsOrHonors: 4, TileHog: 3, FlowerTiles: 8 };
+// Fans that cannot count together (symmetric): the "Does not combine with" lines of the green book, plus what its Non-Repeat principle implies (a fan that is inevitably part of another).
+const NOHON = ['AllSimples', 'AllChows', 'FullFlush', 'AllTerminals', 'AllEvenPungs', 'AllFives', 'UpperTiles', 'MiddleTiles', 'LowerTiles', 'UpperFour', 'LowerFour', 'PureTerminalChows', 'ThreeSuitedTerminalChows', 'NineGates', 'SevenShiftedPairs'];
+const PAIRS = {
+  NoHonors: NOHON,
+  AllSimples: ['AllEvenPungs', 'AllFives', 'MiddleTiles'],
+  AllPungs: ['AllTerminals', 'AllHonors', 'AllTerminalsAndHonors', 'BigFourWinds', 'FourPureShiftedPungs', 'AllEvenPungs', 'FourConcealedPungs', 'FourKongs', 'AllChows'],
+  OutsideHand: ['AllTerminals', 'AllHonors', 'AllTerminalsAndHonors', 'SevenPairs', 'ThirteenOrphans'],
+  AllTerminalsAndHonors: ['AllTerminals', 'AllHonors'],
+  DragonPung: ['TwoDragonPungs', 'BigThreeDragons', 'LittleThreeDragons'], TwoDragonPungs: ['BigThreeDragons', 'LittleThreeDragons'], BigThreeDragons: ['LittleThreeDragons'],
+  BigFourWinds: ['LittleFourWinds', 'BigThreeWinds', 'PrevalentWind', 'SeatWind'], LittleFourWinds: ['BigThreeWinds'],
+  PungOfTerminalsOrHonors: ['AllTerminals', 'AllHonors', 'AllTerminalsAndHonors', 'BigFourWinds', 'LittleFourWinds', 'NineGates'],   // the pungs that form these fans are not counted again (for the other fans the rest is capped below)
+  TriplePung: ['DoublePung'],                         // Non-Repeat: a Double Pung is part of a Triple Pung (the book's Triple Pung examples never add one)
+  PureTripleChow: ['PureDoubleChow', 'QuadrupleChow', 'PureShiftedPungs'], QuadrupleChow: ['PureDoubleChow', 'TileHog', 'PureShiftedPungs'],
+  FourShiftedChows: ['PureShiftedChows'], FourPureShiftedPungs: ['PureShiftedPungs', 'PureTripleChow'],
+  PureTerminalChows: ['FullFlush', 'NoHonors', 'AllChows', 'SevenPairs', 'PureDoubleChow', 'TwoTerminalChows', 'HalfFlush', 'OneVoidedSuit'],   // the book lists Full Flush; No Honors follows from Non-Repeat (decided: 64)
+  ThreeSuitedTerminalChows: ['AllChows', 'NoHonors', 'MixedDoubleChow', 'TwoTerminalChows'],
+  FullFlush: ['HalfFlush', 'OneVoidedSuit', 'NoHonors'], HalfFlush: ['OneVoidedSuit', 'AllHonors'],   // All Green may add Full Flush or Half Flush (its first example)
+  AllGreen: ['OneVoidedSuit'], ReversibleTiles: ['OneVoidedSuit'],
+  UpperTiles: ['UpperFour', 'NoHonors'], LowerTiles: ['LowerFour', 'NoHonors'], MiddleTiles: ['NoHonors'], UpperFour: ['NoHonors'], LowerFour: ['NoHonors'], AllFives: ['NoHonors'], AllEvenPungs: ['NoHonors'],
+  NineGates: ['FullFlush', 'HalfFlush', 'OneVoidedSuit', 'NoHonors', 'ConcealedHand', 'EdgeWait', 'ClosedWait', 'SingleWait', 'TwoConcealedPungs'],   // combines with Fully Concealed Hand if self-drawn; its 111 and 999 pungs are part of the fan, so they are not counted again (the book says so for Pung of Terminals; Two Concealed Pungs follows the same reasoning)
+  SevenShiftedPairs: ['SevenPairs', 'FullFlush', 'HalfFlush', 'OneVoidedSuit', 'NoHonors', 'ConcealedHand', 'SingleWait'],
+  ThirteenOrphans: ['AllTypes', 'ConcealedHand', 'SingleWait'],
+  SevenPairs: ['ConcealedHand', 'SingleWait', 'AllEvenPungs'],   // may combine with Fully Concealed Hand if self-drawn; the book also adds All Terminals, All Honors, flushes, ranges, Tile Hog ...
+  GreaterHonorsKnitted: ['LesserHonorsKnitted', 'AllTypes', 'ConcealedHand', 'SingleWait'], LesserHonorsKnitted: ['AllTypes', 'ConcealedHand', 'SingleWait'],
+  FourConcealedPungs: ['ConcealedHand'],   // does combine with Fully Concealed Hand if self-drawn
+  FourKongs: ['SingleWait'], TwoConcealedKongs: ['TwoConcealedPungs'],   // Non-Repeat: the two kongs already are two concealed pungs
+  ConcealedHand: ['FullyConcealedHand', 'MeldedHand'], FullyConcealedHand: ['SelfDrawn', 'MeldedHand', 'LastTileClaim', 'RobbingTheKong'],
+  MeldedHand: ['SingleWait', 'SelfDrawn', 'LastTileDraw', 'OutWithReplacementTile'],
+  SelfDrawn: ['LastTileDraw', 'OutWithReplacementTile', 'LastTileClaim', 'RobbingTheKong'],
+  LastTileDraw: ['LastTileClaim', 'RobbingTheKong'], OutWithReplacementTile: ['LastTileClaim', 'RobbingTheKong'],   // Out with Replacement Tile combines with Melded Kong or Concealed Kong
+  LastTileClaim: ['RobbingTheKong'], RobbingTheKong: ['LastTile'],
+};
+const EX = {}; for (const a of Object.keys(PAIRS)) for (const b of PAIRS[a]) { (EX[a] = EX[a] || new Set()).add(b); (EX[b] = EX[b] || new Set()).add(a); }
+// groups of which only some may count together (Non-Repeat and Count-Once principles)
+const KONGS = ['FourKongs', 'ThreeKongs', 'TwoConcealedKongs', 'MeldedAndConcealedKong', 'TwoMeldedKongs', 'ConcealedKong', 'MeldedKong'];       // at most one of these counts
+const CPUNGS = ['FourConcealedPungs', 'ThreeConcealedPungs', 'TwoConcealedPungs'];                                                                // at most one; one kong fan and one of these may stand together
+const WAITS = ['EdgeWait', 'ClosedWait', 'SingleWait'];                                                                                         // "not valid if combined with other waits": at most one
+const CHOWSMALL = ['PureDoubleChow', 'MixedDoubleChow', 'ShortStraight', 'TwoTerminalChows'];                                                  // capped as a group by the Count-Once principle
+const FOUR_CHOWS = ['PureTerminalChows', 'QuadrupleChow', 'FourShiftedChows', 'ThreeSuitedTerminalChows'], THREE_CHOWS = ['PureTripleChow', 'PureStraight', 'PureShiftedChows', 'MixedStraight', 'MixedTripleChow', 'MixedShiftedChows'];
+const IRREGULAR = ['SevenPairs', 'SevenShiftedPairs', 'ThirteenOrphans', 'GreaterHonorsKnitted', 'LesserHonorsKnitted'];
+const SEVEN_PAIRS_CHOWS = ['PureDoubleChow', 'PureTripleChow', 'QuadrupleChow', 'MixedDoubleChow', 'ShortStraight', 'TwoTerminalChows'];
+const ALLOWED_SETS = { SevenPairs: SEVEN_PAIRS_CHOWS, LesserHonorsKnitted: ['KnittedStraight'] };   // fans of a standard hand that an irregular hand may still show
+// how many Pungs of Terminals or Honors can still count: the pungs that form a fan are not counted again, nor the Dragon, Seat and Prevalent Wind pungs
+function terminalPungCap(sel) {
+  const has = id => (sel[id] || 0) > 0;
+  if (['BigFourWinds', 'AllHonors', 'AllTerminals', 'AllTerminalsAndHonors'].some(has)) return 0;
+  const wind = has('BigThreeWinds') || has('LittleFourWinds') ? 3 : (has('SeatWind') ? 1 : 0) + (has('PrevalentWind') ? 1 : 0);
+  const dragon = has('BigThreeDragons') ? 3 : has('LittleThreeDragons') || has('TwoDragonPungs') ? 2 : has('DragonPung') ? 1 : 0;
+  return Math.max(0, 4 - wind - dragon);
+}
+function chowSmallCap(sel) { const has = id => (sel[id] || 0) > 0; return FOUR_CHOWS.some(has) ? 0 : THREE_CHOWS.some(has) ? 1 : 3; }
+// what stops each fan right now, and how many times it may count
+function analyze(sel) {
+  const count = id => sel[id] || 0, picked = FANS.filter(f => count(f.id) > 0 && f.id !== 'FlowerTiles').map(f => f.id), locked = {};
+  const lock = (id, why) => { if (!locked[id] && count(id) === 0) locked[id] = why; };
+  for (const g of picked) for (const f of EX[g] || []) lock(f, 'Not combined with ' + NAME(g));
+  const groupCap = (members, cap, why) => { const n = members.reduce((a, id) => a + count(id), 0); if (n >= cap) members.forEach(m => lock(m, why)); };
+  // kong fans: one counts, except that Three Kongs may add Concealed Kong and Two Concealed Kongs (decided, from the book's Three Kongs line)
+  const kongSet = KONGS.filter(k => count(k) > 0), WITH_THREE = ['ConcealedKong', 'TwoConcealedKongs'];
+  const kongOk = (a, b, all) => (a === 'ThreeKongs' && WITH_THREE.includes(b)) || (b === 'ThreeKongs' && WITH_THREE.includes(a)) || (WITH_THREE.includes(a) && WITH_THREE.includes(b) && all.includes('ThreeKongs'));
+  if (kongSet.length) for (const k of KONGS) if (!kongSet.includes(k) && !kongSet.every(p => kongOk(p, k, [...kongSet, k]))) lock(k, kongSet.includes('ThreeKongs') ? 'With Three Kongs only Concealed Kong and Two Concealed Kongs may be added' : 'Only one kong fan counts (' + NAME(kongSet[0]) + ')');
+  const cpPicked = CPUNGS.find(k => count(k) > 0); if (cpPicked) CPUNGS.forEach(k => lock(k, 'Only one concealed pung fan counts (' + NAME(cpPicked) + ')'));
+  const waitPicked = WAITS.find(k => count(k) > 0); if (waitPicked) WAITS.forEach(k => lock(k, 'Only one wait counts (' + NAME(waitPicked) + ')'));
+  const ccap = chowSmallCap(sel); groupCap(CHOWSMALL, ccap, ccap === 0 ? 'Every chow is already used by the four-chow fan' : ccap === 1 ? 'With a three-chow fan only one more of these counts' : 'At most three of these count');
+  const picks = picked.length; if (count('ChickenHand') > 0) FANS.forEach(f => { if (f.id !== 'FlowerTiles' && f.id !== 'ChickenHand') lock(f.id, 'Chicken Hand scores no other fan'); }); else if (picks > 0) lock('ChickenHand', 'Chicken Hand scores no other fan');
+  // irregular hands have no sets; Seven Pairs may still show chows that its pairs form (the book combines it with Pure Triple Chow)
+  for (const i of IRREGULAR) if (count(i) > 0) FANS.forEach(f => { if (f.sets && !(ALLOWED_SETS[i] || []).includes(f.id)) lock(f.id, 'This hand has no four sets and a pair (' + NAME(i) + ')'); });
+  for (const i of IRREGULAR) { const blocker = picked.find(id => BY[id].sets && !(ALLOWED_SETS[i] || []).includes(id)); if (blocker) lock(i, 'Not with a hand of four sets and a pair (' + NAME(blocker) + ')'); }
+  const max = {}; for (const f of FANS) max[f.id] = MAXCOUNT[f.id] || 1;
+  max.PungOfTerminalsOrHonors = terminalPungCap(sel);
+  for (const id of CHOWSMALL) max[id] = Math.min(max[id], Math.max(count(id), ccap - CHOWSMALL.reduce((a, o) => a + (o === id ? 0 : count(o)), 0)));
+  for (const id of Object.keys(locked)) if (count(id) === 0) max[id] = 0;
+  if (count('PungOfTerminalsOrHonors') === 0 && max.PungOfTerminalsOrHonors === 0 && !locked.PungOfTerminalsOrHonors) locked.PungOfTerminalsOrHonors = 'Every pung here is already part of a fan';
+  return { locked, max };
+}
+function nextCount(sel, id) { const { locked, max } = analyze(sel), n = sel[id] || 0; if (n === 0 && locked[id]) return { count: 0, why: locked[id] }; const m = Math.max(n, max[id]); return { count: n >= m ? 0 : n + 1 }; }
+function toggle(sel, id) { const r = nextCount(sel, id), out = { ...sel }; if (r.why) return { sel, why: r.why }; if (r.count) out[id] = r.count; else delete out[id]; return { sel: out }; }
+// a restored selection that breaks a rule loses the lower-scoring fans that clash (the table runs from 88 down to 1)
+function sanitize(sel) { const out = {}; for (const f of FANS) { const n = sel[f.id] | 0; if (n <= 0) continue; const a = analyze(out); if (a.locked[f.id] && f.id !== 'FlowerTiles') continue; const cap = f.id === 'FlowerTiles' ? 8 : Math.max(1, a.max[f.id]); out[f.id] = Math.min(n, cap); } return out; }
+function total(sel, minPoint) {
+  const counted = FANS.filter(f => (sel[f.id] || 0) > 0 && f.id !== 'FlowerTiles').map(f => ({ id: f.id, label: f.name, count: sel[f.id], p: f.pts * sel[f.id] }));
+  const pattern = counted.reduce((a, c) => a + c.p, 0), flowers = Math.min(8, sel.FlowerTiles || 0), valid = pattern >= minPoint;
+  return { counted, patternPoints: pattern, flowers, total: valid ? pattern + flowers : 0, valid, minPoint };
+}
+
+return {FANS:FANS,BY:BY,EX:EX,NAME:NAME,analyze:analyze,toggle:toggle,sanitize:sanitize,total:total,terminalPungCap:terminalPungCap,chowSmallCap:chowSmallCap};
+})();
+var ME=(function(R){
+// MCR tile engine (green book). Given the tiles of a winning hand it finds every way to read the hand, lists the fans each reading
+// can claim, and picks the combination that scores most under the green book's principles:
+//   Non-Repeat and the exclusions: the rules module (mcr_rules.mjs) decides what may stand together.
+//   Non-Separation, Non-Identical and Account-Once: legalCombos() below, for fans made by comparing sets (double chows, straights, ...).
+//   Freedom to choose the highest: every reading is tried, the best one wins.
+// Tiles: 0-8 dots 1-9, 9-17 bamboo 1-9, 18-26 characters 1-9, 27-30 winds E S W N, 31 red, 32 green, 33 white.
+
+const isH = t => t >= 27, suitOf = t => (t < 27 ? Math.floor(t / 9) : 3), rankOf = t => (t < 27 ? (t % 9) + 1 : 0), isTerm = t => t < 27 && (t % 9 === 0 || t % 9 === 8);
+const REV = new Set([0, 1, 2, 3, 4, 7, 8, 10, 12, 13, 14, 16, 17, 33]), GREEN = new Set([10, 11, 12, 14, 16, 32]);
+const PERMS = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];                        // which suit takes 1-4-7, 2-5-8, 3-6-9
+const knittedOf = perm => { const t = []; for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) t.push(s * 9 + perm[s] + 3 * k); return t; };
+const ORPHANS = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
+const countsOf = tiles => { const c = new Array(34).fill(0); tiles.forEach(t => c[t]++); return c; };
+
+// ---- every way to cut tiles into sets -------------------------------------------------------------------------------
+function setsOf(counts, need) {
+  const out = [], cur = [];
+  (function rec() {
+    let i = 0; while (i < 34 && counts[i] === 0) i++;
+    if (i === 34) { if (cur.length === need) out.push(cur.slice()); return; }
+    if (cur.length >= need) return;
+    if (counts[i] >= 3) { counts[i] -= 3; cur.push({ k: 'p', t: i }); rec(); cur.pop(); counts[i] += 3; }
+    if (i < 27 && i % 9 <= 6 && counts[i + 1] > 0 && counts[i + 2] > 0) { counts[i]--; counts[i + 1]--; counts[i + 2]--; cur.push({ k: 'c', t: i }); rec(); cur.pop(); counts[i]++; counts[i + 1]++; counts[i + 2]++; }
+  })();
+  return out;
+}
+const meldSet = m => ({ k: m.type === 'chow' ? 'c' : m.type === 'kong' ? 'k' : 'p', t: m.tile, meld: true, conc: m.type === 'kong' && !!m.concealed });
+
+// the readings of a hand, before the winning tile is placed: { kind, sets, pair, ... }
+function readings(melds, counts) {
+  const out = [], need = 4 - melds.length, ms = melds.map(meldSet), total = counts.reduce((a, b) => a + b, 0);
+  if (total !== 14 - 3 * melds.length) return out;
+  for (let p = 0; p < 34; p++) if (counts[p] >= 2) { counts[p] -= 2; for (const hs of setsOf(counts, need)) out.push({ kind: 'regular', sets: ms.concat(hs.map(s => ({ ...s, conc: true }))), pair: p }); counts[p] += 2; }
+  // Knitted Straight: nine knitted tiles, then one set and a pair (or just the pair when a set is melded)
+  if (melds.length <= 1) for (const perm of PERMS) {
+    const kt = knittedOf(perm); if (!kt.every(t => counts[t] > 0)) continue; kt.forEach(t => counts[t]--);
+    if (melds.length === 0) { for (let p = 0; p < 34; p++) if (counts[p] >= 2) { counts[p] -= 2; for (const hs of setsOf(counts, 1)) out.push({ kind: 'knitted', perm, sets: hs.map(s => ({ ...s, conc: true })), pair: p }); counts[p] += 2; } }
+    else if (counts.reduce((a, b) => a + b, 0) === 2) { const p = counts.findIndex(c => c === 2); if (p >= 0) out.push({ kind: 'knitted', perm, sets: ms.slice(), pair: p }); }
+    kt.forEach(t => counts[t]++);
+  }
+  if (melds.length === 0) {
+    const all = counts.every(c => c % 2 === 0) && counts.reduce((a, b) => a + b, 0) === 14;
+    if (all) { out.push({ kind: 'sevenPairs' }); const ts = counts.map((c, t) => (c ? t : -1)).filter(t => t >= 0); if (ts.length === 7 && counts.every(c => c === 0 || c === 2) && ts.every(t => t < 27 && suitOf(t) === suitOf(ts[0])) && ts[6] - ts[0] === 6) out.push({ kind: 'sevenShifted' }); }
+    if (ORPHANS.every(t => counts[t] >= 1) && ORPHANS.some(t => counts[t] === 2) && counts.reduce((a, b) => a + b, 0) === 14) out.push({ kind: 'thirteenOrphans' });
+    if (counts.every(c => c <= 1)) {
+      const hon = counts.slice(27).filter(c => c).length, suitTiles = []; for (let t = 0; t < 27; t++) if (counts[t]) suitTiles.push(t);
+      for (const perm of PERMS) { const kt = new Set(knittedOf(perm)); if (!suitTiles.every(t => kt.has(t))) continue; if (hon === 7 && suitTiles.length === 7) out.push({ kind: 'greater', perm }); else if (hon <= 6) out.push({ kind: 'lesser', perm }); break; }
+    }
+  }
+  return out;
+}
+const isNineGates = (melds, counts, win) => { if (melds.length) return false; const c = counts.slice(); c[win]--; const s = Math.floor(win / 9); if (win >= 27) return false; const want = [3, 1, 1, 1, 1, 1, 1, 1, 3]; return want.every((n, i) => c[s * 9 + i] === n) && c.reduce((a, b) => a + b, 0) === 13; };
+
+// ---- waits ----------------------------------------------------------------------------------------------------------
+// the tiles that would complete the hand formally (a wait fan is only valid when the hand waits for one tile)
+function formalWaits(melds, counts, win) {
+  const c = counts.slice(); c[win]--; const held = c.slice(); melds.forEach(m => { if (m.type === 'kong') held[m.tile] += 4; else if (m.type === 'pung') held[m.tile] += 3; else for (let i = 0; i < 3; i++) held[m.tile + i]++; });
+  const w = [];
+  for (let t = 0; t < 34; t++) { if (held[t] >= 4) continue; c[t]++; if (readings(melds, c).length) w.push(t); c[t]--; }
+  return w;
+}
+function placements(rd, win) {   // where the winning tile may sit in a reading: the pair, a hand set, or the knitted straight
+  if (rd.kind === 'regular' || rd.kind === 'knitted') {
+    const out = [], seen = new Set();
+    if (rd.pair === win) out.push({ where: 'pair' });
+    rd.sets.forEach((s, i) => { if (s.meld) return; const has = s.k === 'p' ? s.t === win : (win >= s.t && win <= s.t + 2); const key = s.k + s.t; if (has && !seen.has(key)) { seen.add(key); out.push({ where: 'set', i }); } });
+    if (rd.kind === 'knitted' && knittedOf(rd.perm).includes(win)) out.push({ where: 'knitted' });
+    return out;
+  }
+  return [{ where: 'whole' }];
+}
+const roleOf = (rd, pl, win) => { if (pl.where === 'pair') return 'single'; if (pl.where !== 'set') return 'none'; const s = rd.sets[pl.i]; if (s.k !== 'c') return 'none'; const pos = win - s.t; if (pos === 1) return 'closed'; if ((rankOf(s.t) === 1 && pos === 2) || (rankOf(s.t) === 7 && pos === 0)) return 'edge'; return 'none'; };
+
+// ---- Account-Once: can these set-comparing fans all stand? ----------------------------------------------------------
+// The green book: find the primary fan (the highest), then add lesser fans. So the fans are taken from the highest points down; every fan after
+// the first must bring at least one new set (Non-Separation: the same sets cannot be regrouped), and one kind of fan may not use the same set
+// twice (Non-Identical). Fans of equal points may come in any order.
+function legalCombos(list) {
+  const n = list.length; if (n <= 1) return true; const used = new Set(), perFan = {}, placed = new Array(n).fill(false);
+  const go = k => {
+    if (k === n) return true;
+    let top = -1; for (let i = 0; i < n; i++) if (!placed[i] && list[i].pts > top) top = list[i].pts;
+    for (let i = 0; i < n; i++) {
+      if (placed[i] || list[i].pts !== top) continue; const it = list[i], fresh = it.uses.filter(s => !used.has(s)), fs = perFan[it.id] || new Set();
+      if (used.size > 0 && fresh.length === 0) continue;
+      if (it.uses.some(s => fs.has(s))) continue;
+      placed[i] = true; fresh.forEach(s => used.add(s)); const had = perFan[it.id]; perFan[it.id] = new Set([...fs, ...it.uses]);
+      if (go(k + 1)) return true;
+      placed[i] = false; fresh.forEach(s => used.delete(s)); perFan[it.id] = had;
+    }
+    return false;
+  };
+  return go(0);
+}
+
+// ---- the fans one reading can claim ------------------------------------------------------------------------------
+function tileFans(T, add) {
+  const nums = T.filter(t => t < 27), hon = T.some(isH), suits = new Set(nums.map(suitOf));
+  if (!hon) add('NoHonors'); if (T.every(t => t < 27 && rankOf(t) >= 2 && rankOf(t) <= 8)) add('AllSimples');
+  if (!hon && suits.size === 1) add('FullFlush'); if (hon && suits.size === 1) add('HalfFlush'); if (suits.size === 2) add('OneVoidedSuit');
+  if (T.every(isTerm)) add('AllTerminals'); if (T.every(isH)) add('AllHonors'); if (T.every(t => isTerm(t) || isH(t))) add('AllTerminalsAndHonors');
+  if (T.every(t => t < 27 && rankOf(t) >= 7)) add('UpperTiles'); if (T.every(t => t < 27 && rankOf(t) >= 4 && rankOf(t) <= 6)) add('MiddleTiles'); if (T.every(t => t < 27 && rankOf(t) <= 3)) add('LowerTiles');
+  if (T.every(t => t < 27 && rankOf(t) >= 6)) add('UpperFour'); if (T.every(t => t < 27 && rankOf(t) <= 4)) add('LowerFour');
+  if (T.every(t => REV.has(t))) add('ReversibleTiles'); if (T.every(t => GREEN.has(t))) add('AllGreen');
+}
+function candidates(rd, ctx) {
+  const items = [], add = (id, uses) => items.push({ id, pts: R.BY[id].pts, uses: uses || null });
+  const { melds, win, selfDrawn, flags, roundWind, seatWind } = ctx, noMelded = melds.every(m => m.type === 'kong' && m.concealed);
+  // the flags the host gives
+  if (selfDrawn) add('SelfDrawn'); if (flags.lastTile) add('LastTile'); if (flags.lastTileDraw) add('LastTileDraw'); if (flags.lastTileClaim) add('LastTileClaim'); if (flags.outWithReplacement) add('OutWithReplacementTile'); if (flags.robbingKong) add('RobbingTheKong');
+  if (noMelded) add(selfDrawn ? 'FullyConcealedHand' : 'ConcealedHand');
+  const hog = counts => { for (let t = 0; t < 34; t++) if (counts[t] === 4) add('TileHog'); };
+  if (rd.kind === 'thirteenOrphans') { add('ThirteenOrphans'); return items; }
+  if (rd.kind === 'greater' || rd.kind === 'lesser') { add(rd.kind === 'greater' ? 'GreaterHonorsKnitted' : 'LesserHonorsKnitted'); if (rd.kind === 'lesser' && knittedOf(rd.perm).every(t => ctx.counts[t] > 0)) add('KnittedStraight'); return items; }
+  if (rd.kind === 'sevenPairs' || rd.kind === 'sevenShifted') {
+    const T = []; ctx.counts.forEach((c, t) => { for (let i = 0; i < c; i++) T.push(t); });
+    add(rd.kind === 'sevenPairs' ? 'SevenPairs' : 'SevenShiftedPairs'); tileFans(T, add); hog(ctx.counts);
+    const ty = new Set(T.map(t => (t >= 31 ? 4 : t >= 27 ? 3 : suitOf(t)))); if (ty.size === 5) add('AllTypes'); return items;
+  }
+  // a standard hand (or one with a knitted straight)
+  const sets = rd.sets, T = [], rawCounts = new Array(34).fill(0);
+  sets.forEach(s => { const tl = s.k === 'c' ? [s.t, s.t + 1, s.t + 2] : [s.t, s.t, s.t]; tl.forEach(t => T.push(t)); if (s.k !== 'k') tl.forEach(t => rawCounts[t]++); });
+  T.push(rd.pair, rd.pair); rawCounts[rd.pair] += 2; if (rd.kind === 'knitted') knittedOf(rd.perm).forEach(t => { T.push(t); rawCounts[t]++; });
+  tileFans(T, add); hog(rawCounts);
+  const ch = sets.map((s, i) => ({ i, s })).filter(x => x.s.k === 'c').map(x => ({ i: x.i, su: suitOf(x.s.t), r: rankOf(x.s.t) }));
+  const pu = sets.map((s, i) => ({ i, s })).filter(x => x.s.k !== 'c').map(x => ({ i: x.i, t: x.s.t, s: x.s }));
+  const numP = pu.filter(p => p.t < 27).map(p => ({ i: p.i, su: suitOf(p.t), r: rankOf(p.t) })), allKnit = rd.kind === 'knitted';
+  if (rd.kind === 'knitted') { add('KnittedStraight'); }
+  if (isNineGates(melds, ctx.counts, win)) add('NineGates');
+  // sets of one kind
+  if (sets.length === 4 && ch.length === 4 && rd.pair < 27) add('AllChows'); if (allKnit && ch.length === 1 && T.every(t => t < 27)) add('AllChows');
+  if (sets.length === 4 && pu.length === 4) { add('AllPungs'); if (T.every(t => t < 27 && rankOf(t) % 2 === 0)) add('AllEvenPungs'); }
+  if (sets.length === 4 && sets.every(s => s.k === 'c' ? (rankOf(s.t) === 1 || rankOf(s.t) === 7) : (isTerm(s.t) || isH(s.t))) && (isTerm(rd.pair) || isH(rd.pair))) add('OutsideHand');
+  if (sets.length === 4 && sets.every(s => s.k === 'c' ? (rankOf(s.t) >= 3 && rankOf(s.t) <= 5) : (s.t < 27 && rankOf(s.t) === 5)) && rd.pair < 27 && rankOf(rd.pair) === 5) add('AllFives');
+  if (sets.length === 4) { const ty = s => (s.k === 'c' ? suitOf(s.t) : s.t >= 31 ? 4 : s.t >= 27 ? 3 : suitOf(s.t)), parts = sets.map(ty); parts.push(rd.pair >= 31 ? 4 : rd.pair >= 27 ? 3 : suitOf(rd.pair)); if (new Set(parts).size === 5) add('AllTypes'); }
+  // Knitted Straight stands for the three suits, so All Types needs the one remaining set and the pair to be a wind and a dragon
+  if (allKnit && sets.length === 1 && sets[0].k !== 'c' && sets[0].t >= 27 && rd.pair >= 27 && (sets[0].t >= 31) !== (rd.pair >= 31)) add('AllTypes');
+  // honour sets
+  const dragons = pu.filter(p => p.t >= 31), winds = pu.filter(p => p.t >= 27 && p.t <= 30);
+  if (dragons.length === 3) add('BigThreeDragons'); if (dragons.length === 2) { if (rd.pair >= 31) add('LittleThreeDragons'); add('TwoDragonPungs'); } dragons.forEach(() => add('DragonPung'));
+  if (winds.length === 4) add('BigFourWinds'); if (winds.length === 3 && rd.pair >= 27 && rd.pair <= 30) add('LittleFourWinds'); if (winds.length >= 3) add('BigThreeWinds');
+  if (pu.some(p => p.t === 27 + seatWind)) add('SeatWind'); if (pu.some(p => p.t === 27 + roundWind)) add('PrevalentWind');
+  // concealment and kongs
+  const conc = sets.filter(s => s.k !== 'c' && s.conc), ncp = conc.length - (!selfDrawn && ctx.placed && sets[ctx.placed.i] && sets[ctx.placed.i].k === 'p' && sets[ctx.placed.i].conc ? 1 : 0);
+  const nConc = Math.max(0, ncp); if (nConc >= 2) add('TwoConcealedPungs'); if (nConc >= 3) add('ThreeConcealedPungs'); if (nConc >= 4) add('FourConcealedPungs');
+  const kc = sets.filter(s => s.k === 'k' && s.conc).length, km = sets.filter(s => s.k === 'k' && !s.conc).length;
+  for (let i = 0; i < kc; i++) add('ConcealedKong'); for (let i = 0; i < km; i++) add('MeldedKong'); if (kc >= 2) add('TwoConcealedKongs'); if (km >= 2) add('TwoMeldedKongs'); if (kc >= 1 && km >= 1) add('MeldedAndConcealedKong'); if (kc + km >= 3) add('ThreeKongs'); if (kc + km === 4) add('FourKongs');
+  if (melds.length === 4 && melds.every(m => !(m.type === 'kong' && m.concealed)) && !selfDrawn) add('MeldedHand');
+  // fans made by comparing chows
+  const same = (a, b) => a.su === b.su && a.r === b.r;
+  for (let a = 0; a < ch.length; a++) for (let b = a + 1; b < ch.length; b++) { const x = ch[a], y = ch[b], u = [x.i, y.i];
+    if (same(x, y)) add('PureDoubleChow', u); else if (x.r === y.r) add('MixedDoubleChow', u); else if (x.su === y.su && Math.abs(x.r - y.r) === 3) add('ShortStraight', u); else if (x.su === y.su && Math.min(x.r, y.r) === 1 && Math.max(x.r, y.r) === 7) add('TwoTerminalChows', u); }
+  for (let a = 0; a < ch.length; a++) for (let b = a + 1; b < ch.length; b++) for (let c = b + 1; c < ch.length; c++) { const g = [ch[a], ch[b], ch[c]], u = g.map(x => x.i), rs = g.map(x => x.r).sort((p, q) => p - q), sus = new Set(g.map(x => x.su)).size;
+    if (sus === 1 && rs[0] === 1 && rs[1] === 4 && rs[2] === 7) add('PureStraight', u); if (sus === 3 && rs[0] === 1 && rs[1] === 4 && rs[2] === 7) add('MixedStraight', u);
+    if (sus === 1 && ((rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1) || (rs[1] - rs[0] === 2 && rs[2] - rs[1] === 2))) add('PureShiftedChows', u);
+    if (sus === 3 && rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1) add('MixedShiftedChows', u); if (sus === 1 && rs[0] === rs[1] && rs[1] === rs[2]) add('PureTripleChow', u); if (sus === 3 && rs[0] === rs[1] && rs[1] === rs[2]) add('MixedTripleChow', u); }
+  if (ch.length === 4) { const u = ch.map(x => x.i), rs = ch.map(x => x.r).sort((p, q) => p - q), sus = new Set(ch.map(x => x.su)).size;
+    if (sus === 1 && rs.every(r => r === rs[0])) add('QuadrupleChow', u);
+    if (sus === 1 && ((rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1 && rs[3] - rs[2] === 1) || (rs[1] - rs[0] === 2 && rs[2] - rs[1] === 2 && rs[3] - rs[2] === 2))) add('FourShiftedChows', u);
+    if (rd.pair < 27 && rankOf(rd.pair) === 5) { const ps = suitOf(rd.pair);
+      if (ch.every(x => x.su === ps) && rs[0] === 1 && rs[1] === 1 && rs[2] === 7 && rs[3] === 7) add('PureTerminalChows', u);
+      const others = [0, 1, 2].filter(s => s !== ps); if (others.every(s => ch.some(x => x.su === s && x.r === 1) && ch.some(x => x.su === s && x.r === 7)) && ch.filter(x => x.su !== ps).length === 4) add('ThreeSuitedTerminalChows', u); } }
+  // fans made by comparing pungs
+  for (let a = 0; a < numP.length; a++) for (let b = a + 1; b < numP.length; b++) if (numP[a].r === numP[b].r && numP[a].su !== numP[b].su) add('DoublePung', [numP[a].i, numP[b].i]);
+  for (let a = 0; a < numP.length; a++) for (let b = a + 1; b < numP.length; b++) for (let c = b + 1; c < numP.length; c++) { const g = [numP[a], numP[b], numP[c]], u = g.map(x => x.i), rs = g.map(x => x.r).sort((p, q) => p - q), sus = new Set(g.map(x => x.su)).size;
+    if (sus === 3 && rs[0] === rs[1] && rs[1] === rs[2]) add('TriplePung', u); if (sus === 1 && rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1) add('PureShiftedPungs', u); if (sus === 3 && rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1) add('MixedShiftedPungs', u); }
+  if (numP.length === 4 && new Set(numP.map(x => x.su)).size === 1) { const rs = numP.map(x => x.r).sort((p, q) => p - q); if (rs[1] - rs[0] === 1 && rs[2] - rs[1] === 1 && rs[3] - rs[2] === 1) add('FourPureShiftedPungs', numP.map(x => x.i)); }
+  // wait fans (decided by the caller, which knows the whole hand)
+  if (ctx.role) add(ctx.role === 'single' ? 'SingleWait' : ctx.role === 'edge' ? 'EdgeWait' : 'ClosedWait');
+  ctx._pungs = pu; return items;
+}
+
+// ---- the best combination in one reading ---------------------------------------------------------------------------
+function thCount(rd, sel, ctx) {   // Pung of Terminals or Honors: each pung or kong of ones, nines or winds that no chosen fan already counts
+  if (!ctx._pungs) return 0; const a = R.analyze(sel); if (a.locked.PungOfTerminalsOrHonors) return 0;
+  const has = id => (sel[id] || 0) > 0; let n = 0;
+  for (const p of ctx._pungs) { const t = p.t; if (!(isTerm(t) || (t >= 27 && t <= 30))) continue;
+    if (has('SeatWind') && t === 27 + ctx.seatWind) continue; if (has('PrevalentWind') && t === 27 + ctx.roundWind) continue; if (has('BigThreeWinds') && t >= 27 && t <= 30) continue; n++; }
+  return Math.min(n, a.max.PungOfTerminalsOrHonors);
+}
+function bestOf(rd, items, ctx) {
+  items.sort((a, b) => b.pts - a.pts || (a.id < b.id ? -1 : 1));
+  // identical units of one fan are taken in order, so the search does not try the same choice twice
+  const prevSame = items.map((it, i) => { for (let j = i - 1; j >= 0; j--) if (items[j].id === it.id && !it.uses && !items[j].uses) return j; return -1; });
+  const suffix = new Array(items.length + 1).fill(0); for (let i = items.length - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + items[i].pts;
+  const sel = {}, chosen = new Array(items.length).fill(false); let best = { val: -1, picks: [], th: 0 }; const combos = [];
+  const thAvail = (ctx._pungs || []).filter(p => isTerm(p.t) || (p.t >= 27 && p.t <= 30)).length;
+  (function rec(k, cur) {
+    if (cur + suffix[k] + thAvail <= best.val) return;
+    if (k === items.length) { const th = thCount(rd, sel, ctx), v = cur + th; if (v > best.val) best = { val: v, picks: items.filter((_, i) => chosen[i]), th }; return; }
+    const it = items[k];
+    if (prevSame[k] < 0 || chosen[prevSame[k]]) {
+      const n = sel[it.id] || 0, a = R.analyze(sel);
+      if (!(n === 0 && a.locked[it.id]) && n + 1 <= a.max[it.id] && (!it.uses || legalCombos(combos.concat([it])))) {
+        sel[it.id] = n + 1; chosen[k] = true; if (it.uses) combos.push(it);
+        rec(k + 1, cur + it.pts);
+        if (it.uses) combos.pop(); chosen[k] = false; if (n) sel[it.id] = n; else delete sel[it.id];
+      }
+    }
+    rec(k + 1, cur);
+  })(0, 0);
+  return best;
+}
+
+// ---- the whole hand -------------------------------------------------------------------------------------------------
+// input: { melds: [{type:'chow'|'pung'|'kong', tile (a chow's lowest tile), concealed (kongs)}], hand: [tiles, winning tile included], win,
+//          selfDrawn, flowers, roundWind (0 E..3 N), seatWind, flags: {lastTile, lastTileDraw, lastTileClaim, outWithReplacement, robbingKong}, minPoint }
+function score(inp, all) {
+  const melds = inp.melds || [], hand = inp.hand, win = inp.win, selfDrawn = !!inp.selfDrawn, flags = inp.flags || {}, roundWind = inp.roundWind | 0, seatWind = inp.seatWind | 0;
+  const counts = countsOf(hand); if (!hand.includes(win)) return { valid: false, reason: 'The winning tile is not among the tiles' };
+  const held = counts.slice(); melds.forEach(m => { if (m.type === 'kong') held[m.tile] += 4; else if (m.type === 'pung') held[m.tile] += 3; else for (let i = 0; i < 3; i++) held[m.tile + i]++; });
+  if (held.some(c => c > 4)) return { valid: false, reason: 'More than four of one tile' };
+  const rds = readings(melds, counts.slice()); if (!rds.length) return { valid: false, reason: 'These tiles do not make a winning hand' };
+  const W = formalWaits(melds, counts, win), roleSet = new Set();
+  for (const rd of rds) for (const pl of placements(rd, win)) { const r = roleOf(rd, pl, win); if (r === 'single' || r === 'edge' || r === 'closed') roleSet.add(r); }
+  const waitOk = W.length === 1 && roleSet.size <= 1; let best = null, tried = 0; const each = [];
+  for (const rd of rds) for (const pl of placements(rd, win)) {
+    const role = waitOk && (rd.kind === 'regular' || rd.kind === 'knitted') ? roleOf(rd, pl, win) : 'none';
+    const ctx = { melds, win, selfDrawn, flags, roundWind, seatWind, counts, placed: pl.where === 'set' ? pl : null, role: role === 'none' ? null : role };
+    const items = candidates(rd, ctx), b = bestOf(rd, items, ctx); tried++;
+    let picks = b.picks.map(p => p.id), th = b.th;
+    if (!picks.length && !th) picks = ['ChickenHand'];
+    const pattern = picks.length === 1 && picks[0] === 'ChickenHand' ? 8 : b.val;
+    each.push({ pattern, picks, th, rd, pl }); if (!best || pattern > best.pattern) best = { pattern, picks, th, rd, pl };
+  }
+  if (all) return each.map(b => { const tally = {}; b.picks.forEach(id => { tally[id] = (tally[id] || 0) + 1; }); if (b.th) tally.PungOfTerminalsOrHonors = b.th; return { reading: b.rd.kind, pattern: b.pattern, fans: tally, sets: b.rd.sets ? b.rd.sets.map(s => (s.k === 'c' ? 'chow ' : s.k === 'k' ? 'kong ' : 'pung ') + s.t).join(', ') + ', pair ' + b.rd.pair : b.rd.kind }; });
+  const tally = {}; best.picks.forEach(id => { tally[id] = (tally[id] || 0) + 1; }); if (best.th) tally.PungOfTerminalsOrHonors = best.th;
+  const fans = Object.keys(tally).map(id => ({ id, name: R.BY[id].name, count: tally[id], pts: R.BY[id].pts * tally[id] })).sort((a, b) => b.pts - a.pts);
+  const flowers = Math.max(0, Math.min(8, inp.flowers | 0)), minPoint = inp.minPoint | 0, meets = best.pattern >= minPoint;
+  const showSet = s => (s.k === 'c' ? 'chow' : s.k === 'k' ? 'kong' : 'pung') + ' ' + s.t;
+  return { valid: true, fans, pattern: best.pattern, flowers, total: meets ? best.pattern + flowers : 0, meetsMinimum: meets, minPoint, reading: best.rd.kind, tried, waits: W,
+           detail: best.rd.sets ? { sets: best.rd.sets.map(showSet), pair: best.rd.pair, win: best.pl.where } : { win: best.pl.where } };
+}
+const selection = res => Object.fromEntries(res.fans.map(f => [f.id, f.count]));
+
+return {score:score,selection:selection,readings:readings};
+})(MR);
 /* ---------- Pick Tiles: the window ---------- */
 var MODES = [['hand', 'Hand tile'], ['chi', 'Chi'], ['pong', 'Exposed pong'], ['kong', 'Exposed kong'], ['concealed', 'Concealed kong']];
 var HINT = {
@@ -4388,6 +4760,8 @@ var HINT = {
 var SEATN = ['East', 'South', 'West', 'North'];
 var FLN = ['Plum 1', 'Orchid 2', 'Chrysanthemum 3', 'Bamboo 4', 'Spring 1', 'Summer 2', 'Autumn 3', 'Winter 4'];
 var COND = [['last', 'Last tile'], ['replacement', 'Replacement tile'], ['double', 'Double replacement'], ['robbing', 'Robbing a kong']];
+var COND_MCR = [['lastTile', 'Last tile'], ['lastTileDraw', 'Last tile of the wall'], ['lastTileClaim', 'Last discard of the game'], ['outWithReplacement', 'Replacement tile after a kong'], ['robbingKong', 'Robbing the Kong']];
+function condList() { if (!M || !M.ctx || !M.ctx.mcr) return COND; var zimo = M.ctx.by === 'zimo'; return COND_MCR.filter(function (c) { return zimo ? c[0] === 'lastTile' || c[0] === 'lastTileDraw' || c[0] === 'outWithReplacement' : c[0] === 'lastTile' || c[0] === 'lastTileClaim' || c[0] === 'robbingKong'; }); }
 var M = null, tmUse = null, tmCancel = null, tmButtons = [];
 function $t(id) { return document.getElementById(id); }
 function tesc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -4412,7 +4786,7 @@ function takenText() {
 function mLabel(m) { return m.type === 'chi' ? 'Chi' : m.type === 'pong' ? 'Exposed pong' : m.concealed ? 'Concealed kong' : 'Exposed kong'; }
 // what is kept on the hand: only numbers. h concealed tiles, m melds [c|p|k, tile, 1 if concealed], w winning tile, f flowers and seasons 0-7, c win conditions
 function toData() {
-  return { h: M.hand.slice().sort(function (a, b) { return a - b; }), m: M.melds.map(function (m) { return [m.type === 'chi' ? 'c' : m.type === 'pong' ? 'p' : 'k', m.tile, m.concealed ? 1 : 0]; }), w: M.win, f: M.flowers.slice().sort(function (a, b) { return a - b; }), c: COND.filter(function (c) { return M.cond[c[0]]; }).map(function (c) { return c[0]; }) };
+  return { h: M.hand.slice().sort(function (a, b) { return a - b; }), m: M.melds.map(function (m) { return [m.type === 'chi' ? 'c' : m.type === 'pong' ? 'p' : 'k', m.tile, m.concealed ? 1 : 0]; }), w: M.win, f: M.flowers.slice().sort(function (a, b) { return a - b; }), c: condList().filter(function (c) { return M.cond[c[0]]; }).map(function (c) { return c[0]; }) };
 }
 function fromData(d) {
   var cond = {}; (d.c || []).forEach(function (k) { cond[k] = true; });
@@ -4428,7 +4802,32 @@ function noteHtml(r) {
 }
 function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
 // what the tiles say: the pill, the reason, and whether the pattern picker can be opened ("Check patterns")
+function mcrInput(win) {
+  return { melds: M.melds.map(function (m) { return { type: m.type === 'chi' ? 'chow' : m.type === 'pong' ? 'pung' : 'kong', tile: m.tile, concealed: !!m.concealed }; }), hand: M.hand.slice(), win: win, selfDrawn: M.ctx.by === 'zimo', flowers: M.flowers.length, roundWind: M.ctx.prev, seatWind: M.ctx.seat,
+    flags: { lastTile: !!M.cond.lastTile, lastTileDraw: !!M.cond.lastTileDraw, lastTileClaim: !!M.cond.lastTileClaim, outWithReplacement: !!M.cond.outWithReplacement, robbingKong: !!M.cond.robbingKong }, minPoint: M.ctx.min || 0 };
+}
+function mcrAnal() {
+  var n = mNeed(); if (M.hand.length < n) return { status: 'short', missing: n - M.hand.length }; if (M.hand.length > n) return { status: 'long', extra: M.hand.length - n };
+  var r = ME.score(mcrInput(M.hand[0])); return { status: r.valid ? 'valid' : 'invalid', reason: r.reason };
+}
+function anal() { return M.ctx.mcr ? mcrAnal() : E.analyze({ hand: M.hand, melds: M.melds }); }
+function mcrVerdict() {
+  var h = '', ok = false, invalid = false, an = mcrAnal(), min = M.ctx.min || 0, over = [];
+  (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] + M.taken[q] > 4) over.push(E.tileName(q)); })();
+  if (over.length) return { html: pill('bad', 'More than four of a tile') + '<p class="tm-sub warn">Only four of each tile exist: ' + over.join(', ') + '.</p>', ok: false, invalid: false };
+  if (an.status === 'long') h = pill('info', 'Remove ' + an.extra + ' tile' + (an.extra > 1 ? 's' : '')) + '<p class="tm-sub">With ' + M.melds.length + ' meld' + (M.melds.length === 1 ? '' : 's') + ' the hand holds ' + mNeed() + ' tiles.</p>';
+  else if (an.status === 'short') h = M.hand.length === 0 && M.melds.length === 0 ? pill('info', 'Pick the winning hand') + '<p class="tm-sub">Tap the tiles of the hand that won, melds included.</p>' : pill('info', 'Add ' + an.missing + ' more tile' + (an.missing > 1 ? 's' : '')) + '<p class="tm-sub">A winning hand has ' + mNeed() + ' tiles with ' + M.melds.length + ' meld' + (M.melds.length === 1 ? '' : 's') + '.</p>';
+  else if (an.status === 'invalid') h = pill('bad', 'Not a winning hand') + '<p class="tm-sub">These tiles do not make a winning hand. Check them against the real tiles.</p>';
+  else if (M.win === null) h = pill('info', 'Tap the tile that won') + '<p class="tm-sub">The tool needs it to tell the wait and which set the winning tile completed.</p>';
+  else {
+    var r = ME.score(mcrInput(M.win)), list = r.fans.map(function (f) { return tesc(f.name) + (f.count > 1 ? ' \u00d7' + f.count : '') + ' +' + f.pts; }).join(', ');
+    if (r.meetsMinimum) { ok = true; h = pill('ok', 'Suggested: ' + plural(r.pattern + r.flowers, 'point')) + '<p class="tm-sub">' + list + (r.flowers ? ', ' + plural(r.flowers, 'flower') + ' +' + r.flowers : '') + '</p><p class="tm-sub">Next you check this in the pattern picker, and change anything that is wrong.</p>'; }
+    else { invalid = true; h = pill('bad', 'Invalid win') + '<p class="tm-sub warn">The patterns add up to ' + plural(r.pattern, 'point') + ', below the minimum of ' + plural(min, 'point') + ' to win in this game. Flowers do not count toward the minimum, so this would be an invalid win.</p>' + (M.onInvalid ? '<p class="tm-sub"><button type="button" class="btn" id="tmInvalid">Record as Invalid win</button></p>' : ''); }
+  }
+  return { html: h, ok: ok, invalid: invalid };
+}
 function verdict() {
+  if (M.ctx.mcr) return mcrVerdict();
   var an = E.analyze({ hand: M.hand, melds: M.melds }), h = '', ok = false, invalid = false, r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()), min = M.ctx.min || 1;
   var over = []; (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] + M.taken[q] > 4) over.push(E.tileName(q) + ' (' + (4 - M.taken[q]) + ' left for this hand, ' + u[q] + ' picked)'); })();
   if (over.length) return { html: pill('bad', 'More tiles than exist') + '<p class="tm-sub warn">The other winner already holds some of these: ' + over.join(', ') + '. Remove the extra tiles from this hand.</p>', ok: false, invalid: false };
@@ -4463,7 +4862,7 @@ function drawHand() {
   $t('tmHand').innerHTML = '<div class="tm-cap"><h3>Hand</h3><span class="tm-count"><b>' + M.hand.length + '</b> of ' + n + ' tiles' + (M.melds.length ? ' + ' + M.melds.length + ' meld' + (M.melds.length > 1 ? 's' : '') : '') + '</span></div>' + (melds ? '<div class="tm-melds">' + melds + '</div>' : '') + '<div class="tm-tray">' + slots + '</div>';
 }
 function drawWin() {
-  var an = E.analyze({ hand: M.hand, melds: M.melds }), valid = an.status === 'valid', distinct = [];
+  var an = anal(), valid = an.status === 'valid', distinct = [];
   M.hand.forEach(function (t) { if (distinct.indexOf(t) < 0) distinct.push(t); });
   if (M.win !== null && distinct.indexOf(M.win) < 0) M.win = null;
   if (M.shared !== null) M.win = M.hand.indexOf(M.shared) >= 0 ? M.shared : null;   // Double and Triple Hu: one discard won every hand, so the winning tile is the same
@@ -4473,7 +4872,7 @@ function drawWin() {
     : '<p class="tm-sub" style="margin:0">Complete a winning hand first, then tap the tile that won.' + (M.shared !== null ? ' It is the one shared with the other winner: <b>' + E.tileName(M.shared) + '</b>.' : '') + '</p>';
   var nfl = M.flowers.length;
   var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '"' + (M.takenF.indexOf(id) >= 0 ? ' disabled' : '') + ' aria-label="' + FLN[id] + (M.takenF.indexOf(id) >= 0 ? ' (held by the other winner)' : '') + '">' + T(34 + id) + '</button>'; }).join('') + '</div><div class="tm-sub" style="margin-top:6px">' + (nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : 'None held: that is a bonus point (No Flower / Season)') + (M.takenF.length ? '. Greyed out: held by the other winner, each exists once' : '') + '</div>';
-  var conds = '<div class="tm-seg" role="group" aria-label="Win conditions">' + COND.map(function (c) { return '<button type="button" class="chip" data-tm="cond" data-v="' + c[0] + '" aria-pressed="' + !!M.cond[c[0]] + '">' + c[1] + '</button>'; }).join('') + '</div>';
+  var conds = '<div class="tm-seg" role="group" aria-label="Win conditions">' + condList().map(function (c) { return '<button type="button" class="chip" data-tm="cond" data-v="' + c[0] + '" aria-pressed="' + !!M.cond[c[0]] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   $t('tmWin').innerHTML = '<div class="tm-pl">Winning tile</div>' + tiles + '<div class="tm-pl">Flowers and seasons held</div>' + flowers + '<div class="tm-pl">Win conditions</div>' + conds;
   if (M.focus) { var f = $t('tmWin').querySelector('[data-tm="' + M.focus[0] + '"][data-v="' + M.focus[1] + '"]'); if (f) f.focus(); M.focus = null; }
 }
@@ -4519,7 +4918,16 @@ $t('tmCancelBtn').addEventListener('click', function () { var cb = tmCancel; tmC
 $t('tileModal').addEventListener('click', function (e) { if (e.target === $t('tileModal')) { var cb = tmCancel; tmClose(); if (cb) cb(); } });
 // "Check patterns": the tiles (or the flowers) become a suggestion in the normal pattern picker; the host confirms or changes it there
 $t('tmUseBtn').addEventListener('click', function () {
-  if (!M) return; var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()); if (r.status !== 'scored' && r.status !== 'garden') return;
+  if (!M) return;
+  if (M.ctx.mcr) {
+    var an = mcrAnal(); if (an.status !== 'valid' || M.win === null) return; var rm = ME.score(mcrInput(M.win)); if (!rm.valid || !rm.meetsMinimum) return;
+    var sel = ME.selection(rm); if (M.flowers.length) sel.FlowerTiles = Math.min(8, M.flowers.length);
+    var dataM = toData(), keepM = M, useM = tmUse, cancelM = tmCancel, minM = M.ctx.min || 0; tmClose();
+    window.openMcrPatternModal(function (picked) { if (useM) useM({ patterns: picked, tiles: dataM }); }, { mcr: 1, sel: sel },
+      { min: minM, note: 'Suggested from the tiles: ' + plural(rm.pattern + rm.flowers, 'point') + '. Check it, change anything that is wrong, then tap Use total.', onCancel: function () { M = keepM; tmUse = useM; tmCancel = cancelM; tmUpdate(); tmShow(); } });
+    return;
+  }
+  var r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()); if (r.status !== 'scored' && r.status !== 'garden') return;
   var complete = E.analyze({ hand: M.hand, melds: M.melds }).status === 'valid' && M.win !== null, data = complete ? toData() : null;   // a garden win may come without a complete hand: then no tiles are kept
   var keep = M, use = tmUse, cancel = tmCancel; tmClose();
   var note = r.status === 'garden' ? 'Suggested from the flowers: ' + r.gardenName + ', ' + plural(r.total, 'point') + '. Check it, then tap Use total.' : 'Suggested from the tiles: ' + plural(r.total, 'point') + '. Check it, change anything that is wrong, then tap Use total.';
@@ -4528,6 +4936,87 @@ $t('tmUseBtn').addEventListener('click', function () {
 });
 // an invalid win: the form is switched to "Invalid win" for this player
 $t('tmRes').addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('#tmInvalid') : null; if (!b || !M || !M.onInvalid) return; var f = M.onInvalid; tmClose(); f(); });
+
+/* ---------- MCR: the pattern picker window ---------- */
+// Fans of the green book, picked by hand. What cannot count together is greyed out, and a tap says why. Uses the rules module (MR).
+var MP = null, MP_TIERS = [88, 64, 48, 32, 24, 16, 12, 8, 6, 4, 2, 1];
+(function () {
+  var s = document.createElement('style');
+  s.textContent = '#mcrPatModal .mp-sum{position:sticky;top:0;z-index:2;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 4px 12px;margin:0 -4px 10px}'
+    + '#mcrPatModal .mp-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}#mcrPatModal .mp-nums b{display:block;font-family:var(--display);font-size:28px;line-height:1.1;font-variant-numeric:lining-nums}#mcrPatModal .mp-nums span{font-size:12px;color:var(--muted)}'
+    + '#mcrPatModal .mp-pill{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700}#mcrPatModal .mp-pill.ok{background:rgba(45,106,79,.16);color:var(--accent)}#mcrPatModal .mp-pill.bad{background:rgba(183,35,35,.14);color:var(--red)}'
+    + '#mcrPatModal .mp-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}#mcrPatModal .mp-tag{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 4px 0 12px;border-radius:999px;background:var(--field);border:1px solid var(--line);font-size:13px}'
+    + '#mcrPatModal .mp-tag button{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;cursor:pointer}'
+    + '#mcrPatModal .mp-search{width:100%;min-height:46px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--text);font:inherit;font-size:16px;padding:0 16px;margin:0 0 12px}'
+    + '#mcrPatModal details.mp-tier{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}#mcrPatModal details.mp-tier summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:50px;padding:0 14px;cursor:pointer;font-weight:700}'
+    + '#mcrPatModal details.mp-tier summary::-webkit-details-marker{display:none}#mcrPatModal details.mp-tier summary .n{font-weight:500;font-size:13px;color:var(--muted)}#mcrPatModal .mp-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 12px 12px}'
+    + '#mcrPatModal .mp-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;text-align:left}#mcrPatModal .mp-chip .pv{font-weight:700;opacity:.75}'
+    + '#mcrPatModal .mp-chip[aria-disabled="true"]{opacity:.38;text-decoration:line-through;text-decoration-thickness:1px}'
+    + '#mcrPatModal .mp-fl{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px}#mcrPatModal .mp-fl .st{display:flex;align-items:center;gap:6px}'
+    + '#mcrPatModal .mp-fl .st button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:22px;cursor:pointer;color:var(--text)}#mcrPatModal .mp-fl output{min-width:30px;text-align:center;font-family:var(--display);font-size:24px}'
+    + '#mcrPatModal .mp-toast{position:sticky;bottom:6px;margin:8px auto 0;max-width:420px;background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;text-align:center}#mcrPatModal .mp-toast[hidden]{display:none}';
+  document.head.appendChild(s);
+})();
+function mpEnsure() {
+  if ($t('mcrPatModal')) return;
+  var el = document.createElement('div'); el.className = 'patmodal-overlay'; el.id = 'mcrPatModal'; el.hidden = true; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'mpTitle');
+  el.innerHTML = '<div class="patmodal-sheet"><div class="patmodal-header"><h2 id="mpTitle">Pick patterns</h2><button type="button" class="patmodal-x" id="mpClose" aria-label="Close">&times;</button></div>'
+    + '<div class="patmodal-note" id="mpNote" hidden></div><div class="patmodal-body" id="mpBody"><div class="mp-sum" id="mpSum"></div><input class="mp-search" id="mpSearch" type="search" placeholder="Search fans" aria-label="Search fans" autocomplete="off"><div id="mpTiers"></div><div id="mpFl"></div><div class="mp-toast" id="mpToast" role="status" hidden></div></div>'
+    + '<div class="patmodal-footer"><button type="button" class="btn primary" id="mpUse" style="width:100%;min-height:44px">Use total</button></div></div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function (e) { if (e.target === el) mpCancel(); });
+  $t('mpClose').addEventListener('click', mpCancel);
+  $t('mpSearch').addEventListener('input', function () { MP.q = this.value; mpDrawTiers(); });
+  $t('mpBody').addEventListener('toggle', function (e) { var d = e.target; if (MP && d && d.dataset && d.dataset.tier) MP.open[d.dataset.tier] = d.open; }, true);
+  $t('mpBody').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-mp]') : null; if (!b || !MP) return; var a = b.dataset.mp;
+    if (a === 'fan') { var r = MR.toggle(MP.sel, b.dataset.id); if (r.why) { mpToast(r.why); return; } MP.sel = r.sel; mpDraw(); }
+    else if (a === 'rm') { var c = Object.assign({}, MP.sel); delete c[b.dataset.id]; MP.sel = c; mpDraw(); }
+    else if (a === 'fl') { var n = Math.max(0, Math.min(8, (MP.sel.FlowerTiles || 0) + (+b.dataset.d))), c2 = Object.assign({}, MP.sel); if (n) c2.FlowerTiles = n; else delete c2.FlowerTiles; MP.sel = c2; mpDraw(); }
+    else if (a === 'reset') { MP.sel = {}; mpDraw(); }
+  });
+  $t('mpUse').addEventListener('click', function () {
+    if (!MP) return; var t = MR.total(MP.sel, MP.min), counted = t.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p }; });
+    if (t.valid && t.flowers) counted.push({ label: 'Flower Tiles', count: t.flowers, p: t.flowers });   // one label, so the pattern statistics do not split into "1 flower", "2 flowers" ...
+    var use = MP.onUse, out = { total: t.valid ? t.patternPoints + t.flowers : t.patternPoints, counted: counted, state: { mcr: 1, sel: Object.assign({}, MP.sel) }, patternPoints: t.patternPoints, flowers: t.flowers, valid: t.valid };
+    mpHide(); MP = null; if (use) use(out);
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && MP && !$t('mcrPatModal').hidden) mpCancel(); });
+}
+function mpHide() { $t('mcrPatModal').hidden = true; }
+function mpCancel() { var cb = MP && MP.onCancel; mpHide(); MP = null; if (cb) cb(); }
+function mpToast(msg) { var t = $t('mpToast'); t.textContent = msg; t.hidden = false; clearTimeout(MP.tt); MP.tt = setTimeout(function () { t.hidden = true; }, 3200); }
+function mpChip(f, an) {
+  var n = MP.sel[f.id] || 0, off = n === 0 && (an.locked[f.id] || an.max[f.id] === 0), why = an.locked[f.id] || '';
+  return '<button type="button" class="chip mp-chip" data-mp="fan" data-id="' + f.id + '" aria-pressed="' + (n > 0) + '" aria-disabled="' + (off ? 'true' : 'false') + '"' + (off && why ? ' title="' + tesc(why) + '"' : '') + '><span>' + tesc(f.name) + (n > 1 ? ' (\u00d7' + n + ')' : '') + '</span><span class="pv">' + f.pts + '</span></button>';
+}
+function mpDrawSum() {
+  var t = MR.total(MP.sel, MP.min), nothing = !t.patternPoints && !t.flowers;
+  var verdict = nothing ? '<span class="mp-pill" style="background:var(--field);color:var(--muted)">Pick the fans of the winning hand. The minimum is ' + MP.min + ' points of patterns.</span>'
+    : t.valid ? '<span class="mp-pill ok">Valid win: ' + t.patternPoints + ' of ' + MP.min + ' needed' + (t.flowers ? ', +' + t.flowers + ' flower' + (t.flowers > 1 ? 's' : '') : '') + '</span>'
+    : '<span class="mp-pill bad">Invalid win: ' + t.patternPoints + ' point' + (t.patternPoints === 1 ? '' : 's') + ' of patterns, ' + MP.min + ' needed (flowers do not count)</span>';
+  var picks = t.counted.map(function (c) { return '<span class="mp-tag">' + tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' <b>' + c.p + '</b><button type="button" data-mp="rm" data-id="' + c.id + '" aria-label="Remove ' + tesc(c.label) + '">\u00d7</button></span>'; }).join('');
+  $t('mpSum').innerHTML = '<div class="mp-nums"><div><b>' + t.patternPoints + '</b><span>Hand points</span></div><div><b>' + t.flowers + '</b><span>Flowers</span></div><div><b>' + (t.valid ? t.patternPoints + t.flowers : '\u2013') + '</b><span>Total</span></div></div><div style="text-align:center">' + verdict + '</div>' + (picks ? '<div class="mp-picks">' + picks + '</div>' : '');
+  $t('mpUse').disabled = nothing;
+}
+function mpDrawTiers() {
+  var an = MR.analyze(MP.sel), q = MP.q.trim().toLowerCase(), fans = MR.FANS.filter(function (f) { return f.id !== 'FlowerTiles' && (!q || f.name.toLowerCase().indexOf(q) >= 0); });
+  var h = MP_TIERS.map(function (p) {
+    var list = fans.filter(function (f) { return f.pts === p; }); if (!list.length) return '';
+    var picked = list.filter(function (f) { return MP.sel[f.id] > 0; }).length, open = q ? true : (MP.open[p] !== undefined ? MP.open[p] : picked > 0);
+    return '<details class="mp-tier" data-tier="' + p + '"' + (open ? ' open' : '') + '><summary><span>' + p + ' point' + (p === 1 ? '' : 's') + '</span><span class="n">' + (picked ? picked + ' picked \u00b7 ' : '') + list.length + ' fans</span></summary><div class="mp-chips">' + list.map(function (f) { return mpChip(f, an); }).join('') + '</div></details>';
+  }).join('') || '<p class="tm-sub" style="text-align:center">No fan matches \u201c' + tesc(MP.q) + '\u201d.</p>';
+  $t('mpTiers').innerHTML = h;
+}
+function mpDrawFl() { var n = MP.sel.FlowerTiles || 0; $t('mpFl').innerHTML = '<div class="mp-fl"><div><b>Flower tiles</b><div class="tm-sub" style="margin:2px 0 0">1 point each, up to 8. They do not count toward the minimum.</div></div><div class="st"><button type="button" data-mp="fl" data-d="-1" aria-label="One flower less">\u2212</button><output>' + n + '</output><button type="button" data-mp="fl" data-d="1" aria-label="One flower more">+</button></div></div><button type="button" class="btn" data-mp="reset">Reset</button>'; }
+function mpDraw() { var sc = $t('mpBody').scrollTop; mpDrawSum(); mpDrawTiers(); mpDrawFl(); $t('mpBody').scrollTop = sc; }
+// onUse(result) gets { total, counted, state, patternPoints, flowers, valid }; restoreState is { mcr: 1, sel }; opts: { min, note, onCancel }
+window.openMcrPatternModal = function (onUse, restoreState, opts) {
+  mpEnsure(); opts = opts || {};
+  MP = { sel: MR.sanitize(restoreState && restoreState.sel ? restoreState.sel : {}), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
+  var nt = $t('mpNote'); nt.textContent = opts.note || ''; nt.hidden = !opts.note; $t('mpSearch').value = '';
+  mpDraw(); $t('mcrPatModal').hidden = false; $t('mpBody').scrollTop = 0;
+};
 
 })();
 </script>

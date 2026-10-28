@@ -26,7 +26,8 @@ function rulesOf(g) {
 }
 
 // Tiles kept with a won hand (numbers only). A record that does not hold together is dropped, the hand itself is kept.
-const TILE_COND = ['last', 'replacement', 'double', 'robbing'];
+// the win conditions of the Hong Kong style modes, and (MCR) last tile, last tile of the wall, last discard, replacement after a kong, robbing the kong
+const TILE_COND = ['last', 'replacement', 'double', 'robbing', 'lastTile', 'lastTileDraw', 'lastTileClaim', 'outWithReplacement', 'robbingKong'];
 function okTileRecord(r) {
   if (!r || typeof r !== 'object' || !Array.isArray(r.h) || !Array.isArray(r.m) || !Array.isArray(r.f)) return false;
   const isT = x => Number.isInteger(x) && x >= 0 && x <= 33;

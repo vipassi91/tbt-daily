@@ -1025,3 +1025,43 @@ Hasil pengecekan ulang aturan pada Pick Tiles (jendela tile dan pembacaan pola):
 - **File berubah dari v51:** `index.html`, `_redirects`, `_headers`, dan dua file baru: `players.html` dan `functions/api/players.js`. Tidak ada SQL baru.
 - Hanya registry yang aktif yang menampilkan pemain: sebelum ada pemain terdaftar, halaman menjelaskan bahwa belum ada pemain.
 
+
+## Update terbaru (v53): Pick Patterns dan Pick Tiles untuk MCR, dan perbaikan kartu bagikan
+
+**Mode MCR-4, MCR-8, dan MCR-Custom sekarang punya tiga cara mencatat poin hand**, sama seperti mode lain: **Points**
+(diketik, seperti sebelumnya), **Pick Patterns** (pilih fan satu per satu), dan **Pick Tiles** (pilih tile, aplikasi
+mencari fan dan poinnya, lalu host memeriksanya di Pick Patterns sebelum dipakai).
+
+- **Acuan aturan: buku hijau WMO** (Mahjong Competition Rules 2006, edisi Agustus 2014). 81 fan, ditambah satu fan
+  yang di buku tertulis di dalam Two Melded Kongs: satu kong terbuka dan satu kong tertutup bernilai 6. Two Concealed
+  Kongs bernilai 8.
+- **Minimum menang = base game** (4, 8, atau yang diketik di MCR-Custom), dihitung dari poin fan saja. **Bunga
+  ditambahkan setelahnya dan tidak dihitung ke minimum.** Kalau poin fan di bawah minimum, hand ditandai "Invalid win"
+  dan ada tombol untuk mencatatnya sebagai Invalid win.
+- **Fan yang tidak bisa digabung diredupkan**, dan mengetuknya menjelaskan alasannya. Aturan penggabungan mengikuti
+  kalimat "Does not combine with" di buku dan lima prinsip penghitungannya (Non-Repeat, Non-Separation, Non-Identical,
+  pilih yang tertinggi, Account-Once).
+- **Pick Tiles memakai data dari game:** angin putaran dan angin kursi pemenang (mengikuti urutan duduk MCR), serta
+  Zi Mo atau Hu dari jenis hand. Host mengisi tile, tile yang menang, bunga, dan kondisi menang (Last tile, last tile
+  of the wall, last discard, replacement tile, robbing the Kong). Mesin mencoba semua tafsir tangan dan memilih yang
+  poinnya tertinggi.
+- **Tersimpan di hand:** pola dan tile ikut disimpan, jadi muncul di riwayat, kartu bagikan, dan saat hand diedit.
+  Game dengan kode meja ikut menyimpannya; server sekarang menerima kondisi menang MCR (sebelumnya akan membuang tile).
+
+**Tafsiran yang perlu diketahui** (buku tidak menjelaskan):
+- Nine Gates tidak membawa Two Concealed Pungs: pung 111 dan 999 adalah bagian dari fan itu (buku sudah melarang
+  Pung of Terminals or Honors karena alasan yang sama).
+- Pung yang dilengkapi tile menang dari buangan tidak dihitung tertutup.
+- Fan tunggu (Edge, Closed, Single Wait) hanya sah bila tangan menunggu satu tile. Tile yang keempatnya sudah ada di
+  tangan sendiri tidak dihitung sebagai tunggu.
+- Last Tile diisi host, karena buku mensyaratkan terlihat jelas dari buangan.
+- Pure Terminal Chows bernilai 64: Full Flush dan No Honors sama-sama sudah tercakup.
+- Three Kongs boleh ditambah Concealed Kong dan Two Concealed Kongs (kalimat Three Kongs di buku). Tiga kong tertutup
+  jadi 32 + 8 + 2 + 16 (Three Concealed Pungs) = 58.
+
+**Keterbatasan:** Seven Pairs tidak membentuk fan dari susunan chow pasangannya (hand seperti itu dibaca sebagai tangan
+biasa bila cocok). Di buku ada empat keterangan contoh yang tidak cocok dengan gambarnya sendiri (All Honors, Big Three
+Winds, dan dua contoh Reversible Tiles); mesin mengikuti gambarnya.
+
+**Perbaikan kartu bagikan:** saat rotasi kursi MCR menyala, angin kursi di kartu bagikan salah di putaran Selatan,
+Barat, dan Utara (28 dari 64 kombinasi pemain dan tangan). Sekarang kartu memakai urutan duduk yang sama dengan tampilan meja.
