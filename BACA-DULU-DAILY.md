@@ -1094,7 +1094,7 @@ dilindungi kata sandi. Papan skor host (scoreboard) sengaja tidak diberi header 
 **Find your name.** Ikon cari membuka kolom cari yang mencari **semua pemain terdaftar** (semua periode dan mode), jadi
 orang yang hanya main MCR atau hanya bulan lalu tetap ketemu. Hasilnya diberi tag **Not in this view** bila ia tidak ada
 di tampilan sekarang, lengkap dengan jumlah game, mode, dan tanggal terakhir main. Salah ketik (misalnya "riky") dijawab
-dengan saran "Did you mean Ricky?". Bila memang tidak ada, pesannya jujur dan tidak menuduh.
+dengan saran "Did you mean Ricky?". Bila memang tidak ada, pesannya jujur dan tidak menuduh. Di ponsel kolom cari menutupi header; tutup dengan mengetuk di luar kolom (ketukan itu tidak menekan apa pun di bawahnya) atau tombol Esc. Tidak ada tombol Cancel.
 - Daftar nama berasal dari endpoint baru `/api/names`. Isinya hanya nama panggilan, jumlah game, tanggal terakhir, dan
   mode. Tidak ada nama lengkap, WhatsApp, Instagram, kode, pemain yang menyembunyikan halamannya, atau tamu. Di-cache
   sekitar 30 detik, sama seperti daftar pemain.
@@ -1104,7 +1104,7 @@ dengan saran "Did you mean Ricky?". Bila memang tidak ada, pesannya jujur dan ti
 
 **This is me dan My page.** Di halaman pemain ada tombol **This is me**. Bila diketuk, halaman itu muncul sebagai **My
 page** di menu pada setiap halaman publik. Yang disimpan hanya id dan nama panggilan, **di peramban perangkat itu saja**
-(kunci `tbt-me`), tidak dikirim ke server. Ketuk lagi untuk menghapus. Bila penyimpanan diblokir (mode pribadi), tombol
+(kunci `tbt-me`), tidak dikirim ke server. Tombolnya kecil, satu baris di bawah keterangan pemain, dan teks penjelasan baru muncul setelah halaman disimpan. Ketuk lagi untuk menghapus. Bila penyimpanan diblokir (mode pribadi), tombol
 tidak ditampilkan dan semua halaman tetap jalan. Menghapus data situs di peramban juga menghapusnya.
 
 **Panah di baris leaderboard.** Baris yang membuka halaman pemain kini berpanah. Baris tamu atau pemain yang

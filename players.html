@@ -315,7 +315,7 @@ a{color:inherit}
 .tn-hd .brandmark{flex:0 1 auto;min-width:0}
 .tn-gap{flex:1;min-width:0}
 .tn-search{display:none;position:static;min-width:0}
-.tn-field{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 6px 0 14px;border:1px solid var(--line);background:var(--field);border-radius:999px;color:var(--muted)}
+.tn-field{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 6px 0 14px;border:1px solid var(--line);background:var(--field);border-radius:999px;color:var(--muted)}
 .tn-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
 .tn-field svg{flex:none;width:20px;height:20px}
 .tn-field input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:16px;outline:none;padding:11px 0;-webkit-appearance:none;appearance:none}
@@ -323,25 +323,17 @@ a{color:inherit}
 .tn-field input::-webkit-search-cancel-button{display:none}
 .tn-x{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
 .tn-x[hidden]{display:none}
-.tn-sbtn,.tn-mbtn{display:inline-flex;width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex:none;padding:0}
-.tn-sbtn svg,.tn-mbtn svg{width:22px;height:22px}
-.tn-sbtn:focus-visible,.tn-mbtn:focus-visible,.tn-cancel:focus-visible,.tn-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.tn-cancel{display:none;border:0;background:transparent;color:var(--accent);font:700 15px var(--sans);min-height:44px;padding:0 6px 0 10px;cursor:pointer;white-space:nowrap}
-.tn-tabs{display:none;align-items:center;gap:8px}
-.tn-tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font:600 14.5px var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer}
-.tn-tab svg{width:18px;height:18px;flex:none}
-.tn-tab[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
-.tn-tab.me{border-color:var(--accent);color:var(--accent)}.tn-tab.me[aria-current="page"]{color:var(--onaccent)}
-.tn-tab.adm{border-color:transparent;color:var(--muted);font-weight:500}
-.tn-tab:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tn-sbtn,.tn-mbtn{display:inline-flex;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex:none;padding:0}
+.tn-sbtn svg,.tn-mbtn svg{width:20px;height:20px}
+.tn-sbtn:focus-visible,.tn-mbtn:focus-visible,.tn-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 /* the results of a search */
 .tn-res{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.2)}
 .tn-res[hidden]{display:none}
 .tn-hd .tn-res{position:absolute;left:12px;right:12px;top:62px;z-index:40;margin:0}
-.tn-item{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 16px;border-top:1px solid var(--line);background:transparent;color:var(--text);text-align:left;font:inherit;text-decoration:none;cursor:pointer;box-sizing:border-box}
+.tn-item{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:8px 16px;border-top:1px solid var(--line);background:transparent;color:var(--text);text-align:left;font:inherit;text-decoration:none;cursor:pointer;box-sizing:border-box}
 .tn-item:first-child{border-top:0}.tn-item:hover,.tn-item:focus-visible{background:var(--field)}
 .tn-item:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-.tn-item>span:first-child{flex:1;min-width:0}.tn-item b{display:block;font-size:16px;overflow-wrap:anywhere}.tn-item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.tn-item>span:first-child{flex:1;min-width:0}.tn-item b{display:block;font-size:15px;overflow-wrap:anywhere}.tn-item small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 .tn-tag{flex:none;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);white-space:nowrap}
 .tn-go{flex:none;width:18px;height:18px;color:var(--muted)}
 .tn-note{padding:10px 16px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
@@ -352,23 +344,22 @@ a{color:inherit}
 /* the menu */
 .tn-panel{position:absolute;left:0;right:0;top:100%;z-index:45;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 18px 30px rgba(0,0,0,.28);padding:6px 12px 14px}
 .tn-panel[hidden]{display:none}
-.tn-panel a{display:flex;align-items:center;gap:14px;min-height:54px;padding:0 10px;border-radius:12px;color:var(--text);font:600 16px var(--sans);text-decoration:none}
+.tn-panel a{display:flex;align-items:center;gap:14px;min-height:50px;padding:0 10px;border-radius:12px;color:var(--text);font:600 15px var(--sans);text-decoration:none}
 .tn-panel a svg{width:22px;height:22px;color:var(--muted);flex:none}.tn-panel a .tn-go{margin-left:auto;width:18px;height:18px}
 .tn-panel a:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .tn-panel a[aria-current="page"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}.tn-panel a[aria-current="page"] svg{color:var(--accent)}
 .tn-panel a b{color:var(--accent)}
 .tn-adm{margin-top:12px;padding-top:6px;border-top:1px solid var(--line)}
 .tn-adm h4{margin:10px 10px 2px;font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.tn-adm a{min-height:46px;font-weight:500;color:var(--muted);font-size:15px}.tn-adm a svg{opacity:.8}
+.tn-adm a{min-height:44px;font-weight:500;color:var(--muted);font-size:14px}.tn-adm a svg{opacity:.8}
 .tn-dim{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.42)}.tn-dim[hidden]{display:none}
-.tn-pop{position:fixed;z-index:46;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.28);padding:6px}
-.tn-pop[hidden]{display:none}.tn-pop a{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border-radius:10px;color:var(--text);font:600 15px var(--sans);text-decoration:none}.tn-pop a:hover,.tn-pop a:focus-visible{background:var(--field)}.tn-pop a svg{width:20px;height:20px;flex:none;color:var(--muted)}
-/* This is me, on a player's page */
-.tn-this-row{margin:12px 0 4px}
-.tn-this{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font:700 15px var(--sans);cursor:pointer}
+/* This is me, on a player's page: one small line under the title, never squeezed into the title column */
+.tn-this-row{margin:-2px 0 12px}
+.tn-this{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font:700 13.5px var(--sans);white-space:nowrap;cursor:pointer}
+.tn-this svg{width:16px;height:16px;flex:none}
 .tn-this[aria-pressed="true"]{background:var(--accent);color:var(--onaccent)}
 .tn-this:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.tn-saved{font-size:13px;color:var(--muted);margin:8px 0 0;max-width:420px}
+.tn-saved{font-size:12px;line-height:1.4;color:var(--muted);margin:6px 0 0}
 /* the leaderboard rows that open a page show an arrow */
 .row.lk .rv{margin-right:26px}
 .row.lk .rlink::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.7}
@@ -377,19 +368,14 @@ a{color:inherit}
   .tn-hd .brandname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;overflow-wrap:anywhere}
   .tn-hd.searching .brandmark,.tn-hd.searching .tn-sbtn,.tn-hd.searching .tn-mbtn,.tn-hd.searching .tn-gap{display:none}
   .tn-hd.searching .tn-search{display:block;flex:1}
-  .tn-hd.searching .tn-cancel{display:inline-flex}
 }
-/* from 720px the search is always in the header; from 1280px the links too, instead of the menu */
+/* from 720px the search is a field in the header all the time, and the menu opens as a small card under the button */
 @media (min-width:720px){
   .tn-gap{display:none}.tn-sbtn{display:none}
   .tn-search{display:block;flex:1;max-width:520px;margin-left:auto}
-  .tn-hd .tn-res{left:auto;right:20px;width:min(480px,calc(100% - 40px))}
-}
-@media (min-width:1280px){
-  .tn-tabs{display:flex;margin-left:6px;margin-right:auto}
-  .tn-mbtn{display:none}
-  .tn-search{position:relative;flex:0 1 280px;min-width:170px;margin-left:0}
-  .tn-hd .tn-res{position:absolute;right:0;left:auto;width:440px;top:100%}
+  .tn-hd .tn-res{left:auto;right:calc(max(0px,(100% - 1120px) / 2) + 76px);width:min(480px,calc(100% - 40px));top:62px}
+  .tn-panel{left:auto;right:max(12px,calc((100% - 1120px) / 2 + 20px));top:calc(100% + 4px);width:320px;border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.28)}
+  .tn-dim{background:rgba(0,0,0,.18)}
 }
 
 </style>
@@ -699,11 +685,6 @@ var TBTNAV = (function () {
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
   function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
   var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people]];
-  function tabs(active, o) {
-    var m = me(), h = links(o).map(function (i) { return '<a class="tn-tab" href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[1] + '</a>'; }).join('');
-    if (m) h += '<a class="tn-tab me" href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + 'My page</a>';
-    return h + '<button type="button" class="tn-tab adm" data-tn="pop" aria-haspopup="menu" aria-expanded="false">' + IC.shield + 'Admin' + IC.down + '</button>';
-  }
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
     if (m) h += '<a href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + '<span>My page \u00b7 <b>' + esc(m.name) + '</b></span>' + IC.go + '</a>';
@@ -716,23 +697,17 @@ var TBTNAV = (function () {
     var mark = '<a class="brandmark" href="/index.html" aria-label="' + esc(o.name || '') + ' leaderboard"><img src="' + (o.logo || '') + '" alt="" width="23" height="28"><span class="brandname">' + esc(o.name || '') + '</span></a>';
     return '<header class="brandbar tn-hd' + (ST.searching ? ' searching' : '') + '" id="tnHd"><div class="brandin tn-row">' + mark + '<span class="tn-gap"></span>'
       + '<div class="tn-search"><label class="tn-field">' + IC.search + '<input id="tnQ" type="search" aria-label="Find your name" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Find your name" value="' + esc(ST.q) + '"><button type="button" class="tn-x" id="tnX" data-tn="clear" aria-label="Clear search"' + (ST.q ? '' : ' hidden') + '>\u00d7</button></label><div class="tn-res" id="tnRes" role="region" aria-label="Search results" aria-live="polite"' + (show ? '' : ' hidden') + '>' + (show ? resultsHtml() : '') + '</div></div>'
-      + '<button type="button" class="tn-cancel" data-tn="scancel">Cancel</button><button type="button" class="tn-sbtn" id="tnSbtn" data-tn="sopen" aria-label="Search players">' + IC.search + '</button>'
-      + '<nav class="tn-tabs" aria-label="Main">' + tabs(active, o) + '</nav>'
+      + '<button type="button" class="tn-sbtn" id="tnSbtn" data-tn="sopen" aria-label="Search players">' + IC.search + '</button>'
       + '<button type="button" class="tn-mbtn" id="tnMbtn" data-tn="menu" aria-label="Menu" aria-expanded="false" aria-controls="tnPanel">' + IC.menu + '</button></div>'
-      + '<div class="tn-panel" id="tnPanel" hidden>' + panel(active, o) + '</div></header><div class="tn-dim" id="tnDim" data-tn="menuclose" hidden></div><div class="tn-pop" id="tnPop" role="menu" hidden></div>';
+      + '<div class="tn-panel" id="tnPanel" hidden>' + panel(active, o) + '</div></header><div class="tn-dim" id="tnDim" data-tn="menuclose" hidden></div>';
   }
   function closeMenus() {
-    var p = document.getElementById('tnPanel'), b = document.getElementById('tnMbtn'), d = document.getElementById('tnDim'), pp = document.getElementById('tnPop');
-    if (p) p.hidden = true; if (d) d.hidden = true; if (pp) pp.hidden = true;
+    var p = document.getElementById('tnPanel'), b = document.getElementById('tnMbtn'), d = document.getElementById('tnDim');
+    if (p) p.hidden = true; if (d) d.hidden = true;
     if (b) { b.setAttribute('aria-expanded', 'false'); b.innerHTML = IC.menu; }
-    [].forEach.call(document.querySelectorAll('[data-tn="pop"]'), function (x) { x.setAttribute('aria-expanded', 'false'); });
   }
   function menuOpen() { var p = document.getElementById('tnPanel'); return !!p && !p.hidden; }
   function openMenu() { var p = document.getElementById('tnPanel'), b = document.getElementById('tnMbtn'); if (!p) return; p.hidden = false; b.setAttribute('aria-expanded', 'true'); b.innerHTML = IC.close; document.getElementById('tnDim').hidden = false; var a = p.querySelector('a'); if (a) a.focus(); }
-  function openPop(btn) {
-    var pp = document.getElementById('tnPop'), r = btn.getBoundingClientRect(); pp.innerHTML = ADMIN.map(function (i) { return '<a href="' + esc(i[1]) + '" role="menuitem">' + i[2] + i[0] + '</a>'; }).join(''); pp.hidden = false; btn.setAttribute('aria-expanded', 'true');
-    var w = pp.offsetWidth; pp.style.top = (r.bottom + 6) + 'px'; pp.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + 'px'; var a = pp.querySelector('a'); if (a) a.focus();
-  }
   // ---- the list of everyone with a public page, fetched the first time it is needed
   function load(cb) {
     if (cb) ST.cbs.push(cb);
@@ -784,7 +759,7 @@ var TBTNAV = (function () {
   function thisIsMe(p) {
     if (!canStore()) return '';
     var on = !!(me() && me().id === p.id);
-    return '<div class="tn-this-row"><button type="button" class="tn-this" data-tn="me" data-id="' + esc(p.id) + '" data-name="' + esc(p.name) + '" aria-pressed="' + on + '">' + (on ? IC.check : IC.me) + 'This is me</button><p class="tn-saved" id="tnSaved">' + (on ? 'Saved on this device only. Next time, My page is in the menu.' : 'Save your page on this device to open it from the menu. Nothing is sent anywhere.') + '</p></div>';
+    return '<div class="tn-this-row"><button type="button" class="tn-this" data-tn="me" data-id="' + esc(p.id) + '" data-name="' + esc(p.name) + '" aria-pressed="' + on + '" title="Kept on this device only, never sent anywhere">' + (on ? IC.check : IC.me) + 'This is me</button>' + (on ? '<p class="tn-saved" id="tnSaved">Saved on this device only. Find it in the menu as My page.</p>' : '') + '</div>';
   }
   function openSearch() { ST.searching = true; ST.hide = false; var h = document.getElementById('tnHd'); if (h) h.classList.add('searching'); var q = document.getElementById('tnQ'); if (q) q.focus(); load(refresh); refresh(); }
   function closeSearch(focusIcon) { ST.searching = false; ST.q = ''; ST.hide = false; var q = document.getElementById('tnQ'); if (q) q.value = ''; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); refresh(); if (focusIcon) { var b = document.getElementById('tnSbtn'); if (b && b.offsetParent !== null) b.focus(); } }
@@ -796,16 +771,14 @@ var TBTNAV = (function () {
     document.addEventListener('click', function (e) {
       var t = e.target, b = t.closest ? t.closest('[data-tn]') : null;
       if (!b) {
-        var inSearch = t.closest && (t.closest('.tn-search') || t.closest('.tn-panel') || t.closest('.tn-pop'));
-        if (!inSearch) { var box = document.getElementById('tnRes'); if (box && !box.hidden) { ST.hide = true; refresh(); } if (document.getElementById('tnPop') && !document.getElementById('tnPop').hidden) closeMenus(); }
+        var inSearch = t.closest && (t.closest('.tn-search') || t.closest('.tn-panel'));
+        if (!inSearch) { var box = document.getElementById('tnRes'); if (box && !box.hidden) { ST.hide = true; refresh(); } }
         return;
       }
       var a = b.dataset.tn;
       if (a === 'menu') { if (menuOpen()) closeMenus(); else openMenu(); }
       else if (a === 'menuclose') closeMenus();
-      else if (a === 'pop') { var open = b.getAttribute('aria-expanded') === 'true'; closeMenus(); if (!open) openPop(b); }
       else if (a === 'sopen') openSearch();
-      else if (a === 'scancel') closeSearch(true);
       else if (a === 'clear') { ST.q = ''; ST.hide = false; var q = document.getElementById('tnQ'); if (q) { q.value = ''; q.focus(); } refresh(); }
       else if (a === 'retry') { ST.status = 'idle'; load(refresh); refresh(); }
       else if (a === 'me') { var cur = me(), mine = cur && cur.id === b.dataset.id; if (mine) clearMe(); else setMe(b.dataset.id, b.dataset.name); if (CFG.onMe) CFG.onMe(); }
@@ -813,7 +786,6 @@ var TBTNAV = (function () {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         if (menuOpen()) { closeMenus(); var mb = document.getElementById('tnMbtn'); if (mb) mb.focus(); return; }
-        var pp = document.getElementById('tnPop'); if (pp && !pp.hidden) { closeMenus(); return; }
         var q0 = document.getElementById('tnQ'), box0 = document.getElementById('tnRes');
         if (q0 && box0 && (document.activeElement === q0 || box0.contains(document.activeElement))) { if (ST.q) { ST.q = ''; q0.value = ''; refresh(); q0.focus(); return; } if (ST.searching) { closeSearch(true); return; } }
         return;
@@ -823,6 +795,12 @@ var TBTNAV = (function () {
       if (e.key === 'ArrowDown' && (inField || inRes)) { e.preventDefault(); var i = its.indexOf(document.activeElement); its[Math.min(its.length - 1, i + 1)].focus(); }
       else if (e.key === 'ArrowUp' && inRes) { e.preventDefault(); var j = its.indexOf(document.activeElement); if (j <= 0) q.focus(); else its[j - 1].focus(); }
     });
+    // on a phone the search covers the header: a tap anywhere outside it closes it, and that tap does nothing else
+    document.addEventListener('click', function (e) {
+      if (!ST.searching) return;
+      var t = e.target; if (t && t.closest && t.closest('.tn-search')) return;
+      e.preventDefault(); e.stopPropagation(); closeSearch(false);
+    }, true);
     window.addEventListener('resize', function () { if (window.innerWidth >= 720 && ST.searching) { ST.searching = false; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); } });
   }
   return { boot: boot, header: header, thisIsMe: thisIsMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
