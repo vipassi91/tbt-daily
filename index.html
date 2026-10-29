@@ -94,22 +94,25 @@ a{color:inherit}
 .btn.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:700}
 
 /* ranks 1 to 4: a quiet marker, never a box. Every row keeps the same shape; the place is shown by a slim bar
-   and a faint tint in the medal colour, a ring round the number (filled for first place) and a small crown
-   beside the champion's name. Gold, silver, bronze and the brand green. */
-:root{--m2:#8E98A6;--m3:#A8703E}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--m2:#BAC3CF;--m3:#D49A66}}
+   and a faint tint, a ring round the number, and a small flat gem after the name:
+   1 Diamond, 2 Ruby, 3 Jade, 4 Pearl. Tied players share the rank and so the gem. */
+:root{--c1:#9FB8E8;--c2:#D62828;--c3:#2D6A4F;--c4:#C9BCA7;--t1:rgba(159,184,232,.16);--t2:rgba(214,40,40,.08);--t3:rgba(45,106,79,.12);--t4:rgba(201,188,167,.20);--g-d1:#6F90DB;--g-d2:#CFDEF9;--g-r1:#D62828;--g-r2:#FDE8E8;--g-j1:#2D6A4F;--g-j2:#B7D4C0;--g-p1:#EDE7DB;--g-p2:#B5A68B}
+@media (prefers-color-scheme: dark){:root:not([data-theme=\"light\"]){--c2:#E04646;--c3:#6FAE8E;--c4:#E8E1D8;--t1:rgba(159,184,232,.14);--t2:rgba(224,70,70,.12);--t3:rgba(111,174,142,.15);--t4:rgba(232,225,216,.10);--g-d1:#9FB8E8;--g-d2:#E8F1FF;--g-r1:#E04646;--g-j1:#6FAE8E;--g-j2:#E6F1E8;--g-p1:#E8E1D8;--g-p2:#C9BCA7}}
 .row{position:relative}
 .row.m::before{content:"";position:absolute;left:-16px;right:-16px;top:0;bottom:0;background:linear-gradient(90deg,var(--mt),transparent 70%);pointer-events:none}
 .row.m::after{content:"";position:absolute;left:-16px;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--mc)}
 .row.m>*{position:relative;z-index:1}
 .row.m .rn{background:transparent;border:2px solid var(--mc);color:var(--text)}
-.row.r1{--mc:var(--gold);--mt:rgba(201,162,74,.16)}
-.row.r2{--mc:var(--m2);--mt:rgba(150,160,176,.15)}
-.row.r3{--mc:var(--m3);--mt:rgba(190,122,66,.15)}
-.row.r4{--mc:var(--accent);--mt:rgba(95,180,138,.13)}
-.row.r1 .rn{background:var(--mc);color:#2B2108}
+.row.r1{--mc:var(--c1);--mt:var(--t1)}
+.row.r2{--mc:var(--c2);--mt:var(--t2)}
+.row.r3{--mc:var(--c3);--mt:var(--t3)}
+.row.r4{--mc:var(--c4);--mt:var(--t4)}
 .rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rname .crown{flex:none;width:16px;height:11px;color:var(--gold)}
+.rname .gn{flex:none;display:inline-flex}.rname .gn svg{width:15px;height:15px;display:block}
+.gi-diamond .a{fill:var(--g-d1)}.gi-diamond .b{fill:var(--g-d2)}
+.gi-ruby .a{fill:var(--g-r1)}.gi-ruby .b{fill:var(--g-r2);opacity:.5}
+.gi-jade .a{fill:var(--g-j1)}.gi-jade .b{fill:var(--g-j2);opacity:.7}
+.gi-pearl .a{fill:var(--g-p1);stroke:var(--g-p2);stroke-width:1.2}.gi-pearl .b{fill:#fff;opacity:.9}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -393,8 +396,9 @@ function rankList(list){
   var prev=null,prevRank=0;
   return sorted.map(function(p,i){var v=Math.round(p[key]*10)/10,rank=(prev!==null&&v===prev)?prevRank:i+1;prev=v;prevRank=rank;return {p:p,v:v,rank:rank,key:key};});
 }
-var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" d="M8 48L4 20L28 38L50 8L72 38L96 20L92 48Z"/><circle cx="4" cy="18" r="6" fill="currentColor"/><circle cx="50" cy="5" r="6" fill="currentColor"/><circle cx="96" cy="18" r="6" fill="currentColor"/><rect x="8" y="55" width="84" height="11" rx="4" fill="currentColor"/></svg>';
-// Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
+var GEMS={1:['Diamond','diamond','<path class="a" d="M6.5 4h11L22 9.5 12 20.5 2 9.5z"/><path class="b" d="M6.5 4h11l-2.6 5.5H9.1z"/>'],2:['Ruby','ruby','<polygon class="a" points="20.8,15.6 15.6,20.8 8.4,20.8 3.2,15.6 3.2,8.4 8.4,3.2 15.6,3.2 20.8,8.4"/><polygon class="b" points="16.6,13.9 13.9,16.6 10.1,16.6 7.4,13.9 7.4,10.1 10.1,7.4 13.9,7.4 16.6,10.1"/>'],3:['Jade','jade','<circle class="a" cx="12" cy="12" r="9"/><ellipse class="b" cx="9" cy="8.8" rx="3" ry="2" transform="rotate(-30 9 8.8)"/>'],4:['Pearl','pearl','<circle class="a" cx="12" cy="12" r="8.6"/><ellipse class="b" cx="9" cy="8.8" rx="3" ry="2" transform="rotate(-30 9 8.8)"/>']};
+function gemIcon(rank){var g=GEMS[rank];if(!g)return '';return '<span class="gn" role="img" aria-label="'+g[0]+'"><svg class="gi gi-'+g[1]+'" viewBox="0 0 24 24" aria-hidden="true">'+g[2]+'</svg></span>';}
+// Ranks 1 to 4 stand out with a coloured bar and tint and a small gem after the name: Diamond, Ruby, Jade, Pearl. Tied players share the rank and so the look.
 // the readable part of a player's address: the nickname as plain letters, numbers and hyphens (only the id after it matters)
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
@@ -564,7 +568,7 @@ function board(list,session){
   var html='',pq=session?'':playerQuery();
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+gemIcon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }

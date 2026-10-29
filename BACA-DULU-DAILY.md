@@ -1082,8 +1082,8 @@ berisi nama sekarang (langsung terpilih). **Enter** atau **Simpan** menyimpan, *
 ## Update terbaru (v55): header dan menu baru, cari nama sendiri, My page, dan seluruh situs berbahasa Inggris
 
 **Header baru di leaderboard, All players, dan halaman pemain.** Nama merek tetap terlihat. Di ponsel ada ikon cari dan
-tombol menu (tiga garis) di kanan atas. Dari layar 720 piksel kolom cari selalu terlihat, dan dari 1280 piksel tautan
-(Leaderboard, Players, Table code, Admin) tampil langsung di header tanpa tombol menu. Tautan kecil lama ("All players ›"
+tombol menu (tiga garis) di kanan atas. Dari layar 720 piksel kolom cari selalu terlihat sebagai kolom di header. Navigasinya
+tetap lewat tombol menu di semua lebar layar; di layar lebar menunya berupa kartu kecil di bawah tombol, bukan panel selebar layar. Tautan kecil lama ("All players ›"
 di bawah judul dan "Enter table code" di header) dihapus; keduanya kini ada di menu. Players di menu tetap membawa
 pilihan periode dan mode yang sedang dipakai.
 
@@ -1106,6 +1106,13 @@ dengan saran "Did you mean Ricky?". Bila memang tidak ada, pesannya jujur dan ti
 page** di menu pada setiap halaman publik. Yang disimpan hanya id dan nama panggilan, **di peramban perangkat itu saja**
 (kunci `tbt-me`), tidak dikirim ke server. Tombolnya kecil, satu baris di bawah keterangan pemain, dan teks penjelasan baru muncul setelah halaman disimpan. Ketuk lagi untuk menghapus. Bila penyimpanan diblokir (mode pribadi), tombol
 tidak ditampilkan dan semua halaman tetap jalan. Menghapus data situs di peramban juga menghapusnya.
+
+**Ikon permata di empat baris teratas.** Peringkat 1 sampai 4 kini ditandai ikon permata datar kecil di samping nama:
+1 **Diamond** (biru), 2 **Ruby** (merah), 3 **Jade** (hijau), 4 **Pearl** (krem). Bulatan bernomor tidak berubah
+bentuknya; cincinnya, garis di kiri, dan semburat latar baris mengikuti warna permatanya (versi terang dan gelap punya
+warna sendiri supaya tetap terlihat). Pemain yang seri berbagi peringkat dan permata yang sama, dan peringkat 5 ke bawah
+tidak punya ikon. **Mahkota di daftar dihapus**, dan bulatan nomor 1 tidak lagi berisi emas penuh. Mahkota di gambar
+"Share top 10" belum diubah. Pembaca layar membacakan nama permatanya setelah nama pemain.
 
 **Panah di baris leaderboard.** Baris yang membuka halaman pemain kini berpanah. Baris tamu atau pemain yang
 menyembunyikan halamannya tidak berpanah.
