@@ -17,7 +17,7 @@ export async function onRequestPost({ request, env }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
     const d = await request.json();
-    if (!d.label || !d.date) return json({ error: 'Label dan tanggal wajib diisi' }, 400);
+    if (!d.label || !d.date) return json({ error: 'A label and a date are required' }, 400);
     const id = 'day-' + Date.now();
     await env.DB.prepare('INSERT INTO days (id, label, date, created_at) VALUES (?, ?, ?, ?)')
       .bind(id, String(d.label).trim(), d.date, new Date().toISOString()).run();

@@ -26,16 +26,16 @@ function summarizeMove(game, moved, order) {
 // the names the admin typed, checked: the person keeps the old name unless it really changed
 function applyNames(game, moved, names) {
   if (names === undefined) return { renamed: [] };
-  if (!Array.isArray(names) || names.length !== 4 || names.some(n => typeof n !== 'string')) return { error: 'Nama harus empat, satu per kursi.' };
+  if (!Array.isArray(names) || names.length !== 4 || names.some(n => typeof n !== 'string')) return { error: 'There must be four names, one per seat.' };
   const renamed = [], final = moved.names.slice();
   for (let j = 0; j < 4; j++) {
     if (cmp(names[j]) === cmp(moved.names[j])) continue;                       // unchanged: keep it exactly as it was
     const to = cleanText(names[j], 200);
-    if (!to) return { error: 'Nama kursi ' + (j + 1) + ' tidak boleh kosong.' };
-    if (to.length > NAME_MAX) return { error: 'Nama kursi ' + (j + 1) + ' terlalu panjang (maksimal ' + NAME_MAX + ' karakter).' };
+    if (!to) return { error: 'The name at seat ' + (j + 1) + ' cannot be empty.' };
+    if (to.length > NAME_MAX) return { error: 'The name at seat ' + (j + 1) + ' is too long (' + NAME_MAX + ' characters at most).' };
     final[j] = to; renamed.push(j);
   }
-  for (const j of renamed) for (let k = 0; k < 4; k++) if (k !== j && nameKey(final[k]) === nameKey(final[j])) return { error: 'Nama "' + final[j] + '" sudah dipakai di kursi ' + (k + 1) + '. Dua pemain di satu meja tidak boleh bernama sama.' };
+  for (const j of renamed) for (let k = 0; k < 4; k++) if (k !== j && nameKey(final[k]) === nameKey(final[j])) return { error: 'The name "' + final[j] + '" is already used at seat ' + (k + 1) + '. Two players at one table cannot have the same name.' };
   moved.names = final;
   return { renamed };
 }
@@ -64,14 +64,14 @@ export async function onRequestPost({ request, env }) {
     const t = await env.DB.prepare('SELECT id, players, rounds, updated_at FROM tables WHERE code=?').bind(code).first();
     if (!t) return json({ error: 'Table code not found' }, 404);
     let game; try { game = JSON.parse(t.rounds); } catch (e) { return json({ error: 'Invalid game data' }, 400); }
-    if (!Array.isArray(game.events) || game.events.length === 0) return json({ error: 'no_hands', message: 'Meja ini belum punya hand. Pemain masih bisa diubah langsung di scoreboard.' }, 400);
+    if (!Array.isArray(game.events) || game.events.length === 0) return json({ error: 'no_hands', message: 'This table has no hands yet. Players can still be changed directly on the scoreboard.' }, 400);
     const moved = permuteGame(game, order);
-    if (!moved) return json({ error: 'bad_order', message: 'Urutan tidak valid.' }, 400);
+    if (!moved) return json({ error: 'bad_order', message: 'The order is not valid.' }, 400);
     const nm = applyNames(game, moved, body.names);
     if (nm.error) return json({ error: 'bad_names', message: nm.error }, 400);
-    if (!validGame(moved)) return json({ error: 'bad_order', message: 'Urutan tidak valid.' }, 400);
+    if (!validGame(moved)) return json({ error: 'bad_order', message: 'The order is not valid.' }, 400);
     const reg = await loadRegistry(env), own = owners(reg, t.id, order, moved, nm.renamed);
-    if (own) for (const j of nm.renamed) { if (own[j] && own.some((o, k) => k !== j && o === own[j])) return json({ error: 'same_person', message: 'Nama "' + moved.names[j] + '" dikenali sebagai pemain terdaftar "' + reg.players.get(own[j]).nickname + '", yang sudah duduk di kursi lain di meja ini. Satu orang tidak bisa mengisi dua kursi.' }, 400); }
+    if (own) for (const j of nm.renamed) { if (own[j] && own.some((o, k) => k !== j && o === own[j])) return json({ error: 'same_person', message: 'The name "' + moved.names[j] + '" is recognised as the registered player "' + reg.players.get(own[j]).nickname + '", who already sits at another seat at this table. One person cannot fill two seats.' }, 400); }
     const rows = await seatRows(env, t.id), inv = []; order.forEach((o, j) => { inv[o] = j; });
     const summary = summarizeMove(game, moved, order);
     summary.renamed = nm.renamed.map(j => ({ seat: j + 1, from: game.names[order[j]], to: moved.names[j], registered: own && own[j] ? reg.players.get(own[j]).nickname : null }));
@@ -83,7 +83,7 @@ export async function onRequestPost({ request, env }) {
     if (text.length > 200000) return json({ error: 'Game too large' }, 413);
     const now = nextStamp(t.updated_at);
     const res = await env.DB.prepare('UPDATE tables SET rounds=?, players=?, stats=?, updated_at=? WHERE code=? AND updated_at=?').bind(text, JSON.stringify(stats.names), JSON.stringify(stats), now, code, t.updated_at).run();
-    if (!res.meta || res.meta.changes !== 1) return json({ error: 'conflict', message: 'Meja berubah saat diproses. Muat ulang dan coba lagi.' }, 409);
+    if (!res.meta || res.meta.changes !== 1) return json({ error: 'conflict', message: 'The table changed while this was being processed. Reload and try again.' }, 409);
     const seats = await moveSeats(env, t.id, rows, order, nm.renamed);
     return json({ ok: true, applied: true, updatedAt: now, seatsMoved: seats, summary });
   } catch (err) {

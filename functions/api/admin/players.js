@@ -58,10 +58,10 @@ function newId() { return crypto.randomUUID().replace(/-/g, '').slice(0, 10); }
 // Reads and validates the person fields of a request. `partial` leaves out fields that were not sent.
 function readFields(body, partial) {
   const out = {};
-  if (!partial || body.nickname !== undefined) { out.nickname = cleanText(body.nickname, 30); if (!out.nickname) return { error: 'Nama panggilan wajib diisi' }; }
+  if (!partial || body.nickname !== undefined) { out.nickname = cleanText(body.nickname, 30); if (!out.nickname) return { error: 'Nickname is required' }; }
   if (!partial || body.fullName !== undefined) out.fullName = cleanText(body.fullName, 60);
-  if (!partial || body.whatsapp !== undefined) { out.whatsapp = normWhatsapp(body.whatsapp); if (out.whatsapp === null) return { error: 'Nomor WhatsApp tidak valid' }; }
-  if (!partial || body.instagram !== undefined) { out.instagram = normInstagram(body.instagram); if (out.instagram === null) return { error: 'Username Instagram tidak valid' }; }
+  if (!partial || body.whatsapp !== undefined) { out.whatsapp = normWhatsapp(body.whatsapp); if (out.whatsapp === null) return { error: 'WhatsApp number is not valid' }; }
+  if (!partial || body.instagram !== undefined) { out.instagram = normInstagram(body.instagram); if (out.instagram === null) return { error: 'Instagram username is not valid' }; }
   return { fields: out };
 }
 
@@ -70,21 +70,21 @@ async function handlePost({ request, env }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
     let body;
-    try { body = await request.json(); } catch (e) { return json({ error: 'Data tidak valid' }, 400); }
+    try { body = await request.json(); } catch (e) { return json({ error: 'Invalid data' }, 400); }
     const action = body && body.action;
     if (action === 'setup') { await ensureRegistryTables(env); return json({ ok: true }); }
 
     const reg = await loadRegistry(env);
-    if (!reg.ready) return json({ error: 'setup_needed', message: 'Aktifkan database pemain dulu.' }, 409);
+    if (!reg.ready) return json({ error: 'setup_needed', message: 'Turn on the player database first.' }, 409);
     const now = new Date().toISOString();
     const owner = function (key) { const pl = reg.players.get(reg.names.get(key)); return pl ? pl.nickname : null; };
 
     // keys must be free (or already this person's) and must not have sat at one table
     async function checkKeys(keys, id) {
       for (const k of keys) {
-        if (!k) return 'Nama tidak boleh kosong';
+        if (!k) return 'The name cannot be empty';
         const o = reg.names.get(k);
-        if (o && o !== id) return '"' + k + '" sudah terdaftar atas nama ' + owner(k) + '.';
+        if (o && o !== id) return '"' + k + '" is already registered under ' + owner(k) + '.';
       }
       const { typed } = await gatherNames(env);
       const mine = id ? Array.from(reg.names.entries()).filter(function (e) { return e[1] === id; }).map(function (e) { return e[0]; }) : [];
@@ -96,7 +96,7 @@ async function handlePost({ request, env }) {
       } catch (e) {
         if (/UNIQUE/i.test(String(e)) && f.whatsapp) {
           const other = await env.DB.prepare('SELECT nickname FROM registry WHERE whatsapp=?').bind(f.whatsapp).first();
-          return 'Nomor WhatsApp ini sudah dipakai ' + (other ? other.nickname : 'pemain lain') + '.';
+          return 'This WhatsApp number is already used by ' + (other ? other.nickname : 'another player') + '.';
         }
         throw e;
       }
@@ -131,7 +131,7 @@ async function handlePost({ request, env }) {
 
     if (action === 'signupEnable' || action === 'signupDisable' || action === 'signupReset') {
       const sg = await loadSignup(env);
-      if (!sg.ready) return json({ error: 'setup_needed', message: 'Aktifkan pendaftaran lewat link dulu.' }, 409);
+      if (!sg.ready) return json({ error: 'setup_needed', message: 'Turn on sign-up by link first.' }, 409);
       const put = function (k, v) { return env.DB.prepare('INSERT INTO registry_settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(k, v).run(); };
       if (action === 'signupDisable') await put('signup_enabled', '0');
       else {
@@ -143,9 +143,9 @@ async function handlePost({ request, env }) {
 
     if (action === 'requestApprove' || action === 'requestReject') {
       const sg = await loadSignup(env);
-      if (!sg.ready) return json({ error: 'setup_needed', message: 'Aktifkan pendaftaran lewat link dulu.' }, 409);
+      if (!sg.ready) return json({ error: 'setup_needed', message: 'Turn on sign-up by link first.' }, 409);
       const rq = await env.DB.prepare('SELECT id, nickname, full_name, whatsapp, instagram, table_name FROM registry_requests WHERE id=?').bind(String(body.id || '')).first();
-      if (!rq) return json({ error: 'Pendaftaran tidak ditemukan' }, 404);
+      if (!rq) return json({ error: 'Sign-up not found' }, 404);
       if (action === 'requestReject') { await env.DB.prepare('DELETE FROM registry_requests WHERE id=?').bind(rq.id).run(); return json({ ok: true }); }
       const pick = function (v, d) { return v !== undefined ? v : d; };
       const r = readFields({ nickname: pick(body.nickname, rq.nickname), fullName: pick(body.fullName, rq.full_name), whatsapp: pick(body.whatsapp, rq.whatsapp), instagram: pick(body.instagram, rq.instagram) }, false);
@@ -160,20 +160,20 @@ async function handlePost({ request, env }) {
     }
 
     if (action === 'seatAssign') {
-      if (!reg.seatsReady) return json({ error: 'setup_needed', message: 'Perbarui registry dulu.' }, 409);
+      if (!reg.seatsReady) return json({ error: 'setup_needed', message: 'Update the registry first.' }, 409);
       const tableId = String(body.tableId || ''), seat = Number(body.seat), to = String(body.to || '');
-      if (!tableId || !Number.isInteger(seat) || seat < 0 || seat > 3) return json({ error: 'Kursi tidak valid' }, 400);
+      if (!tableId || !Number.isInteger(seat) || seat < 0 || seat > 3) return json({ error: 'Seat is not valid' }, 400);
       const { typed } = await gatherNames(env);
       let key = null;
       typed.forEach(function (w) { w.tables.forEach(function (t) { if (t.id === tableId && t.seat === seat) key = w.key; }); });
-      if (!key) return json({ error: 'Kursi tidak ditemukan' }, 404);
-      if (to && to !== 'guest' && !reg.players.has(to)) return json({ error: 'Pemain tidak ditemukan' }, 400);
+      if (!key) return json({ error: 'Seat not found' }, 404);
+      if (to && to !== 'guest' && !reg.players.has(to)) return json({ error: 'Player not found' }, 400);
       if (to && to !== 'guest') {
         // one person can not take two seats at one table
         const sim = { players: reg.players, names: reg.names, seats: new Map(reg.seats) };
         sim.seats.set(tableId + ':' + seat, { key: key, to: to });
         const clash = seatRecords(sim, typed).find(function (r) { return r.tableId === tableId && r.seat !== seat && r.owner === to; });
-        if (clash) return json({ error: '"' + reg.players.get(to).nickname + '" sudah duduk di meja yang sama (' + clash.table + ') sebagai "' + clash.typedName + '", jadi tidak bisa mengisi dua kursi.' }, 409);
+        if (clash) return json({ error: '"' + reg.players.get(to).nickname + '" already sits at the same table (' + clash.table + ') as "' + clash.typedName + '", so one person cannot fill two seats.' }, 409);
       }
       // choosing what the written name already says is the same as no choice at all
       if (!to || to === reg.names.get(key)) await env.DB.prepare('DELETE FROM registry_seats WHERE table_id=? AND seat=?').bind(tableId, seat).run();
@@ -183,11 +183,11 @@ async function handlePost({ request, env }) {
 
     const id = String(body.id || '');
     const pl = reg.players.get(id);
-    if (!pl) return json({ error: 'Pemain tidak ditemukan' }, 400);
+    if (!pl) return json({ error: 'Player not found' }, 400);
 
     if (action === 'setHidden') {
       // a player hides their page (or shows it again); the leaderboard keeps showing their name either way
-      if (!reg.hiddenReady) return json({ error: 'page_needs_db', message: 'Database belum diperbarui untuk halaman pemain. Tekan "Perbarui registry" atau jalankan migrate-v3.sql.' }, 409);
+      if (!reg.hiddenReady) return json({ error: 'page_needs_db', message: 'The database has not been updated for player pages yet. Press "Update registry" or run migrate-v3.sql.' }, 409);
       await env.DB.prepare('UPDATE registry SET hidden=?, updated_at=? WHERE id=?').bind(body.hidden ? 1 : 0, now, id).run();
       return json({ ok: true });
     }
@@ -201,7 +201,7 @@ async function handlePost({ request, env }) {
       } catch (e) {
         if (/UNIQUE/i.test(String(e))) {
           const other = await env.DB.prepare('SELECT nickname FROM registry WHERE whatsapp=?').bind(f.whatsapp).first();
-          return json({ error: 'Nomor WhatsApp ini sudah dipakai ' + (other ? other.nickname : 'pemain lain') + '.' }, 409);
+          return json({ error: 'This WhatsApp number is already used by ' + (other ? other.nickname : 'another player') + '.' }, 409);
         }
         throw e;
       }
@@ -218,8 +218,8 @@ async function handlePost({ request, env }) {
 
     if (action === 'removename') {
       const k = nameKey(body.key);
-      if (reg.names.get(k) !== id) return json({ error: 'Ejaan tidak dikenali' }, 400);
-      if (k === nameKey(pl.nickname)) return json({ error: 'Nama panggilan tidak bisa dihapus. Ubah dulu nama panggilannya.' }, 400);
+      if (reg.names.get(k) !== id) return json({ error: 'Spelling not recognised' }, 400);
+      if (k === nameKey(pl.nickname)) return json({ error: 'The nickname cannot be removed. Change the nickname first.' }, 400);
       await env.DB.prepare('DELETE FROM registry_names WHERE name_key=?').bind(k).run();
       return json({ ok: true });
     }
@@ -232,7 +232,7 @@ async function handlePost({ request, env }) {
       return json({ ok: true });
     }
 
-    return json({ error: 'Aksi tidak dikenal' }, 400);
+    return json({ error: 'Unknown action' }, 400);
   } catch (err) {
     return json({ error: String(err) }, 500);
   }

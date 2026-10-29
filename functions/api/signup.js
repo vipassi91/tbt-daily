@@ -30,34 +30,34 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   try {
     let b;
-    try { b = await request.json(); } catch (e) { return json({ error: 'Data tidak valid' }, 400); }
+    try { b = await request.json(); } catch (e) { return json({ error: 'Invalid data' }, 400); }
     const o = await openFor(env, String(b && b.t || ''));
-    if (!o.ok) return json({ error: 'Link pendaftaran tidak berlaku atau sudah ditutup.' }, 403);
+    if (!o.ok) return json({ error: 'This sign-up link is not valid or has been closed.' }, 403);
     if (b.website) return json({ ok: true });                       // a hidden field only a bot fills in
-    if (b.consent !== true) return json({ error: 'Centang persetujuan dulu.' }, 400);
+    if (b.consent !== true) return json({ error: 'Please tick the consent box first.' }, 400);
     const nickname = cleanText(b.nickname, 30);
-    if (!nickname) return json({ error: 'Nama panggilan wajib diisi.' }, 400);
+    if (!nickname) return json({ error: 'Nickname is required.' }, 400);
     const wa = normWhatsapp(b.whatsapp);
-    if (!wa) return json({ error: wa === null ? 'Nomor WhatsApp tidak valid.' : 'Nomor WhatsApp wajib diisi.' }, 400);
+    if (!wa) return json({ error: wa === null ? 'WhatsApp number is not valid.' : 'WhatsApp number is required.' }, 400);
     const ig = normInstagram(b.instagram);
-    if (ig === null) return json({ error: 'Username Instagram tidak valid.' }, 400);
+    if (ig === null) return json({ error: 'Instagram username is not valid.' }, 400);
     const full = cleanText(b.fullName, 60), tableName = cleanText(b.tableName, 40);
 
     const total = await env.DB.prepare('SELECT COUNT(*) AS n FROM registry_requests').first();
-    if (total.n >= MAX_PENDING) return json({ error: 'Pendaftaran sedang penuh. Hubungi admin.' }, 429);
+    if (total.n >= MAX_PENDING) return json({ error: 'Sign-ups are full right now. Please contact the admin.' }, 429);
     const hash = await ipHash(request, o.sg.token);
     const since = new Date(Date.now() - 3600 * 1000).toISOString();
     const recent = await env.DB.prepare('SELECT COUNT(*) AS n FROM registry_requests WHERE ip_hash=? AND created_at>?').bind(hash, since).first();
-    if (recent.n >= RATE_PER_HOUR) return json({ error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429);
+    if (recent.n >= RATE_PER_HOUR) return json({ error: 'Too many attempts. Please try again later.' }, 429);
 
     const dupe = await env.DB.prepare('SELECT 1 AS x FROM registry WHERE whatsapp=? UNION SELECT 1 FROM registry_requests WHERE whatsapp=?').bind(wa, wa).first();
-    if (dupe) return json({ error: 'Nomor WhatsApp ini sudah terdaftar atau sedang menunggu persetujuan.' }, 409);
-    if (o.reg.names.has(nameKey(nickname))) return json({ error: 'Nama panggilan ini sudah dipakai pemain lain. Coba nama lain.' }, 409);
+    if (dupe) return json({ error: 'This WhatsApp number is already registered or waiting for approval.' }, 409);
+    if (o.reg.names.has(nameKey(nickname))) return json({ error: 'This nickname is already used by another player. Try another one.' }, 409);
 
     await env.DB.prepare('INSERT INTO registry_requests (id, nickname, full_name, whatsapp, instagram, table_name, ip_hash, created_at) VALUES (?,?,?,?,?,?,?,?)')
       .bind(crypto.randomUUID().replace(/-/g, '').slice(0, 10), nickname, full || null, wa, ig || null, tableName || null, hash, new Date().toISOString()).run();
     return json({ ok: true });
   } catch (err) {
-    return json({ error: 'Terjadi kesalahan. Coba lagi nanti.' }, 500);
+    return json({ error: 'Something went wrong. Please try again later.' }, 500);
   }
 }

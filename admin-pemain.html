@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<title>TBT Admin &middot; Pemain</title>
+<title>TBT Admin &middot; Players</title>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -159,29 +159,29 @@ function checkAll(){
       return r.text().then(function(tx){
         var j=null;try{j=JSON.parse(tx);}catch(e){}
         if(r.status===200&&j&&j.player){if(!j.games.length)pageReport.empty.push(p.nickname);if(j.skipped)pageReport.skipped.push(p.nickname+' ('+j.skipped+')');}
-        else pageReport.fails.push(p.nickname+' (kode '+r.status+(j&&(j.reason||j.detail)?': '+(j.reason||j.detail):'')+')');
+        else pageReport.fails.push(p.nickname+' (code '+r.status+(j&&(j.reason||j.detail)?': '+(j.reason||j.detail):'')+')');
       });
-    },function(){pageReport.fails.push(p.nickname+' (tidak ada koneksi)');}).then(function(){pageReport.done++;if(pageReport.done%6===0||pageReport.done===pageReport.total)render();next();});
+    },function(){pageReport.fails.push(p.nickname+' (no connection)');}).then(function(){pageReport.done++;if(pageReport.done%6===0||pageReport.done===pageReport.total)render();next();});
   }
   next();
 }
 function pageReportHtml(){
   var r=pageReport;if(!r)return '';
-  if(r.running)return '<p class="note" style="margin-top:0">Memeriksa halaman pemain\u2026 '+r.done+' dari '+r.total+'</p>';
-  var ok=r.total-r.fails.length,h='<p class="note" style="margin-top:0'+(r.fails.length?';color:var(--red)':'')+'"><b>'+ok+' dari '+r.total+' halaman pemain bisa dibuka.</b>';
-  if(r.fails.length)h+=' Gagal: '+r.fails.map(esc).join(', ')+'.';
-  if(r.empty.length)h+=' Belum punya game (halamannya kosong): '+r.empty.map(esc).join(', ')+'.';
-  if(r.skipped.length)h+=' Ada game yang dilewati karena datanya tidak terbaca: '+r.skipped.map(esc).join(', ')+'.';
+  if(r.running)return '<p class="note" style="margin-top:0">Checking player pages\u2026 '+r.done+' of '+r.total+'</p>';
+  var ok=r.total-r.fails.length,h='<p class="note" style="margin-top:0'+(r.fails.length?';color:var(--red)':'')+'"><b>'+ok+' of '+r.total+' player pages can be opened.</b>';
+  if(r.fails.length)h+=' Failed: '+r.fails.map(esc).join(', ')+'.';
+  if(r.empty.length)h+=' No games yet (the page is empty): '+r.empty.map(esc).join(', ')+'.';
+  if(r.skipped.length)h+=' Some games were skipped because their data could not be read: '+r.skipped.map(esc).join(', ')+'.';
   return h+'</p>';
 }
 function pageCheckText(){
-  var c=pageCheck,code=' (kode: '+c.status+(c.reason?'/'+c.reason:c.old?'/old':'')+')';
-  if(c.old)return 'Halaman pemain belum aktif di server: file functions/api/overview.js dan functions/_players.js belum versi terbaru. Unggah keduanya, lalu tunggu deploy selesai.'+code;
-  if(c.reason==='not_found')return 'Server tidak menemukan pemain ini di registry (ID '+c.id+', registry berisi '+c.n+' pemain). Kirim kode ini ke pembuat situs.'+code;
-  if(c.reason==='registry_not_ready')return 'Server menganggap registry belum aktif di database. Kirim kode ini ke pembuat situs.'+code;
-  if(c.reason==='hidden')return 'Server mencatat halaman pemain ini disembunyikan, padahal tidak di daftar admin. Kirim kode ini ke pembuat situs.'+code;
-  if(c.reason==='bad_id')return 'Server menolak bentuk ID '+c.id+'. Kirim kode ini ke pembuat situs.'+code;
-  return 'Halaman pemain belum bisa dibuka dari server'+code+'. Pastikan semua file versi terbaru sudah terunggah ke GitHub, lalu tunggu deploy selesai.';
+  var c=pageCheck,code=' (code: '+c.status+(c.reason?'/'+c.reason:c.old?'/old':'')+')';
+  if(c.old)return 'Player pages are not active on the server yet: functions/api/overview.js and functions/_players.js are not the latest version. Upload both, then wait for the deploy to finish.'+code;
+  if(c.reason==='not_found')return 'The server cannot find this player in the registry (ID '+c.id+', the registry holds '+c.n+' players). Send this code to the site builder.'+code;
+  if(c.reason==='registry_not_ready')return 'The server thinks the registry is not active in the database. Send this code to the site builder.'+code;
+  if(c.reason==='hidden')return 'The server records this player page as hidden, although it is not hidden in the admin list. Send this code to the site builder.'+code;
+  if(c.reason==='bad_id')return 'The server rejects the form of ID '+c.id+'. Send this code to the site builder.'+code;
+  return 'The player page cannot be opened from the server yet'+code+'. Make sure all the latest files are uploaded to GitHub, then wait for the deploy to finish.';
 }
 function checkPages(){
   var p=(data.registered||[]).filter(function(x){return !x.hidden;})[0];
@@ -202,20 +202,20 @@ function post(body){
 function reload(){return load().then(render).catch(function(){render();});}
 function act(body,okMsg,onOk){
   return post(body).then(function(r){
-    if(!r.ok){alert(r.body&&r.body.message||r.body&&r.body.error||'Gagal. Coba lagi.');return null;}
+    if(!r.ok){alert(r.body&&r.body.message||r.body&&r.body.error||'Failed. Please try again.');return null;}
     if(onOk)onOk(r.body);
-    toast(okMsg||'Tersimpan');return reload();
-  }).catch(function(){alert('Tidak ada koneksi. Coba lagi.');});
+    toast(okMsg||'Saved');return reload();
+  }).catch(function(){alert('No connection. Please try again.');});
 }
-function needSetup(){if(!data.ready){alert('Aktifkan registry pemain dulu.');return true;}return false;}
+function needSetup(){if(!data.ready){alert('Turn on the player registry first.');return true;}return false;}
 
 function viewSetup(){
-  if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Registry pemain belum aktif</h3><p class="note">Registry adalah daftar pemain resmi yang diisi admin: nama lengkap, nama panggilan (yang tampil di leaderboard), WhatsApp, dan Instagram. Nama yang tidak terdaftar menjadi guest dan tidak masuk leaderboard. Daftar nama di bawah sudah bisa dipakai untuk memeriksa nama. Aktifkan satu kali, aman kalau terpencet lagi.</p><button class="btn primary" data-a="setup">Aktifkan registry pemain</button></div>';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Registry pemain</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Fitur pisah per game belum aktif di registry ini. <button class="btn sm" data-a="setup">Perbarui registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Halaman pemain belum aktif di registry ini: database perlu satu pembaruan kecil. <button class="btn sm" data-a="setup">Perbarui registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">'+pageCheckText()+'</p>':'')+(data.registered.length?'<p class="note" style="margin-top:0"><button class="btn sm" data-a="checkpages">Cek halaman pemain</button> Memeriksa halaman semua pemain yang tidak disembunyikan.</p>':'')+pageReportHtml()+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' pemain terdaftar &middot; '+data.guests.length+' guest &middot; '+data.played+' meja yang sudah dimainkan.</p>';
+  if(!data.ready)return '<div class="card"><h3 style="margin-bottom:6px">Player registry is not active</h3><p class="note">The registry is the official list of players, filled in by the admin: full name, nickname (shown on the leaderboard), WhatsApp and Instagram. Names that are not registered become guests and stay off the leaderboard. The name list below can already be used to check names. Turn it on once; pressing it again is safe.</p><button class="btn primary" data-a="setup">Turn on the player registry</button></div>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Player registry</h3>'+(data.seatsReady?'':'<p class="note" style="margin-top:0">Splitting by game is not active in this registry. <button class="btn sm" data-a="setup">Update registry</button></p>')+(data.pageReady===false?'<p class="note" style="margin-top:0">Player pages are not active in this registry: the database needs one small update. <button class="btn sm" data-a="setup">Update registry</button></p>':'')+(pageCheck?'<p class="note" style="margin-top:0;color:var(--red)">'+pageCheckText()+'</p>':'')+(data.registered.length?'<p class="note" style="margin-top:0"><button class="btn sm" data-a="checkpages">Check player pages</button> Checks the pages of all players who have not hidden theirs.</p>':'')+pageReportHtml()+'<p class="note" style="margin-bottom:8px">'+data.registered.length+' registered players &middot; '+data.guests.length+' guests &middot; '+data.played+' tables played.</p>';
   h+=data.ruleOn
-    ?'<p class="note" style="margin-top:0">Hanya pemain terdaftar yang masuk leaderboard. Guest tetap tampil di meja dan sesinya, dan nama ganda (memuat "/", "&amp;", "+" atau "dan") juga guest.</p>'
-    :'<p class="note" style="margin-top:0">Aturan guest belum berlaku karena belum ada pemain terdaftar, jadi semua nama masih dihitung di leaderboard. Begitu ada satu pemain terdaftar, hanya pemain terdaftar yang masuk leaderboard. Centang nama yang mau didaftarkan di daftar guest di bawah. Yang tidak dicentang tetap guest.</p>';
-  h+='<div class="acts"><button class="btn" data-a="newplayer">Tambah pemain baru</button></div>';
+    ?'<p class="note" style="margin-top:0">Only registered players appear on the leaderboard. Guests still show at their table and session, and double names (containing "/", "&amp;", "+" or the word "dan") are guests too.</p>'
+    :'<p class="note" style="margin-top:0">The guest rule does not apply yet because no player is registered, so every name still counts on the leaderboard. As soon as one player is registered, only registered players appear on the leaderboard. Tick the names you want to register in the guest list below. Names left unticked stay guests.</p>';
+  h+='<div class="acts"><button class="btn" data-a="newplayer">Add a new player</button></div>';
   if(form&&form.mode==='new')h+=viewForm();
   return h+'</div>';
 }
@@ -223,40 +223,40 @@ function viewForm(){
   var f=form,isEdit=f.mode==='edit',isReq=f.mode==='request',p=isEdit?reg(f.id):null,rq=isReq?req(f.id):null;
   if((isEdit&&!p)||(isReq&&!rq)){form=null;return '';}
   var v=isReq?{nick:rq.nickname,full:rq.fullName,wa:rq.whatsapp,ig:rq.instagram}:{nick:isEdit?p.nickname:(f.name||''),full:isEdit?p.fullName:'',wa:isEdit?p.whatsapp:'',ig:isEdit?p.instagram:''};
-  var h='<div class="form">'+(isReq?'<div class="full note" style="margin:0">'+(rq.tableName?'Mengaku sebagai guest &quot;'+esc(rq.tableName)+'&quot;'+(rq.claim?' ('+rq.claim.games+' game, terakhir '+fmtDate(rq.claim.last)+').':'.'):'Tidak memilih nama dari daftar guest.')+' Periksa datanya, lalu setujui.</div>':'')+'<div><label for="fNick">Nama panggilan (tampil di leaderboard) *</label><input id="fNick" maxlength="30" autocomplete="off" value="'+esc(v.nick)+'"></div>'
-    +'<div><label for="fFull">Nama lengkap</label><input id="fFull" maxlength="60" autocomplete="off" value="'+esc(v.full)+'"></div>'
-    +'<div><label for="fWa">Nomor WhatsApp</label><input id="fWa" inputmode="tel" placeholder="0812..." autocomplete="off" value="'+esc(v.wa)+'"></div>'
-    +'<div><label for="fIg">Username Instagram</label><input id="fIg" placeholder="username" autocomplete="off" value="'+esc(v.ig)+'"></div>';
+  var h='<div class="form">'+(isReq?'<div class="full note" style="margin:0">'+(rq.tableName?'Says they are the guest &quot;'+esc(rq.tableName)+'&quot;'+(rq.claim?' ('+rq.claim.games+' games, last '+fmtDate(rq.claim.last)+').':'.'):'Did not pick a name from the guest list.')+' Check the details, then approve.</div>':'')+'<div><label for="fNick">Nickname (shown on the leaderboard) *</label><input id="fNick" maxlength="30" autocomplete="off" value="'+esc(v.nick)+'"></div>'
+    +'<div><label for="fFull">Full name</label><input id="fFull" maxlength="60" autocomplete="off" value="'+esc(v.full)+'"></div>'
+    +'<div><label for="fWa">WhatsApp number</label><input id="fWa" inputmode="tel" placeholder="0812..." autocomplete="off" value="'+esc(v.wa)+'"></div>'
+    +'<div><label for="fIg">Instagram username</label><input id="fIg" placeholder="username" autocomplete="off" value="'+esc(v.ig)+'"></div>';
   if(isEdit){
-    h+='<div class="full"><label>Ejaan yang dikenali di meja</label>';
-    p.names.forEach(function(k){h+='<span class="tag" style="margin:0 6px 4px 0">'+esc(k)+(k===p.nickname.toLowerCase().replace(/\s+/g,' ')?'':' <button class="lnk" data-a="rmname" data-id="'+esc(p.id)+'" data-v="'+esc(k)+'">hapus</button>')+'</span>';});
-    h+='<div class="addname"><input id="fAlias" placeholder="Tambah ejaan lain, misalnya salah ketik" autocomplete="off"><button class="btn sm" data-a="addname" data-id="'+esc(p.id)+'">Tambah</button></div></div>';
+    h+='<div class="full"><label>Spellings recognised at the table</label>';
+    p.names.forEach(function(k){h+='<span class="tag" style="margin:0 6px 4px 0">'+esc(k)+(k===p.nickname.toLowerCase().replace(/\s+/g,' ')?'':' <button class="lnk" data-a="rmname" data-id="'+esc(p.id)+'" data-v="'+esc(k)+'">remove</button>')+'</span>';});
+    h+='<div class="addname"><input id="fAlias" placeholder="Add another spelling, for example a typo" autocomplete="off"><button class="btn sm" data-a="addname" data-id="'+esc(p.id)+'">Add</button></div></div>';
   }
-  if(isReq&&rq.tableName)h+='<div class="full"><label class="ckrow"><input type="checkbox" id="fLink"'+(rq.claimTakenBy?'':' checked')+'> Tautkan nama &quot;'+esc(rq.tableName)+'&quot; ke pemain ini</label>'+(rq.claimTakenBy?'<div class="meta" style="margin:4px 0 0">Nama ini sudah dipakai '+esc(rq.claimTakenBy)+'. Setujui tanpa menautkan, lalu atur game-nya satu per satu lewat &quot;Pisah per game&quot;.</div>':'')+'</div>';
-  h+='<div class="full note" style="margin:0">WhatsApp dan Instagram hanya terlihat oleh admin, tidak pernah tampil di halaman publik.</div>';
-  h+='<div class="full acts"><button class="btn primary" data-a="save">'+(isReq?'Setujui dan daftarkan':'Simpan')+'</button><button class="btn" data-a="cancelform">Batal</button></div></div>';
+  if(isReq&&rq.tableName)h+='<div class="full"><label class="ckrow"><input type="checkbox" id="fLink"'+(rq.claimTakenBy?'':' checked')+'> Link the name &quot;'+esc(rq.tableName)+'&quot; to this player</label>'+(rq.claimTakenBy?'<div class="meta" style="margin:4px 0 0">This name is already used by '+esc(rq.claimTakenBy)+'. Approve without linking, then set up its games one by one with &quot;Split by game&quot;.</div>':'')+'</div>';
+  h+='<div class="full note" style="margin:0">WhatsApp and Instagram are only visible to the admin and never shown on a public page.</div>';
+  h+='<div class="full acts"><button class="btn primary" data-a="save">'+(isReq?'Approve and register':'Save')+'</button><button class="btn" data-a="cancelform">Cancel</button></div></div>';
   return h;
 }
 function matches(needle,parts){if(!needle)return true;return parts.some(function(s){return String(s||'').toLowerCase().indexOf(needle)>=0;});}
 function viewSignup(){
   if(!data.ready)return '';
   var sg=data.signup;
-  if(!sg||!sg.ready)return '<div class="card"><h3 style="margin-bottom:6px">Pendaftaran lewat link</h3><p class="note">Pemain bisa mendaftar sendiri lewat satu link yang kamu bagikan. Pendaftaran masuk ke daftar tunggu dan baru jadi pemain setelah kamu setujui.</p><button class="btn primary" data-a="setup">Aktifkan pendaftaran lewat link</button></div>';
+  if(!sg||!sg.ready)return '<div class="card"><h3 style="margin-bottom:6px">Sign-up by link</h3><p class="note">Players can sign up themselves through one link that you share. Sign-ups go to a waiting list and only become players after you approve them.</p><button class="btn primary" data-a="setup">Turn on sign-up by link</button></div>';
   var link=sg.token?location.origin+'/daftar.html?t='+sg.token:'';
-  var h='<div class="card"><h3 style="margin-bottom:6px">Pendaftaran lewat link'+(sg.token?'<span class="tag">'+(sg.enabled?'aktif':'dimatikan')+'</span>':'')+'</h3>';
-  if(!sg.token)h+='<p class="note">Buat satu link, lalu bagikan ke pemain (misalnya di grup WhatsApp). Pendaftaran masuk ke daftar tunggu dan baru jadi pemain setelah kamu setujui.</p><button class="btn primary" data-a="sgenable">Buat link pendaftaran</button>';
-  else h+='<input class="search" id="sgLink" readonly value="'+esc(link)+'"><div class="acts"><button class="btn sm primary" data-a="sgcopy">Salin link</button>'+(sg.enabled?'<button class="btn sm" data-a="sgdisable">Matikan link</button>':'<button class="btn sm" data-a="sgenable">Aktifkan lagi</button>')+'<button class="btn sm" data-a="sgreset">Buat link baru</button></div><p class="note" style="margin-top:10px">Siapa pun yang punya link bisa mengirim pendaftaran, tapi tidak ada yang tampil di leaderboard sebelum kamu setujui. Kalau link bocor, buat link baru: link lama langsung tidak berlaku.</p>';
+  var h='<div class="card"><h3 style="margin-bottom:6px">Sign-up by link'+(sg.token?'<span class="tag">'+(sg.enabled?'on':'off')+'</span>':'')+'</h3>';
+  if(!sg.token)h+='<p class="note">Create one link, then share it with players (for example in a WhatsApp group). Sign-ups go to a waiting list and only become players after you approve them.</p><button class="btn primary" data-a="sgenable">Create sign-up link</button>';
+  else h+='<input class="search" id="sgLink" readonly value="'+esc(link)+'"><div class="acts"><button class="btn sm primary" data-a="sgcopy">Copy link</button>'+(sg.enabled?'<button class="btn sm" data-a="sgdisable">Turn the link off</button>':'<button class="btn sm" data-a="sgenable">Turn it on again</button>')+'<button class="btn sm" data-a="sgreset">Create a new link</button></div><p class="note" style="margin-top:10px">Anyone with the link can send a sign-up, but nobody appears on the leaderboard before you approve them. If the link leaks, create a new link: the old one stops working at once.</p>';
   h+='</div>';
   var rs=sg.requests||[];
   if(sg.token||rs.length){
-    h+='<div class="card"><h3 style="margin-bottom:10px">Menunggu persetujuan ('+rs.length+')</h3>';
-    if(!rs.length)h+='<div class="empty">Belum ada pendaftaran baru.</div>';
+    h+='<div class="card"><h3 style="margin-bottom:10px">Waiting for approval ('+rs.length+')</h3>';
+    if(!rs.length)h+='<div class="empty">No new sign-ups yet.</div>';
     rs.forEach(function(x){
       var contact=['WhatsApp <a href="https://wa.me/'+esc(x.whatsapp)+'" target="_blank" rel="noopener">'+esc(x.whatsapp)+'</a>'];
       if(x.instagram)contact.push('Instagram <a href="https://instagram.com/'+esc(x.instagram)+'" target="_blank" rel="noopener">@'+esc(x.instagram)+'</a>');
-      var info=x.tableName?'Mengaku sebagai guest &quot;'+esc(x.tableName)+'&quot;'+(x.claim?' ('+x.claim.games+' game, terakhir '+fmtDate(x.claim.last)+')':' (belum ada game dengan nama itu)'):'Tidak memilih nama dari daftar guest';
-      var warn=(x.claimTakenBy?'<div class="meta" style="color:var(--red)">Nama &quot;'+esc(x.tableName)+'&quot; sudah terdaftar atas nama '+esc(x.claimTakenBy)+', jadi tidak bisa disetujui. Cek dulu orangnya.</div>':'')+(x.nicknameTakenBy?'<div class="meta" style="color:var(--red)">Nama panggilan ini sudah dipakai '+esc(x.nicknameTakenBy)+'. Ubah dulu saat menyetujui.</div>':'');
-      h+='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(x.nickname)+'</span><div class="meta">'+(x.fullName?esc(x.fullName)+' &middot; ':'')+contact.join(' &middot; ')+'</div><div class="meta">'+info+'</div>'+warn+'</div><div class="acts"><button class="btn sm primary" data-a="rqopen" data-id="'+esc(x.id)+'">Tinjau dan setujui</button><button class="btn sm" data-a="rqreject" data-id="'+esc(x.id)+'">Tolak</button></div></div>';
+      var info=x.tableName?'Says they are the guest &quot;'+esc(x.tableName)+'&quot;'+(x.claim?' ('+x.claim.games+' games, last '+fmtDate(x.claim.last)+')':' (no games with that name yet)'):'Did not pick a name from the guest list';
+      var warn=(x.claimTakenBy?'<div class="meta" style="color:var(--red)">The name &quot;'+esc(x.tableName)+'&quot; is already registered under '+esc(x.claimTakenBy)+', so it cannot be approved. Check the person first.</div>':'')+(x.nicknameTakenBy?'<div class="meta" style="color:var(--red)">This nickname is already used by '+esc(x.nicknameTakenBy)+'. Change it when approving.</div>':'');
+      h+='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(x.nickname)+'</span><div class="meta">'+(x.fullName?esc(x.fullName)+' &middot; ':'')+contact.join(' &middot; ')+'</div><div class="meta">'+info+'</div>'+warn+'</div><div class="acts"><button class="btn sm primary" data-a="rqopen" data-id="'+esc(x.id)+'">Review and approve</button><button class="btn sm" data-a="rqreject" data-id="'+esc(x.id)+'">Reject</button></div></div>';
       if(form&&form.mode==='request'&&form.id===x.id)h+=viewForm();
     });
     h+='</div>';
@@ -265,31 +265,31 @@ function viewSignup(){
 }
 function seatPanel(seats){
   var opts=data.registered.map(function(p){return [p.id,p.nickname];});
-  var h='<div class="split"><p class="note" style="margin:0 0 10px">'+(seats.length===1?'Game ini tertaut karena namanya. Kalau yang main orang lain, pilih Guest atau pemain yang benar. &quot;Ikuti nama&quot; mengembalikannya ke tautan awal. Game aslinya tidak diubah.':'Pilih siapa yang main di tiap game. &quot;Ikuti nama&quot; berarti mengikuti nama yang tertulis di meja. Game aslinya tidak diubah.')+'</p>';
+  var h='<div class="split"><p class="note" style="margin:0 0 10px">'+(seats.length===1?'This game is linked because of its name. If someone else played, choose Guest or the right player. &quot;Follow the name&quot; puts it back to the original link. The original game is not changed.':'Choose who played in each game. &quot;Follow the name&quot; means following the name written at the table. The original game is not changed.')+'</p>';
   seats.forEach(function(s){
-    var sel='<option value=""'+(s.override===''?' selected':'')+'>Ikuti nama</option><option value="guest"'+(s.override==='guest'?' selected':'')+'>Guest (tidak dihitung)</option>'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(s.override===o[0]?' selected':'')+'>'+esc(o[1])+'</option>';}).join('');
-    h+='<div class="seatrow"><div class="meta" style="margin:0 0 6px"><b>'+esc(s.session||'-')+'</b> &middot; '+esc(s.table)+' &middot; '+fmtDate(s.date)+' &middot; hasil '+(s.net>0?'+':'')+s.net+'<br>Main bareng: '+(s.with.length?s.with.map(esc).join(', '):'-')+'<br>Ditulis sebagai &quot;'+esc(s.typed)+'&quot; &middot; sekarang dihitung untuk: <b>'+(s.owner?esc(s.owner):'guest')+'</b></div><select data-a="seatsel" data-t="'+esc(s.tableId)+'" data-s="'+s.seat+'">'+sel+'</select></div>';
+    var sel='<option value=""'+(s.override===''?' selected':'')+'>Follow the name</option><option value="guest"'+(s.override==='guest'?' selected':'')+'>Guest (not counted)</option>'+opts.map(function(o){return '<option value="'+esc(o[0])+'"'+(s.override===o[0]?' selected':'')+'>'+esc(o[1])+'</option>';}).join('');
+    h+='<div class="seatrow"><div class="meta" style="margin:0 0 6px"><b>'+esc(s.session||'-')+'</b> &middot; '+esc(s.table)+' &middot; '+fmtDate(s.date)+' &middot; result '+(s.net>0?'+':'')+s.net+'<br>Played with: '+(s.with.length?s.with.map(esc).join(', '):'-')+'<br>Written as &quot;'+esc(s.typed)+'&quot; &middot; now counted for: <b>'+(s.owner?esc(s.owner):'guest')+'</b></div><select data-a="seatsel" data-t="'+esc(s.tableId)+'" data-s="'+s.seat+'">'+sel+'</select></div>';
   });
   return h+'</div>';
 }
 function viewGuests(){
   var needle=q.trim().toLowerCase();
   var list=data.guests.filter(function(g){return matches(needle,[g.name,g.key]);});
-  if(!data.guests.length)return '<div class="empty">Tidak ada guest. Semua nama sudah terdaftar.</div>';
-  if(!list.length)return '<div class="empty">Tidak ada guest yang cocok.</div>';
+  if(!data.guests.length)return '<div class="empty">No guests. Every name is registered.</div>';
+  if(!list.length)return '<div class="empty">No matching guests.</div>';
   return list.map(function(g){
     var hasSeats=g.seats&&g.seats.length;
-    var sims=g.similar.map(function(s){return '<div class="meta">Mirip &quot;'+esc(s.nickname)+'&quot; ('+esc(s.reason)+') <button class="lnk" data-a="simlink" data-id="'+esc(s.id)+'" data-name="'+esc(g.name)+'">tautkan ke '+esc(s.nickname)+'</button></div>';}).join('');
-    var tags='<span class="tag">guest</span>'+(g.two?'<span class="tag">dua nama?</span>':'')+(g.mapped?'<span class="tag">diatur per game</span>':'');
-    var btns=(g.mapped?'':'<button class="btn sm primary" data-a="reg" data-k="'+esc(g.key)+'">Daftarkan</button><button class="btn sm" data-a="linkopen" data-k="'+esc(g.key)+'">Tautkan ke...</button>')+(hasSeats?'<button class="btn sm" data-a="splitopen" data-k="'+esc(g.key)+'">Pisah per game</button>':'');
-    var row='<div class="prow"><div style="min-width:0">'+((g.two||g.mapped)?'':'<input type="checkbox" class="pk" data-a="pick" data-k="'+esc(g.key)+'" aria-label="Pilih '+esc(g.name)+'"'+(picked[g.key]?' checked':'')+'>')+'<span class="pname">'+esc(g.name)+'</span>'+tags
-      +'<div class="meta">'+g.games+' game &middot; terakhir '+fmtDate(g.last)+(g.two?' &middot; nama ganda, tetap guest':'')+(g.mapped?' &middot; namanya terdaftar, tapi game ini diatur manual':'')+'</div>'+sims+'</div>'
+    var sims=g.similar.map(function(s){return '<div class="meta">Similar to &quot;'+esc(s.nickname)+'&quot; ('+esc(s.reason)+') <button class="lnk" data-a="simlink" data-id="'+esc(s.id)+'" data-name="'+esc(g.name)+'">link to '+esc(s.nickname)+'</button></div>';}).join('');
+    var tags='<span class="tag">guest</span>'+(g.two?'<span class="tag">two names?</span>':'')+(g.mapped?'<span class="tag">set per game</span>':'');
+    var btns=(g.mapped?'':'<button class="btn sm primary" data-a="reg" data-k="'+esc(g.key)+'">Register</button><button class="btn sm" data-a="linkopen" data-k="'+esc(g.key)+'">Link to...</button>')+(hasSeats?'<button class="btn sm" data-a="splitopen" data-k="'+esc(g.key)+'">Split by game</button>':'');
+    var row='<div class="prow"><div style="min-width:0">'+((g.two||g.mapped)?'':'<input type="checkbox" class="pk" data-a="pick" data-k="'+esc(g.key)+'" aria-label="Select '+esc(g.name)+'"'+(picked[g.key]?' checked':'')+'>')+'<span class="pname">'+esc(g.name)+'</span>'+tags
+      +'<div class="meta">'+g.games+(g.games===1?' game':' games')+' &middot; last '+fmtDate(g.last)+(g.two?' &middot; double name, stays a guest':'')+(g.mapped?' &middot; the name is registered, but this game is set manually':'')+'</div>'+sims+'</div>'
       +'<div class="acts">'+btns+'</div></div>';
     if(form&&form.mode==='register'&&form.key===g.key)row+=viewForm();
     if(splitFor&&splitFor.kind==='guest'&&splitFor.key===g.key&&hasSeats)row+=seatPanel(g.seats);
     if(linkFor===g.key){
       var opts=data.registered.map(function(p){return '<option value="'+esc(p.id)+'">'+esc(p.nickname)+'</option>';}).join('');
-      row+=data.registered.length?'<div class="mergebox"><span class="meta" style="margin:0">&quot;'+esc(g.name)+'&quot; adalah ejaan lain dari:</span><select id="lt">'+opts+'</select><button class="btn sm primary" data-a="linkgo" data-k="'+esc(g.key)+'">Tautkan</button><button class="btn sm" data-a="linkcancel">Batal</button></div>':'<div class="note">Belum ada pemain terdaftar untuk ditautkan.</div>';
+      row+=data.registered.length?'<div class="mergebox"><span class="meta" style="margin:0">&quot;'+esc(g.name)+'&quot; is another spelling of:</span><select id="lt">'+opts+'</select><button class="btn sm primary" data-a="linkgo" data-k="'+esc(g.key)+'">Link</button><button class="btn sm" data-a="linkcancel">Cancel</button></div>':'<div class="note">No registered players to link to yet.</div>';
     }
     return row;
   }).join('');
@@ -298,18 +298,18 @@ function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u
 function viewRegistered(){
   var needle=q.trim().toLowerCase();
   var list=data.registered.filter(function(p){return matches(needle,[p.nickname,p.fullName,p.instagram,p.whatsapp].concat(p.names));});
-  if(!data.registered.length)return '<div class="empty">Belum ada pemain terdaftar.</div>';
-  if(!list.length)return '<div class="empty">Tidak ada pemain yang cocok.</div>';
+  if(!data.registered.length)return '<div class="empty">No registered players yet.</div>';
+  if(!list.length)return '<div class="empty">No matching players.</div>';
   return list.map(function(p){
     var contact=[];
     if(p.whatsapp)contact.push('WhatsApp <a href="https://wa.me/'+esc(p.whatsapp)+'" target="_blank" rel="noopener">'+esc(p.whatsapp)+'</a>');
     if(p.instagram)contact.push('Instagram <a href="https://instagram.com/'+esc(p.instagram)+'" target="_blank" rel="noopener">@'+esc(p.instagram)+'</a>');
-    var spell=p.names.length>1?' &middot; ejaan: '+p.names.map(esc).join(', '):'';
+    var spell=p.names.length>1?' &middot; spellings: '+p.names.map(esc).join(', '):'';
     var hasSeats=p.seats&&p.seats.length;
-    var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">data belum lengkap</span>':'')+(p.hidden?'<span class="tag">halaman disembunyikan</span>':'')
-      +'<div class="meta">'+(p.fullName?esc(p.fullName)+' &middot; ':'')+p.games+' game &middot; terakhir '+fmtDate(p.last)+spell+'</div>'
+    var row='<div class="prow"><div style="min-width:0"><span class="pname">'+esc(p.nickname)+'</span>'+(p.incomplete?'<span class="tag">incomplete data</span>':'')+(p.hidden?'<span class="tag">page hidden</span>':'')
+      +'<div class="meta">'+(p.fullName?esc(p.fullName)+' &middot; ':'')+p.games+(p.games===1?' game':' games')+' &middot; last '+fmtDate(p.last)+spell+'</div>'
       +(contact.length?'<div class="meta">'+contact.join(' &middot; ')+'</div>':'')+'</div>'
-      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(p.hidden?'':'<a class="btn sm" href="/players/'+encodeURIComponent(p.id)+'/'+esc(slugOf(p.nickname))+'" target="_blank" rel="noopener">Halaman</a>')+(data.pageReady===false?'':'<button class="btn sm" data-a="hide" data-id="'+esc(p.id)+'" data-v="'+(p.hidden?'0':'1')+'">'+(p.hidden?'Tampilkan halaman':'Sembunyikan halaman')+'</button>')+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Atur game':'Pisah per game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Hapus</button></div></div>';
+      +'<div class="acts"><button class="btn sm" data-a="edit" data-id="'+esc(p.id)+'">Edit</button>'+(p.hidden?'':'<a class="btn sm" href="/players/'+encodeURIComponent(p.id)+'/'+esc(slugOf(p.nickname))+'" target="_blank" rel="noopener">Page</a>')+(data.pageReady===false?'':'<button class="btn sm" data-a="hide" data-id="'+esc(p.id)+'" data-v="'+(p.hidden?'0':'1')+'">'+(p.hidden?'Show page':'Hide page')+'</button>')+(hasSeats?'<button class="btn sm" data-a="splitreg" data-id="'+esc(p.id)+'">'+(p.games<2?'Set up games':'Split by game')+'</button>':'')+'<button class="btn sm" data-a="remove" data-id="'+esc(p.id)+'">Delete</button></div></div>';
     if(form&&form.mode==='edit'&&form.id===p.id)row+=viewForm();
     if(splitFor&&splitFor.kind==='reg'&&splitFor.id===p.id&&hasSeats)row+=seatPanel(p.seats);
     return row;
@@ -320,23 +320,23 @@ function pickedKeys(){
 }
 function updatePick(){
   var n=pickedKeys().length,btn=document.getElementById('pickGo');
-  if(btn){btn.textContent='Daftarkan yang dipilih ('+n+')';btn.disabled=!n;}
+  if(btn){btn.textContent='Register the selected ('+n+')';btn.disabled=!n;}
 }
 function pickBar(){
-  return '<div class="pickbar"><button class="btn sm" data-a="pickall">Pilih semua yang tampil</button><button class="btn sm" data-a="pickclear">Kosongkan</button><button class="btn sm primary" id="pickGo" data-a="pickgo" disabled>Daftarkan yang dipilih (0)</button></div><p class="note" style="margin-top:0">Yang tidak dicentang tetap guest dan tidak masuk leaderboard. Nama ganda tidak bisa dicentang.</p>';
+  return '<div class="pickbar"><button class="btn sm" data-a="pickall">Select all shown</button><button class="btn sm" data-a="pickclear">Clear</button><button class="btn sm primary" id="pickGo" data-a="pickgo" disabled>Register the selected (0)</button></div><p class="note" style="margin-top:0">Names left unticked stay guests and stay off the leaderboard. Double names cannot be ticked.</p>';
 }
 function render(){
   var app=document.getElementById('app');
   if(!authed){
-    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" data-a="login">Masuk</button></div>';
+    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" data-a="login">Sign in</button></div>';
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
     return;
   }
-  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Keluar</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sesi</a><a href="/admin-pemain.html" aria-current="page">Pemain</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
+  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html" aria-current="page">Players</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
     +'<main class="wrap">'+viewSetup()+viewSignup()
-    +'<div class="card"><input class="search" id="q" placeholder="Cari nama, nama lengkap, atau Instagram" value="'+esc(q)+'"></div>'
-    +'<div class="card"><h3 style="margin-bottom:10px">Guest, belum terdaftar ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>'
-    +'<div class="card"><h3 style="margin-bottom:10px">Pemain terdaftar ('+data.registered.length+')</h3><div id="rlist">'+viewRegistered()+'</div></div></main>';
+    +'<div class="card"><input class="search" id="q" placeholder="Search by nickname, full name or Instagram" value="'+esc(q)+'"></div>'
+    +'<div class="card"><h3 style="margin-bottom:10px">Guests, not registered ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>'
+    +'<div class="card"><h3 style="margin-bottom:10px">Registered players ('+data.registered.length+')</h3><div id="rlist">'+viewRegistered()+'</div></div></main>';
   updatePick();
   var qi=document.getElementById('q');qi.oninput=function(){q=this.value;document.getElementById('glist').innerHTML=viewGuests();document.getElementById('rlist').innerHTML=viewRegistered();};
 }
@@ -351,19 +351,19 @@ document.addEventListener('click',function(e){
   if(a==='login'){doLogin();}
   else if(a==='logout'){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;data=null;render();}
   else if(a==='checkpages'){checkAll();}
-    else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Sembunyikan halaman "'+p.nickname+'"?\n\nNamanya tetap tampil di leaderboard, tetapi halaman pribadinya tertutup untuk semua orang.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Halaman disembunyikan':'Halaman ditampilkan');}
-    else if(a==='setup'){post({action:'setup'}).then(function(r){if(!r.ok){alert(r.body&&r.body.error||'Gagal mengaktifkan.');return;}toast('Registry aktif');return reload();});}
+    else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Hide the page of "'+p.nickname+'"?\n\nThe name still shows on the leaderboard, but the personal page is closed to everyone.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Page hidden':'Page shown');}
+    else if(a==='setup'){post({action:'setup'}).then(function(r){if(!r.ok){alert(r.body&&r.body.error||'Could not turn it on.');return;}toast('Registry is on');return reload();});}
   else if(a==='newplayer'){if(needSetup())return;form={mode:'new'};linkFor=null;render();}
   else if(a==='reg'){if(needSetup())return;g=guest(b.dataset.k);if(!g)return;form={mode:'register',key:g.key,name:g.name};linkFor=null;render();}
   else if(a==='edit'){form={mode:'edit',id:b.dataset.id};linkFor=null;render();}
   else if(a==='cancelform'){form=null;render();}
   else if(a==='save'){
     var body={nickname:val('fNick'),fullName:val('fFull'),whatsapp:val('fWa'),instagram:val('fIg')};
-    if(!body.nickname.trim()){alert('Nama panggilan wajib diisi.');return;}
+    if(!body.nickname.trim()){alert('Nickname is required.');return;}
     if(form.mode==='edit'){body.action='update';body.id=form.id;}
     else if(form.mode==='request'){body.action='requestApprove';body.id=form.id;var lk=document.getElementById('fLink');if(lk&&!lk.checked)body.linkName=false;}
     else{body.action='register';if(form.key)body.fromGuest=form.key;}
-    act(body,'Tersimpan',function(){form=null;});
+    act(body,'Saved',function(){form=null;});
   }
   else if(a==='pick'){picked[b.dataset.k]=b.checked;updatePick();}
   else if(a==='pickall'){
@@ -375,46 +375,46 @@ document.addEventListener('click',function(e){
   else if(a==='pickgo'){
     var keys=pickedKeys();if(!keys.length)return;
     if(needSetup())return;
-    if(!window.confirm('Daftarkan '+keys.length+' nama sebagai pemain?\n\nNama panggilannya sama dengan ejaan yang tercatat dan bisa diubah lewat Edit. Nama yang tidak dicentang tetap guest.'))return;
+    if(!window.confirm('Register '+keys.length+' names as players?\n\nTheir nicknames are the same as the recorded spelling and can be changed with Edit. Names left unticked stay guests.'))return;
     post({action:'registerAll',keys:keys}).then(function(r){
-      if(!r.ok){alert(r.body&&r.body.error||'Gagal. Coba lagi.');return;}
-      var msg='Terdaftar: '+r.body.created+' pemain.';
-      if(r.body.skippedTwo)msg+=' Dilewati karena nama ganda: '+r.body.skippedTwo+'.';
-      if(r.body.skippedOther)msg+=' Dilewati karena nama panggilan sudah dipakai: '+r.body.skippedOther+'.';
+      if(!r.ok){alert(r.body&&r.body.error||'Failed. Please try again.');return;}
+      var msg='Registered: '+r.body.created+' players.';
+      if(r.body.skippedTwo)msg+=' Skipped because of double names: '+r.body.skippedTwo+'.';
+      if(r.body.skippedOther)msg+=' Skipped because the nickname is already used: '+r.body.skippedOther+'.';
       picked={};alert(msg);return reload();
     });
   }
-  else if(a==='sgenable'){act({action:'signupEnable'},'Link aktif');}
-  else if(a==='sgdisable'){act({action:'signupDisable'},'Link dimatikan');}
-  else if(a==='sgreset'){if(!window.confirm('Buat link baru?\n\nLink lama langsung tidak berlaku, jadi link yang sudah dibagikan perlu dikirim ulang.'))return;act({action:'signupReset'},'Link baru dibuat');}
+  else if(a==='sgenable'){act({action:'signupEnable'},'Link is on');}
+  else if(a==='sgdisable'){act({action:'signupDisable'},'Link is off');}
+  else if(a==='sgreset'){if(!window.confirm('Create a new link?\n\nThe old link stops working at once, so a link that was already shared has to be sent again.'))return;act({action:'signupReset'},'New link created');}
   else if(a==='sgcopy'){
     var box=document.getElementById('sgLink');if(!box)return;
-    var done=function(){toast('Link disalin');},manual=function(){box.select();toast('Tekan lama lalu salin');};
+    var done=function(){toast('Link copied');},manual=function(){box.select();toast('Press and hold, then copy');};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(box.value).then(done,manual);else manual();
   }
   else if(a==='rqopen'){form={mode:'request',id:b.dataset.id};linkFor=null;render();}
   else if(a==='rqreject'){
     var rq=req(b.dataset.id);if(!rq)return;
-    if(!window.confirm('Tolak pendaftaran "'+rq.nickname+'"?\n\nData yang dikirim langsung dihapus.'))return;
-    act({action:'requestReject',id:rq.id},'Ditolak');
+    if(!window.confirm('Reject the sign-up of "'+rq.nickname+'"?\n\nThe data that was sent is deleted at once.'))return;
+    act({action:'requestReject',id:rq.id},'Rejected');
   }
   else if(a==='splitopen'){splitFor=(splitFor&&splitFor.kind==='guest'&&splitFor.key===b.dataset.k)?null:{kind:'guest',key:b.dataset.k};form=null;linkFor=null;render();}
   else if(a==='splitreg'){splitFor=(splitFor&&splitFor.kind==='reg'&&splitFor.id===b.dataset.id)?null:{kind:'reg',id:b.dataset.id};form=null;linkFor=null;render();}
   else if(a==='linkopen'){if(needSetup())return;linkFor=b.dataset.k;form=null;render();}
   else if(a==='linkcancel'){linkFor=null;render();}
-  else if(a==='linkgo'){g=guest(b.dataset.k);var sel=document.getElementById('lt');if(!g||!sel)return;act({action:'addname',id:sel.value,name:g.name},'Ditautkan',function(){linkFor=null;});}
-  else if(a==='simlink'){if(needSetup())return;act({action:'addname',id:b.dataset.id,name:b.dataset.name},'Ditautkan');}
-  else if(a==='addname'){var nm=val('fAlias');if(!nm.trim())return;act({action:'addname',id:b.dataset.id,name:nm},'Ejaan ditambah');}
-  else if(a==='rmname'){act({action:'removename',id:b.dataset.id,key:b.dataset.v},'Ejaan dihapus');}
+  else if(a==='linkgo'){g=guest(b.dataset.k);var sel=document.getElementById('lt');if(!g||!sel)return;act({action:'addname',id:sel.value,name:g.name},'Linked',function(){linkFor=null;});}
+  else if(a==='simlink'){if(needSetup())return;act({action:'addname',id:b.dataset.id,name:b.dataset.name},'Linked');}
+  else if(a==='addname'){var nm=val('fAlias');if(!nm.trim())return;act({action:'addname',id:b.dataset.id,name:nm},'Spelling added');}
+  else if(a==='rmname'){act({action:'removename',id:b.dataset.id,key:b.dataset.v},'Spelling removed');}
   else if(a==='remove'){
     p=reg(b.dataset.id);if(!p)return;
-    if(!window.confirm('Hapus "'+p.nickname+'" dari registry?\n\nGame tidak diubah. Namanya jadi guest lagi dan tidak masuk leaderboard. Game yang diatur manual untuk pemain ini juga jadi guest.'))return;
-    act({action:'remove',id:p.id},'Dihapus',function(){form=null;});
+    if(!window.confirm('Delete "'+p.nickname+'" from the registry?\n\nGames are not changed. The name becomes a guest again and stays off the leaderboard. Games set manually for this player also become guest games.'))return;
+    act({action:'remove',id:p.id},'Deleted',function(){form=null;});
   }
 });
 document.addEventListener('change',function(e){
   var s=e.target;if(!s||!s.dataset||s.dataset.a!=='seatsel')return;
-  act({action:'seatAssign',tableId:s.dataset.t,seat:+s.dataset.s,to:s.value},'Tersimpan').then(function(r){if(r===null)reload();});
+  act({action:'seatAssign',tableId:s.dataset.t,seat:+s.dataset.s,to:s.value},'Saved').then(function(r){if(r===null)reload();});
 });
 if(password){load().then(render).catch(function(){render();});}else{render();}
 </script>

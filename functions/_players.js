@@ -146,7 +146,7 @@ export function sameTableConflict(typed, keys) {
     const w = typed.get(k);
     if (!w) continue;
     for (const t of w.tables) {
-      if (seen[t.id] && seen[t.id] !== k) return '"' + typed.get(seen[t.id]).latestName + '" dan "' + w.latestName + '" bermain di meja yang sama (' + t.label + '), jadi tidak mungkin orang yang sama.';
+      if (seen[t.id] && seen[t.id] !== k) return '"' + typed.get(seen[t.id]).latestName + '" and "' + w.latestName + '" played at the same table (' + t.label + '), so they cannot be the same person.';
       seen[t.id] = k;
     }
   }
@@ -170,15 +170,15 @@ function lev(a, b) {
 function tokens(k) { return k.split(/[^a-z0-9]+/).filter(function (t) { return t.length >= 3; }); }
 function squash(k) { return k.replace(/[^a-z0-9]/g, ''); }
 function reasonFor(a, b) {
-  if (squash(a) && squash(a) === squash(b)) return { score: 3, text: 'sama kalau spasi dan tanda baca diabaikan' };
+  if (squash(a) && squash(a) === squash(b)) return { score: 3, text: 'the same once spaces and punctuation are ignored' };
   const ta = tokens(a), tb = tokens(b);
   const shared = ta.filter(function (t) { return tb.indexOf(t) >= 0; })[0];
-  if (shared) return { score: 3, text: 'sama-sama memuat "' + shared + '"' };
+  if (shared) return { score: 3, text: 'both contain "' + shared + '"' };
   const s = a.length <= b.length ? a : b, l = a.length <= b.length ? b : a;
-  if (s.length >= 3 && l.length > s.length && l.indexOf(s) === 0 && /[^a-z0-9]/.test(l.charAt(s.length))) return { score: 3, text: '"' + s + '" adalah awalan dari "' + l + '"' };
+  if (s.length >= 3 && l.length > s.length && l.indexOf(s) === 0 && /[^a-z0-9]/.test(l.charAt(s.length))) return { score: 3, text: '"' + s + '" is the start of "' + l + '"' };
   const min = Math.min(a.length, b.length), d = lev(a, b);
-  if (d <= 1 && (min >= 4 || a.charAt(0) === b.charAt(0)) && min >= 3) return { score: 2, text: 'ejaan sangat mirip' };
-  if (d <= 2 && min >= 7) return { score: 1, text: 'ejaan mirip' };
+  if (d <= 1 && (min >= 4 || a.charAt(0) === b.charAt(0)) && min >= 3) return { score: 2, text: 'spelling is very similar' };
+  if (d <= 2 && min >= 7) return { score: 1, text: 'spelling is similar' };
   return null;
 }
 

@@ -13,7 +13,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/9e38e04780.woff2">
 <style>
-/* Playfair Display, Inter Tight, and the four wind hanzi from LXGW WenKai TC — embedded as
+/* Playfair Display, Inter Tight, and the four wind hanzi from LXGW WenKai TC, embedded as
    base64 so the type never falls back to a different font depending on the device or network. */
 @font-face{font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/8a53e5ecdb.woff2) format('woff2');}
 @font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9401d0214a.woff2) format('woff2');}
@@ -426,13 +426,13 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 
     <div class="card">
       <h2>Scores per hand</h2>
-      <p class="hint">Pick a wind round above, then enter that round's hands here — each round keeps its own hands, so Overall adds them all up automatically.</p>
+      <p class="hint">Pick a wind round above, then enter that round's hands here. Each round keeps its own hands, so Overall adds them all up automatically.</p>
       <div class="start">
         <label class="chk"><input type="checkbox" id="useStart"> Use starting scores</label>
         <input id="startScore" type="number" step="any" aria-label="Starting score">
       </div>
       <p class="hint" id="startHint" hidden>Enter each hand as a plus or minus change. The total shows each player's starting score plus their changes.</p>
-      <p class="hint">A hand's four changes should add up to zero — one player's win is the others' loss. Rows that don't are outlined in red.</p>
+      <p class="hint">A hand's four changes should add up to zero: one player's win is the others' loss. Rows that don't are outlined in red.</p>
       <div id="handsEditor">
         <div class="hrow hhead" id="hhead"></div>
         <div id="rows"></div>
@@ -707,7 +707,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var names=state.names.map(function(v,i){return clean(v)||('Player '+(i+1));});
     if(state.round===4){
       // whole game: one row per wind round (from that round's own hands, wherever they came from),
-      // then the overall result — starting score plus the net of every hand across all four rounds
+      // then the overall result, starting score plus the net of every hand across all four rounds
       var bases4=[0,1,2,3].map(function(i){return state.useStart?num(state.starts[i]):0;});
       var any4=[0,1,2,3].some(function(w){return (state.roundHands[w]||[]).filter(hasVal).length>0;});
       var orows=[],ot=bases4.slice(),ow=[],olevel=false;
@@ -913,7 +913,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var TOP=isStory?256:Math.max(40,Math.round(64*handK));
     var tH=isStory?204:Math.max(80,Math.round(132*handK));
     // the footer's own margin is sized to what the footer actually draws (its logo row, plus a
-    // tagline line when one is shown), never independently of it — that's what let the crown and
+    // tagline line when one is shown), never independently of it, that's what let the crown and
     // the footer logo clash before: the margin could shrink past the footer's real height
     var footLh=Math.max(34,Math.round(56*handK));
     var footH=footerOneLine?footLh:footLh+58;
@@ -929,10 +929,10 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var fixedM=headH+padRows+totalH+ovH+gap2+spotH;
     var rowH=0,rowsBlock=emptyH;
     if(isStory){
-      // Story: row spacing stays fixed as long as possible — the header and footer move first to
+      // Story: row spacing stays fixed as long as possible, the header and footer move first to
       // make room. Only once a round is long enough that moving them as far as they reasonably can
       // still isn't enough (well past the 12-16 hand range) does row spacing give a little, and even
-      // then only by as much as still needed — never enough to actually collide with the footer
+      // then only by as much as still needed, never enough to actually collide with the footer
       var ROWH=58,zoneH_base=1468-(256+204+46); // FOOT_TOP - (TOP+tH+headerGap), the room a 4-hand round has always had
       rowsBlock=n?ROWH*rowCount:emptyH;
       var need=Math.max(0,fixedM+rowsBlock-zoneH_base);
@@ -1949,7 +1949,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   }
 
   // replay every hand in order: works out dealer, streak, wind round and each hand's score changes.
-  // A wind round ends once 4 different seats have each had a dealer turn — counted directly, rather
+  // A wind round ends once 4 different seats have each had a dealer turn, counted directly, rather
   // than by watching for the dealer index to land back on 0, because with seat rotation on, a wind
   // round doesn't necessarily start at seat 0, so it wouldn't reliably wrap back to it either.
   // MCR seat rotation: which seat deals each of the 4 hands in a wind round. Row 0 is East
@@ -2263,7 +2263,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       var pk=patterns[k];
       if(!pk||!pk.counted||!pk.counted.length)return;
       var list=pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ');
-      lines.push(multi?('Patterns \u2014 '+esc(gname(+k))+': '+list):('Patterns: '+list));
+      lines.push(multi?('Patterns, '+esc(gname(+k))+': '+list):('Patterns: '+list));
     });
     return lines.map(function(l){return '<p class="hint" style="margin-top:6px">'+l+'</p>';}).join('');
   }
@@ -2396,7 +2396,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     }
     if(game.mode==='casual')return 'Any hand of 1 point or more can win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
     if(game.mode==='default')return 'A hand needs at least 2 points to win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
-    if(game.mode==='tournament')return 'A hand needs at least 2 points to win. The dealer never repeats \u2014 streak caps at 1.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.')+' A draw pays tenpai '+drawWord(cfg)+'.';
+    if(game.mode==='tournament')return 'A hand needs at least 2 points to win. The dealer never repeats, so the streak caps at 1.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.')+' A draw pays tenpai '+drawWord(cfg)+'.';
     return 'A hand needs at least '+cfg.minPoint+' point'+(cfg.minPoint===1?'':'s')+' to win. Dealer streak up to '+cfg.maxStreak+'.'+(cfg.deadwall?' Non-replenishing deadwall is on, doubling the draw payout again.':'')+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':'')+' A draw pays tenpai '+drawWord(cfg)+'.';
   }
   function syncGameMode(){
@@ -2947,15 +2947,15 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(floSelIdx>=0)h+='<p class="hint">Only one flower/season bonus applies at a time, so picking one locks the others.</p>';
     if(gardenSel)h+='<p class="hint">Win By Royal Garden and Win By Imperial Garden count on their own, so every other pattern and bonus is locked while one of them is picked.</p>';
     else if(otherPicks)h+='<p class="hint">Win By Royal Garden and Win By Imperial Garden can only be picked on their own, so they are locked while anything else is picked.</p>';
-    if(hasML)h+='<p class="hint">Master and Legendary hands don\u2019t stack with anything else, including the flower and win-condition bonuses below \u2014 those are locked.</p>';
+    if(hasML)h+='<p class="hint">Master and Legendary hands don\u2019t stack with anything else, including the flower and win-condition bonuses below; those are locked.</p>';
     else if(hasNonML)h+='<p class="hint">Master and Legendary patterns don\u2019t stack with anything else, so they\u2019re locked while a Beginner, Apprentice or Expert pattern is picked.</p>';
     if(!hasML){
       if(bonusDis)h+='<p class="hint">Pattern points alone are already above 10, so flower and win-condition bonuses below are locked and can\u2019t be added.</p>';
       if(selSet[IDX.HALFTERM])h+='<p class="hint">Half Terminals already guarantees All Pong and Half Outside, so those are locked.</p>';
-      if(selSet[IDX.SEVENPAIRS])h+='<p class="hint">Seven Pairs only stacks with All Simples, Half Flush, Full Flush and Half Terminals \u2014 everything else is locked.</p>';
+      if(selSet[IDX.SEVENPAIRS])h+='<p class="hint">Seven Pairs only stacks with All Simples, Half Flush, Full Flush and Half Terminals; everything else is locked.</p>';
       if(selSet[IDX.ALLTYPES])h+='<p class="hint">With All Types, Pong Of Dragon can only be picked once.</p>';
-      if(selSet[IDX.SPLITSTRAIGHT])h+='<p class="hint">Split Straight only stacks with All Types, Concealed Hand and All Sequences / Chi \u2014 everything else is locked.</p>';
-      if(selSet[IDX.SCATTEREDSTARS])h+='<p class="hint">Scattered Stars doesn\u2019t stack with any other pattern \u2014 only the flower and win-condition bonuses below still apply.</p>';
+      if(selSet[IDX.SPLITSTRAIGHT])h+='<p class="hint">Split Straight only stacks with All Types, Concealed Hand and All Sequences / Chi; everything else is locked.</p>';
+      if(selSet[IDX.SCATTEREDSTARS])h+='<p class="hint">Scattered Stars doesn\u2019t stack with any other pattern; only the flower and win-condition bonuses below still apply.</p>';
     }
     $('pkBox').innerHTML=h;
     $('pkBox').querySelectorAll('details[data-tier]').forEach(function(d){
@@ -2977,7 +2977,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     if(r.mode==='garden')notes.push('Winning by Royal Garden or Imperial Garden counts on its own, so no other pattern, flower or win-condition bonus is added.');
     else if(r.mode==='ml')notes.push('A Master or Legendary pattern is selected, so only Master/Legendary picks count toward the total; everything else is ignored.');
     else{
-      if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches 10, no further pattern points are added \u2014 the pattern that crosses 10 still counts in full.');
+      if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches 10, no further pattern points are added. The pattern that crosses 10 still counts in full.');
       if(r.bonusTrimmed&&r.bonusTrimmed.length)notes.push('Flower and win-condition bonuses are added highest first until the running total reaches 10. The one that crosses 10 still counts in full; the rest are not counted, even though they can still be selected.');
       if(r.bonusLocked)notes.push('Pattern points alone are already above 10, so flower and win-condition bonuses don\u2019t add on top.');
       if(r.capNotes&&r.capNotes.indexOf(IDX.KONG3)>=0)notes.push('Three Quadruplets / Kongs is counted at a reduced +3 (normally +7) because it overlaps in structure with the other triplet-family pattern(s) picked.');
@@ -3323,7 +3323,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   /* ---------- drawing ---------- */
   var canvas=$('shareCanvas'),ctx=canvas.getContext('2d');
   // a player's seat wind for a given hand is relative to that hand's dealer (the dealer is always
-  // East for their own hand), not a fixed per-player assignment \u2014 so it is derived from the hand's row
+  // East for their own hand), not a fixed per-player assignment, so it is derived from the hand's row
   // every time, along the seats of that wind round (with seat rotation on the players change seats between rounds).
   function seatWindOf(player,row){
     var ROUNDS=window.ROUNDS;
@@ -3354,7 +3354,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     return NOISE;
   }
   // same background treatment as the Story card: gradient, soft bloom from above, vignette,
-  // a giant low-opacity wind-round hanzi bleeding off the corner, and a grain overlay \u2014
+  // a giant low-opacity wind-round hanzi bleeding off the corner, and a grain overlay, 
   // this is what keeps the card from reading as empty once the content block is only half the canvas
   function background(W,H,t,rd){
     var g=ctx.createLinearGradient(0,0,0,H);
@@ -3463,7 +3463,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     var leftX=pad;
 
     // Fixed slots: each section has its own constant Y, so toggling a field on/off never shifts
-    // the sections below it \u2014 only the patterns list (whose own length varies hand to hand) and
+    // the sections below it, only the patterns list (whose own length varies hand to hand) and
     // whatever sits after it move, which is content-driven rather than toggle-driven.
     var NAME_Y=contentTop,COND_Y=contentTop+106*K,SCORE_Y=contentTop+190*K;
     var SCORE_SIZE=Math.round(132*K);

@@ -1068,6 +1068,8 @@ Barat, dan Utara (28 dari 64 kombinasi pemain dan tangan). Sekarang kartu memaka
 
 ## Update terbaru (v54): ubah nama sesi
 
+(Label tombol di halaman admin sekarang berbahasa Inggris, lihat tabel di v55: Ubah nama menjadi Rename, Simpan menjadi Save, Batal menjadi Cancel.)
+
 Di halaman admin, layar sebuah sesi sekarang punya opsi **Ubah nama** di samping Hapus sesi. Ketuk, kolom nama muncul
 berisi nama sekarang (langsung terpilih). **Enter** atau **Simpan** menyimpan, **Esc** atau **Batal** membatalkan.
 
@@ -1076,3 +1078,63 @@ berisi nama sekarang (langsung terpilih). **Enter** atau **Simpan** menyimpan, *
 - Semua halaman yang menampilkan nama sesi (daftar sesi, halaman sesi publik, halaman pemain, halaman meja) membaca nama
   dari sesi itu, jadi ikut berubah. Halaman publik di-cache sekitar 30 detik, jadi nama baru bisa baru terlihat setelah itu.
 - Hanya admin yang bisa mengubah. Server menolak permintaan tanpa kata sandi admin.
+
+## Update terbaru (v55): header dan menu baru, cari nama sendiri, My page, dan seluruh situs berbahasa Inggris
+
+**Header baru di leaderboard, All players, dan halaman pemain.** Nama merek tetap terlihat. Di ponsel ada ikon cari dan
+tombol menu (tiga garis) di kanan atas. Dari layar 720 piksel kolom cari selalu terlihat, dan dari 1280 piksel tautan
+(Leaderboard, Players, Table code, Admin) tampil langsung di header tanpa tombol menu. Tautan kecil lama ("All players ›"
+di bawah judul dan "Enter table code" di header) dihapus; keduanya kini ada di menu. Players di menu tetap membawa
+pilihan periode dan mode yang sedang dipakai.
+
+**Menu.** Isinya Leaderboard, Players, Table code, **My page** (hanya bila sudah disimpan), lalu grup **Admin** (Sessions
+dan Players) paling bawah, bergaya lebih tenang. Admin selalu terlihat untuk semua orang, tetapi kedua halaman admin tetap
+dilindungi kata sandi. Papan skor host (scoreboard) sengaja tidak diberi header ini.
+
+**Find your name.** Ikon cari membuka kolom cari yang mencari **semua pemain terdaftar** (semua periode dan mode), jadi
+orang yang hanya main MCR atau hanya bulan lalu tetap ketemu. Hasilnya diberi tag **Not in this view** bila ia tidak ada
+di tampilan sekarang, lengkap dengan jumlah game, mode, dan tanggal terakhir main. Salah ketik (misalnya "riky") dijawab
+dengan saran "Did you mean Ricky?". Bila memang tidak ada, pesannya jujur dan tidak menuduh.
+- Daftar nama berasal dari endpoint baru `/api/names`. Isinya hanya nama panggilan, jumlah game, tanggal terakhir, dan
+  mode. Tidak ada nama lengkap, WhatsApp, Instagram, kode, pemain yang menyembunyikan halamannya, atau tamu. Di-cache
+  sekitar 30 detik, sama seperti daftar pemain.
+- Pemain yang sudah terdaftar tetapi belum punya satu pun game belum muncul (sama seperti di halaman All players).
+- Di halaman All players, pencarian tanpa hasil sekarang menulis "No match with the current filters." (bukan lagi
+  "No player matches") dan menampilkan blok **Also found, but not in this view** berisi orang yang tersembunyi oleh filter.
+
+**This is me dan My page.** Di halaman pemain ada tombol **This is me**. Bila diketuk, halaman itu muncul sebagai **My
+page** di menu pada setiap halaman publik. Yang disimpan hanya id dan nama panggilan, **di peramban perangkat itu saja**
+(kunci `tbt-me`), tidak dikirim ke server. Ketuk lagi untuk menghapus. Bila penyimpanan diblokir (mode pribadi), tombol
+tidak ditampilkan dan semua halaman tetap jalan. Menghapus data situs di peramban juga menghapusnya.
+
+**Panah di baris leaderboard.** Baris yang membuka halaman pemain kini berpanah. Baris tamu atau pemain yang
+menyembunyikan halamannya tidak berpanah.
+
+**Seluruh situs berbahasa Inggris.** Halaman daftar, halaman admin sesi, halaman admin pemain, dan semua pesan server
+kini berbahasa Inggris. Dokumen BACA-DULU ini tetap berbahasa Indonesia. Dua hal sengaja tidak diubah supaya tautan lama
+tidak patah: **nama berkas** (`admin-pemain.html`, `masuk.html`, `daftar.html`) dan parameter alamat `?sesi=`. Aturan nama
+ganda di server masih mengenali kata "dan" (misalnya "Ana dan Budi" dihitung dua orang), dan catatan di halaman admin
+menyebutnya apa adanya.
+
+Padanan label admin (untuk membaca petunjuk lama di dokumen ini):
+
+| Dulu | Sekarang |
+|---|---|
+| Sesi, Pemain, Masuk, Keluar | Sessions, Players, Sign in, Sign out |
+| Buat sesi, Tambah meja, Buat meja | Create session, Add table, Create table |
+| Ubah nama, Hapus sesi, Simpan, Batal | Rename, Delete session, Save, Cancel |
+| Buka kunci, Perbaiki pemain, Salin link | Unlock, Fix players, Copy link |
+| Perbarui registry, Pisah per game | Update registry, Split by game |
+| Ikuti nama, Tautkan ke... | Follow the name, Link to... |
+| Pendaftaran lewat link, Buat link baru | Sign-up by link, Create a new link |
+| Tinjau dan setujui, Tolak | Review and approve, Reject |
+| Daftarkan, Tambah pemain baru | Register, Add a new player |
+| Sembunyikan halaman, Tampilkan halaman | Hide page, Show page |
+
+**Yang diunggah.** Seluruh isi folder `tbt-website-latest.zip`. File baru: `functions/api/names.js`. Tidak ada migrasi
+database.
+
+**Pengujian.** 22 pemeriksaan server untuk daftar nama (privasi, halaman tersembunyi, tamu, mode, tanggal), 139
+pemeriksaan di peramban (ikon cari, hasil, salah ketik, menu, My page, penyimpanan rusak atau diblokir, nama berbahaya,
+All players, dan semua halaman di lebar 320 sampai 1280 piksel), ditambah seluruh rangkaian lama yang tetap lolos.
+

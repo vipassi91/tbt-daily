@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<title>TBT Admin &middot; Sesi</title>
+<title>TBT Admin &middot; Sessions</title>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -87,7 +87,7 @@ main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padd
 main .meta .lnk{padding:8px 6px!important}
 main .meta a{display:inline-flex;align-items:center;min-height:38px}
 
-/* Perbaiki pemain */
+/* Fix players */
 .fxo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}.fxo[hidden]{display:none}
 .fxs{background:var(--surface);color:var(--text);width:100%;max-width:520px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;border:1px solid var(--line)}
 @media (min-width:700px){.fxo{align-items:center}.fxs{border-radius:18px}}
@@ -140,49 +140,49 @@ function loadNames(){
 }
 function openDay(id){
   return fetch('/api/days/'+encodeURIComponent(id),{headers:H()}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    day=d;renaming=false;rnBusy=false;nt={label:d?'Meja '+(d.tables.length+1):'',p:['','','','']};render();window.scrollTo(0,0);
+    day=d;renaming=false;rnBusy=false;nt={label:d?'Table '+(d.tables.length+1):'',p:['','','','']};render();window.scrollTo(0,0);
   });
 }
 function progText(t){
-  if(!t.events)return 'Belum mulai';
-  if(t.locked)return t.events+' hand, final (terkunci)';
-  if(t.progress.done)return t.events+' hand, selesai';
-  return t.events+' hand, ronde '+['East','South','West','North'][t.progress.wind];
+  if(!t.events)return 'Not started';
+  if(t.locked)return t.events+(t.events===1?' hand':' hands')+', final (locked)';
+  if(t.progress.done)return t.events+(t.events===1?' hand':' hands')+', finished';
+  return t.events+(t.events===1?' hand':' hands')+', '+['East','South','West','North'][t.progress.wind]+' round';
 }
 var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
 function rulesLine(t){
   var r=t.rules;if(!r)return '';
-  if(r.base!=null){var q=[modeLabel(t.mode),'base '+r.base,'min '+r.minPoint+' poin','dealer tidak mengulang'];if(r.seatRotation)q.push('rotasi kursi');return q.join(' \u00b7 ');}   // meja MCR
-  var p=[modeLabel(t.mode),'min '+r.minPoint+' poin','streak '+r.maxStreak,r.start==null?'tanpa skor awal':'skor awal '+r.start];
+  if(r.base!=null){var q=[modeLabel(t.mode),'base '+r.base,'min '+r.minPoint+' points','no dealer repeat'];if(r.seatRotation)q.push('seat rotation');return q.join(' \u00b7 ');}   // meja MCR
+  var p=[modeLabel(t.mode),'min '+r.minPoint+' points','streak '+r.maxStreak,r.start==null?'no starting score':'starting score '+r.start];
   if(r.bankrupt)p.push('bankrupt');
-  if(r.seatRotation)p.push('rotasi kursi');
+  if(r.seatRotation)p.push('seat rotation');
   if(r.deadwall)p.push('deadwall');
   return p.join(' \u00b7 ');
 }
 function modeLabel(m){return MODE_NAMES[m||'casual']||'Casual';}
 function unlockTable(code){
-  if(!confirm('Buka kunci meja ini? Host bisa mengedit lagi sampai disimpan ulang.'))return;
+  if(!confirm('Unlock this table? The host can edit it again until it is saved again.'))return;
   fetch('/api/lock/'+encodeURIComponent(code),{method:'DELETE',headers:H()}).then(function(r){if(!r.ok)throw new Error('x');return openDay(day.id);}).then(render).catch(function(){alert('Gagal membuka kunci.');});
 }
 function copyLink(kind,code){
   var url=location.origin+'/scoreboard.html?'+(kind==='host'?'code=':'view=')+code;
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(function(){toast('Link disalin');},function(){prompt('Salin link ini:',url);});
-  else prompt('Salin link ini:',url);
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(function(){toast('Link copied');},function(){prompt('Copy this link:',url);});
+  else prompt('Copy this link:',url);
 }
 
 function render(){
   var app=document.getElementById('app');
   if(!authed){
-    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Masuk</button></div>';
+    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Sign in</button></div>';
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
     return;
   }
-  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Keluar</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html" aria-current="page">Sesi</a><a href="/admin-pemain.html">Pemain</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div><main class="wrap">'+(day?viewDay():viewDays())+'</main>';
+  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html" aria-current="page">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div><main class="wrap">'+(day?viewDay():viewDays())+'</main>';
 }
 function doLogin(){
   password=document.getElementById('pw').value;
   checkLogin().then(function(ok){
-    if(!ok){loginError='Password salah.';render();return;}
+    if(!ok){loginError='Wrong password.';render();return;}
     sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';
     return Promise.all([loadDays(),loadNames()]).then(render);
   });
@@ -190,69 +190,69 @@ function doLogin(){
 function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;day=null;render();}
 
 function viewDays(){
-  return '<div class="card"><h3 style="margin-bottom:12px">Sesi baru</h3><div class="frow"><div class="field"><label>Nama sesi</label><input id="ndl" placeholder="Fun Tournament" value="'+esc(nd.label)+'" oninput="nd.label=this.value"></div><div class="field"><label>Tanggal</label><input id="ndd" type="date" value="'+esc(nd.date)+'" oninput="nd.date=this.value"></div></div><button class="btn primary" onclick="createDay()">Buat sesi</button></div>'
-    +'<h3 style="margin:22px 0 4px">Semua sesi</h3>'
-    +(days.length?days.map(function(d){return '<div class="dayrow" onclick="openDay(\''+esc(d.id)+'\')"><div><strong>'+esc(d.label)+'</strong><div class="meta">'+esc(fmtDate(d.date))+' \u00b7 '+d.table_count+' meja</div></div><span class="meta">\u203a</span></div>';}).join(''):'<div class="empty">Belum ada sesi.</div>');
+  return '<div class="card"><h3 style="margin-bottom:12px">New session</h3><div class="frow"><div class="field"><label>Session name</label><input id="ndl" placeholder="Fun Tournament" value="'+esc(nd.label)+'" oninput="nd.label=this.value"></div><div class="field"><label>Date</label><input id="ndd" type="date" value="'+esc(nd.date)+'" oninput="nd.date=this.value"></div></div><button class="btn primary" onclick="createDay()">Create session</button></div>'
+    +'<h3 style="margin:22px 0 4px">All sessions</h3>'
+    +(days.length?days.map(function(d){return '<div class="dayrow" onclick="openDay(\''+esc(d.id)+'\')"><div><strong>'+esc(d.label)+'</strong><div class="meta">'+esc(fmtDate(d.date))+' \u00b7 '+d.table_count+(d.table_count===1?' table':' tables')+'</div></div><span class="meta">\u203a</span></div>';}).join(''):'<div class="empty">No sessions yet.</div>');
 }
 function createDay(){
-  if(!nd.label.trim()||!nd.date){alert('Nama sesi dan tanggal wajib diisi');return;}
+  if(!nd.label.trim()||!nd.date){alert('A session name and a date are required');return;}
   fetch('/api/days',{method:'POST',headers:H(),body:JSON.stringify(nd)}).then(function(r){return r.json();}).then(function(d){
     nd={label:'',date:''};return loadDays().then(function(){return d.id?openDay(d.id):render();});
   });
 }
 function viewDay(){
   var d=day;
-  return '<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 Semua sesi</button>'
-    +(renaming?renameForm(d):'<h2>'+esc(d.label)+'</h2>')+'<div class="meta" style="margin-bottom:4px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">Lihat halaman publik sesi ini</a></div><div class="meta" style="margin-bottom:12px;display:flex;gap:18px">'+(renaming?'':'<button class="lnk" style="padding:10px 0;color:var(--accent)" onclick="startRename()">Ubah nama</button>')+'<button class="lnk" style="padding:10px 0;color:var(--red)" onclick="delDay()">Hapus sesi</button></div>'
+  return '<button class="lnk" style="color:var(--accent);font-weight:700;padding:0 0 10px" onclick="day=null;render()">\u2039 All sessions</button>'
+    +(renaming?renameForm(d):'<h2>'+esc(d.label)+'</h2>')+'<div class="meta" style="margin-bottom:4px">'+esc(fmtDate(d.date))+' \u00b7 <a href="/index.html?sesi='+encodeURIComponent(d.id)+'" target="_blank">View this session on the public page</a></div><div class="meta" style="margin-bottom:12px;display:flex;gap:18px">'+(renaming?'':'<button class="lnk" style="padding:10px 0;color:var(--accent)" onclick="startRename()">Rename</button>')+'<button class="lnk" style="padding:10px 0;color:var(--red)" onclick="delDay()">Delete session</button></div>'
     +'<datalist id="pnames">'+names.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>'
-    +'<div class="card"><h3 style="margin-bottom:12px">Tambah meja</h3><div class="field"><label>Nama meja</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Nama pemain boleh dikosongin, host bisa isi sendiri nanti dari scoreboard</div><div class="frow">'
-    +[0,1,2,3].map(function(i){return '<div class="field"><label>Pemain '+(i+1)+' (opsional)</label><input id="ntp'+i+'" list="pnames" autocomplete="off" placeholder="Diisi host nanti" value="'+esc(nt.p[i])+'" oninput="nt.p['+i+']=this.value"></div>';}).join('')
-    +'</div><button class="btn primary" onclick="createTable()">Buat meja</button></div>'
-    +'<h3 style="margin:22px 0 10px">Meja</h3>'
-    +(d.tables.length?d.tables.map(tableItem).join(''):'<div class="empty">Belum ada meja.</div>');
+    +'<div class="card"><h3 style="margin-bottom:12px">Add table</h3><div class="field"><label>Table name</label><input id="ntl" value="'+esc(nt.label)+'" oninput="nt.label=this.value"></div><div class="meta" style="margin:-4px 0 10px">Player names can be left empty. The host can fill them in later from the scoreboard.</div><div class="frow">'
+    +[0,1,2,3].map(function(i){return '<div class="field"><label>Player '+(i+1)+' (optional)</label><input id="ntp'+i+'" list="pnames" autocomplete="off" placeholder="The host fills this in later" value="'+esc(nt.p[i])+'" oninput="nt.p['+i+']=this.value"></div>';}).join('')
+    +'</div><button class="btn primary" onclick="createTable()">Create table</button></div>'
+    +'<h3 style="margin:22px 0 10px">Tables</h3>'
+    +(d.tables.length?d.tables.map(tableItem).join(''):'<div class="empty">No tables yet.</div>');
 }
 function tableItem(t){
   var base=location.origin+'/scoreboard.html?';
-  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Buka kunci</button> ':'')+(t.events>0?'<button class="lnk" onclick="openFix(\''+t.code+'\')">Perbaiki pemain</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Hapus</button></div></div>'
-    +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Salin link</button></div>'
-    +'<div class="cr"><span class="cl">Pemain</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Buka</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Salin link</button></div>'
-    +'<div class="meta" style="margin-top:6px">Atau cukup kasih kodenya aja (host atau pemain), tinggal buka <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> terus ketik kodenya</div></div>';
+  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span><div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Unlock</button> ':'')+(t.events>0?'<button class="lnk" onclick="openFix(\''+t.code+'\')">Fix players</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Delete</button></div></div>'
+    +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Open</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Copy link</button></div>'
+    +'<div class="cr"><span class="cl">Players</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Open</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Copy link</button></div>'
+    +'<div class="meta" style="margin-top:6px">Or just share the code (host or players), then open <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> and type the code</div></div>';
 }
 function createTable(){
   var p=nt.p.map(function(x){return x.trim();});
-  if(!nt.label.trim()){alert('Nama meja wajib diisi');return;}
+  if(!nt.label.trim()){alert('A table name is required');return;}
   fetch('/api/tables',{method:'POST',headers:H(),body:JSON.stringify({day_id:day.id,label:nt.label.trim(),players:p})}).then(function(r){return r.json().then(function(b){return {ok:r.ok,b:b};});}).then(function(x){
-    if(!x.ok){alert(x.b.error||'Gagal membuat meja');return;}
+    if(!x.ok){alert(x.b.error||'Could not create the table');return;}
     return Promise.all([openDay(day.id),loadDays(),loadNames()]).then(function(){render();});
   });
 }
 function delTable(code){
-  if(!confirm('Hapus meja ini beserta semua skornya?'))return;
+  if(!confirm('Delete this table and all its scores?'))return;
   fetch('/api/tables/'+code,{method:'DELETE',headers:H()}).then(function(){return Promise.all([openDay(day.id),loadDays()]);}).then(function(){render();});
 }
 // Rename the session. The name lives only on the session, so every page that shows it picks the new one up.
 function renameForm(d){
-  return '<div class="field" style="max-width:420px;margin-bottom:10px"><label for="rnl">Nama sesi</label><input id="rnl" value="'+esc(rnValue)+'" maxlength="80" autocomplete="off" oninput="rnValue=this.value" onkeydown="rnKey(event)"></div>'
-    +'<div style="display:flex;gap:8px;margin:0 0 14px"><button type="button" class="btn primary sm" onclick="saveRename()"'+(rnBusy?' disabled':'')+'>Simpan</button><button type="button" class="btn sm" onclick="cancelRename()">Batal</button></div>';
+  return '<div class="field" style="max-width:420px;margin-bottom:10px"><label for="rnl">Session name</label><input id="rnl" value="'+esc(rnValue)+'" maxlength="80" autocomplete="off" oninput="rnValue=this.value" onkeydown="rnKey(event)"></div>'
+    +'<div style="display:flex;gap:8px;margin:0 0 14px"><button type="button" class="btn primary sm" onclick="saveRename()"'+(rnBusy?' disabled':'')+'>Save</button><button type="button" class="btn sm" onclick="cancelRename()">Cancel</button></div>';
 }
 function startRename(){renaming=true;rnBusy=false;rnValue=day.label;render();var i=document.getElementById('rnl');if(i){i.focus();i.select();}}
 function cancelRename(){renaming=false;rnBusy=false;render();}
 function rnKey(e){if(e.key==='Enter'){e.preventDefault();saveRename();}else if(e.key==='Escape'){e.preventDefault();cancelRename();}}
 function saveRename(){
   if(rnBusy)return;var v=rnValue.replace(/\s+/g,' ').trim();
-  if(!v){alert('Nama sesi wajib diisi');return;}
+  if(!v){alert('A session name is required');return;}
   if(v===day.label){cancelRename();return;}
   rnBusy=true;render();
   fetch('/api/days/'+encodeURIComponent(day.id),{method:'PATCH',headers:H(),body:JSON.stringify({label:v})})
     .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
     .then(function(x){
       rnBusy=false;
-      if(!x.ok){alert((x.j&&x.j.error)||'Gagal mengubah nama sesi');render();var i2=document.getElementById('rnl');if(i2)i2.focus();return;}
-      day.label=x.j.label;days.forEach(function(d){if(d.id===day.id)d.label=x.j.label;});renaming=false;render();toast('Nama sesi diubah');
-    }).catch(function(){rnBusy=false;alert('Koneksi gagal, coba lagi');render();});
+      if(!x.ok){alert((x.j&&x.j.error)||'Could not rename the session');render();var i2=document.getElementById('rnl');if(i2)i2.focus();return;}
+      day.label=x.j.label;days.forEach(function(d){if(d.id===day.id)d.label=x.j.label;});renaming=false;render();toast('Session renamed');
+    }).catch(function(){rnBusy=false;alert('Connection failed, please try again');render();});
 }
 function delDay(){
-  if(!confirm('Hapus sesi ini beserta semua mejanya?'))return;
+  if(!confirm('Delete this session and all its tables?'))return;
   fetch('/api/days/'+encodeURIComponent(day.id),{method:'DELETE',headers:H()}).then(function(){day=null;return loadDays();}).then(render);
 }
 
@@ -280,42 +280,42 @@ function fixCall(apply){
   fx.busy=true;fx.err='';renderFix();
   return fetch('/api/admin/table-order',{method:'POST',headers:H(),body:JSON.stringify({code:fx.code,order:fx.order,names:fx.order.map(function(o){return fx.edited[o];}),apply:apply})}).then(function(r){return r.json().then(function(b){return {ok:r.ok,b:b};});}).then(function(x){
     fx.busy=false;
-    if(!x.ok){fx.err=x.b.message||x.b.error||'Gagal';renderFix();return null;}
+    if(!x.ok){fx.err=x.b.message||x.b.error||'Failed';renderFix();return null;}
     return x.b;
-  }).catch(function(){fx.busy=false;fx.err='Tidak bisa menghubungi server.';renderFix();return null;});
+  }).catch(function(){fx.busy=false;fx.err='Could not reach the server.';renderFix();return null;});
 }
 function fixPreview(){fixCall(false).then(function(b){if(b){fx.preview=b.summary;renderFix();}});}
 function fixApply(){
   if(!fx||!fx.preview)return;
-  if(!confirm('Simpan perubahan? Skor dan leaderboard ikut berubah. Meja yang sudah disimpan tetap terkunci.'))return;
-  fixCall(true).then(function(b){if(!b)return;fx=null;renderFix();return openDay(day.id).then(function(){render();toast('Pemain diperbarui');});});
+  if(!confirm('Save the changes? Scores and the leaderboard change too. A table that was already saved stays locked.'))return;
+  fixCall(true).then(function(b){if(!b)return;fx=null;renderFix();return openDay(day.id).then(function(){render();toast('Players updated');});});
 }
 function renderFix(){
   var el=document.getElementById('fixModal');
   if(!fx){el.hidden=true;el.innerHTML='';document.removeEventListener('keydown',fixKey);return;}
   var namesChanged=fx.names.some(function(n,o){return fx.edited[o]!==n;});
   var changed=fx.order.join()!=='0,1,2,3'||namesChanged,pv=fx.preview;
-  var rows=fx.order.map(function(o,j){var edited=fx.edited[o]!==fx.names[o];return '<div class="fxr"><span class="fxn">'+(j+1)+'</span><div class="fxc"><input type="text" class="fxin" maxlength="16" autocomplete="off" data-nm="'+o+'" value="'+esc(fx.edited[o])+'" aria-label="Nama kursi '+(j+1)+'" oninput="fixName('+o+',this.value)"'+(fx.busy?' disabled':'')+'>'
-    +(j===0||edited?'<span class="fxtags">'+(j===0?'<span class="fxtag">dealer pertama</span>':'')+(edited?'<span class="fxtag chg">diganti</span>':'')+'</span>':'')+'</div>'
-    +'<button type="button" class="fxm" aria-label="Naikkan '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|-1" onclick="fixMove('+j+',-1)"'+(j===0||fx.busy?' disabled':'')+'>\u2191</button>'
-    +'<button type="button" class="fxm" aria-label="Turunkan '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|1" onclick="fixMove('+j+',1)"'+(j===3||fx.busy?' disabled':'')+'>\u2193</button></div>';}).join('');
+  var rows=fx.order.map(function(o,j){var edited=fx.edited[o]!==fx.names[o];return '<div class="fxr"><span class="fxn">'+(j+1)+'</span><div class="fxc"><input type="text" class="fxin" maxlength="16" autocomplete="off" data-nm="'+o+'" value="'+esc(fx.edited[o])+'" aria-label="Name at seat '+(j+1)+'" oninput="fixName('+o+',this.value)"'+(fx.busy?' disabled':'')+'>'
+    +(j===0||edited?'<span class="fxtags">'+(j===0?'<span class="fxtag">first dealer</span>':'')+(edited?'<span class="fxtag chg">changed</span>':'')+'</span>':'')+'</div>'
+    +'<button type="button" class="fxm" aria-label="Move up '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|-1" onclick="fixMove('+j+',-1)"'+(j===0||fx.busy?' disabled':'')+'>\u2191</button>'
+    +'<button type="button" class="fxm" aria-label="Move down '+esc(fx.edited[o]||'')+'" data-mv="'+j+'|1" onclick="fixMove('+j+',1)"'+(j===3||fx.busy?' disabled':'')+'>\u2193</button></div>';}).join('');
   var res='';
   if(pv){
-    var d1=pv.dealerChanged===0?'Dealer tidak berubah di hand mana pun.':'Dealer berbeda di <b>'+pv.dealerChanged+'</b> dari '+pv.hands+' hand.';
+    var d1=pv.dealerChanged===0?'The dealer does not change in any hand.':'The dealer differs in <b>'+pv.dealerChanged+'</b> of '+pv.hands+' hands.';
     var warn='',rn='';
     if(pv.renamed&&pv.renamed.length){
-      rn='<p class="fxt" style="margin:10px 0 0"><b>Nama:</b></p>'+pv.renamed.map(function(r){return '<div class="fxp"><span>'+esc(r.from)+' \u2192 '+esc(r.to)+'</span><b style="white-space:normal;text-align:right">'+(pv.registryOn?(r.registered?'pemain terdaftar: '+esc(r.registered):'belum terdaftar, dihitung tamu'):'')+'</b></div>';}).join('');
-      if(pv.linksDropped)rn+='<p class="fxt">'+pv.linksDropped+' tautan kursi ke pemain terdaftar berhenti berlaku karena namanya diganti. Bisa ditautkan lagi di Admin pemain.</p>';
+      rn='<p class="fxt" style="margin:10px 0 0"><b>Names:</b></p>'+pv.renamed.map(function(r){return '<div class="fxp"><span>'+esc(r.from)+' \u2192 '+esc(r.to)+'</span><b style="white-space:normal;text-align:right">'+(pv.registryOn?(r.registered?'registered player: '+esc(r.registered):'not registered, counted as a guest'):'')+'</b></div>';}).join('');
+      if(pv.linksDropped)rn+='<p class="fxt">'+pv.linksDropped+' seat link(s) to registered players no longer apply because the name was changed. You can link them again in the Players admin.</p>';
     }
-    if(pv.firstDealerChanged)warn+='<p class="fxt warn">Dealer pertama berubah dari '+esc(pv.firstDealerBefore)+' ke '+esc(pv.firstDealerAfter)+'.</p>';
-    if(pv.doneBefore&&!pv.doneAfter)warn+='<p class="fxt warn">Dengan urutan ini game tidak lagi selesai. Periksa urutannya.</p>';
-    else if(pv.lateAfter!==pv.lateBefore)warn+='<p class="fxt warn">'+pv.lateAfter+' hand jatuh setelah game berakhir dan tidak dihitung (sebelumnya '+pv.lateBefore+').</p>';
-    res='<div class="fxres"><div class="fxt" style="margin:0 0 6px">Skor bersih tiap orang, sebelum lalu sesudah:</div>'+pv.people.map(function(p){return '<div class="fxp'+(p.before!==p.after?' chg':'')+'"><span>'+esc(p.name)+'</span><b>'+signed(p.before)+' \u2192 '+signed(p.after)+'</b></div>';}).join('')+'<p class="fxt">'+d1+'</p>'+rn+warn+'</div>';
+    if(pv.firstDealerChanged)warn+='<p class="fxt warn">The first dealer changes from '+esc(pv.firstDealerBefore)+' to '+esc(pv.firstDealerAfter)+'.</p>';
+    if(pv.doneBefore&&!pv.doneAfter)warn+='<p class="fxt warn">With this order the game no longer finishes. Check the order.</p>';
+    else if(pv.lateAfter!==pv.lateBefore)warn+='<p class="fxt warn">'+pv.lateAfter+' hand(s) fall after the game ended and are not counted (before: '+pv.lateBefore+').</p>';
+    res='<div class="fxres"><div class="fxt" style="margin:0 0 6px">Net score of each person, before and after:</div>'+pv.people.map(function(p){return '<div class="fxp'+(p.before!==p.after?' chg':'')+'"><span>'+esc(p.name)+'</span><b>'+signed(p.before)+' \u2192 '+signed(p.after)+'</b></div>';}).join('')+'<p class="fxt">'+d1+'</p>'+rn+warn+'</div>';
   }
-  el.innerHTML='<div class="fxs"><div class="fxh"><h2 id="fxT">Perbaiki pemain</h2><button type="button" class="fxx" id="fxClose" aria-label="Tutup" onclick="closeFix()">&times;</button></div>'
-    +'<div class="fxb"><p>Meja <b>'+esc(fx.label)+'</b>. Geser dengan panah untuk memperbaiki urutan duduk (kursi 1 adalah dealer pertama, East), dan ketuk nama untuk mengganti ejaannya. Semua hand ikut berpindah bersama orangnya, lalu dealer, angin, dan skor dihitung ulang dari hand pertama.</p>'
+  el.innerHTML='<div class="fxs"><div class="fxh"><h2 id="fxT">Fix players</h2><button type="button" class="fxx" id="fxClose" aria-label="Close" onclick="closeFix()">&times;</button></div>'
+    +'<div class="fxb"><p>Table <b>'+esc(fx.label)+'</b>. Use the arrows to fix the seating order (seat 1 is the first dealer, East), and tap a name to change its spelling. Every hand moves with its person, then the dealer, the winds and the scores are worked out again from the first hand.</p>'
     +rows+res+(fx.err?'<div class="fxerr" role="alert">'+esc(fx.err)+'</div>':'')+'</div>'
-    +'<div class="fxf"><button type="button" class="btn" onclick="closeFix()">Batal</button><button type="button" class="btn" onclick="fixPreview()"'+(!changed||fx.busy?' disabled':'')+'>Lihat dampak</button><button type="button" class="btn primary" onclick="fixApply()"'+(!pv||fx.busy?' disabled':'')+'>Simpan</button></div></div>';
+    +'<div class="fxf"><button type="button" class="btn" onclick="closeFix()">Cancel</button><button type="button" class="btn" onclick="fixPreview()"'+(!changed||fx.busy?' disabled':'')+'>See the effect</button><button type="button" class="btn primary" onclick="fixApply()"'+(!pv||fx.busy?' disabled':'')+'>Save</button></div></div>';
   el.hidden=false;document.addEventListener('keydown',fixKey);
 }
 function fixKey(e){if(e.key==='Escape')closeFix();}

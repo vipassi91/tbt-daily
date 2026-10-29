@@ -188,6 +188,90 @@ a{color:inherit}
 @media(max-width:979px){.n-head{grid-template-columns:minmax(0,1fr);grid-template-areas:"t" "f"}.n-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr))}.n-side{display:none}.n-dhead .n-filters{display:block}}
 @media(min-width:980px){.n-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}.n-grid.one{display:block}.n-grid.d{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.n-side{position:sticky;top:16px}}
 @media(max-width:380px){.n-strip b{font-size:19px}.n-strip span{font-size:10.5px}}
+
+/* shared header: the brand name, the search, the menu (and Admin) on every public page */
+.tn-hd{position:relative}
+.tn-hd .tn-row{flex-wrap:nowrap}
+.tn-hd .brandmark{flex:0 1 auto;min-width:0}
+.tn-gap{flex:1;min-width:0}
+.tn-search{display:none;position:static;min-width:0}
+.tn-field{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 6px 0 14px;border:1px solid var(--line);background:var(--field);border-radius:999px;color:var(--muted)}
+.tn-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.tn-field svg{flex:none;width:20px;height:20px}
+.tn-field input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:16px;outline:none;padding:11px 0;-webkit-appearance:none;appearance:none}
+.tn-field input::placeholder{color:var(--muted)}
+.tn-field input::-webkit-search-cancel-button{display:none}
+.tn-x{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
+.tn-x[hidden]{display:none}
+.tn-sbtn,.tn-mbtn{display:inline-flex;width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex:none;padding:0}
+.tn-sbtn svg,.tn-mbtn svg{width:22px;height:22px}
+.tn-sbtn:focus-visible,.tn-mbtn:focus-visible,.tn-cancel:focus-visible,.tn-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tn-cancel{display:none;border:0;background:transparent;color:var(--accent);font:700 15px var(--sans);min-height:44px;padding:0 6px 0 10px;cursor:pointer;white-space:nowrap}
+.tn-tabs{display:none;align-items:center;gap:8px}
+.tn-tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font:600 14.5px var(--sans);text-decoration:none;white-space:nowrap;cursor:pointer}
+.tn-tab svg{width:18px;height:18px;flex:none}
+.tn-tab[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
+.tn-tab.me{border-color:var(--accent);color:var(--accent)}.tn-tab.me[aria-current="page"]{color:var(--onaccent)}
+.tn-tab.adm{border-color:transparent;color:var(--muted);font-weight:500}
+.tn-tab:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+/* the results of a search */
+.tn-res{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.tn-res[hidden]{display:none}
+.tn-hd .tn-res{position:absolute;left:12px;right:12px;top:62px;z-index:40;margin:0}
+.tn-item{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 16px;border-top:1px solid var(--line);background:transparent;color:var(--text);text-align:left;font:inherit;text-decoration:none;cursor:pointer;box-sizing:border-box}
+.tn-item:first-child{border-top:0}.tn-item:hover,.tn-item:focus-visible{background:var(--field)}
+.tn-item:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.tn-item>span:first-child{flex:1;min-width:0}.tn-item b{display:block;font-size:16px;overflow-wrap:anywhere}.tn-item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.tn-tag{flex:none;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);white-space:nowrap}
+.tn-go{flex:none;width:18px;height:18px;color:var(--muted)}
+.tn-note{padding:10px 16px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+.tn-none{padding:16px}.tn-none b{display:block;font-size:16px;margin-bottom:4px}.tn-none p{margin:0 0 10px;color:var(--muted);font-size:14px;line-height:1.45}
+.tn-sug{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent);font:700 14px var(--sans);text-decoration:none;cursor:pointer}
+.tn-also{margin:12px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tn-also h3{margin:0;padding:12px 16px 8px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+/* the menu */
+.tn-panel{position:absolute;left:0;right:0;top:100%;z-index:45;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 18px 30px rgba(0,0,0,.28);padding:6px 12px 14px}
+.tn-panel[hidden]{display:none}
+.tn-panel a{display:flex;align-items:center;gap:14px;min-height:54px;padding:0 10px;border-radius:12px;color:var(--text);font:600 16px var(--sans);text-decoration:none}
+.tn-panel a svg{width:22px;height:22px;color:var(--muted);flex:none}.tn-panel a .tn-go{margin-left:auto;width:18px;height:18px}
+.tn-panel a:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.tn-panel a[aria-current="page"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}.tn-panel a[aria-current="page"] svg{color:var(--accent)}
+.tn-panel a b{color:var(--accent)}
+.tn-adm{margin-top:12px;padding-top:6px;border-top:1px solid var(--line)}
+.tn-adm h4{margin:10px 10px 2px;font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tn-adm a{min-height:46px;font-weight:500;color:var(--muted);font-size:15px}.tn-adm a svg{opacity:.8}
+.tn-dim{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.42)}.tn-dim[hidden]{display:none}
+.tn-pop{position:fixed;z-index:46;min-width:210px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.28);padding:6px}
+.tn-pop[hidden]{display:none}.tn-pop a{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border-radius:10px;color:var(--text);font:600 15px var(--sans);text-decoration:none}.tn-pop a:hover,.tn-pop a:focus-visible{background:var(--field)}.tn-pop a svg{width:20px;height:20px;flex:none;color:var(--muted)}
+/* This is me, on a player's page */
+.tn-this-row{margin:12px 0 4px}
+.tn-this{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font:700 15px var(--sans);cursor:pointer}
+.tn-this[aria-pressed="true"]{background:var(--accent);color:var(--onaccent)}
+.tn-this:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tn-saved{font-size:13px;color:var(--muted);margin:8px 0 0;max-width:420px}
+/* the leaderboard rows that open a page show an arrow */
+.row.lk .rv{margin-right:26px}
+.row.lk .rlink::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.7}
+/* phones: the name stays, a search icon opens the search over the header */
+@media (max-width:719px){
+  .tn-hd .brandname{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;overflow-wrap:anywhere}
+  .tn-hd.searching .brandmark,.tn-hd.searching .tn-sbtn,.tn-hd.searching .tn-mbtn,.tn-hd.searching .tn-gap{display:none}
+  .tn-hd.searching .tn-search{display:block;flex:1}
+  .tn-hd.searching .tn-cancel{display:inline-flex}
+}
+/* from 720px the search is always in the header; from 1280px the links too, instead of the menu */
+@media (min-width:720px){
+  .tn-gap{display:none}.tn-sbtn{display:none}
+  .tn-search{display:block;flex:1;max-width:520px;margin-left:auto}
+  .tn-hd .tn-res{left:auto;right:20px;width:min(480px,calc(100% - 40px))}
+}
+@media (min-width:1280px){
+  .tn-tabs{display:flex;margin-left:6px;margin-right:auto}
+  .tn-mbtn{display:none}
+  .tn-search{position:relative;flex:0 1 280px;min-width:170px;margin-left:0}
+  .tn-hd .tn-res{position:absolute;right:0;left:auto;width:440px;top:100%}
+}
+
 </style>
 </head>
 <body>
@@ -326,6 +410,169 @@ function rankList(list){
 var CROWN='<svg class="crown" viewBox="0 0 100 70" aria-hidden="true"><path fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" d="M8 48L4 20L28 38L50 8L72 38L96 20L92 48Z"/><circle cx="4" cy="18" r="6" fill="currentColor"/><circle cx="50" cy="5" r="6" fill="currentColor"/><circle cx="96" cy="18" r="6" fill="currentColor"/><rect x="8" y="55" width="84" height="11" rx="4" fill="currentColor"/></svg>';
 // Ranks 1 to 4 stand out: gold with a crown, silver, bronze, jade. Tied players share the rank and so the look.
 // the readable part of a player's address: the nickname as plain letters, numbers and hyphens (only the id after it matters)
+// shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
+var TBTNAV = (function () {
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom' };
+  var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
+  var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var IC = {
+    search: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    close: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    board: '<svg viewBox="0 0 24 24" ' + P + '><path d="M7 21V11M12 21V4M17 21v-7"/></svg>',
+    people: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>',
+    code: '<svg viewBox="0 0 24 24" ' + P + '><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
+    me: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 3.8-6.5 8-6.5s7.2 2.5 8 6.5"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" ' + P + '><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" ' + P + '><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
+    down: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 9l6 6 6-6"/></svg>',
+    go: '<svg class="tn-go" viewBox="0 0 24 24" ' + P + '><path d="M9 6l6 6-6 6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" width="18" height="18" ' + P + '><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+  };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fold(s) { return String(s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ''); }
+  function slug(n) { return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24) || 'player'; }
+  function href(p) { return '/players/' + encodeURIComponent(p.id) + '/' + slug(p.name); }
+  function dateText(d) { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return d; } }
+  // who this device says it is (kept on the device only)
+  function me() {
+    try { var v = JSON.parse(localStorage.getItem(ME_KEY) || 'null'); return v && typeof v.id === 'string' && typeof v.name === 'string' && /^[A-Za-z0-9_-]{4,80}$/.test(v.id) ? { id: v.id, name: String(v.name).slice(0, 40) } : null; } catch (e) { return null; }
+  }
+  function canStore() { try { localStorage.setItem('tbt-t', '1'); localStorage.removeItem('tbt-t'); return true; } catch (e) { return false; } }
+  function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
+  function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
+  // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
+  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
+  var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people]];
+  function tabs(active, o) {
+    var m = me(), h = links(o).map(function (i) { return '<a class="tn-tab" href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[1] + '</a>'; }).join('');
+    if (m) h += '<a class="tn-tab me" href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + 'My page</a>';
+    return h + '<button type="button" class="tn-tab adm" data-tn="pop" aria-haspopup="menu" aria-expanded="false">' + IC.shield + 'Admin' + IC.down + '</button>';
+  }
+  function panel(active, o) {
+    var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
+    if (m) h += '<a href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + '<span>My page \u00b7 <b>' + esc(m.name) + '</b></span>' + IC.go + '</a>';
+    return h + '<div class="tn-adm"><h4>Admin</h4>' + ADMIN.map(function (i) { return '<a href="' + esc(i[1]) + '">' + i[2] + '<span>' + i[0] + '</span>' + IC.go + '</a>'; }).join('') + '</div>';
+  }
+  // o: { logo, name, players }  (the page gives its own logo and brand name)
+  function header(active, o) {
+    o = o || {}; LAST = { active: active, o: o };
+    var show = !!fold(ST.q) && !ST.hide && (ST.searching || window.innerWidth >= 720);
+    var mark = '<a class="brandmark" href="/index.html" aria-label="' + esc(o.name || '') + ' leaderboard"><img src="' + (o.logo || '') + '" alt="" width="23" height="28"><span class="brandname">' + esc(o.name || '') + '</span></a>';
+    return '<header class="brandbar tn-hd' + (ST.searching ? ' searching' : '') + '" id="tnHd"><div class="brandin tn-row">' + mark + '<span class="tn-gap"></span>'
+      + '<div class="tn-search"><label class="tn-field">' + IC.search + '<input id="tnQ" type="search" aria-label="Find your name" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Find your name" value="' + esc(ST.q) + '"><button type="button" class="tn-x" id="tnX" data-tn="clear" aria-label="Clear search"' + (ST.q ? '' : ' hidden') + '>\u00d7</button></label><div class="tn-res" id="tnRes" role="region" aria-label="Search results" aria-live="polite"' + (show ? '' : ' hidden') + '>' + (show ? resultsHtml() : '') + '</div></div>'
+      + '<button type="button" class="tn-cancel" data-tn="scancel">Cancel</button><button type="button" class="tn-sbtn" id="tnSbtn" data-tn="sopen" aria-label="Search players">' + IC.search + '</button>'
+      + '<nav class="tn-tabs" aria-label="Main">' + tabs(active, o) + '</nav>'
+      + '<button type="button" class="tn-mbtn" id="tnMbtn" data-tn="menu" aria-label="Menu" aria-expanded="false" aria-controls="tnPanel">' + IC.menu + '</button></div>'
+      + '<div class="tn-panel" id="tnPanel" hidden>' + panel(active, o) + '</div></header><div class="tn-dim" id="tnDim" data-tn="menuclose" hidden></div><div class="tn-pop" id="tnPop" role="menu" hidden></div>';
+  }
+  function closeMenus() {
+    var p = document.getElementById('tnPanel'), b = document.getElementById('tnMbtn'), d = document.getElementById('tnDim'), pp = document.getElementById('tnPop');
+    if (p) p.hidden = true; if (d) d.hidden = true; if (pp) pp.hidden = true;
+    if (b) { b.setAttribute('aria-expanded', 'false'); b.innerHTML = IC.menu; }
+    [].forEach.call(document.querySelectorAll('[data-tn="pop"]'), function (x) { x.setAttribute('aria-expanded', 'false'); });
+  }
+  function menuOpen() { var p = document.getElementById('tnPanel'); return !!p && !p.hidden; }
+  function openMenu() { var p = document.getElementById('tnPanel'), b = document.getElementById('tnMbtn'); if (!p) return; p.hidden = false; b.setAttribute('aria-expanded', 'true'); b.innerHTML = IC.close; document.getElementById('tnDim').hidden = false; var a = p.querySelector('a'); if (a) a.focus(); }
+  function openPop(btn) {
+    var pp = document.getElementById('tnPop'), r = btn.getBoundingClientRect(); pp.innerHTML = ADMIN.map(function (i) { return '<a href="' + esc(i[1]) + '" role="menuitem">' + i[2] + i[0] + '</a>'; }).join(''); pp.hidden = false; btn.setAttribute('aria-expanded', 'true');
+    var w = pp.offsetWidth; pp.style.top = (r.bottom + 6) + 'px'; pp.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + 'px'; var a = pp.querySelector('a'); if (a) a.focus();
+  }
+  // ---- the list of everyone with a public page, fetched the first time it is needed
+  function load(cb) {
+    if (cb) ST.cbs.push(cb);
+    if (ST.status === 'ready' || ST.status === 'failed') { flush(); return; }
+    if (ST.status === 'loading') return;
+    ST.status = 'loading';
+    try { fetch('/api/names').then(function (r) { if (!r.ok) throw new Error('x'); return r.json(); }).then(function (d) { ST.idx = d.players || []; ST.status = 'ready'; flush(); }).catch(function () { ST.status = 'failed'; flush(); }); } catch (e) { ST.status = 'failed'; flush(); }
+  }
+  function flush() { var c = ST.cbs; ST.cbs = []; c.forEach(function (f) { try { f(); } catch (e) { } }); }
+  function lev(a, b) { var d = [], i, j; for (i = 0; i <= a.length; i++) d[i] = [i]; for (j = 1; j <= b.length; j++) d[0][j] = j; for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; }
+  function modesText(ms) {
+    if (!ms || !ms.length || (ms.length === 1 && ms[0] === 'default')) return '';
+    var t = ms.slice(0, 3).map(function (m) { return MODES[m] || m; }).join(', ') + (ms.length > 3 ? ' +' + (ms.length - 3) : ''); return ms.length === 1 ? t + ' only' : t;
+  }
+  function meta(p) { if (!p.games) return 'No games yet'; var s = [p.games + ' game' + (p.games === 1 ? '' : 's')], m = modesText(p.modes); if (m) s.push(m); if (p.last) s.push('last played ' + dateText(p.last)); return s.join(' \u00b7 '); }
+  function find(q) {
+    var k = fold(q); if (!k || !ST.idx) return { hits: [], best: null };
+    var hits = ST.idx.filter(function (p) { return fold(p.name).indexOf(k) >= 0; }).sort(function (a, b) { return (fold(a.name).indexOf(k) === 0 ? 0 : 1) - (fold(b.name).indexOf(k) === 0 ? 0 : 1); });
+    var best = null; if (!hits.length) { var bd = 99; ST.idx.forEach(function (p) { var d = lev(k, fold(p.name)); if (d < bd) { bd = d; best = p; } }); if (!best || bd > (k.length <= 4 ? 1 : 2)) best = null; }
+    return { hits: hits, best: best };
+  }
+  function itemHtml(p, tagText) { return '<a class="tn-item" href="' + esc(href(p)) + '"><span><b>' + esc(p.name) + '</b><small>' + esc(meta(p)) + '</small></span>' + (tagText ? '<span class="tn-tag">' + esc(tagText) + '</span>' : '') + IC.go + '</a>'; }
+  function noneHtml(q, best) {
+    return '<div class="tn-none"><b>No one named \u201c' + esc(q.trim()) + '\u201d.</b><p>' + (best ? 'Did you mean <b style="display:inline">' + esc(best.name) + '</b>?' : 'Check the spelling, or try just the first letters.') + ' You can be on the list and still not see yourself in the current view, so this searches everyone.</p>' + (best ? '<a class="tn-sug" href="' + esc(href(best)) + '">Open ' + esc(best.name) + '</a>' : '') + '</div><div class="tn-note">Players appear here after their first game. Not signed up yet? Ask your host for the sign-up link.</div>';
+  }
+  function resultsHtml() {
+    var q = ST.q;
+    if (ST.status === 'loading' || ST.status === 'idle') return '<div class="tn-note" style="border-top:0">Loading players\u2026</div>';
+    if (ST.status === 'failed') return '<div class="tn-none"><b>Can\u2019t load the player list.</b><p>Check your connection and try again.</p><button type="button" class="tn-sug" data-tn="retry">Try again</button></div>';
+    if (!ST.idx.length) return '<div class="tn-none"><b>No registered players yet.</b><p>Players appear here once the host has registered them.</p></div>';
+    var f = find(q); if (!f.hits.length) return noneHtml(q, f.best);
+    var vis = CFG.inView, tagFor = function (p) { return vis && !vis(p.id) ? 'Not in this view' : ''; };
+    return f.hits.slice(0, 6).map(function (p) { return itemHtml(p, tagFor(p)); }).join('') + '<div class="tn-note">Searching everyone, all time and all modes.</div>';
+  }
+  function refresh() {
+    var box = document.getElementById('tnRes'), x = document.getElementById('tnX'); if (!box) return;
+    if (x) x.hidden = !ST.q;
+    if (!fold(ST.q) || ST.hide) { box.hidden = true; box.innerHTML = ''; return; }
+    box.innerHTML = resultsHtml(); box.hidden = false;
+  }
+  // the All players page: people who match its search but are not in its current list
+  function others(q, shown) {
+    var k = fold(q); if (!k) return ''; if (ST.status !== 'ready') return '';
+    var f = find(q), more = f.hits.filter(function (p) { return !shown[p.id]; }), listed = Object.keys(shown).length;
+    if (more.length) return '<div class="tn-also"><h3>Also found, but not in this view</h3>' + more.slice(0, 6).map(function (p) { return itemHtml(p, ''); }).join('') + '<div class="tn-note">Their page opens with the right period and mode.</div></div>';
+    if (!listed) return '<div class="tn-also">' + noneHtml(q, f.best) + '</div>';
+    return '';
+  }
+  function thisIsMe(p) {
+    if (!canStore()) return '';
+    var on = !!(me() && me().id === p.id);
+    return '<div class="tn-this-row"><button type="button" class="tn-this" data-tn="me" data-id="' + esc(p.id) + '" data-name="' + esc(p.name) + '" aria-pressed="' + on + '">' + (on ? IC.check : IC.me) + 'This is me</button><p class="tn-saved" id="tnSaved">' + (on ? 'Saved on this device only. Next time, My page is in the menu.' : 'Save your page on this device to open it from the menu. Nothing is sent anywhere.') + '</p></div>';
+  }
+  function openSearch() { ST.searching = true; ST.hide = false; var h = document.getElementById('tnHd'); if (h) h.classList.add('searching'); var q = document.getElementById('tnQ'); if (q) q.focus(); load(refresh); refresh(); }
+  function closeSearch(focusIcon) { ST.searching = false; ST.q = ''; ST.hide = false; var q = document.getElementById('tnQ'); if (q) q.value = ''; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); refresh(); if (focusIcon) { var b = document.getElementById('tnSbtn'); if (b && b.offsetParent !== null) b.focus(); } }
+  function boot(cfg) {
+    CFG.inView = cfg && cfg.inView || null; CFG.onMe = cfg && cfg.onMe || null;
+    if (BOUND) return; BOUND = true;
+    document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
+    document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
+    document.addEventListener('click', function (e) {
+      var t = e.target, b = t.closest ? t.closest('[data-tn]') : null;
+      if (!b) {
+        var inSearch = t.closest && (t.closest('.tn-search') || t.closest('.tn-panel') || t.closest('.tn-pop'));
+        if (!inSearch) { var box = document.getElementById('tnRes'); if (box && !box.hidden) { ST.hide = true; refresh(); } if (document.getElementById('tnPop') && !document.getElementById('tnPop').hidden) closeMenus(); }
+        return;
+      }
+      var a = b.dataset.tn;
+      if (a === 'menu') { if (menuOpen()) closeMenus(); else openMenu(); }
+      else if (a === 'menuclose') closeMenus();
+      else if (a === 'pop') { var open = b.getAttribute('aria-expanded') === 'true'; closeMenus(); if (!open) openPop(b); }
+      else if (a === 'sopen') openSearch();
+      else if (a === 'scancel') closeSearch(true);
+      else if (a === 'clear') { ST.q = ''; ST.hide = false; var q = document.getElementById('tnQ'); if (q) { q.value = ''; q.focus(); } refresh(); }
+      else if (a === 'retry') { ST.status = 'idle'; load(refresh); refresh(); }
+      else if (a === 'me') { var cur = me(), mine = cur && cur.id === b.dataset.id; if (mine) clearMe(); else setMe(b.dataset.id, b.dataset.name); if (CFG.onMe) CFG.onMe(); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if (menuOpen()) { closeMenus(); var mb = document.getElementById('tnMbtn'); if (mb) mb.focus(); return; }
+        var pp = document.getElementById('tnPop'); if (pp && !pp.hidden) { closeMenus(); return; }
+        var q0 = document.getElementById('tnQ'), box0 = document.getElementById('tnRes');
+        if (q0 && box0 && (document.activeElement === q0 || box0.contains(document.activeElement))) { if (ST.q) { ST.q = ''; q0.value = ''; refresh(); q0.focus(); return; } if (ST.searching) { closeSearch(true); return; } }
+        return;
+      }
+      var q = document.getElementById('tnQ'), box = document.getElementById('tnRes'); if (!q || !box) return;
+      var inField = document.activeElement === q, inRes = box.contains(document.activeElement), its = [].slice.call(box.querySelectorAll('.tn-item')); if (!its.length || box.hidden) return;
+      if (e.key === 'ArrowDown' && (inField || inRes)) { e.preventDefault(); var i = its.indexOf(document.activeElement); its[Math.min(its.length - 1, i + 1)].focus(); }
+      else if (e.key === 'ArrowUp' && inRes) { e.preventDefault(); var j = its.indexOf(document.activeElement); if (j <= 0) q.focus(); else its[j - 1].focus(); }
+    });
+    window.addEventListener('resize', function () { if (window.innerWidth >= 720 && ST.searching) { ST.searching = false; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); } });
+  }
+  return { boot: boot, header: header, thisIsMe: thisIsMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
+})();
+
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
 // the player's page opens with the same period and mode the visitor is looking at (nothing is added for the usual view)
 function playerQuery(){
@@ -339,7 +586,7 @@ function board(list,session){
   var html='',pq=session?'':playerQuery();
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(rank===1?CROWN:'')+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }
@@ -451,7 +698,7 @@ function headHtml(){
   var upd=S.updated?'Updated '+pad2(S.updated.getHours())+':'+pad2(S.updated.getMinutes()):'';
   var f=ddButton('period',periodLabel(),ICON.cal,false);
   if(S.loaded&&modesInData().length>=2)f+=ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all');
-  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+(upd?' \u00b7 ':'')+'<a class="allp" href="/players'+playerQuery()+'">All players \u203A</a></div></div><div class="n-filters">'+f+'</div></div>';
+  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+'</div></div><div class="n-filters">'+f+'</div></div>';
 }
 function tabsHtml(){return '<div class="n-tabs" role="tablist">'+[['total','Total'],['sessions','Sessions']].map(function(o){return '<button type="button" role="tab" data-set="tab" data-v="'+o[0]+'" aria-selected="'+(S.tab===o[0])+'" class="'+(S.tab===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>';}
 function sideCard(ts){
@@ -516,7 +763,7 @@ function render(){
   else if(S.tab==='sessions'&&S.day)body=viewDay(S.day);
   else body=headHtml()+viewMain();
   var sheet=(S.menu&&!isWide()&&S.loaded)?menuSheet(S.menu):'';
-  document.getElementById('app').innerHTML='<header class="brandbar"><div class="brandin"><a class="brandmark" href="index.html" aria-label="Tiles by Tiles leaderboard"><img src="'+LOGO+'" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a><a class="backlink" href="masuk.html"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>Enter table code</a></div></header><div class="wrap n">'+body+'</div>'+sheet;
+  document.getElementById('app').innerHTML=TBTNAV.header('lb',{logo:LOGO,name:'Tiles by Tiles',players:'/players'+playerQuery()})+'<div class="wrap n">'+body+'</div>'+sheet;
   // the page scroll is locked only while the sheet is open, and only unlocked by whoever locked it (the share card has its own lock)
   if(sheet&&!S.locked){document.body.style.overflow='hidden';S.locked=true;}else if(!sheet&&S.locked){document.body.style.overflow='';S.locked=false;}
   try{var nu=viewUrl();if(NAV&&nu!==location.pathname+location.search)history.pushState({v:1},'',nu);else history.replaceState(history.state,'',nu);}catch(e){}
@@ -539,6 +786,7 @@ function applyCustom(){
   if(a>b){S.cust.err='The start date is after the end date.';render();focusMenu('#cFrom');return;}
   S.period='custom';closeMenu();
 }
+TBTNAV.boot({inView:function(id){return !!document.querySelector('.rlink[href*="/players/'+id+'/"]');},onMe:function(){render();}});
 document.getElementById('app').addEventListener('click',function(e){
   var t=e.target;
   if(t.closest&&t.closest('[data-close]')){closeMenu();return;}

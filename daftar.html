@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Daftar pemain | Tiles by Tiles</title>
+<title>Player sign-up | Tiles by Tiles</title>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -61,43 +61,43 @@ button:disabled{opacity:.5;cursor:default}
 <div class="box">
   <img src="/assets/i/cfad30e8e7.png" alt="">
   <div class="brand">TILES BY TILES</div>
-  <h1>Daftar sebagai pemain</h1>
-  <p class="hint">Isi data di bawah. Admin akan mengecek, lalu namamu masuk ke leaderboard.</p>
+  <h1>Sign up as a player</h1>
+  <p class="hint">Fill in the details below. The admin will check them, then your name goes on the leaderboard.</p>
   <div id="view"></div>
 </div>
 <script>
 var T=new URLSearchParams(location.search).get('t')||'';
 var view=document.getElementById('view');
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function closed(){view.innerHTML='<div class="done"><b>Link tidak berlaku</b><span>Link pendaftaran ini sudah ditutup atau salah. Minta link terbaru ke admin.</span><a class="lk" href="index.html">Lihat leaderboard</a></div>';}
+function closed(){view.innerHTML='<div class="done"><b>This link is not valid</b><span>This sign-up link has been closed or is wrong. Ask the admin for the latest link.</span><a class="lk" href="index.html">View leaderboard</a></div>';}
 function showForm(names){
   var opts=names.map(function(n){return '<option value="'+esc(n)+'">';}).join('');
   view.innerHTML='<div class="f">'
-    +'<label for="nick">Nama panggilan *</label><p class="sub">Ini yang tampil di leaderboard.</p><input id="nick" type="text" maxlength="30" autocomplete="off">'
-    +'<label for="tname">Namamu di papan skor</label><p class="sub">Kalau sudah pernah main, pilih nama yang biasa ditulis di meja supaya game-mu ikut terhubung. Boleh dikosongkan.</p><input id="tname" type="text" maxlength="40" list="names" autocomplete="off"><datalist id="names">'+opts+'</datalist>'
-    +'<label for="full">Nama lengkap</label><input id="full" type="text" maxlength="60" autocomplete="name">'
-    +'<label for="wa">Nomor WhatsApp *</label><input id="wa" type="tel" inputmode="tel" placeholder="0812..." autocomplete="tel">'
-    +'<label for="ig">Username Instagram</label><input id="ig" type="text" placeholder="username" autocomplete="off" autocapitalize="none">'
+    +'<label for="nick">Nickname *</label><p class="sub">This is what shows on the leaderboard.</p><input id="nick" type="text" maxlength="30" autocomplete="off">'
+    +'<label for="tname">Your name on the scoreboard</label><p class="sub">If you have played before, pick the name usually written at the table so your games are linked to you. You can leave this empty.</p><input id="tname" type="text" maxlength="40" list="names" autocomplete="off"><datalist id="names">'+opts+'</datalist>'
+    +'<label for="full">Full name</label><input id="full" type="text" maxlength="60" autocomplete="name">'
+    +'<label for="wa">WhatsApp number *</label><input id="wa" type="tel" inputmode="tel" placeholder="0812..." autocomplete="tel">'
+    +'<label for="ig">Instagram username</label><input id="ig" type="text" placeholder="username" autocomplete="off" autocapitalize="none">'
     +'<div class="hp" aria-hidden="true"><input id="hp" type="text" tabindex="-1" autocomplete="off"></div>'
-    +'<label class="ck"><input id="consent" type="checkbox"><span>Saya setuju data ini disimpan admin untuk pendaftaran, dan nama panggilan, hasil permainan, serta statistik saya ditampilkan di leaderboard dan di halaman pemain saya (bisa disembunyikan lewat admin). Nomor WhatsApp dan Instagram tidak ditampilkan.</span></label>'
-    +'<button id="send" type="button">Kirim pendaftaran</button><div class="err" id="err"></div></div>';
+    +'<label class="ck"><input id="consent" type="checkbox"><span>I agree that the admin stores this information for my registration, and that my nickname, game results and statistics are shown on the leaderboard and on my player page (it can be hidden through the admin). My WhatsApp number and Instagram are not shown.</span></label>'
+    +'<button id="send" type="button">Send sign-up</button><div class="err" id="err"></div></div>';
   document.getElementById('send').addEventListener('click',submit);
 }
 function val(id){return document.getElementById(id).value;}
 function submit(){
   var err=document.getElementById('err'),btn=document.getElementById('send');
   err.textContent='';
-  if(!val('nick').trim()){err.textContent='Nama panggilan wajib diisi.';return;}
-  if(!val('wa').trim()){err.textContent='Nomor WhatsApp wajib diisi.';return;}
-  if(!document.getElementById('consent').checked){err.textContent='Centang persetujuan dulu.';return;}
+  if(!val('nick').trim()){err.textContent='Nickname is required.';return;}
+  if(!val('wa').trim()){err.textContent='WhatsApp number is required.';return;}
+  if(!document.getElementById('consent').checked){err.textContent='Please tick the consent box first.';return;}
   btn.disabled=true;
   fetch('/api/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:T,nickname:val('nick'),tableName:val('tname'),fullName:val('full'),whatsapp:val('wa'),instagram:val('ig'),website:val('hp'),consent:true})})
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};});})
     .then(function(r){
-      if(!r.ok){err.textContent=r.body.error||'Gagal mengirim. Coba lagi.';btn.disabled=false;return;}
-      view.innerHTML='<div class="done"><b>Terima kasih!</b><span>Pendaftaranmu sudah terkirim. Admin akan mengeceknya. Setelah disetujui, namamu muncul di leaderboard.</span><a class="lk" href="index.html">Lihat leaderboard</a></div>';
+      if(!r.ok){err.textContent=r.body.error||'Could not send. Please try again.';btn.disabled=false;return;}
+      view.innerHTML='<div class="done"><b>Thank you!</b><span>Your sign-up has been sent. The admin will check it. Once approved, your name appears on the leaderboard.</span><a class="lk" href="index.html">View leaderboard</a></div>';
     })
-    .catch(function(){err.textContent='Tidak ada koneksi. Coba lagi.';btn.disabled=false;});
+    .catch(function(){err.textContent='No connection. Please try again.';btn.disabled=false;});
 }
 fetch('/api/signup?t='+encodeURIComponent(T)).then(function(r){return r.json();}).then(function(d){if(d.open)showForm(d.names||[]);else closed();}).catch(closed);
 </script>

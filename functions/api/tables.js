@@ -12,10 +12,10 @@ export async function onRequestPost({ request, env }) {
     let players = Array.isArray(t.players) ? t.players.slice(0, 4).map(p => String(p || '').trim()) : [];
     while (players.length < 4) players.push('');
     if (!t.day_id || !t.label) {
-      return json({ error: 'day_id dan nama meja wajib diisi' }, 400);
+      return json({ error: 'day_id and a table name are required' }, 400);
     }
     const day = await env.DB.prepare('SELECT id, date FROM days WHERE id=?').bind(t.day_id).first();
-    if (!day) return json({ error: 'Sesi tidak ditemukan' }, 404);
+    if (!day) return json({ error: 'Session not found' }, 404);
 
     const code = await uniqueCode(env);
     const viewCode = await uniqueCode(env, [code]);

@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env, params }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
     const day = await env.DB.prepare('SELECT * FROM days WHERE id=?').bind(params.id).first();
-    if (!day) return json({ error: 'Sesi tidak ditemukan' }, 404);
+    if (!day) return json({ error: 'Session not found' }, 404);
     const { results } = await env.DB.prepare(
       'SELECT id, code, view_code, label, players, rounds, stats, updated_at FROM tables WHERE day_id=? ORDER BY created_at ASC'
     ).bind(params.id).all();
@@ -38,12 +38,12 @@ export async function onRequestGet({ request, env, params }) {
 export async function onRequestPatch({ request, env, params }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
-    let d; try { d = await request.json(); } catch (e) { return json({ error: 'Permintaan tidak terbaca' }, 400); }
+    let d; try { d = await request.json(); } catch (e) { return json({ error: 'The request could not be read' }, 400); }
     const label = d && typeof d.label === 'string' ? d.label.replace(/\s+/g, ' ').trim() : '';
-    if (!label) return json({ error: 'Nama sesi wajib diisi' }, 400);
-    if (label.length > 80) return json({ error: 'Nama sesi terlalu panjang (maksimal 80 huruf)' }, 400);
+    if (!label) return json({ error: 'A session name is required' }, 400);
+    if (label.length > 80) return json({ error: 'The session name is too long (80 characters at most)' }, 400);
     const day = await env.DB.prepare('SELECT id FROM days WHERE id=?').bind(params.id).first();
-    if (!day) return json({ error: 'Sesi tidak ditemukan' }, 404);
+    if (!day) return json({ error: 'Session not found' }, 404);
     await env.DB.prepare('UPDATE days SET label=? WHERE id=?').bind(label, params.id).run();
     return json({ id: params.id, label: label });
   } catch (err) {

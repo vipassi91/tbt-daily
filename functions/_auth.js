@@ -6,7 +6,7 @@ export function isAdmin(request, env) {
 export function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
 }
-export function unauthorized() { return json({ error: 'Password admin salah atau belum diisi' }, 401); }
+export function unauthorized() { return json({ error: 'The admin password is wrong or missing' }, 401); }
 
 function randChar() { return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]; }
 export function genCode(len = 5) { return Array.from({ length: len }, randChar).join(''); }
