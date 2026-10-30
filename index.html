@@ -96,8 +96,15 @@ a{color:inherit}
 /* ranks 1 to 4: a quiet marker, never a box. Every row keeps the same shape; the place is shown by a slim bar
    and a faint tint, a ring round the number, and a small flat gem after the name:
    1 Diamond, 2 Ruby, 3 Jade, 4 Pearl. Tied players share the rank and so the gem. */
+/* ranks 1 to 4 everywhere: 1 Diamond, 2 Ruby, 3 Jade, 4 Pearl. One set of colours for the ring, the bar, the tint and the gem. */
 :root{--c1:#9FB8E8;--c2:#D62828;--c3:#2D6A4F;--c4:#C9BCA7;--t1:rgba(159,184,232,.16);--t2:rgba(214,40,40,.08);--t3:rgba(45,106,79,.12);--t4:rgba(201,188,167,.20);--g-d1:#6F90DB;--g-d2:#CFDEF9;--g-r1:#D62828;--g-r2:#FDE8E8;--g-j1:#2D6A4F;--g-j2:#B7D4C0;--g-p1:#EDE7DB;--g-p2:#B5A68B}
-@media (prefers-color-scheme: dark){:root:not([data-theme=\"light\"]){--c2:#E04646;--c3:#6FAE8E;--c4:#E8E1D8;--t1:rgba(159,184,232,.14);--t2:rgba(224,70,70,.12);--t3:rgba(111,174,142,.15);--t4:rgba(232,225,216,.10);--g-d1:#9FB8E8;--g-d2:#E8F1FF;--g-r1:#E04646;--g-j1:#6FAE8E;--g-j2:#E6F1E8;--g-p1:#E8E1D8;--g-p2:#C9BCA7}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c2:#E04646;--c3:#6FAE8E;--c4:#E8E1D8;--t1:rgba(159,184,232,.14);--t2:rgba(224,70,70,.12);--t3:rgba(111,174,142,.15);--t4:rgba(232,225,216,.10);--g-d1:#9FB8E8;--g-d2:#E8F1FF;--g-r1:#E04646;--g-j1:#6FAE8E;--g-j2:#E6F1E8;--g-p1:#E8E1D8;--g-p2:#C9BCA7}}
+.gn{flex:none;display:inline-flex}.gn svg{width:15px;height:15px;display:block}
+.gi-diamond .a{fill:var(--g-d1)}.gi-diamond .b{fill:var(--g-d2)}
+.gi-ruby .a{fill:var(--g-r1)}.gi-ruby .b{fill:var(--g-r2);opacity:.5}
+.gi-jade .a{fill:var(--g-j1)}.gi-jade .b{fill:var(--g-j2);opacity:.6}.gi-jade .c{fill:none;stroke:var(--g-j2);stroke-width:.9;stroke-linecap:round;opacity:.7}
+.gi-pearl .a{fill:var(--g-p1);stroke:var(--g-p2);stroke-width:1.2}.gi-pearl .b{fill:#fff;opacity:.9}
+
 .row{position:relative}
 .row.m::before{content:"";position:absolute;left:-16px;right:-16px;top:0;bottom:0;background:linear-gradient(90deg,var(--mt),transparent 70%);pointer-events:none}
 .row.m::after{content:"";position:absolute;left:-16px;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--mc)}
@@ -108,11 +115,6 @@ a{color:inherit}
 .row.r3{--mc:var(--c3);--mt:var(--t3)}
 .row.r4{--mc:var(--c4);--mt:var(--t4)}
 .rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rname .gn{flex:none;display:inline-flex}.rname .gn svg{width:15px;height:15px;display:block}
-.gi-diamond .a{fill:var(--g-d1)}.gi-diamond .b{fill:var(--g-d2)}
-.gi-ruby .a{fill:var(--g-r1)}.gi-ruby .b{fill:var(--g-r2);opacity:.5}
-.gi-jade .a{fill:var(--g-j1)}.gi-jade .b{fill:var(--g-j2);opacity:.7}
-.gi-pearl .a{fill:var(--g-p1);stroke:var(--g-p2);stroke-width:1.2}.gi-pearl .b{fill:#fff;opacity:.9}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -396,10 +398,47 @@ function rankList(list){
   var prev=null,prevRank=0;
   return sorted.map(function(p,i){var v=Math.round(p[key]*10)/10,rank=(prev!==null&&v===prev)?prevRank:i+1;prev=v;prevRank=rank;return {p:p,v:v,rank:rank,key:key};});
 }
-var GEMS={1:['Diamond','diamond','<path class="a" d="M6.5 4h11L22 9.5 12 20.5 2 9.5z"/><path class="b" d="M6.5 4h11l-2.6 5.5H9.1z"/>'],2:['Ruby','ruby','<polygon class="a" points="20.8,15.6 15.6,20.8 8.4,20.8 3.2,15.6 3.2,8.4 8.4,3.2 15.6,3.2 20.8,8.4"/><polygon class="b" points="16.6,13.9 13.9,16.6 10.1,16.6 7.4,13.9 7.4,10.1 10.1,7.4 13.9,7.4 16.6,10.1"/>'],3:['Jade','jade','<circle class="a" cx="12" cy="12" r="9"/><ellipse class="b" cx="9" cy="8.8" rx="3" ry="2" transform="rotate(-30 9 8.8)"/>'],4:['Pearl','pearl','<circle class="a" cx="12" cy="12" r="8.6"/><ellipse class="b" cx="9" cy="8.8" rx="3" ry="2" transform="rotate(-30 9 8.8)"/>']};
-function gemIcon(rank){var g=GEMS[rank];if(!g)return '';return '<span class="gn" role="img" aria-label="'+g[0]+'"><svg class="gi gi-'+g[1]+'" viewBox="0 0 24 24" aria-hidden="true">'+g[2]+'</svg></span>';}
 // Ranks 1 to 4 stand out with a coloured bar and tint and a small gem after the name: Diamond, Ruby, Jade, Pearl. Tied players share the rank and so the look.
 // the readable part of a player's address: the nickname as plain letters, numbers and hyphens (only the id after it matters)
+// the four rank gems (1 Diamond, 2 Ruby, 3 Jade, 4 Pearl): the small icon next to a name, and the same shapes drawn on a card
+var TBTGEM = (function () {
+  var NAME = { 1: 'Diamond', 2: 'Ruby', 3: 'Jade', 4: 'Pearl' }, KEY = { 1: 'diamond', 2: 'ruby', 3: 'jade', 4: 'pearl' };
+  // shapes on a 24 by 24 grid: ['p', path, class] or ['e', cx, cy, rx, ry, rotation, class]
+  var SHAPES = {
+    diamond: [['p', 'M6.5 4h11L22 9.5 12 20.5 2 9.5z', 'a'], ['p', 'M6.5 4h11l-2.6 5.5H9.1z', 'b']],
+    ruby: [['p', 'M20.8 15.6L15.6 20.8H8.4L3.2 15.6V8.4L8.4 3.2h7.2l5.2 5.2z', 'a'], ['p', 'M16.6 13.9L13.9 16.6h-3.8l-2.7-2.7v-3.8l2.7-2.7h3.8l2.7 2.7z', 'b']],
+    jade: [['p', 'M10 3.5h4A4 4 0 0 1 18 7.5v9a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-9A4 4 0 0 1 10 3.5z', 'a'], ['p', 'M11.2 7.5h1.6A2 2 0 0 1 14.8 9.5v5a2 2 0 0 1-2 2h-1.6A2 2 0 0 1 9.2 14.5v-5A2 2 0 0 1 11.2 7.5z', 'b'], ['p', 'M7.3 5.3L9.4 7.7M16.7 5.3L14.6 7.7M7.3 18.7L9.4 16.3M16.7 18.7L14.6 16.3', 'c']],
+    pearl: [['p', 'M12 3.4a8.6 8.6 0 1 0 0 17.2 8.6 8.6 0 1 0 0-17.2z', 'a'], ['e', 9, 8.8, 3, 2, -30, 'b']]
+  };
+  // colours for a drawn card: [on a light card, on a dark card]
+  var COL = {
+    diamond: { a: ['#6F90DB', '#9FB8E8'], b: ['#CFDEF9', '#E8F1FF'], bo: 1 },
+    ruby: { a: ['#D62828', '#E04646'], b: ['#FDE8E8', '#FDE8E8'], bo: .5 },
+    jade: { a: ['#2D6A4F', '#6FAE8E'], b: ['#B7D4C0', '#E6F1E8'], bo: .6, c: ['#B7D4C0', '#E6F1E8'], co: .7 },
+    pearl: { a: ['#EDE7DB', '#E8E1D8'], b: ['#FFFFFF', '#FFFFFF'], bo: .9, s: ['#B5A68B', '#C9BCA7'] }
+  };
+  var RING = { light: ['#9FB8E8', '#D62828', '#2D6A4F', '#C9BCA7'], dark: ['#9FB8E8', '#E04646', '#6FAE8E', '#E8E1D8'] };
+  function esc(s) { return String(s).replace(/"/g, '&quot;'); }
+  function svgShapes(key) { return SHAPES[key].map(function (s) { return s[0] === 'p' ? '<path class="' + s[2] + '" d="' + s[1] + '"/>' : '<ellipse class="' + s[6] + '" cx="' + s[1] + '" cy="' + s[2] + '" rx="' + s[3] + '" ry="' + s[4] + '" transform="rotate(' + s[5] + ' ' + s[1] + ' ' + s[2] + ')"/>'; }).join(''); }
+  // the small icon after a name (nothing for ranks below 4)
+  function icon(rank) { var k = KEY[rank]; if (!k) return ''; return '<span class="gn" role="img" aria-label="' + esc(NAME[rank]) + '"><svg class="gi gi-' + k + '" viewBox="0 0 24 24" aria-hidden="true">' + svgShapes(k) + '</svg></span>'; }
+  // the same gem on a canvas, centred on cx, cy and size px wide
+  function draw(ctx, cx, cy, size, rank, light) {
+    var k = KEY[rank]; if (!k) return; var i = light ? 0 : 1, c = COL[k];
+    ctx.save(); ctx.translate(cx - size / 2, cy - size / 2); ctx.scale(size / 24, size / 24); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    SHAPES[k].forEach(function (s) {
+      var cl = s[0] === 'p' ? s[2] : s[6]; ctx.save();
+      if (cl === 'c') { ctx.globalAlpha = c.co; ctx.strokeStyle = c.c[i]; ctx.lineWidth = .9; ctx.stroke(new Path2D(s[1])); ctx.restore(); return; }
+      ctx.globalAlpha = cl === 'b' ? c.bo : 1; ctx.fillStyle = c[cl][i];
+      if (s[0] === 'p') { var p = new Path2D(s[1]); ctx.fill(p); if (cl === 'a' && c.s) { ctx.strokeStyle = c.s[i]; ctx.lineWidth = 1.2; ctx.stroke(p); } }
+      else { ctx.beginPath(); ctx.ellipse(s[1], s[2], s[3], s[4], s[5] * Math.PI / 180, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+  return { icon: icon, draw: draw, name: function (r) { return NAME[r] || ''; }, ring: function (rank, light) { return RING[light ? 'light' : 'dark'][rank - 1] || null; } };
+})();
+
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
   var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom' };
@@ -568,7 +607,7 @@ function board(list,session){
   var html='',pq=session?'':playerQuery();
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+gemIcon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+TBTGEM.icon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }
@@ -805,7 +844,7 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
 </script>
 <script>
 /* Share top 10: a card in the same family as the scoreboard story and the share-hand card
-   (same five styles, fonts, backdrop, logo header, crown and footer). It shows the top ten of the
+   (same five styles, fonts, backdrop, logo header and footer). It shows the top ten of the
    board that is on screen, and is drawn on a canvas so it can be saved or shared as a picture. */
 (function(){
   var PLAY='"Playfair Display",Georgia,"Times New Roman",serif';
@@ -823,12 +862,6 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
     black:{label:'Black',bg1:'#2A2A2A',bg2:'#080808',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(255,255,255,.09)',vig:'rgba(0,0,0,.5)',grain:.13,sw:'linear-gradient(160deg,#2A2A2A,#080808)'},
     cream:{label:'Cream',light:true,bg1:'#FAF7F2',bg2:'#EBE1CE',text:'#1B4332',muted:'rgba(27,67,50,.7)',line:'rgba(45,106,79,.4)',loss:RED,wm:.075,bloom:'rgba(255,255,255,.6)',vig:'rgba(110,80,30,.16)',grain:.09,sw:'linear-gradient(160deg,#FAF7F2,#EBE1CE)'}
   };
-  // ranks 1 to 4: gold, silver, bronze, jade (the same colours as the board on the page)
-  var MEDAL=[null,
-    {a:'#F6DE9A',b:'#C9962B',ink:'#3A2804',edge:'#E5B84C'},
-    {a:'#F1F4F8',b:'#8D97A6',ink:'#222A33',edge:'#C3CAD5'},
-    {a:'#E9B98A',b:'#9C5E2B',ink:'#3A1F0A',edge:'#CF8A55'},
-    {a:'#9BD9B6',b:'#2D6A4F',ink:'#0B2A1B',edge:'#5FB48A'}];
   var st={format:'story',theme:'forest'};
   var card=null,modal=null,canvas=null,ctx=null,logoImg=null,assets=null,W=1080,H=1920,NOISE=null;
 
@@ -847,19 +880,6 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
     ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
     ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
     ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  }
-  function crown(cx,top,w,color){
-    var s=w/100;
-    ctx.save();
-    ctx.translate(cx-w/2,top);ctx.scale(s,s);
-    ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineJoin='round';ctx.lineWidth=6;
-    ctx.beginPath();
-    ctx.moveTo(8,48);ctx.lineTo(4,20);ctx.lineTo(28,38);ctx.lineTo(50,8);
-    ctx.lineTo(72,38);ctx.lineTo(96,20);ctx.lineTo(92,48);ctx.closePath();
-    ctx.fill();ctx.stroke();
-    [[4,18],[50,5],[96,18]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],6,0,Math.PI*2);ctx.fill();});
-    rr(8,55,84,11,4);ctx.fill();
-    ctx.restore();
   }
   // KaiTi, semibold: regular weight plus a fine same-colour stroke, so the look holds on every device
   function kai(glyph,x,y,size,color,align,base){
@@ -950,39 +970,39 @@ setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on 
     hline(mx,x1,zoneTop-14,t.text,2.5,.95);
     var rowH=Math.min(100,Math.floor((zoneBottom-zoneTop-12)/10));
     var by=zoneTop+6+Math.max(0,((zoneBottom-zoneTop-12)-rowH*n)/2);
-    var pal=t.light?['#B8912E','#8A94A3','#A8703E','#2D6A4F']:['#E5C36B','#C7CFDA','#D79B68','#7CCBA0'];
+    var pal=[1,2,3,4].map(function(k){return TBTGEM.ring(k,t.light);});   // Diamond, Ruby, Jade, Pearl
     rows.forEach(function(r,i){
       var y=by+i*rowH,cy=y+rowH/2,offN=Math.round(rowH*0.155),offM=Math.round(rowH*0.225),top4=r.rank<=4,col=top4?pal[r.rank-1]:null,bx=mx+34,br=25;
       // the same hairline between every row
       if(i>0)hline(mx,x1,y,t.text,2,.14);
       if(top4){
-        // a slim bar and a faint tint in the medal colour: marks the place without boxing the row
+        // a slim bar and a faint tint in the colour of the gem: marks the place without boxing the row
         var gt=ctx.createLinearGradient(mx-16,0,x1+16,0);
         gt.addColorStop(0,rgba(col,t.light?.17:.14));gt.addColorStop(.75,rgba(col,0));
         ctx.fillStyle=gt;ctx.fillRect(mx-16,y+2,(x1-mx)+32,rowH-4);
         ctx.fillStyle=col;rr(mx-16,y+13,5,rowH-26,2.5);ctx.fill();
       }
-      // rank ring, filled for first place
+      // rank ring in the colour of the gem
       ctx.beginPath();ctx.arc(bx,cy,br,0,Math.PI*2);
-      if(top4){if(r.rank===1){ctx.fillStyle=col;ctx.fill();}ctx.lineWidth=3;ctx.strokeStyle=col;ctx.stroke();}
+      if(top4){ctx.lineWidth=3;ctx.strokeStyle=col;ctx.stroke();}
       else{ctx.lineWidth=2.5;ctx.strokeStyle=t.line;ctx.stroke();}
       ctx.textAlign='center';ctx.textBaseline='middle';spacing(0);
       ctx.font='700 '+(r.rank>=10?24:28)+'px '+INTER;
-      ctx.fillStyle=r.rank===1?'#2B2108':(top4?t.text:t.muted);
+      ctx.fillStyle=top4?t.text:t.muted;
       ctx.fillText(String(r.rank),bx,cy+1);
-      // net score at the right, name and games to its left, a small crown after the champion's name
+      // net score at the right, name and games to its left, a small gem after the name of ranks 1 to 4
       var nx=bx+br+32;
       ctx.textAlign='right';ctx.textBaseline='middle';
       ctx.font='700 40px '+INTER;
       var sw=ctx.measureText(r.text).width;
       ctx.fillStyle=r.neg?t.loss:t.text;ctx.fillText(r.text,x1-8,cy);
-      var maxW=(x1-8-sw)-nx-36-(r.rank===1?44:0);
+      var maxW=(x1-8-sw)-nx-36-(top4?50:0);
       var meta=r.meta||(r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places'));
       ctx.textAlign='left';
       fit(r.name,maxW,700,INTER,34,20);
       var nw=ctx.measureText(r.name).width;
       ctx.fillStyle=t.text;ctx.fillText(r.name,nx,cy-offN);
-      if(r.rank===1)crown(nx+nw+24,cy-offN-10,30,col);
+      if(top4)TBTGEM.draw(ctx,nx+nw+26,cy-offN,32,r.rank,t.light);
       fit(meta,maxW,400,INTER,22,15);
       ctx.fillStyle=t.muted;ctx.fillText(meta,nx,cy+offM);
     });

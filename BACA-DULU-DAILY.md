@@ -220,8 +220,6 @@ File yang berubah dari v7: `scoreboard.html`, `functions/_tables.js`,
   benar ("LXGW WenKai TC"), plus tiga huruf baru untuk kartu share (胡, 自, 摸).
 - **Tema story otomatis**: membuka story dari tab Play atau Standings memilih tema sesuai ronde.
 - Ukuran `scoreboard.html` naik dari sekitar 0,6 MB ke sekitar 2,2 MB (gambar tile untuk pemilih tile).
-- Catatan untuk klien lain: teks "@tiles.by.tiles" dan "Play. Learn. Connect." pada kartu share
-  (dan footer serta kartu story) masih tertulis langsung di kode, belum jadi pengaturan brand.
 - Tidak ada migrasi database. File yang berubah dari v11: `scoreboard.html`.
 
 ## Update terbaru (v13): bonus menumpuk seperti pola, berhenti di 10
@@ -374,10 +372,9 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
 - **Save image** satu ketukan (Android dan desktop mengunduh, iPhone dan iPad lewat share sheet),
   **Share** lewat share sheet HP (Instagram, WhatsApp, dan lain-lain). Perilakunya sama dengan kartu lain.
 - **Handle dan tagline** di footer kartu diambil dari pengaturan brand: kunci `handle` dan `tagline` di
-  `brands/<slug>.json` (kalau kosong, barisnya tidak ditampilkan). Ini hanya untuk template produk, bukan
-  untuk yang diunggah.
+  `brands/tbt.json` (kalau kosong, barisnya tidak ditampilkan).
 - Tidak ada perubahan database. File yang diunggah dan berubah dari v18: `index.html`
-  (template produk juga: `build.py` dan `brands/tbt.json`).
+  (sumbernya juga: `build.py` dan `brands/tbt.json`).
 
 ## Update terbaru (v20): leaderboard lebih rapi
 
@@ -430,7 +427,7 @@ Bagian share hand (CSS dan skrip) sekarang identik dengan file `index.html` terb
   naik, jadi peringkat 1 sampai 6 sudah terlihat di layar pertama HP.
 - Logo di bilah bisa diketuk untuk kembali ke halaman utama (tab Total). Area ketuknya dibesarkan di halaman
   utama dan di scoreboard.
-- Nama brand di bilah diambil dari pengaturan brand (`brand_name`), jadi ikut berganti untuk klien lain.
+- Nama brand di bilah diambil dari pengaturan brand (`brand_name`).
 - Tidak ada perubahan database. File berubah dari v21: `index.html` dan `scoreboard.html`.
 
 ## Update terbaru (v23): perbaikan dari pemeriksaan menyeluruh
@@ -450,7 +447,6 @@ leaderboard, registry), plus uji nama berisi kode HTML di semua halaman, peminda
 - Hasil lain yang baik: nama berisi kode HTML tampil sebagai teks biasa di semua halaman (tidak ada celah
   injeksi), dan semua langkah perjalanan penuh berjalan tanpa error.
 - Warna dasar tertanam di semua halaman, jadi semua file HTML berubah sedikit. Tidak ada perubahan database.
-  Untuk klien lain: cek kontras warna `muted` dan `red` di `brands/<slug>.json`.
 
 ## Update terbaru (v24): halaman jauh lebih ringan, cache leaderboard, header keamanan, pratinjau tautan
 
@@ -479,10 +475,9 @@ Yang berubah:
   `Content-Security-Policy: ...` di `_headers`, unggah ulang, dan beri tahu saya.
   Jawaban API kini ditandai `no-store` (tidak disimpan browser) kecuali leaderboard.
 - **Pratinjau tautan** untuk leaderboard (WhatsApp, Instagram): judul, deskripsi, dan gambar `og-image.jpg`
-  (1200x630, 68 KB). Alamat situs diambil dari `site_url` di `brands/<slug>.json` (sekarang
+  (1200x630, 68 KB). Alamat situs diambil dari `site_url` di `brands/tbt.json` (sekarang
   `https://tilesbytilesleaderboard.pages.dev`). Kalau pindah ke domain sendiri, ubah `site_url` lalu build ulang.
-  Brand tanpa `site_url` tidak mendapat tag pratinjau (deskripsi tetap ada). Gambar pratinjau per brand:
-  `brands/<slug>.og.jpg`. WhatsApp menyimpan pratinjau lama; untuk mengujinya tambahkan `?v=2` di ujung alamat.
+  Gambar pratinjaunya: `brands/tbt.og.jpg`. WhatsApp menyimpan pratinjau lama; untuk mengujinya tambahkan `?v=2` di ujung alamat.
 - **Escape** kini menutup jendela share hand dan pemilih pola di scoreboard.
 - Tidak ada perubahan database. File berubah dari v23: semua halaman HTML, `functions/_auth.js`,
   `functions/api/overview.js`. File baru: folder `assets`, `_headers`, `og-image.jpg`.
@@ -898,7 +893,7 @@ Tampilan statistik di halaman pemain ditata ulang. Rumus dan angkanya sama denga
   serta per game. **Tab Patterns:** daftar pola yang dimenangkan dengan bar kecil (sepuluh teratas, sisanya lewat "Show all").
 - **Warna** mengikuti palet A: hijau (token aksen brand) untuk menang, emas (token gold brand) untuk kalah, merah untuk penalty, krem untuk neutral;
   nuansa lebih muda dan lebih tua ditetapkan di bagian `statistics card` pada CSS `player.html` (variabel `--k-sd`, `--k-ls`, `--k-pe`, `--k-nu`).
-  Hijau, emas, dan merah mengikuti token brand otomatis; nuansa turunannya diturunkan dari palet TBT, jadi brand lain perlu menyesuaikannya.
+  Hijau, emas, dan merah mengikuti token brand otomatis; nuansa turunannya diturunkan dari palet TBT.
 - **Data:** satu fakta baru per pemain di tiap meja (`penalties`). Versi statistik naik dari 5 ke 6, sehingga semua meja dihitung ulang otomatis dari
   hand mentahnya (12 meja per permintaan di leaderboard, dan langsung untuk meja si pemain saat halamannya dibuka). Tidak ada SQL yang perlu dijalankan.
 - File berubah dari v43: `player.html`, `functions/_tables.js`, `functions/_players.js`. Unggah ketiganya dalam satu commit.
@@ -1107,12 +1102,26 @@ page** di menu pada setiap halaman publik. Yang disimpan hanya id dan nama pangg
 (kunci `tbt-me`), tidak dikirim ke server. Tombolnya kecil, satu baris di bawah keterangan pemain, dan teks penjelasan baru muncul setelah halaman disimpan. Ketuk lagi untuk menghapus. Bila penyimpanan diblokir (mode pribadi), tombol
 tidak ditampilkan dan semua halaman tetap jalan. Menghapus data situs di peramban juga menghapusnya.
 
-**Ikon permata di empat baris teratas.** Peringkat 1 sampai 4 kini ditandai ikon permata datar kecil di samping nama:
-1 **Diamond** (biru), 2 **Ruby** (merah), 3 **Jade** (hijau), 4 **Pearl** (krem). Bulatan bernomor tidak berubah
-bentuknya; cincinnya, garis di kiri, dan semburat latar baris mengikuti warna permatanya (versi terang dan gelap punya
-warna sendiri supaya tetap terlihat). Pemain yang seri berbagi peringkat dan permata yang sama, dan peringkat 5 ke bawah
-tidak punya ikon. **Mahkota di daftar dihapus**, dan bulatan nomor 1 tidak lagi berisi emas penuh. Mahkota di gambar
-"Share top 10" belum diubah. Pembaca layar membacakan nama permatanya setelah nama pemain.
+**Peringkat 1 sampai 4 memakai permata di semua tampilan.** Urutannya: 1 **Diamond** (biru), 2 **Ruby** (merah),
+3 **Jade** (hijau), 4 **Pearl** (krem). Bulatan bernomor tidak berubah bentuknya; cincinnya, garis di kiri, dan semburat
+latar baris mengikuti warna permatanya (versi terang dan gelap punya warna sendiri supaya tetap terlihat), dan ikon
+permata kecil muncul di samping nama. Ikon Jade berbentuk persegi panjang **tegak** bersudut bulat dengan garis silang di
+sudutnya (criss cut) supaya berbeda dari Pearl yang bulat. Berlaku di:
+- **Leaderboard** (Total dan Sessions) dan **kartu "Share top 10"** (kedua format, kelima tema). Di kartu itu mahkota dan
+  warna emas, perak, perunggu sudah diganti permata. Bulatan nomor 1 tidak lagi terisi emas penuh.
+- **Daftar game di halaman pemain** dirancang ulang. Bulatan peringkat diganti **pil peringkat** ("1st", "2nd", "3rd",
+  "4th") berwarna permata, dengan **poin bersih tepat di bawahnya**. Pil dan poin adalah **satu blok** di kanan kartu,
+  rata kanan dan berada di tengah vertikal kartu, sama seperti blok tanggal di kiri. Di antaranya ada tiga baris teks
+  (judul, "Table 1 · Default", dan "1st in ... rounds · ... win rate") yang rapat dan sama jaraknya. Di tepi kiri kartu
+  ada garis tipis dengan warna permata yang sama (seperti di leaderboard). Tinggi kartu seragam (sekitar 82 piksel di
+  ponsel). Di layar sangat kecil (320 piksel) baris ketiga boleh turun menjadi dua baris.
+- **All players tidak berubah** (angka polos di huruf Playfair, tanpa bulatan atau permata).
+- **Tidak berubah:** kartu bagikan di scoreboard (host) tetap memakai mahkota. Di standings scoreboard hanya huruf angka
+  di dalam bulatan yang dibetulkan (sekarang huruf sans seperti di leaderboard, tegak sama tinggi, dan di tengah bulatan;
+  sebelumnya Playfair yang turun 2 sampai 3 piksel di bawah tengah). Tanpa permata di sana.
+
+Pemain yang seri berbagi peringkat dan permata yang sama, dan peringkat 5 ke bawah tidak punya ikon. Pembaca layar
+membacakan nama permatanya setelah nama pemain.
 
 **Panah di baris leaderboard.** Baris yang membuka halaman pemain kini berpanah. Baris tamu atau pemain yang
 menyembunyikan halamannya tidak berpanah.
