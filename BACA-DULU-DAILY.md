@@ -1115,6 +1115,22 @@ sudutnya (criss cut) supaya berbeda dari Pearl yang bulat. Berlaku di:
   (judul, "Table 1 · Default", dan "1st in ... rounds · ... win rate") yang rapat dan sama jaraknya. Di tepi kiri kartu
   ada garis tipis dengan warna permata yang sama (seperti di leaderboard). Tinggi kartu seragam (sekitar 82 piksel di
   ponsel). Di layar sangat kecil (320 piksel) baris ketiga boleh turun menjadi dua baris.
+- **Daftar game bisa dibuka (rangkuman wind round).** Mengetuk kartu game membuka ruang di bawahnya (panah kecil di tengah
+  bawah kartu; satu game terbuka sekali waktu; bisa dengan keyboard). Isinya empat baris (East, South, West, North) dengan
+  ubin hanzi berhuruf Kai Ti seperti di kartu bagikan scoreboard, peringkat pemain di ronde itu (pil berwarna permata), poin
+  bersih, dan "6 hands · won 1". Di bawahnya ada tanda progres empat kotak (satu kotak per giliran dealer dalam satu wind
+  round), lalu **final table** (empat pemain meja itu berurutan, pemilik halaman disorot), lalu "Game total" dan tautan
+  "Open table recap" (rekap meja pindah ke sini; ketukan pada kartu sendiri kini membuka rangkuman, bukan rekap).
+  Cara membaca tanda empat kotak: wind round yang selesai penuh empat; yang sedang berjalan terisi sebanyak giliran dealer
+  yang sudah lewat (kotak berikutnya berbingkai, dan baris diberi "Live"); yang belum dimainkan redup ("Not played").
+  Dealer yang bertahan (menang lagi) tidak menggeser kotak, karena yang dihitung giliran dealer, bukan jumlah hand. Pada game
+  yang dihentikan host di tengah ronde, kotak tidak penuh dan tidak ada "Live". Ronde yang berakhir karena ada pemain
+  bangkrut (aturan custom) tetap dihitung selesai. "Live" hanya muncul bila meja belum dikunci dan terakhir disimpan dalam
+  12 jam terakhir.
+  Tambahan di server: `/api/overview?player=` kini membawa untuk tiap game `wr` (hasil tiap wind round), `turn`, `done`,
+  `live`, dan `tb` (final table); versi statistik naik dari 6 ke **7**, jadi semua meja dihitung ulang otomatis sekali saat
+  pertama dibaca (tanpa migrasi database). Nama di final table adalah nama yang tertulis di meja, sama seperti di rekap
+  meja; nama lengkap, WhatsApp, dan Instagram tidak ikut.
 - **All players tidak berubah** (angka polos di huruf Playfair, tanpa bulatan atau permata).
 - **Tidak berubah:** kartu bagikan di scoreboard (host) tetap memakai mahkota. Di standings scoreboard hanya huruf angka
   di dalam bulatan yang dibetulkan (sekarang huruf sans seperti di leaderboard, tegak sama tinggi, dan di tengah bulatan;

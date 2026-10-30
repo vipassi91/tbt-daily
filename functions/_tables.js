@@ -16,7 +16,7 @@ function validMcrEvent(ev) {
 }
 // Bump this whenever buildStats starts storing something new. Stored results with an older
 // version are rebuilt from the saved game the next time they are read (see statsFor).
-export const STATS_VERSION = 6;
+export const STATS_VERSION = 7;
 
 // The rule set a table is played under, in the same terms the scoring engine uses.
 function rulesOf(g) {
@@ -163,7 +163,9 @@ export function buildStats(game, fallbackPlayers) {
     });
     facts[n] = { won: wins[n], ptsSum: Math.round(ptsSum * 100) / 100, best: best, zimo: zimo, dealIns: dealIns, windFirsts: windFirsts,
       zimoLost: zimoLost, penalties: penalties, low: low, dealPts: Math.round(dealPts * 100) / 100, patterns: patterns, streak: streak,
-      windHigh: windHigh, windLow: windLow, windPlaceSum: windPlaceSum };
+      windHigh: windHigh, windLow: windLow, windPlaceSum: windPlaceSum,
+      // the four wind rounds in order: [place, net points, hands, hands won] for a wind round that had hands, null for one that did not
+      wr: s.rounds.map(function (r) { return r.totalHands > 0 ? [r.places[n], r2(r.totals[n]), r.totalHands, r.handsWon[n] || 0] : null; }) };
   });
   return {
     v: STATS_VERSION, mode: g.mode || 'casual', locked: !!g.lockedAt, rules: rulesOf(g), names: names, rank: rank, wins: wins, aggregates: s.aggregates,
@@ -171,7 +173,7 @@ export function buildStats(game, fallbackPlayers) {
     winds: s.rounds.filter(function (r) { return r.totalHands > 0; }).length,
     windsDone: windsDone,
     facts: facts,
-    progress: { wind: s.wind, dealer: s.dealer, done: s.done },
+    progress: { wind: s.wind, dealer: s.dealer, turn: s.turn, done: s.done },
   };
 }
 

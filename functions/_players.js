@@ -284,6 +284,8 @@ export async function safeDisplay(env, tableId, typedNames, storedNames) {
 // A registered player's own page: who they are and every game they played, with the statistics kept for each game.
 // Asked as /api/overview?player=<id>, public, no login. A player who hid their page, an id nobody has, and a badly written id
 // all get the very same answer, so nobody can find out who chose to hide. Only an admin asking is told which of these it is.
+// a table that is not locked and was saved within this long ago is still being played (it is shown as live)
+const LIVE_MS = 12 * 3600 * 1000;
 export async function playerPage(env, rawId, admin) {
   const no = function (reason, reg) {
     const body = { error: 'not_available' };
@@ -324,7 +326,7 @@ export async function playerPage(env, rawId, admin) {
           const row = byId[m.t.id]; if (!row) continue;
           const stats = await statsFor(env, row);   // renews an old table's statistics when its turn comes, so the facts are there
           if (!stats.events) continue;
-          const me = summarizePlayers(stats)[m.seat], f = (stats.facts && stats.facts[stats.names[m.seat]]) || null;
+          const all = summarizePlayers(stats), me = all[m.seat], f = (stats.facts && stats.facts[stats.names[m.seat]]) || null;
           if (!me || !f) { skipped++; continue; }
           const d = days[row.day_id] || {};
           games.push({
@@ -333,6 +335,10 @@ export async function playerPage(env, rawId, admin) {
             ptsSum: f.ptsSum, best: f.best, zimo: f.zimo, dealIns: f.dealIns,
             zimoLost: f.zimoLost || 0, penalties: f.penalties || 0, low: f.low === undefined ? null : f.low, dealPts: f.dealPts || 0, patterns: f.patterns || {}, streak: f.streak || 0,
             windsDone: stats.windsDone || 0, windHigh: f.windHigh === undefined ? null : f.windHigh, windLow: f.windLow === undefined ? null : f.windLow, windPlaceSum: f.windPlaceSum || 0,
+            // for the wind round summary: the result of each wind round, which dealer turn is being played, whether the game is still running, and the final table
+            wr: Array.isArray(f.wr) ? f.wr : null, turn: (stats.progress && stats.progress.turn) || 0, done: !!(stats.progress && stats.progress.done),
+            live: !stats.locked && !(stats.progress && stats.progress.done) && (Date.now() - Date.parse(row.updated_at)) < LIVE_MS,
+            tb: all.map(function (p, i) { return [p.name, p.netTotal, p.rank, i === m.seat ? 1 : 0]; }).sort(function (a, b) { return a[2] - b[2] || 0; }),
           });
         } catch (e) { skipped++; }
       }

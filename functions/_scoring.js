@@ -141,7 +141,7 @@ export function replay(events, cfg) {
       }
     }
   });
-  return { hands, wind, dealer, streak, done };
+  return { hands, wind, dealer, streak, done, turn };   // turn: which of the 4 dealer turns of this wind round is being played, 0 to 3
 }
 
 export function curveScore(pos) { return { 1: 100, 2: 60, 3: 30, 4: 0 }[pos] ?? 0; }
@@ -219,5 +219,5 @@ export function scoreGame(rawNames, gameLike) {
     aggregates[p] = { placementScore, pointValueScore, handWinRate, netScore, leagueScore, netTotal };
   });
 
-  return { names, rounds, aggregates, totalHands, wind: rp.wind, dealer: rp.dealer, done: rp.done, mode: gameLike && gameLike.mode };
+  return { names, rounds, aggregates, totalHands, wind: rp.wind, dealer: rp.dealer, turn: rp.turn, done: rp.done, mode: gameLike && gameLike.mode };
 }
