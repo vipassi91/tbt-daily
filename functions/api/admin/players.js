@@ -1,4 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
+import { listHosts } from '../../_hostauth.js';
 import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, guestRuleOn, gatherNames, sameTableConflict, looksLikeTwo, similarRegistered, seatRecords, ensureRegistryTables, loadSignup, clearRegistryCache, REGISTRY_SQL } from '../../_players.js';
 
 // GET /api/admin/players (admin): the registered players (with their private details) and the guests.
@@ -46,7 +47,8 @@ export async function onRequestGet({ request, env }) {
         };
       });
     }
-    return json({ ready: reg.ready, seatsReady: reg.seatsReady, pageReady: reg.hiddenReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
+    let hosts = []; try { if (reg.ready) hosts = await listHosts(env); } catch (e) { hosts = []; }   // who may make sessions and tables
+    return json({ hosts: hosts, ready: reg.ready, seatsReady: reg.seatsReady, pageReady: reg.hiddenReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
       signup: { ready: sg.ready, enabled: sg.enabled, token: sg.token, requests: requests } });
   } catch (err) {
     return json({ error: String(err) }, 500);
@@ -227,6 +229,7 @@ async function handlePost({ request, env }) {
     if (action === 'remove') {
       await env.DB.prepare('DELETE FROM registry_names WHERE registry_id=?').bind(id).run();
       await env.DB.prepare('DELETE FROM registry WHERE id=?').bind(id).run();
+      try { await env.DB.prepare('DELETE FROM registry_hosts WHERE registry_id=?').bind(id).run(); await env.DB.prepare('DELETE FROM host_logins WHERE registry_id=?').bind(id).run(); } catch (e) { /* hosts were never switched on */ }
       // games that were set by hand for this person must not slip over to somebody who shares the name
       if (reg.seatsReady) await env.DB.prepare("UPDATE registry_seats SET registry_id='guest' WHERE registry_id=?").bind(id).run();
       return json({ ok: true });

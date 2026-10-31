@@ -1170,3 +1170,55 @@ database.
 pemeriksaan di peramban (ikon cari, hasil, salah ketik, menu, My page, penyimpanan rusak atau diblokir, nama berbahaya,
 All players, dan semua halaman di lebar 320 sampai 1280 piksel), ditambah seluruh rangkaian lama yang tetap lolos.
 
+
+## Update terbaru (v56): host yang bisa membuat sesi dan meja, QR untuk kode meja, dan kode host 6 karakter
+
+**Apa yang baru, singkatnya.** Kamu bisa menunjuk pemain terdaftar sebagai **host**. Host login di `/host` dengan nama panggilan dan kata sandi
+pribadi, lalu membuat **sesi** (tanggal bebas) dan **meja** sendiri, dan mendapat kode meja sebagai link **dan QR**. Kamu sendiri juga mendapat
+tombol **QR** di samping setiap link di halaman Sessions, dan kartu meja yang bisa dicetak.
+
+**Cara memakainya (admin).**
+1. Buka halaman **Players**. Di kartu **Hosts** dan di setiap baris pemain ada tombol **Make host** (aktif hanya bila pemain punya nomor WhatsApp).
+2. Setelah konfirmasi muncul **detail login**: pesan WhatsApp yang sudah terisi (tombol "Send on WhatsApp") dan QR untuk halaman login. Pesan itu
+   hanya menyebut aturannya ("6 digit terakhir nomor WhatsApp ini"), bukan angkanya, dan tidak memuat rahasia apa pun.
+3. Host membuka `/host`, login dengan nama panggilan dan **6 digit terakhir nomor WhatsApp** sebagai kata sandi pertama, lalu **wajib memilih kata sandi
+   sendiri** (minimal 8 karakter, tidak boleh memuat 6 digit itu atau sama dengan nama panggilan). Kata sandi pertama berlaku 7 hari.
+4. **Reset password** (di kartu Hosts atau baris pemain): kata sandi kembali ke 6 digit terakhir, berlaku 7 hari, dan semua ponsel host itu keluar.
+   **Revoke host**: host keluar di semua ponsel dan tidak bisa login lagi. Sesi dan meja yang sudah dibuat tidak tersentuh.
+5. Kamu tidak pernah melihat kata sandi host. Menghapus pemain dari registry otomatis mencabut hak host-nya.
+6. Di halaman **Sessions**, sesi dan meja buatan host diberi keterangan "by <nama host>".
+
+**Apa yang boleh dilakukan host.** Membuat sesi (tanggal bebas, maksimal **10 sesi per hari**), mengganti nama sesinya sendiri, membuat meja di sesinya
+sendiri (maksimal **24 meja per hari**), melihat kode dan QR mejanya sendiri, menghapus sesi atau meja miliknya **hanya bila masih kosong** (belum ada
+hand), dan mencetak kartu meja. Host **tidak** bisa: memakai sesi buatan admin, melihat milik host lain, membuka kunci meja, menghapus meja yang sudah
+ada skornya, atau melihat nomor WhatsApp dan nama lengkap pemain. Batas harian dihitung menurut hari di Jakarta (WIB), apa pun tanggal sesinya, dan
+**tidak kembali** bila sesi atau meja dihapus.
+
+**Keamanan.**
+- Kata sandi disimpan sebagai hash PBKDF2 (SHA-256, 100.000 putaran, garam acak per host). Tidak ada yang bisa membacanya kembali.
+- Login memberi cookie `tbt_host` yang **tidak bisa dibaca skrip halaman** (HttpOnly), hanya dikirim lewat HTTPS (Secure), tidak dikirim dari situs
+  lain (SameSite=Strict), dan hanya untuk alamat `/api/host`. Berlaku 30 hari, paling banyak 5 ponsel sekaligus. Tombol **Sign out** mengakhirinya.
+- Satu pesan galat yang sama untuk semua kegagalan login ("Nickname or password is wrong"), jadi halaman tidak membocorkan siapa yang host.
+  Lima kali salah (alamat dan nama yang sama) mengunci 15 menit; ada juga batas per nama panggilan dan per alamat.
+- **Kode meja:** meja baru, dibuat siapa pun, mendapat kode host **6 karakter** (kode pemain tetap 5). Kode lama 5 karakter tetap berlaku. Semua kode
+  kini dibuat dengan pembangkit acak yang aman. Pencarian kode yang publik (halaman Table code, scoreboard, tampilan pemain, kunci) kini membatasi
+  alamat yang terus menebak kode salah: sekitar 60 kode salah dalam 10 menit menahan alamat itu beberapa menit. Kode yang benar tidak pernah dihitung.
+  Di tempat yang banyak orang memakai satu WiFi, batas ini cukup longgar untuk salah ketik biasa.
+- Kartu meja yang dicetak hanya membawa **kode pemain**, tidak pernah kode host.
+
+**QR.** Digambar langsung di peramban (tanpa layanan luar; kebijakan keamanan situs memang memblokir layanan QR pihak ketiga), jadi kode meja tidak keluar
+dari situs. Pustakanya `qrcode-generator` (Kazuhiko Arase, lisensi MIT; pemberitahuan hak ciptanya tertulis di bagian atas `shared/qr.js` dan harus
+tetap ada). Beratnya sekitar 7 KB terkompresi, hanya di halaman yang memakainya (host, Sessions, Players).
+
+**Menu.** Kelompok tenang di bagian bawah menu kini berjudul "Admin and hosts" dan berisi Sessions, Players, dan **Host desk**.
+
+**Pemasangan.** Unggah seluruh isi zip seperti biasa. **Tidak perlu SQL manual dan tidak perlu menekan tombol apa pun**: tabel baru (`registry_hosts`,
+`host_logins`, `host_daily`, `rate_events`) dan kolom `created_by` di `days` dan `tables` dibuat otomatis saat fitur host pertama kali dipakai.
+Fitur host baru aktif setelah ada player registry (Players, "Turn on the player registry") dan kamu menekan Make host pertama kali.
+
+**Berkas baru.** `host.html` (halaman host), `functions/_hostauth.js` (keamanan host), `functions/api/host/*` (login, logout, password, me, sessions, tables),
+`functions/api/admin/hosts.js`, `shared/qr.js` dan `shared/qr.css`, `shared/kai.css`. **Pengujian baru:** `hosts_server.test.mjs` (88 pemeriksaan) dan
+`hosts.test.mjs` (162 pemeriksaan, memerlukan paket `jsqr` yang ikut terpasang bersama paket uji lain).
+
+**Yang belum diuji di dunia nyata:** pemindaian kamera ponsel pada QR yang dicetak, pengiriman WhatsApp sungguhan, dan perilaku PBKDF2 serta cookie
+di Cloudflare produksi (di lingkungan uji berjalan baik). Cobalah satu kali dengan satu host sungguhan sebelum diumumkan.

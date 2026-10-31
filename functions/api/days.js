@@ -1,11 +1,20 @@
 import { isAdmin, json, unauthorized } from '../_auth.js';
 
 // GET /api/days: list of sessions with how many tables each has
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   try {
-    const { results } = await env.DB.prepare(
+    // the admin also sees which host made a session (the public list does not)
+    let results;
+    if (isAdmin(request, env)) {
+      try {
+        results = (await env.DB.prepare(
+          'SELECT d.id, d.label, d.date, (SELECT COUNT(*) FROM tables t WHERE t.day_id = d.id) AS table_count, (SELECT r.nickname FROM registry r WHERE r.id = d.created_by) AS created_by_name FROM days d ORDER BY d.date DESC, d.created_at DESC'
+        ).all()).results;
+      } catch (e) { results = null; }   // before hosts are used there is no such column yet
+    }
+    if (!results) results = (await env.DB.prepare(
       'SELECT d.id, d.label, d.date, (SELECT COUNT(*) FROM tables t WHERE t.day_id = d.id) AS table_count FROM days d ORDER BY d.date DESC, d.created_at DESC'
-    ).all();
+    ).all()).results;
     return json(results);
   } catch (err) {
     return json({ error: String(err) }, 500);

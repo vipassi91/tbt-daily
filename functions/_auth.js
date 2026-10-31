@@ -8,5 +8,6 @@ export function json(obj, status = 200) {
 }
 export function unauthorized() { return json({ error: 'The admin password is wrong or missing' }, 401); }
 
-function randChar() { return 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]; }
-export function genCode(len = 5) { return Array.from({ length: len }, randChar).join(''); }
+// Codes come from the secure random generator. The alphabet has 32 characters, which divides 256, so every character is equally likely.
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export function genCode(len = 5) { const a = new Uint8Array(len); crypto.getRandomValues(a); return Array.from(a, function (b) { return CODE_ALPHABET[b & 31]; }).join(''); }

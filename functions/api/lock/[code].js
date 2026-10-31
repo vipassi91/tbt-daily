@@ -1,14 +1,16 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
 import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
+import { guessBlocked, guessMiss, tooManyGuesses } from '../../_hostauth.js';
 
 // POST /api/lock/:code (host code): save the final game and lock the table.
 // The body is the host's game, so the final hands and the lock land in one
 // atomic write. After this nobody can edit the table until an admin unlocks it.
 export async function onRequestPost({ request, env, params }) {
+  if (await guessBlocked(request)) return tooManyGuesses();
   try {
     const code = params.code.toUpperCase();
     const t = await env.DB.prepare('SELECT id, players, rounds, updated_at FROM tables WHERE code=?').bind(code).first();
-    if (!t) return json({ error: 'Table code not found' }, 404);
+    if (!t) { if (await guessMiss(env, request)) return tooManyGuesses(); return json({ error: 'Table code not found' }, 404); }
     let current = {};
     try { current = JSON.parse(t.rounds); } catch (e) { current = {}; }
     if (current.lockedAt) return json({ error: 'locked', lockedAt: current.lockedAt, updatedAt: t.updated_at, game: current }, 423);

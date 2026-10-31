@@ -41,6 +41,12 @@
 /admin-pemain.html
   X-Robots-Tag: noindex, nofollow
   Referrer-Policy: no-referrer
+/host
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/host.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
 /masuk
   X-Robots-Tag: noindex
 /masuk.html

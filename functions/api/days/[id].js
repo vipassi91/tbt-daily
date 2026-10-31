@@ -12,6 +12,10 @@ export async function onRequestGet({ request, env, params }) {
       'SELECT id, code, view_code, label, players, rounds, stats, updated_at FROM tables WHERE day_id=? ORDER BY created_at ASC'
     ).bind(params.id).all();
 
+    // which host made the session and each table (nothing before hosts are used)
+    const nick = {}, by = {};
+    try { (await env.DB.prepare('SELECT id, nickname FROM registry').all()).results.forEach(function (x) { nick[x.id] = x.nickname; }); } catch (e) { /* no registry */ }
+    try { (await env.DB.prepare('SELECT id, created_by FROM tables WHERE day_id=? AND created_by IS NOT NULL').bind(params.id).all()).results.forEach(function (x) { by[x.id] = nick[x.created_by] || null; }); } catch (e) { /* no such column yet */ }
     const tables = [];
     for (const t of results) {
       let viewCode = t.view_code;
@@ -22,12 +26,12 @@ export async function onRequestGet({ request, env, params }) {
       }
       const stats = await statsFor(env, t);
       tables.push({
-        id: t.id, code: t.code, view_code: viewCode, label: t.label,
+        id: t.id, code: t.code, view_code: viewCode, label: t.label, createdBy: by[t.id] || null,
         events: stats.events, progress: stats.progress, mode: stats.mode || 'casual', locked: !!stats.locked, rules: stats.rules || null, updatedAt: t.updated_at,
         players: summarizePlayers(stats),
       });
     }
-    return json({ id: day.id, label: day.label, date: day.date, tables: tables });
+    return json({ id: day.id, label: day.label, date: day.date, createdBy: day.created_by ? (nick[day.created_by] || null) : null, tables: tables });
   } catch (err) {
     return json({ error: String(err) }, 500);
   }

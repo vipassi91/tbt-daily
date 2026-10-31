@@ -1,13 +1,15 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
 import { buildStats, validGame, nextStamp, sameSetup, cleanTiles } from '../../_tables.js';
 import { safeDisplay } from '../../_players.js';
+import { guessBlocked, guessMiss, tooManyGuesses } from '../../_hostauth.js';
 
 // GET /api/tables/:code: the host's edit code. Returns the raw game object
 // (which carries `lockedAt` once the table has been saved as final).
-export async function onRequestGet({ env, params }) {
+export async function onRequestGet({ request, env, params }) {
+  if (await guessBlocked(request)) return tooManyGuesses();
   try {
     const t = await env.DB.prepare('SELECT id, label, players, rounds, updated_at FROM tables WHERE code=?').bind(params.code.toUpperCase()).first();
-    if (!t) return json({ error: 'Table code not found' }, 404);
+    if (!t) { if (await guessMiss(env, request)) return tooManyGuesses(); return json({ error: 'Table code not found' }, 404); }
     const game = JSON.parse(t.rounds);
     let stored = []; try { stored = JSON.parse(t.players); } catch (e) { stored = []; }
     return json({ label: t.label, updatedAt: t.updated_at, game: game, display: await safeDisplay(env, t.id, game.names, stored) });
@@ -24,6 +26,7 @@ export async function onRequestGet({ env, params }) {
 //    requests racing each other can't both win.
 //  - results are computed here, once, and stored, so leaderboards never replay hands.
 export async function onRequestPatch({ request, env, params }) {
+  if (await guessBlocked(request)) return tooManyGuesses();
   try {
     const code = params.code.toUpperCase();
     let game;
@@ -32,7 +35,7 @@ export async function onRequestPatch({ request, env, params }) {
     game.events.forEach(cleanTiles);
 
     const t = await env.DB.prepare('SELECT id, players, rounds, updated_at FROM tables WHERE code=?').bind(code).first();
-    if (!t) return json({ error: 'Table code not found' }, 404);
+    if (!t) { if (await guessMiss(env, request)) return tooManyGuesses(); return json({ error: 'Table code not found' }, 404); }
     let current = {};
     try { current = JSON.parse(t.rounds); } catch (e) { current = {}; }
 

@@ -684,11 +684,11 @@ var TBTNAV = (function () {
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
   function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
-  var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people]];
+  var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
     if (m) h += '<a href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + '<span>My page \u00b7 <b>' + esc(m.name) + '</b></span>' + IC.go + '</a>';
-    return h + '<div class="tn-adm"><h4>Admin</h4>' + ADMIN.map(function (i) { return '<a href="' + esc(i[1]) + '">' + i[2] + '<span>' + i[0] + '</span>' + IC.go + '</a>'; }).join('') + '</div>';
+    return h + '<div class="tn-adm"><h4>Admin and hosts</h4>' + ADMIN.map(function (i) { return '<a href="' + esc(i[1]) + '">' + i[2] + '<span>' + i[0] + '</span>' + IC.go + '</a>'; }).join('') + '</div>';
   }
   // o: { logo, name, players }  (the page gives its own logo and brand name)
   function header(active, o) {

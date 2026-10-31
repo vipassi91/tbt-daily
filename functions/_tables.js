@@ -186,9 +186,9 @@ export function summarizePlayers(stats) {
   });
 }
 
-export async function uniqueCode(env, avoid) {
+export async function uniqueCode(env, avoid, len) {
   for (let i = 0; i < 25; i++) {
-    const c = genCode(5);
+    const c = genCode(len || 5);
     if (avoid && avoid.indexOf(c) >= 0) continue;
     const row = await env.DB.prepare('SELECT id FROM tables WHERE code=? OR view_code=?').bind(c, c).first();
     if (!row) return c;
@@ -247,3 +247,30 @@ export function setupOf(g) {
   };
 }
 export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.stringify(setupOf(b)); }
+
+// Makes a table with its two codes: the host code (6 characters, it lets whoever has it enter scores) and the players code (5 characters, read only).
+// `createdBy` is the registry id of the host who made it; an admin leaves it out.
+export async function createTableRow(env, day, label, rawPlayers, createdBy) {
+  let players = Array.isArray(rawPlayers) ? rawPlayers.slice(0, 4).map(function (p) { return String(p || '').trim(); }) : [];
+  while (players.length < 4) players.push('');
+  const code = await uniqueCode(env, undefined, 6);
+  const viewCode = await uniqueCode(env, [code], 5);
+  let dateText = '';
+  try { dateText = new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dateText = ''; }
+  const game = {
+    names: players, title: String(label).slice(0, 30), date: dateText,
+    useStart: false, start: '200', mode: 'casual', seatRotation: true, bankrupt: false,
+    custom: { minPoint: 2, maxStreak: 4, deadwall: false }, events: [],
+  };
+  const stats = buildStats(game, players);
+  const id = 'tbl-' + crypto.randomUUID().slice(0, 8);
+  const now = new Date().toISOString();
+  if (createdBy) {
+    await env.DB.prepare('INSERT INTO tables (id, day_id, code, view_code, label, players, rounds, stats, starting_score, created_at, updated_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(id, day.id, code, viewCode, String(label).trim(), JSON.stringify(stats.names), JSON.stringify(game), JSON.stringify(stats), 240, now, now, createdBy).run();
+  } else {
+    await env.DB.prepare('INSERT INTO tables (id, day_id, code, view_code, label, players, rounds, stats, starting_score, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(id, day.id, code, viewCode, String(label).trim(), JSON.stringify(stats.names), JSON.stringify(game), JSON.stringify(stats), 240, now, now).run();
+  }
+  return { id: id, code: code, view_code: viewCode };
+}
