@@ -928,7 +928,7 @@ Mode MCR tidak berubah (poin tetap diketik).
   kursi dan hand lama yang diedit atau disisipi), dan prevailing wind (putaran angin hand itu). Host tidak perlu mengisinya.
 - **Aturan hitung** diambil kata demi kata dari pemilih pola scoreboard saat pemasangan (mesin tidak punya salinan aturan sendiri yang bisa berbeda). Aturan yang sudah
   dikonfirmasi: concealed kong tetap concealed; pong yang dilengkapi tile buangan yang menang tidak dihitung concealed (Four Concealed Pong hanya sah kalau buangannya
-  melengkapi pasangan); Thirteen Orphans, Nine Gates, dan Seven Stars harus self draw; Split Straight hanya boleh dilengkapi buangan pada set atau pasangannya;
+  melengkapi pasangan); Thirteen Orphans, Nine Gates, dan Seven Stars boleh dimenangkan dengan self draw maupun Hu (sejak v57); Split Straight hanya boleh dilengkapi buangan pada set atau pasangannya;
   Half Outside, Half Flush, dan Half Terminals butuh minimal tiga dari lima kelompok; Ruby, Jade, dan Pearl Dragon butuh pure straight satu suit dengan pasangan.
 - **Tile disimpan sebagai data, bukan gambar:** tiap hand yang dimenangkan dengan tile menyimpan `tiles` berisi angka saja (tile concealed, meld, tile menang, bunga,
   kondisi), sekitar 80 sampai 120 byte per hand. Kartu **Share hand** otomatis memuat tile itu: bunga di baris sendiri, lalu meld dan tangan, tile menang paling akhir.
@@ -1222,3 +1222,21 @@ Fitur host baru aktif setelah ada player registry (Players, "Turn on the player 
 
 **Yang belum diuji di dunia nyata:** pemindaian kamera ponsel pada QR yang dicetak, pengiriman WhatsApp sungguhan, dan perilaku PBKDF2 serta cookie
 di Cloudflare produksi (di lingkungan uji berjalan baik). Cobalah satu kali dengan satu host sungguhan sebelum diumumkan.
+
+## Update terbaru (v57): Thirteen Orphans, Nine Gates, dan Seven Stars boleh menang dari Hu
+
+Berlaku untuk mode Casual, Default, Tournament, dan Custom. Mode MCR tidak berubah.
+
+- **Aturan lama dihapus:** ketiga pola itu tidak lagi harus self draw. Bila dimenangkan dari buangan (Hu), jendela Pick Tiles dan Pick Patterns tetap
+  mengusulkan polanya dengan poin yang sama seperti saat self draw: Thirteen Orphans 13, Nine Gates 13, Seven Stars 11. Sebelumnya Hu dari tangan ini
+  ditolak ("must be self drawn") atau jatuh ke pola biasa (Nine Gates saat Hu hanya terbaca Concealed Hand + Full Flush, 8 sampai 10 poin).
+- **Deteksi Nine Gates diperiksa:** semua 118.800 kemungkinan 14 tile dalam satu suit dibandingkan dengan definisi terpisah (1112345678999 ditambah satu tile
+  suit yang sama). Hanya 9 tangan yang Nine Gates, semuanya terdeteksi, tidak ada yang salah deteksi, dan semuanya dihitung 13 baik self draw maupun Hu.
+  Tile penunggu (waits) juga benar: 9 tile untuk Nine Gates 13 tile, 13 tile untuk Thirteen Orphans 13 sisi. Jadi yang tampak "tidak terdeteksi" adalah
+  penolakan saat Hu, yang sekarang sudah hilang. Bila masih ada tangan Nine Gates yang terbaca salah di layar, kirim tile dan tile menangnya.
+- **Split Straight tetap:** buangan hanya boleh melengkapi set atau pasangannya (bukan split straight), dan pesan penolakannya hanya untuk kasus itu.
+- **Berkas:** `template/scoreboard.html` (daftar SHAPES, penolakan di `score`, pesan alasan) dan sumber lab `tilelab/engine.mjs`, `tilelab/detect.mjs`.
+- **Tes baru:** `tests/tile_nine_gates.test.mjs` dan `tests/tile_special_hands.test.mjs` (200 pemeriksaan lewat antarmuka sungguhan; pada scoreboard lama tes
+  ini gagal di semua kasus Hu). Tes lab diperbarui: detect.test.mjs 322 pemeriksaan (termasuk 98 kemenangan self draw dan Hu), ui.test.mjs 97.
+- **Catatan tes lama:** `scoreboard-integration/tilepick.test.mjs` gagal di pernyataan MCR yang basi ("MCR modes keep typed points"), juga pada build sebelum
+  perubahan ini, dan `rank_marks.test.mjs` tidak menemukan baris leaderboard pada build lama maupun baru. Keduanya belum dibereskan.

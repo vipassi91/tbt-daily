@@ -3763,11 +3763,11 @@ const SHAPES = {
   sevenPairs:      { name: 'Seven Pairs', note: 'Seven different pairs.' },
   sevenSteps:      { name: 'Seven Steps', note: 'Seven pairs in a row, in one suit.' },
   sevenWonders:    { name: 'Seven Wonders', note: 'A pair of each of the seven honors.' },
-  thirteenOrphans: { name: 'Thirteen Orphans', note: 'Must be self drawn.', needs: 'selfDraw' },
-  nineGates:       { name: 'Nine Gates', note: 'Must be self drawn.', needs: 'selfDraw' },
+  thirteenOrphans: { name: 'Thirteen Orphans', note: 'Self drawn or won off a discard.' },
+  nineGates:       { name: 'Nine Gates', note: 'Self drawn or won off a discard.' },
   splitStraight:   { name: 'Split Straight', note: 'A discard can only complete the grey set, not the split straight.' },
   scatteredStars:  { name: 'Scattered Stars', note: 'Six or five different honors with eight or nine split straight tiles.' },
-  sevenStars:      { name: 'Seven Stars', note: 'Must be self drawn.', needs: 'selfDraw' },
+  sevenStars:      { name: 'Seven Stars', note: 'Self drawn or won off a discard.' },
 };
 const PERMS = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];   // which suit takes which of 1-4-7, 2-5-8, 3-6-9
 const knittedOf = perm => { const t = []; for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) t.push(s * 9 + perm[s] + 3 * k); return t; };
@@ -4360,7 +4360,6 @@ function score(input, ctx0) {
   if (!(input.hand || []).includes(ctx.winTile)) return garden ? gardenResult({ status: 'needWinTile' }) : { status: 'needWinTile', analysis: res, notes, minPoints };
   const meldCount = (input.melds || []).length, options = [], rejected = [];
   for (const reading of res.readings) {
-    if ((reading.shape === 'thirteenOrphans' || reading.shape === 'nineGates' || reading.shape === 'sevenStars') && ctx.winBy !== 'zimo') { rejected.push({ shape: reading.shape, why: 'must be self drawn' }); continue; }
     let slots = [{ kind: 'self' }];
     if ((reading.shape === 'standard' || reading.shape === 'splitStraight') && ctx.winBy === 'hu') {
       slots = [];
@@ -4382,8 +4381,7 @@ function score(input, ctx0) {
     }
   }
   if (!options.length) {
-    const SHAPE_NAME = { thirteenOrphans: 'Thirteen Orphans', nineGates: 'Nine Gates', sevenStars: 'Seven Stars' };
-    const reason = rejected.length ? (rejected.every(r => r.why === 'must be self drawn') ? [...new Set(rejected.map(r => SHAPE_NAME[r.shape]))].join(' and ') + ' must be self drawn, so this hand cannot win off a discard.' : 'A discard cannot complete the split straight part of this hand. It can only complete the set or the pair.') : '';
+    const reason = rejected.length ? 'A discard cannot complete the split straight part of this hand. It can only complete the set or the pair.' : '';
     return garden ? gardenResult({ status: 'notWinning', reason }) : { status: 'notWinning', analysis: res, rejected, reason, notes, minPoints };
   }
   // the highest total comes first; at the same total the Master or Legendary hand, then the one with more patterns
