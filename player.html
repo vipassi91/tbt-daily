@@ -293,7 +293,7 @@ a{color:inherit}
 .tn-hd .brandmark{flex:0 1 auto;min-width:0}
 .tn-gap{flex:1;min-width:0}
 .tn-search{display:none;position:static;min-width:0}
-.tn-field{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 6px 0 14px;border:1px solid var(--line);background:var(--field);border-radius:999px;color:var(--muted)}
+.tn-field{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 8px 0 16px;border:1px solid var(--line);background:var(--field);border-radius:16px;color:var(--muted)}
 .tn-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
 .tn-field svg{flex:none;width:20px;height:20px}
 .tn-field input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:16px;outline:none;padding:11px 0;-webkit-appearance:none;appearance:none}
@@ -301,8 +301,8 @@ a{color:inherit}
 .tn-field input::-webkit-search-cancel-button{display:none}
 .tn-x{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
 .tn-x[hidden]{display:none}
-.tn-sbtn,.tn-mbtn{display:inline-flex;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex:none;padding:0}
-.tn-sbtn svg,.tn-mbtn svg{width:20px;height:20px}
+.tn-sbtn,.tn-mbtn{display:inline-flex;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer;align-items:center;justify-content:center;flex:none;padding:0}
+.tn-sbtn svg,.tn-mbtn svg{width:18px;height:18px}
 .tn-sbtn:focus-visible,.tn-mbtn:focus-visible,.tn-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 /* the results of a search */
 .tn-res{margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.2)}
@@ -311,24 +311,24 @@ a{color:inherit}
 .tn-item{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:8px 16px;border-top:1px solid var(--line);background:transparent;color:var(--text);text-align:left;font:inherit;text-decoration:none;cursor:pointer;box-sizing:border-box}
 .tn-item:first-child{border-top:0}.tn-item:hover,.tn-item:focus-visible{background:var(--field)}
 .tn-item:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-.tn-item>span:first-child{flex:1;min-width:0}.tn-item b{display:block;font-size:15px;overflow-wrap:anywhere}.tn-item small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.tn-item>span:first-child{flex:1;min-width:0}.tn-item b{display:block;font-size:15px;overflow-wrap:anywhere}.tn-item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
 .tn-tag{flex:none;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);white-space:nowrap}
 .tn-go{flex:none;width:18px;height:18px;color:var(--muted)}
 .tn-note{padding:10px 16px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
 .tn-none{padding:16px}.tn-none b{display:block;font-size:16px;margin-bottom:4px}.tn-none p{margin:0 0 10px;color:var(--muted);font-size:14px;line-height:1.45}
-.tn-sug{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent);font:700 14px var(--sans);text-decoration:none;cursor:pointer}
+.tn-sug{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--accent);background:transparent;color:var(--accent);font:500 14px var(--sans);text-decoration:none;cursor:pointer}
 .tn-also{margin:12px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .tn-also h3{margin:0;padding:12px 16px 8px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
 /* the menu */
 .tn-panel{position:absolute;left:0;right:0;top:100%;z-index:45;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 18px 30px rgba(0,0,0,.28);padding:6px 12px 14px}
 .tn-panel[hidden]{display:none}
-.tn-panel a{display:flex;align-items:center;gap:14px;min-height:50px;padding:0 10px;border-radius:12px;color:var(--text);font:600 15px var(--sans);text-decoration:none}
+.tn-panel a{display:flex;align-items:center;gap:14px;min-height:50px;padding:0 10px;border-radius:12px;color:var(--text);font:500 15px var(--sans);text-decoration:none}
 .tn-panel a svg{width:22px;height:22px;color:var(--muted);flex:none}.tn-panel a .tn-go{margin-left:auto;width:18px;height:18px}
 .tn-panel a:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .tn-panel a[aria-current="page"]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}.tn-panel a[aria-current="page"] svg{color:var(--accent)}
 .tn-panel a b{color:var(--accent)}
 .tn-adm{margin-top:12px;padding-top:6px;border-top:1px solid var(--line)}
-.tn-adm h4{margin:10px 10px 2px;font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tn-adm h4{margin:12px 12px 4px;font:500 12px/16px var(--sans);letter-spacing:0;text-transform:none;color:var(--muted)}
 .tn-adm a{min-height:44px;font-weight:500;color:var(--muted);font-size:14px}.tn-adm a svg{opacity:.8}
 .tn-dim{position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.42)}.tn-dim[hidden]{display:none}
 /* This is me, on a player's page: one small line under the title, never squeezed into the title column */
@@ -339,7 +339,7 @@ a{color:inherit}
 .tn-this:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .tn-saved{font-size:12px;line-height:1.4;color:var(--muted);margin:6px 0 0}
 /* the leaderboard rows that open a page show an arrow */
-.row.lk .rv{margin-right:26px}
+.row.lk .rv{margin-right:24px}
 .row.lk .rlink::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.7}
 /* phones: the name stays, a search icon opens the search over the header */
 @media (max-width:719px){

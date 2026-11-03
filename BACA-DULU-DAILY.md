@@ -1238,5 +1238,40 @@ Berlaku untuk mode Casual, Default, Tournament, dan Custom. Mode MCR tidak berub
 - **Berkas:** `template/scoreboard.html` (daftar SHAPES, penolakan di `score`, pesan alasan) dan sumber lab `tilelab/engine.mjs`, `tilelab/detect.mjs`.
 - **Tes baru:** `tests/tile_nine_gates.test.mjs` dan `tests/tile_special_hands.test.mjs` (200 pemeriksaan lewat antarmuka sungguhan; pada scoreboard lama tes
   ini gagal di semua kasus Hu). Tes lab diperbarui: detect.test.mjs 322 pemeriksaan (termasuk 98 kemenangan self draw dan Hu), ui.test.mjs 97.
-- **Catatan tes lama:** `scoreboard-integration/tilepick.test.mjs` gagal di pernyataan MCR yang basi ("MCR modes keep typed points"), juga pada build sebelum
-  perubahan ini, dan `rank_marks.test.mjs` tidak menemukan baris leaderboard pada build lama maupun baru. Keduanya belum dibereskan.
+- **Seven Pairs dan keluarganya diperiksa:** Seven Pairs, Seven Steps, Seven Wonders, dan Scattered Stars sejak awal tidak wajib self draw. Saat Hu, poinnya
+  sama seperti saat self draw di keempat mode (320 pemeriksaan lewat antarmuka, juga pada build sebelum v57). Tidak ada yang perlu dibenarkan.
+- **Dua tes lama yang gagal sudah dibereskan (yang salah tesnya, bukan situs):**
+  - `rank_marks.test.mjs`: leaderboard terbuka di bulan berjalan, sedangkan data contoh tes bertanggal Agustus sampai Oktober 2026. Begitu bulan berganti ke
+    November, tidak ada baris yang tampil. Tes sekarang menetapkan "hari ini" ke 26 Oktober 2026 (`window.TBT_TODAY`), jadi tidak bergantung pada tanggal
+    dijalankan (93 pemeriksaan lolos).
+  - `scoreboard-integration/tilepick.test.mjs`: masih menyatakan bahwa mode MCR tidak punya Pick Tiles, padahal sejak v53 MCR punya. Pernyataannya diperbarui
+    (61 pemeriksaan lolos).
+
+## Update terbaru (v58): polish leaderboard dan scoreboard (metode unslop)
+
+Hanya tampilan (CSS, teks, dan sedikit susunan). Fungsi, urutan bagian, dan data tidak berubah. Brand (warna, huruf, gem, wordmark) tidak diubah. Header
+dipakai bersama oleh semua halaman publik, jadi perubahan header juga tampil di sana. Halaman lain tidak diubah.
+
+- **Metode:** audit dengan daftar tanda dan token dari unslop (Damir Sokolovsky, @heydamir, lisensi CC BY 4.0, https://github.com/heydamir/unslop), mode Polish.
+  Keputusan yang dikecualikan karena brand: Playfair berat 900 untuk judul dan skor, permukaan gelap bernuansa hijau, dan gem.
+- **Spasi:** semua nilai ke grid 4 px (padding kartu 16, tepi halaman 20, tinggi header 56). Spasi di luar grid: leaderboard 42 jadi 0, scoreboard 120 jadi 3
+  (sisanya checkbox bawaan browser).
+- **Huruf:** judul halaman seragam 32 px. Tidak ada teks di bawah 12 px (11 px hanya di layar sempit 380 px ke bawah). Nama pemain dan angka kecil tetap berat 700
+  (Inter Tight hanya memuat 400, 500, 700, jadi 600 tampil sebagai 700). Label, tab, tombol, dan judul kartu berat 500. Label huruf besar berjarak lebar
+  menjadi huruf biasa (kecuali wordmark TILES BY TILES).
+- **Bentuk:** dropdown, kolom cari, dan tombol aksi radius 16. Tombol ikon header (cari, menu) kotak radius 14. Kolom isian radius 12. Tab, chip, dan tag tetap pil.
+- **Baris peringkat 1 sampai 4:** sapuan warna dilembutkan jadi separuh intensitas (`.row.m::before`, opacity .5). Garis kiri, cincin, dan gem tetap.
+- **Scoreboard:**
+  - Baris "Players and options" memuat tag mode (Default, MCR-8, dan seterusnya) di kanan dan rincian kunci di bawah judul (Min dan Streak, atau Base dan Min
+    untuk MCR, ditambah chip Rotation, Deadwall, Start, atau Bankrupt bila aktif). Diisi dari `renderRules` (`#gsTag`, `#gsSub`).
+  - Kartu Game rules hanya tampil bila "Players and options" dibuka (`#gsetup:not([open])+#rulesCard`). Pada mode lihat saja dan game yang sudah dikunci kartu itu
+    tetap tampil, karena blok opsi disembunyikan di sana. Tab Standings tetap menampilkannya.
+  - Chip "What happened?" dalam kisi sejajar (3 kolom, 4 kolom mulai 560 px), pill selisih di daftar Hands dalam kisi (2 kolom, 4 kolom di layar lebar).
+  - Lede dipersingkat, tag "STANDINGS" menjadi "Standings", tautan hand (Edit, Insert before, Delete, Share) berwarna redup dan menyala saat disorot.
+- **Gerak:** satu kurva `cubic-bezier(0.22, 1, 0.36, 1)` (150 ms, tekan 120 ms), hanya warna, latar, garis, dan transform. Tombol sedikit mengecil saat ditekan.
+  Semua mengikuti pengaturan reduced-motion. Cincin fokus ditambahkan untuk tautan.
+- **Berkas:** `template/index.html`, `template/scoreboard.html`, `shared/nav.css`.
+- **Tes:** semua tes yang bisa dijalankan lolos (data pemain 528, nama 22, ronde angin 11 dan 69, host 88 dan 162, header 156, gem 46, rank mark 93, ganti nama sesi
+  25 dan 29, angin kursi, tile 320 dan Nine Gates, MCR server 12 dan statistik 8). Dua perbaikan tes: `nav_browser.test.mjs` tidak mengunci tanggal pada satu konteks
+  (leaderboard terbuka di bulan berjalan, jadi baris Oktober tidak tampil, gagal juga pada versi sebelumnya), sekarang dikunci ke 26 Oktober 2026.
+  `mcr_integration.test.mjs` tidak bisa dijalankan sejak folder kerja lama direset karena modul bantu `mcr_engine.mjs` tidak ada, dan itu tidak terkait polish.
