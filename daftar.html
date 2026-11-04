@@ -34,27 +34,27 @@
   }
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;justify-content:center;padding:28px 18px}
-h1{font-family:var(--display);margin:0 0 8px;color:var(--text);font-weight:900;font-size:24px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;justify-content:center;padding:24px 20px}
+h1{font-family:var(--display);margin:0 0 8px;color:var(--text);font-weight:900;font-size:28px;line-height:1.15}
 .box{max-width:420px;width:100%}
 .box>img{display:block;width:52px;height:auto;margin:0 auto 16px}
-.brand{text-align:center;font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent);margin-bottom:14px}
+.brand{text-align:center;font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent);margin-bottom:16px}
 h1,.hint{text-align:center}
-.hint{font-size:14px;color:var(--muted);margin:0 0 22px;line-height:1.5}
-.f label{display:block;font-size:13px;font-weight:700;margin:14px 0 5px}
-.f .sub{font-size:12px;color:var(--muted);margin:0 0 6px;line-height:1.4}
-.f input[type=text],.f input[type=tel]{font:inherit;font-size:16px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text)}
+.hint{font-size:14px;color:var(--muted);margin:0 0 24px;line-height:20px}
+.f label{display:block;font-size:13px;font-weight:700;margin:16px 0 4px}
+.f .sub{font-size:12px;color:var(--muted);margin:0 0 8px;line-height:16px}
+.f input[type=text],.f input[type=tel]{font:inherit;font-size:16px;width:100%;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text)}
 .f input:focus{outline:none;border-color:var(--accent)}
-.ck,.f .ck{display:flex;gap:10px;align-items:flex-start;margin:18px 0 0;font-size:13px;font-weight:400;color:var(--muted);line-height:1.45}
+.ck,.f .ck{display:flex;gap:12px;align-items:flex-start;margin:16px 0 0;font-size:13px;font-weight:400;color:var(--muted);line-height:1.45}
 .ck input{width:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--accent)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-button{font:inherit;width:100%;margin-top:20px;border-radius:999px;padding:13px;border:none;background:var(--accent);color:var(--onaccent);font-weight:700;font-size:15px;cursor:pointer}
+button{font:inherit;width:100%;margin-top:24px;border-radius:16px;padding:12px;border:none;background:var(--accent);color:var(--onaccent);font-weight:500;font-size:15px;cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
 .err{color:var(--red);font-size:13px;margin-top:12px;min-height:16px;text-align:center}
 .done{text-align:center;padding:24px 8px;line-height:1.55}
 .done b{display:block;font-family:var(--display);font-size:22px;margin-bottom:8px}
 .done span{color:var(--muted);font-size:14px}
-.lk{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:14px;color:var(--accent);font-size:14px;font-weight:700;text-decoration:none}
+.lk{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:16px;color:var(--accent);font-size:14px;font-weight:500;text-decoration:none}
 </style>
 </head>
 <body>
@@ -69,7 +69,8 @@ button:disabled{opacity:.5;cursor:default}
 var T=new URLSearchParams(location.search).get('t')||'';
 var view=document.getElementById('view');
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function closed(){view.innerHTML='<div class="done"><b>This link is not valid</b><span>This sign-up link has been closed or is wrong. Ask the admin for the latest link.</span><a class="lk" href="index.html">View leaderboard</a></div>';}
+function only(){document.querySelector('h1').hidden=true;document.querySelector('.hint').hidden=true;}
+function closed(){only();view.innerHTML='<div class="done"><b>This link is not valid</b><span>This sign-up link has been closed or is wrong. Ask the admin for the latest link.</span><a class="lk" href="index.html">View leaderboard</a></div>';}
 function showForm(names){
   var opts=names.map(function(n){return '<option value="'+esc(n)+'">';}).join('');
   view.innerHTML='<div class="f">'
@@ -95,7 +96,7 @@ function submit(){
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};});})
     .then(function(r){
       if(!r.ok){err.textContent=r.body.error||'Could not send. Please try again.';btn.disabled=false;return;}
-      view.innerHTML='<div class="done"><b>Thank you!</b><span>Your sign-up has been sent. The admin will check it. Once approved, your name appears on the leaderboard.</span><a class="lk" href="index.html">View leaderboard</a></div>';
+      only();view.innerHTML='<div class="done"><b>Thank you</b><span>Your sign-up has been sent. The admin will check it. Once approved, your name appears on the leaderboard.</span><a class="lk" href="index.html">View leaderboard</a></div>';
     })
     .catch(function(){err.textContent='No connection. Please try again.';btn.disabled=false;});
 }

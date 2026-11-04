@@ -1275,3 +1275,34 @@ dipakai bersama oleh semua halaman publik, jadi perubahan header juga tampil di 
   25 dan 29, angin kursi, tile 320 dan Nine Gates, MCR server 12 dan statistik 8). Dua perbaikan tes: `nav_browser.test.mjs` tidak mengunci tanggal pada satu konteks
   (leaderboard terbuka di bulan berjalan, jadi baris Oktober tidak tampil, gagal juga pada versi sebelumnya), sekarang dikunci ke 26 Oktober 2026.
   `mcr_integration.test.mjs` tidak bisa dijalankan sejak folder kerja lama direset karena modul bantu `mcr_engine.mjs` tidak ada, dan itu tidak terkait polish.
+
+## Update terbaru (v59): kontrol lebih rapat dan jendela scoreboard dirapikan
+
+Lanjutan v58 setelah dicek di ponsel: padding terasa terlalu besar, judul serif jendela terlalu tipis, dan daftar Pick Patterns kurang rapi. Hanya tampilan.
+
+- **Padding lebih rapat:** chip 36 px (huruf 14, padding 6 12), tab 36 px, tombol 42 px, tombol mode di Players and options 35 px, pill selisih hand 26 px, jarak antar kartu 12 px.
+  Chip dan tab di halaman utama punya area sentuh yang melebar 3 px ke sela-selanya (`.chip::before`, `.tab::before`), jadi terlihat kecil tapi tetap mudah dikenai.
+- **Judul serif:** judul jendela (Pick patterns, Pick tiles, Share hand) dan judul bagian di Pick Tiles kembali berat 700. Di v58 ikut turun ke 500 dan jatuh ke 400
+  karena Playfair 500 tidak dimuat.
+- **Pick Patterns (biasa):** dua kolom di semua lebar, huruf 12 px, padding 8 px, jarak 6 px. Chip yang terbungkus di lebar 390 px: 15 jadi 6 dari 52.
+- **Pick Patterns (semua mode MCR):** sebelumnya chip mengalir seperti pil setinggi 44 px, sekarang dua kolom dengan gaya yang sama (radius 12, tinggi satu baris 36 px,
+  nama panjang boleh turun ke baris kedua). Kolom cari radius 16. Tes `mcr_ui_layout.mjs` memeriksa chip fan setinggi 36 px (bukan 44 px) karena sengaja dibuat rapat.
+- **Jendela lain:** tingkat pola berhuruf biasa (bukan huruf besar), label suit di Pick Tiles dan label di jendela Bagikan berhuruf biasa, tombol tutup (x) punya area sentuh 44 px,
+  jarak dirapikan ke grid 4 px, ukuran huruf 12,5 dan 17 menjadi 13 dan 18.
+- **Berkas:** `template/scoreboard.html`, `template/index.html`, `tests/mcr_ui_layout.mjs`.
+- **Tes:** semua lolos (data pemain 528, nama 22, ronde angin 11 dan 69, host 88 dan 162, header 156, gem 46, rank mark 93, ganti nama sesi 25 dan 29, angin kursi, tile 320
+  dan Nine Gates, MCR server 12 dan statistik 8, tata letak MCR 50 layar tanpa masalah).
+
+## Update terbaru (v60): halaman pemain, daftar pemain, dan pendaftaran dipoles
+
+Hanya tampilan dan satu perilaku kecil di halaman pendaftaran. Memakai ukuran rapat yang sama dengan v59.
+
+- **Halaman pemain (`player.html`) dan daftar pemain (`players.html`):** blok gaya bersama dengan leaderboard disamakan (dropdown, tombol Share, dan kolom cari radius 16; tab, chip, dan tag tetap pil;
+  berat 600 yang sebenarnya tampil 700 menjadi 500 untuk label, sedangkan nama dan angka kecil tetap 700). Ukuran huruf disatukan (12, 13, 14, 15, 16, 20, 22, 32): angka Playfair
+  utama 32 dan kedua 22, judul bagian 20. Label huruf besar berjarak lebar di kartu statistik ("OF 4 HANDS WON" dan sejenisnya) menjadi huruf biasa 12 px. Spasi ke grid 4 px.
+  Kartu game memakai tinggi baris tetap (20, 16, 16 px) dan padding atas 14 px (nudge optik 2 px karena panah buka-tutup ada di padding bawah). Daftar pemain: kolom cari dan Sort radius 16,
+  baris keterangan 12 px.
+- **Pendaftaran (`daftar.html`):** judul 28 px, tombol "Send sign-up" radius 16, label formulir tetap 700, jarak ke grid 4 px. Teks "Thank you!" menjadi "Thank you".
+  Setelah formulir terkirim, dan pada tautan yang sudah ditutup, judul dan kalimat pengantar disembunyikan sehingga hanya pesannya yang tampil.
+- **Tes baru:** `tests/signup_page.test.mjs` (12 pemeriksaan: formulir, galat, layar terima kasih, tautan tertutup, tanpa geser samping dan tanpa em dash di 3 lebar dan 2 tema).
+- **Tes lain:** semua lolos (data pemain 528, header 156, gem 46, rank mark 93, ronde angin 69, host 162, ganti nama sesi 29, tata letak MCR 50 layar).
