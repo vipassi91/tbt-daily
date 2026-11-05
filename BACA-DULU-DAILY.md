@@ -1327,3 +1327,37 @@ Hanya tampilan. Dengan ini semua halaman situs sudah melewati polish unslop (v58
 - **Berkas:** `template/host.html`, `admin-daily.html`, `admin-pemain.html`, `masuk.html`, `404.html`, `index.html`, `player.html`, `players.html`.
 - **Tes:** semua lolos (data pemain 528, nama 22, ronde angin 11 dan 69, host 88 dan 162, ganti nama sesi 25 dan 29, pendaftaran 12, header 156, gem 46, rank mark 93,
   angin kursi, tile 320 dan Nine Gates, MCR server 12 dan statistik 8, tata letak MCR 50 layar).
+
+## Update terbaru (v62): font Hanzi KaiTi
+
+Semua huruf Mandarin di situs (東 南 西 北 untuk angin, 胡 自 摸 牌 untuk label dan kartu bagikan) kini memakai satu keluarga font, `TBT Hanzi`, yang sumbernya berkas
+`KaiTi_1.ttf`. Teks Latin, angka, tombol, navigasi, dan isi halaman tidak berubah (diukur: font yang dipakai identik sebelum dan sesudah di sembilan halaman).
+
+- **Sebelumnya:** dua keluarga (`TBT Hanzi` di leaderboard, daftar pemain, dan halaman pemain, `LXGW WenKai TC` di scoreboard) dengan 19 deklarasi `@font-face` yang tersebar di
+  empat halaman, dan variabel `--kai` yang menaruh font sistem (KaiTi, Kaiti SC, STKaiti) di urutan pertama dan font yang disematkan di urutan terakhir.
+- **Sekarang:** satu keluarga `TBT Hanzi` (nama dipertahankan) dengan satu deklarasi `@font-face` di `shared/kai.css`, disisipkan lewat `/* TBT Hanzi: the one font family for every Chinese character on the site (KaiTi). Latin text, numbers and everything else keep their own fonts.
+   The files are fetched only by a page that really shows one of these characters. KaiTi has all the Traditional characters the site uses (East, Green dragon and the closing character included).
+   The font is the WOFF2 copy of KaiTi (5 MB), which every browser that loads web fonts can read.
+   Declared once here; the pages carry no copies of their own. */
+@font-face{font-family:"TBT Hanzi";font-style:normal;font-weight:100 900;font-display:swap;unicode-range:U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF;src:url(/assets/f/KaiTi_1.woff2) format("woff2");}
+:root{--kai:"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif}
+` ke leaderboard, daftar pemain,
+  halaman pemain, dan scoreboard. Variabel `--kai` kini `"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif`, dan tumpukan font di JavaScript (kartu bagikan,
+  tile angin di halaman pemain, tanda air) ikut diubah. Subset LXGW WenKai TC yang lama dibuang karena KaiTi memuat semua karakter yang dipakai (東, 終, dan 發 termasuk).
+- **Berkas font:** `shared/fonts/KaiTi_1.TTF` (berkas asli, 11,8 MB) dan `shared/fonts/KaiTi_1.woff2` (font yang sama dalam format terkompresi, 5,1 MB), disalin build ke
+  `assets/f/KaiTi_1.TTF` dan `assets/f/KaiTi_1.woff2` dengan nama persis (bukan hash). Peramban mengambil WOFF2; TTF hanya cadangan untuk peramban yang tidak membaca WOFF2 dan boleh dihapus
+  untuk menghemat ruang repositori. Karena namanya tetap, berkas yang diganti perlu nama baru agar peramban tidak memakai salinan lama (cache `/assets/*` setahun).
+  Berkas hanya diunduh halaman yang menampilkan huruf Mandarin: scoreboard, halaman pemain saat tile angin digambar, dan kartu bagikan. Leaderboard, daftar pemain, host, admin,
+  pendaftaran, masuk, dan 404 tidak mengunduhnya.
+- **Hanya untuk Hanzi:** `unicode-range` hanya mencakup ideograf CJK (U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF), jadi huruf Latin dan angka tidak pernah memakainya.
+- **Tebal huruf:** KaiTi berbobot reguler, jadi garis tambahan yang membuatnya tampak semibold (`-webkit-text-stroke` di CSS, `strokeText` di kanvas) dipertahankan seperti sebelumnya.
+- **Berkas yang berubah:** `shared/kai.css`, `shared/fonts/KaiTi_1.TTF` dan `KaiTi_1.woff2` (baru), `build.py` (menyalin berkas font yang dikirim apa adanya), `template/index.html`, `players.html`,
+  `player.html`, `scoreboard.html`, `template/_headers` (hanya catatan), `tests/hanzi_font.test.mjs` (baru, 17 pemeriksaan), `tests/windrounds.test.mjs` (asersi tumpukan font diperbarui).
+- **Catatan:** berkas `Kaiti-SC-Bold_1.ttf` yang diunggah lebih dulu tidak dipakai: font Mandarin Sederhana itu tidak punya 東, 終, dan 發, dan ditolak peramban sampai tiga nilai headernya diperbaiki.
+  KaiTi (Beijing ZhongYi Electronics, 1995-2005) berhak cipta pihak lain; berkasnya bertanda `fsType` 8 (penyematan yang dapat disunting).
+
+## Update terbaru (v62b): berkas TTF KaiTi dihapus
+
+Hanya ada satu berkas font Hanzi sekarang: `assets/f/KaiTi_1.woff2` (5,1 MB). `KaiTi_1.TTF` (11,8 MB) dihapus dari `shared/fonts/` dan dari rujukan `src` di `shared/kai.css`. Semua browser yang memuat font web
+membaca WOFF2, jadi cadangan itu tidak diperlukan; browser tua yang tidak bisa membacanya akan memakai font Kai sistem atau serif, seperti sebelum ada font ini. Folder situs menyusut 11,8 MB.
+`tests/hanzi_font.test.mjs` kini memeriksa bahwa WOFF2 ada dengan nama persis dan sama dengan berkas sumber, bahwa TTF tidak ada, dan bahwa `kai.css` hanya menunjuk WOFF2 (18 pemeriksaan).

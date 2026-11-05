@@ -13,25 +13,26 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/9e38e04780.woff2">
 <style>
-/* Playfair Display, Inter Tight, and the four wind hanzi from LXGW WenKai TC, embedded as
-   base64 so the type never falls back to a different font depending on the device or network. */
+/* Playfair Display and Inter Tight, embedded as base64 so the type never falls back to a different font depending on the device or network.
+   The Chinese characters use the TBT Hanzi family from shared/kai.css. */
 @font-face{font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/8a53e5ecdb.woff2) format('woff2');}
 @font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9401d0214a.woff2) format('woff2');}
 @font-face{font-family:'Playfair Display';font-style:normal;font-weight:900;font-display:swap;src:url(/assets/f/0ba66220fb.woff2) format('woff2');}
 @font-face{font-family:'Inter Tight';font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/2c20035257.woff2) format('woff2');}
 @font-face{font-family:'Inter Tight';font-style:normal;font-weight:500;font-display:swap;src:url(/assets/f/5ab688ca8c.woff2) format('woff2');}
 @font-face{font-family:'Inter Tight';font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9e38e04780.woff2) format('woff2');}
-@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;unicode-range:U+5357,U+897F;src:url(data:font/woff2;base64,d09GMgABAAAAAAUcABEAAAAACOQAAATEAAFUewAAAAAAAAAAAAAAAAAAAAAAAAAAGV4aFhw8BmAAPBEICoc0hh8BNgIkAwgLCAAEIAWDWgcgDAcXJBgIGyEHyJ4FOdlpCqfMkeTcTJk+j7+I4Hmqs96vroaSDBYgr5B04m2w//9+7v6ptqWXZiYwb6IaYZHTiRYikUq1SKNxNKf3oU/SARAqInKIjhyCmp9q3diujVOI+G/+L6c36Iqi0jGVE/n9GwvbkwvnAox6PgHHWBxnFCBHKYqXHtR06UoEcABNWgj9c4etTr0x+mxuqm8aAqlXw7QPwn4jGz0QErgOkEFIhRtM5IZQjB5Qnc+EBICBJgiTMbD/6VJAAxSlICiIXeBRHivE2kHxLKClcSkuxaWrpBAA/g/Yr40bmQ8mqJlECgCN8tXSFbRSGEApGoDcgQ81bh8qgLtV4W6cMVwcaAdpAiAA8lgdA8gOBVCAASSCRyAjkB+13IISjv4fMGL3zrGTkMuZR31RkL1gxYR0tC6AwKeB+HYjIaufzGpRfNl5dqc3uDk+zY4zGZYs8Yc2trVp9yQd21u9QYXFm3O3blu4LpOOxZ1NoIRqLzu3bxzbGVx9vnLrPLme1psJnMDg04RAMDTnJ8OIxGipdcWOTvK8Ov34xRqxY0uqFBNH3ypunQqeuXPnhH74TDoWJb1jmXRse3xOcu1pJbgt186xbt26dOYKWne/X+wNKi0qpFHTN9K1a519O9rMXgPtx69Ov3j8GuNRdlOxXy58Pq6+nPE4Zfzsp127LJz3XPFnBS9bdjEgHd8WlJyUzT4+k85lV+nw6kTonvYSkp/Anjj4nMKaM04dStduxRrGL6f10aOm4ZI0KzZk6LDCln6x8jsRem5nrnNIsgJTvq9d4sXgdItQkSp79+v0kHTpUQGuXBnFyaTBYYtexdRFjcCIpcd3vul4zfacyh3bgl3PRsxbWCLvSGGaRCbDfaVUUsx87/QjG0xYEmqFMe2yaGsurfnenUKbaJTMLorgbYdsrgl7Hz8L1E0/MZ/jYV4mcMIXPzTXsfF4Z3Rg/B7FIL2UKo3hjwisvwnhLv7p/1DlSVU/qSk2TaE2txixIIpfrTQ/MYLFUChuN42d/TApIiXCIOYZsy3jgnqCqC5WzJtfu5RM/nYtp6pcKHnhI9uYHJEMRRtsOsZyyo+Pno05q6DyVedaOdVENYrNjivlznf8wkyLN2h1DFvhXzQPmYZTw+43cYsrTWiU78qqNz2bdKwiZz/dEQcGww7pQ9z31PR7sECaT9y36MqpWr+KIytcOdcOQ33enpZoRcqXXSypKB1ILrHaEY6LCSNqbIUqQ/FCmdLlMGxKMm7bkVXSACCAtG56fx0Oz2ZX/nMMUgTwKmUPAB8H7R2c7KV+8ndTUQBYKAAEtPP/CfzjBGQUFCgNeOl9qTcLtmCAYRqBGAN4BIjKcdt0HCU0h+6kaq2QmVetIsJVrUFVPrWawhKvNckoVd9jkV/ag48RYzZM6dCizRyEFjVa9CCyPbRhHKdIiAJfkK8bEqNCB0SaKSO6NKgJhfCwyGe1GTFlBkK8GNBnj5lhRYWKFh1ickEVpcAGRgxQ0WdNixWscUpqC7zXWxYfku0hgb9xXmuxoE+FKRqU6NChxibAlqWCUGujQPVbtEO6J0/jkqM6jBiCNq3PRhY8gan/oGX9cRG7X4+AxAD7lxoYIjX0P2fKll5nkJ8EZHcFHgAA) format('woff2');}
-@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;unicode-range:U+5317,U+6771;src:url(data:font/woff2;base64,d09GMgABAAAAAASMABEAAAAACAAAAAQzAAFUewAAAAAAAAAAAAAAAAAAAAAAAAAAGV4aFhw8BmAAPBEICoVQhHQBNgIkAwgLCAAEIAWDWgcgDAcXJBgIG3YGAI7UVjeYSG4yeDr95i0Ul+SWTFPIH+JJKg52iNJrFgpATZqCFVps/PgZX97k5/+aeoFHR/dx0TT0idz/qwvaG2VhcTXggBM80rpoRgPG2ZyWCxYXB8ormnZJEAACAAYWmI6mXr2hta3vq3ODc1YvuJaJwW54rMG2LnhkcAZgG2sCp2m4F1xD8/BAHACABgOljGsR4/qkAFyJQ0pAQCEsAiREicGmZeTJcOpB+pA+pE/ABwPBGI1YAwz9DNmPBlA7qUoAufpkUo+Q+AEUxQJgBOBLeTOzAkndUj9A9xvXgRGIPQACAGSDugfgRABAAaABmKFBQDPwwjknAbVL2GgE0OfGr48fQG4Jox4NQIsBDgAPEAog8QBIBvUKsHHRjJDM6CsPb3zQbSfquusUu7a3K64hC9JOs8t3ujUsXL1b2okyP3IC5OewtPOqxc6jXpiffMxSXzv/0Gah5JFtsnA20e78xunLZneOc54+SWq2twuPkYWbr5d2mh0+bnbtRlbNwtWrFhY7ZOohjxZZJuW6o6ziWIHos9KulySZtFjC1cPouslk4ajHVTi4RhY9GHHKLssKyK8n4Yj5kRPmZW+AOgzuvrAeIRYVGxvyZXQxbjsXzB83O4xdgXEbvSlY/Y90jeWxBYutrYYp+P8ZFrJVvq5R4jm759SKTvdLmfUhu1WSmv80YjaCNKh+iBIUPBs2tUP1yxWJf5QT0B8nwrE0MT82bM5+2F9XSM2H1RcrkwvKVOl8enRaB6+YXVOnfGj72B/xkcIz5oRPdxvK2R0iiM47RT4ncHvshbzYAFKurL/ntvNqgXGbOoVvtvgKxxVcNOOLb+GL4wczbhO4tPssuIwHhAyL314Wbv2Rl3qsn2AyWfEfHfeGojBIu/9JTgzby3NOq0nvKtukU+VjVjyT+Zh1EasRzcOcGI6lT1y1YqSiX1SF94h3a0WOyY7o0qu0V0SInJKnTVtUGlOGn2fq5PtnO6OyJV5BZZtPRB5rLsx/XpsQQDFKzdN3iaa2rpnRO6oG4jIdWMH+h3XlZ52eL3QDAEAAEHnq/0MFMQ2auN8Emv4SAN757yYA8HHXzd3/Sv9/oriRKQDAgQIAEIAR/v8EUNybgQ2hykLiifdHrdJYIgBo1gNewtEggEgtJ4/qaAYjArgebCWBneuVFNR4WkkjwYaSgV9MlCxskvAYDl6pRKo+/SYMMtDrMMxJiCAhwjiRvXibdp5KmSr4ClquV64mBk6KDOrTqU1LdUCyEZ3r8AcMGiLaS4djWD87YgRKl54ha/MRzQK06NMjULdxemMC5VmmXmRXe7JU3udAGbuXaKM3oluTQcEChAoVJLbSahXugLiJP8rv1cxpusq13bafQZ9eTt2r09FOQxgyRiHE9HuJceVWZg+iBfn1fyX95RMwuvx3xdsayA/FkrNLFAAA) format('woff2');}
-@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;unicode-range:U+80E1;src:url(data:font/woff2;base64,d09GMgABAAAAAALsABAAAAAABPQAAAKXAAFUewAAAAAAAAAAAAAAAAAAAAAAAAAAGV4aFBw8BmAANBEICoM8gxkBNgIkAwYLBgAEIAUGByAXJBgGG7IDAI6Ubq5EZYRKDg/0XvlGSW5SAzkV5m4B+wv67G0htk7d1K9wTqFHTuijL9CNnW/RUMfUwAIMLKAFSrlN8VCJPdEi1nEvuhsRgAdo0qB7dOzX/RcIbh0P8lI/nM4jB/UhT/dBXXuTZwL3BOgNOuI+U7gfjCE9Ow3pxAFAoUmUs2SICNNAJCJQBWILLOWogKlVp1FAtg1UAaoAVSArgIakRyLsQKurYh4G5AwZBzSsp0U7SohCIKUB6B7UGsXVjaVa6D0PVQMiQHsiMyAAxCN5FMiGB0hAAalQiFrUZCN0XkDofSQiaHw2BIAn+nBSACTAGjDAev0qEJzRaEeXbdM9CGL6B8Hap1ljg0DExz1psMXOILT99O3j/sydIrxEtA8vFeEd1gZbjtgZhBanXrz6MaFHjx4Fiwj5M+8+fRrbIXbpUhFekeY0d9gZi2wQG7v1ipimWrQplYPwkjxvd6VevJwgsDO2pFmySki9eHNhqR8b1Lox0kgdHVpMKN0iIf1RIXqmSbJ3qfF3jnrOgkdRxWQD98595t+yC25OJVettH6bRJ7jvb2cfLFN9j2d8R0Ouw2dpOuT+88Sv87gRbkyt2rdQzav38BbkHVujZkVav7wPc+dWS+2+qSksXO+3jHrPrhm09tUO01P13+WRDZTTbRccdQOTOyknJfIyfZx8M8Yoy57Z2tF+4lcnbtNM58D8z3XLliQTBuTbAy1clozz4Rdlm9Mlsy6Tv0G9RPZQ8aalNmkY7ON9FKkVgAgABGMTriqerdPWumfp9Q3gJf/A/Dle+KB5IxUQ5UAHCQAArSX8BHUN3IyOFq+kTzR/WQXciIAyXoMAALYDgrHSDlKUBfJEH8TEqlvvJD+5FYXAbETVX5/AA==) format('woff2');}
-@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;unicode-range:U+81EA;src:url(data:font/woff2;base64,d09GMgABAAAAAAI8ABAAAAAABAwAAAHoAAFUewAAAAAAAAAAAAAAAAAAAAAAAAAAGV4aFBw8BmAANBEICoFUgU0BNgIkAwYLBgAEIAUGByAXJBgGG+YCyB4JNk5yD5U/Q/DI+4d/cpMKmOpvbYZH2ivWvnLvL8TQ/72lO3A02gSPnBr9RZTdFFIe4HVYfqL0BmpBuc374BBWTMaFT8NoCn6IAP6AEYsN7DV8wPcH9tkwOuaG49tn0uih5A4Y3W8IuQYGgYagXjDUwnDk2EG9x7biC4BiBO84HPEEAxycAAhrEEgVNfFp3LR1W9KbaSEtpIXBQgzA844CgOlNWYkPuMWuI9DqjEt3SqQYnPMBCX9QWnds1oH6s/68qiM9YP6SAgiAPHMngXT8AQcoEI0icCMdW1lg1h/Pm9r0OATAST0TBoADwAADmgAdYewAmJnVGNG2Z/s+We3WZ8MGmbU5scf6GWcCA3vufXpQZu05EbgY1s1k5tZL9dveCVw8M2bdpoRuzNwYzczd24OWiFy577t1S6CtPfjIZ+6eSJt9/pnPvNPROjuy+ZugQ3/9/W58SYq2If7BAWn+peEfAm/7BZ9MCwwKVuenoS+2HW2jz8ODQqcNnUJYXFh4WpJPSP2NAdGRCgACSNspRc1rNOkRVvu/v+ovgLf3A/BDyCiOeTVDKwFfHAAC5l/9FfQXx7hp6r8A5KT43ZdjCOBoggEgkLaRajO8KkoAPyUc+VcdrL/0FzVI0IeA3AoV1QA=) format('woff2');}
-@font-face{font-family:'LXGW WenKai TC';font-style:normal;font-weight:400;font-display:swap;unicode-range:U+6478;src:url(data:font/woff2;base64,d09GMgABAAAAAAP0ABAAAAAABoQAAAOeAAFUewAAAAAAAAAAAAAAAAAAAAAAAAAAGV4aFBw8BmAANBEICoZMhU4BNgIkAwYLBgAEIAUGByAXJBgGG+cEIMaH/83Xc7lG8L4S0jo1dVITJbVteZuTquvX3L4s/3eq/sugbFsgwaMIBzwia3f5HCDBDqZraUzQEvUVqOBUm2u7GZlbJksFBdbj1Q9BAKgAGDyw0UMmjvoJBP+jp1PzqYkQw+ZMHY/So6aOGIfSCukYwDgYko5XSidCnT5m6PQhBMBrCgaDFg5I9t3MAchAaBJcAjTURX3wlq07BvAN0OXp8nT5YXkwsC2bxXVGb5KPwQElrfQG0KH7ERmI6qQioCgckFTU0bF3m15oOnw2HaGTs+8CTCWF3fIb/kw5CcCHegEKAArABQUpCoOPGJDJ8NnZ7Dlb+x5IaN501wY2eAwwABwg9QAyHACACM7YvAF95vmDiw97vdKn10qSWrNHS0dutM0NVq5NpJ7WjtISnwqv9/4dO9KRNviOlkaYiWdW509mQoSRG0YId2/XcwnxeoXxDMJVq9xAS+/wVijDbldqzk30uvQs2OaOWidf8rDG8+dJwcG9a0mq9IsXE4Mdd85oy+cfn0/P3tga0u/hw7UktXa33SrZy/xozw4t7Zw7447gBI4wvhtBEKULr3Qyq03BTkIQnbp1y02Hu0vV6dm703qtb0cajVqu3VgwlKBZM8C6QkHPNSfywlv6rnsHu9qPchW6CE9ff7LivaJVbhQhzN17sFqx98ZbWr8y00aXMlvfavND7HONPa+uKVWdz6Y+OiQTTaWiELNTvVvq5MuSf3K/wBpvnDSK1GJdaRs7r62ptK47YFIeYwrXuGYJyhXdn6PaeagYQBmpa/BeLcg5aZjdjziUca3TyGSCW5NXiKIzRnYru16TpvJv2yI9anbstKNmuw8n9CnbjepDv6Iy3rfokj45W/DPe/P7qJxrhfCH6VQuEHN1Yn7z3hdMxuT2/WPWYtUY8fHXMtZqo8qqfcY3XcYt5/OE0CUtqRbGof58siXsL6jklNS/vqelpVY71JbhoJ9a1u133Xq/YXehbmlfZvm+2OeamneRShzl6fZHR3qcq6Ook16bBldKzs9RSyeXSLVtvK3nCJacPbzIhN6sq86N4pN9jcuTb2d4wprck9EYZyplOdUM06ATZohCfSpRSU2roAcAAAFAgnnR1vGPB9kN/1Yp/Q4A3v63HwDwzS/mFPjZ7fQ1LQtAQFlIZOr/XwL0O/iwFQJs8m1Cv8Nw+CAAFFIPvO6FIUDhmK2L6qgTB+Sv/w36HX0RbVGY3gVATHopbwsAAA==) format('woff2');}
+/* TBT Hanzi: the one font family for every Chinese character on the site (KaiTi). Latin text, numbers and everything else keep their own fonts.
+   The files are fetched only by a page that really shows one of these characters. KaiTi has all the Traditional characters the site uses (East, Green dragon and the closing character included).
+   The font is the WOFF2 copy of KaiTi (5 MB), which every browser that loads web fonts can read.
+   Declared once here; the pages carry no copies of their own. */
+@font-face{font-family:"TBT Hanzi";font-style:normal;font-weight:100 900;font-display:swap;unicode-range:U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF;src:url(/assets/f/KaiTi_1.woff2) format("woff2");}
+:root{--kai:"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif}
+
 :root{
   --bg:#FAF7F2; --surface:#FFFFFF; --text:#1B4332; --muted:#587263; --line:#E4DDCD;
   --field:#FBF9F4; --accent:#2D6A4F; --onaccent:#FAF7F2; --focus:#2D6A4F; --red:#B72323;
   --sans:"Inter Tight","Helvetica Neue",Arial,sans-serif;
   --display:"Playfair Display",Georgia,"Times New Roman",serif;
-  --kai:KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312","LXGW WenKai TC",serif;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -589,7 +590,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
   }
   var PLAY='"Playfair Display",Georgia,"Times New Roman",serif';
   var INTER='"Inter Tight","Helvetica Neue",Arial,sans-serif';
-  var KAI='KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312","LXGW WenKai TC",serif';
+  var KAI='"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif';
   function urlCode(k){try{var v=new URLSearchParams(location.search).get(k);return v?String(v).trim().toUpperCase():null;}catch(e){return null;}}
   var TABLE_CODE=urlCode('code');
   var VIEW_CODE=urlCode('view');
@@ -2639,7 +2640,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       document.fonts.load('700 48px "Playfair Display"'),
       document.fonts.load('400 30px "Inter Tight"'),
       document.fonts.load('700 30px "Inter Tight"'),
-      document.fonts.load('400 48px "LXGW WenKai TC"',han)
+      document.fonts.load('400 48px "TBT Hanzi"',han)
     ];
     Promise.all(loads).then(function(){draw();}).catch(function(){});
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){draw();});
@@ -3130,7 +3131,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       document.fonts.load('700 36px "Playfair Display"'),
       document.fonts.load('400 28px "Inter Tight"'),
       document.fonts.load('700 28px "Inter Tight"'),
-      document.fonts.load('400 40px "LXGW WenKai TC"',han)
+      document.fonts.load('400 40px "TBT Hanzi"',han)
     ]).then(function(){fontsReady=true;if(!$('shareModal').hidden)drawCard();}).catch(function(){});
   }catch(e){}
 
@@ -3377,7 +3378,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
   }
 
-  var KAI='KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312","LXGW WenKai TC",serif';
+  var KAI='"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif';
   var NOISE=null;
   function noisePattern(){
     if(NOISE)return NOISE;
