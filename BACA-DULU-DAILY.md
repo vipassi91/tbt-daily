@@ -1306,3 +1306,24 @@ Hanya tampilan dan satu perilaku kecil di halaman pendaftaran. Memakai ukuran ra
   Setelah formulir terkirim, dan pada tautan yang sudah ditutup, judul dan kalimat pengantar disembunyikan sehingga hanya pesannya yang tampil.
 - **Tes baru:** `tests/signup_page.test.mjs` (12 pemeriksaan: formulir, galat, layar terima kasih, tautan tertutup, tanpa geser samping dan tanpa em dash di 3 lebar dan 2 tema).
 - **Tes lain:** semua lolos (data pemain 528, header 156, gem 46, rank mark 93, ronde angin 69, host 162, ganti nama sesi 29, tata letak MCR 50 layar).
+
+## Update terbaru (v61): halaman host, admin, masuk, dan 404 dipoles, penjajaran vertikal dirapikan
+
+Hanya tampilan. Dengan ini semua halaman situs sudah melewati polish unslop (v58 sampai v61).
+
+- **Host (`host.html`), admin harian (`admin-daily.html`), admin pemain (`admin-pemain.html`), masuk (`masuk.html`), 404 (`404.html`):** memakai sistem yang sama dengan halaman lain.
+  Spasi ke grid 4 px (sisi halaman 20, padding kartu 16). Judul halaman 28 px dan judul bagian 18 px. Berat 600 menjadi 500, tombol utama 500, nama tetap 700.
+  Label bagian dan badge berhuruf besar berjarak lebar (MY SESSIONS, TABLES, DEFAULT) menjadi huruf biasa 12 px. Tombol aksi radius 16, kolom isian 12, kotak QR 16, tab navigasi tetap pil.
+  Wordmark TILES BY TILES dan kolom kode di halaman masuk tetap berhuruf besar berjarak lebar (logo dan petunjuk format).
+- **Judul panjang:** judul halaman dan judul bagian boleh turun baris (`overflow-wrap:anywhere`), karena judul 28 px yang panjang membuat halaman bergeser samping di layar 320 px.
+  Navigasi admin dan host sedikit mengecil di layar 360 px ke bawah (huruf 13, jarak 6).
+- **Penjajaran vertikal** (diperiksa dengan tiga pengukuran di 52 layar: pusat teks terhadap kotaknya, baris yang anaknya tidak satu pusat, dan dua item bertetangga di satu baris):
+  - Kartu meja di admin harian: tautan "Fix players" dan "Delete" di tengah vertikal (`.th{align-items:center}`).
+  - Baris ronde angin di halaman pemain: tile angin sejajar dengan nama, bukan dengan nama ditambah batang (`.we-r.seg .we-t{align-self:start;margin-top:2px}`).
+  - Tombol Share di halaman pemain dan daftar pemain, serta dropdown filter di header desktop, sejajar dengan baris judul (`margin-top:-4px`, judul 37 px dan kontrol 44 px).
+  - Tombol Share di daftar pemain ikut aturan v60 yang sebelumnya terlewat (radius 16, berat 500).
+  - Dikecualikan karena disengaja: judul dan tombol yang rata atas, judul bagian yang sejajar baseline, kotak centang dengan teks beberapa baris, dan sel grid yang membentang beberapa baris.
+- **Teks:** placeholder kolom pemain di admin harian "The host fills this in later" menjadi "Fill in later" (sebelumnya terpotong di layar sempit).
+- **Berkas:** `template/host.html`, `admin-daily.html`, `admin-pemain.html`, `masuk.html`, `404.html`, `index.html`, `player.html`, `players.html`.
+- **Tes:** semua lolos (data pemain 528, nama 22, ronde angin 11 dan 69, host 88 dan 162, ganti nama sesi 25 dan 29, pendaftaran 12, header 156, gem 46, rank mark 93,
+  angin kursi, tile 320 dan Nine Gates, MCR server 12 dan statistik 8, tata letak MCR 50 layar).
