@@ -245,7 +245,12 @@ function load(){
     if(r.status===401){authed=false;sessionStorage.removeItem('tbt-admin-pw');throw new Error('auth');}
     if(!r.ok)throw new Error('server');
     return r.json();
-  }).then(function(d){data=d;authed=true;if(!pageChecked){pageChecked=true;checkPages();}});
+  }).then(function(d){
+    data=d;authed=true;if(!pageChecked){pageChecked=true;checkPages();}
+    // the players' requests to edit their profile (the older server has no such list: then there is simply nothing to show)
+    return fetch('/api/admin/claims',{headers:H()}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};}).then(function(c){data.claims=c.claims||[];data.accounts=c.accounts||[];data.linkMinutes=c.linkMinutes||30;})
+      .then(function(){return fetch('/api/admin/quiz',{headers:H()}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};});}).then(function(q){data.quiz=q.leads?q:{total:0,byTile:{},leads:[]};});
+  });
 }
 // Once per visit: can the server open the page of a registered player? If not, say why, so a missing file is not a mystery.
 var pageChecked=false,pageCheck=null,pageReport=null;
@@ -349,6 +354,7 @@ function viewSignup(){
   var h='<div class="card"><h3 style="margin-bottom:6px">Sign-up by link'+(sg.token?'<span class="tag">'+(sg.enabled?'on':'off')+'</span>':'')+'</h3>';
   if(!sg.token)h+='<p class="note">Create one link, then share it with players (for example in a WhatsApp group). Sign-ups go to a waiting list and only become players after you approve them.</p><button class="btn primary" data-a="sgenable">Create sign-up link</button>';
   else h+='<input class="search" id="sgLink" readonly value="'+esc(link)+'"><div class="acts"><button class="btn sm primary" data-a="sgcopy">Copy link</button>'+(sg.enabled?'<button class="btn sm" data-a="sgdisable">Turn the link off</button>':'<button class="btn sm" data-a="sgenable">Turn it on again</button>')+'<button class="btn sm" data-a="sgreset">Create a new link</button></div><p class="note" style="margin-top:10px">Anyone with the link can send a sign-up, but nobody appears on the leaderboard before you approve them. If the link leaks, create a new link: the old one stops working at once.</p>';
+  if(sg.token&&sg.enabled)h+='<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><div class="meta"><b>'+(sg.open?'Open to everyone':'Link only')+'.</b> '+(sg.open?'Anyone can ask to join without the link, and the menu shows Sign up. Requests still wait for your approval.':'Only people who have the link can ask to join.')+'</div><div class="acts" style="margin-top:8px"><button class="btn sm'+(sg.open?'':' primary')+'" data-a="'+(sg.open?'sgclose':'sgopen')+'">'+(sg.open?'Back to link only':'Open to everyone')+'</button></div></div>';
   h+='</div>';
   var rs=sg.requests||[];
   if(sg.token||rs.length){
@@ -438,6 +444,73 @@ function hostAction(a,id){
   else if(a==='hreset')TBTQR.ask({title:'Reset '+nick+'\'s password?',text:'The password goes back to the last 6 digits of the WhatsApp number, valid for 7 days, and the phones '+nick+' is logged in on are signed out. Sessions and tables stay as they are.',ok:'Reset password'}).then(function(v){if(!v)return;postHosts({action:'reset',id:id}).then(function(r){if(!r.ok){alert(r.body.error||'Failed. Please try again.');return;}reload().then(function(){hostSent(nick,r.body.whatsapp||p.whatsapp,true);});});});
   else if(a==='hrevoke')TBTQR.ask({title:'Revoke '+nick+' as host?',text:nick+' is signed out everywhere and can no longer log in. Sessions and tables already made stay as they are.',ok:'Revoke'}).then(function(v){if(!v)return;postHosts({action:'revoke',id:id}).then(function(r){if(!r.ok){alert(r.body.error||'Failed. Please try again.');return;}toast('Host revoked');reload();});});
 }
+
+// ---- profile logins: a player asks on their page to edit their profile; the admin sends a one-time link to the WhatsApp number on file
+function postClaims(body){
+  return fetch('/api/admin/claims',{method:'POST',headers:H(),body:JSON.stringify(body)}).then(function(r){
+    return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,status:r.status,body:j};});
+  });
+}
+function agoText(iso){
+  var m=Math.max(0,Math.round((Date.now()-Date.parse(iso))/60000));
+  return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago';
+}
+function viewClaims(){
+  if(!data.ready)return '';
+  var cl=data.claims||[],ac=data.accounts||[];
+  var reqs=cl.length?cl.map(function(c){
+    var meta=(c.whatsapp?'WhatsApp '+esc(c.whatsapp)+' &middot; ':'<span style="color:var(--red)">No WhatsApp number on file</span> &middot; ')+'asked '+agoText(c.createdAt)+(c.status==='sent'?' &middot; link sent '+agoText(c.sentAt)+', works until '+new Date(c.expiresAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'');
+    return '<div class="prow"><div style="min-width:0"><span class="pname">'+esc(c.nickname)+'</span><span class="tag">'+(c.status==='sent'?'link sent':'waiting')+'</span><div class="meta">'+meta+'</div></div><div class="acts"><button class="btn sm hostbtn" data-a="csend" data-id="'+esc(c.id)+'"'+(c.whatsapp?'':' disabled')+'>'+(c.status==='sent'?'Send a new link':'Send on WhatsApp')+'</button><button class="btn sm" data-a="ccancel" data-id="'+esc(c.id)+'">Dismiss</button></div></div>';
+  }).join(''):'<div class="empty" style="padding:16px 0">No requests right now.</div>';
+  var logins=ac.length?'<h3 style="margin:16px 0 4px;font-size:16px">Players with a login ('+ac.length+')</h3>'+ac.map(function(a){
+    return '<div class="prow"><div style="min-width:0"><span class="pname">'+esc(a.nickname)+'</span><div class="meta">Last sign-in '+(a.lastLogin?fmtDate(a.lastLogin.slice(0,10)):'never')+'</div></div><div class="acts"><button class="btn sm" data-a="creset" data-id="'+esc(a.id)+'">Reset login</button><button class="btn sm" data-a="cclear" data-id="'+esc(a.id)+'">Clear profile</button></div></div>';
+  }).join(''):'';
+  return '<div class="card" id="claimscard"><h3 style="margin-bottom:6px">Profile logins</h3><p class="note" style="margin-top:0">A player asks on their own page to edit their profile. Press Send on WhatsApp: the message with a one-time link is ready, and the link works for '+(data.linkMinutes||30)+' minutes after you press the button. The link is shown only once.</p>'+reqs+logins+'</div>';
+}
+function claimSent(j){
+  var prev=document.activeElement,ov=document.createElement('div');ov.className='tq-ov';var msg=j.message;
+  ov.innerHTML='<div class="tq-sheet" role="dialog" aria-modal="true" aria-labelledby="csh"><h3 id="csh">Link for '+esc(j.nickname)+'</h3><p class="tq-note">Send it now: it works once and for '+(data.linkMinutes||30)+' minutes. It is not shown again.</p><div class="wamsg">'+esc(msg)+'</div><div class="tq-acts"><a class="tq-b tq-p" data-hs="wa" href="https://wa.me/'+esc(j.whatsapp)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener">Send on WhatsApp</a><button type="button" class="tq-b" data-hs="copy">Copy message</button><button type="button" class="tq-b" data-hs="done">Done</button></div></div>';
+  function close(){document.removeEventListener('keydown',key,true);ov.remove();if(prev&&prev.focus)prev.focus();load().then(render).catch(render);}
+  function key(e){if(e.key==='Escape'){e.stopPropagation();close();}}
+  ov.addEventListener('click',function(e){if(e.target===ov)return close();var b=e.target.closest?e.target.closest('[data-hs]'):null;if(!b)return;var h=b.getAttribute('data-hs');if(h==='done')close();else if(h==='copy')TBTQR.copy(msg,function(ok){b.textContent=ok?'Message copied':'Copy failed';setTimeout(function(){b.textContent='Copy message';},1600);});});
+  document.addEventListener('keydown',key,true);document.body.appendChild(ov);ov.querySelector('.tq-p').focus();
+}
+function claimAction(a,id){
+  var c=(data.claims||[]).filter(function(x){return x.id===id;})[0],ac=(data.accounts||[]).filter(function(x){return x.id===id;})[0];
+  function done(r,msg){if(!r.ok){alert(r.body.error||'Failed. Please try again.');return;}toast(msg);load().then(render).catch(render);}
+  if(a==='csend'){postClaims({action:'send',id:id}).then(function(r){if(!r.ok){alert(r.body.error||'Failed. Please try again.');return;}claimSent(r.body);});}
+  else if(a==='ccancel')TBTQR.ask({title:'Dismiss the request of '+(c?c.nickname:'this player')+'?',text:'Nothing is sent. The player can ask again.',ok:'Dismiss'}).then(function(v){if(!v)return;postClaims({action:'cancel',id:id}).then(function(r){done(r,'Request dismissed');});});
+  else if(a==='creset')TBTQR.ask({title:'Reset the login of '+(ac?ac.nickname:'this player')+'?',text:'The password is forgotten and every phone is signed out. The profile stays. The player asks for a new link on their page.',ok:'Reset login'}).then(function(v){if(!v)return;postClaims({action:'reset',id:id}).then(function(r){done(r,'Login reset');});});
+  else if(a==='cclear')TBTQR.ask({title:'Clear the profile of '+(ac?ac.nickname:'this player')+'?',text:'The avatar, tags and bio are removed from their page. The login stays.',ok:'Clear profile'}).then(function(v){if(!v)return;postClaims({action:'clearprofile',id:id}).then(function(r){done(r,'Profile cleared');});});
+}
+
+// ---- who took the tile quiz (only the admin sees this)
+var qzShown=25;
+function tileName(id){return String(id).split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
+function viewQuiz(){
+  var q=data.quiz;if(!q)return '';
+  var ls=q.leads||[];
+  var top=Object.keys(q.byTile||{}).sort(function(a,b){return q.byTile[b]-q.byTile[a];}).slice(0,3).map(function(k){return tileName(k)+' ('+q.byTile[k]+')';}).join(', ');
+  var rows=ls.slice(0,qzShown).map(function(l){
+    return '<div class="prow"><div style="min-width:0"><span class="pname">'+esc(l.name)+'</span><span class="tag">'+esc(tileName(l.tile))+'</span><div class="meta"><a href="https://instagram.com/'+esc(l.instagram)+'" target="_blank" rel="noopener">@'+esc(l.instagram)+'</a> &middot; '+esc(l.city)+(l.whatsapp?' &middot; WhatsApp <a href="https://wa.me/'+esc(l.whatsapp)+'" target="_blank" rel="noopener">'+esc(l.whatsapp)+'</a>':'')+' &middot; '+(l.invite?'wants invites':'no invites')+' &middot; '+fmtDate(l.updatedAt.slice(0,10))+'</div></div><div class="acts"><button class="btn sm" data-a="qzdel" data-id="'+esc(l.id)+'">Delete</button></div></div>';
+  }).join('');
+  return '<div class="card" id="quizcard"><h3 style="margin-bottom:6px">Tile quiz responses'+(q.total?'<span class="tag">'+q.total+'</span>':'')+'</h3><p class="note" style="margin-top:0">What people leave after the quiz: name, Instagram, city, and a WhatsApp number if they gave one. Only you can see it.'+(top?' Most common tiles: '+esc(top)+'.':'')+'</p>'
+    +(ls.length?'<div class="acts" style="margin:0 0 8px"><button class="btn sm" data-a="qzcsv">Download CSV</button></div>'+rows+(ls.length>qzShown?'<div class="acts" style="margin-top:12px"><button class="btn sm" data-a="qzmore">Show more ('+(ls.length-qzShown)+' left)</button></div>':''):'<div class="empty" style="padding:16px 0">Nobody has taken the quiz yet.</div>')+'</div>';
+}
+function quizAction(a,id){
+  if(a==='qzmore'){qzShown+=50;render();return;}
+  if(a==='qzcsv'){
+    fetch('/api/admin/quiz?format=csv',{headers:H()}).then(function(r){if(!r.ok)throw new Error('x');return r.blob();}).then(function(b){
+      var u=URL.createObjectURL(b),el=document.createElement('a');el.href=u;el.download='tbt-quiz-responses.csv';document.body.appendChild(el);el.click();el.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+    }).catch(function(){alert('Could not download the file. Please try again.');});
+    return;
+  }
+  var l=((data.quiz||{}).leads||[]).filter(function(x){return x.id===id;})[0];
+  TBTQR.ask({title:'Delete '+(l?l.name:'this response')+'?',text:'The response is removed for good. The person can take the quiz again.',ok:'Delete'}).then(function(v){
+    if(!v)return;
+    fetch('/api/admin/quiz',{method:'POST',headers:H(),body:JSON.stringify({action:'delete',id:id})}).then(function(r){if(!r.ok)throw new Error('x');toast('Response deleted');load().then(render).catch(render);}).catch(function(){alert('Failed. Please try again.');});
+  });
+}
 function viewRegistered(){
   var needle=q.trim().toLowerCase();
   var list=data.registered.filter(function(p){return matches(needle,[p.nickname,p.fullName,p.instagram,p.whatsapp].concat(p.names));});
@@ -476,7 +549,7 @@ function render(){
     return;
   }
   app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html" aria-current="page">Players</a><a href="/index.html" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
-    +'<main class="wrap">'+viewSetup()+viewSignup()+viewHosts()
+    +'<main class="wrap">'+viewSetup()+viewSignup()+viewHosts()+viewClaims()+viewQuiz()
     +'<div class="card"><input class="search" id="q" placeholder="Search by nickname, full name or Instagram" value="'+esc(q)+'"></div>'
     +'<div class="card"><h3 style="margin-bottom:10px">Guests, not registered ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>'
     +'<div class="card"><h3 style="margin-bottom:10px">Registered players ('+data.registered.length+')</h3><div id="rlist">'+viewRegistered()+'</div></div></main>';
@@ -493,6 +566,8 @@ document.addEventListener('click',function(e){
   var a=b.dataset.a,p,g;
   if(a==='login'){doLogin();}
   else if(a==='hgrant'||a==='hreset'||a==='hrevoke'){hostAction(a,b.dataset.id);}
+  else if(a==='csend'||a==='ccancel'||a==='creset'||a==='cclear'){claimAction(a,b.dataset.id);}
+  else if(a==='qzcsv'||a==='qzdel'||a==='qzmore'){quizAction(a,b.dataset.id);}
   else if(a==='logout'){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;data=null;render();}
   else if(a==='checkpages'){checkAll();}
     else if(a==='hide'){p=reg(b.dataset.id);if(!p)return;var hide=b.dataset.v==='1';if(hide&&!window.confirm('Hide the page of "'+p.nickname+'"?\n\nThe name still shows on the leaderboard, but the personal page is closed to everyone.'))return;act({action:'setHidden',id:p.id,hidden:hide},hide?'Page hidden':'Page shown');}
@@ -530,6 +605,8 @@ document.addEventListener('click',function(e){
   }
   else if(a==='sgenable'){act({action:'signupEnable'},'Link is on');}
   else if(a==='sgdisable'){act({action:'signupDisable'},'Link is off');}
+  else if(a==='sgopen'){if(!window.confirm('Open sign-up to everyone?\n\nThe menu will show Sign up, and anyone can ask to join without the secret link. Every request still waits for your approval, and the list of guest names stays hidden.'))return;act({action:'signupOpen'},'Sign-up is open to everyone');}
+  else if(a==='sgclose'){act({action:'signupClose'},'Back to link only');}
   else if(a==='sgreset'){if(!window.confirm('Create a new link?\n\nThe old link stops working at once, so a link that was already shared has to be sent again.'))return;act({action:'signupReset'},'New link created');}
   else if(a==='sgcopy'){
     var box=document.getElementById('sgLink');if(!box)return;

@@ -671,6 +671,8 @@ var TBTNAV = (function () {
     shield: '<svg viewBox="0 0 24 24" ' + P + '><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
     down: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 9l6 6 6-6"/></svg>',
     go: '<svg class="tn-go" viewBox="0 0 24 24" ' + P + '><path d="M9 6l6 6-6 6"/></svg>',
+    quiz: '<svg viewBox="0 0 24 24" ' + P + '><rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="10" cy="11" r=".6"/><circle cx="14" cy="11" r=".6"/><path d="M10 15c.6.7 3.4.7 4 0"/></svg>',
+    signup: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="10" cy="8" r="4"/><path d="M2.5 21c.8-4 3.4-6.5 7.5-6.5 1.6 0 3 .4 4.2 1.1"/><path d="M19 14v6M16 17h6"/></svg>',
     check: '<svg viewBox="0 0 24 24" width="18" height="18" ' + P + '><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
   };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -686,7 +688,7 @@ var TBTNAV = (function () {
   function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
-  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
+  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
   var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
@@ -769,6 +771,8 @@ var TBTNAV = (function () {
   function boot(cfg) {
     CFG.inView = cfg && cfg.inView || null; CFG.onMe = cfg && cfg.onMe || null;
     if (BOUND) return; BOUND = true;
+    // Sign up is in the menu only while the admin has opened sign-up to everyone (one small answer, kept 60 seconds)
+    if (!ST.suAsked) { ST.suAsked = true; try { fetch('/api/signup?status=1').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { if (j && j.open) { ST.su = true; var pn = document.getElementById('tnPanel'); if (pn && LAST) pn.innerHTML = panel(LAST.active, LAST.o); } }).catch(function () { }); } catch (e) { } }
     document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('click', function (e) {
@@ -806,7 +810,7 @@ var TBTNAV = (function () {
     }, true);
     window.addEventListener('resize', function () { if (window.innerWidth >= 720 && ST.searching) { ST.searching = false; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); } });
   }
-  return { boot: boot, header: header, thisIsMe: thisIsMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
+  return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
 
 function brandbar(){return TBTNAV.header('pl',{logo:LOGO,name:'Tiles by Tiles'});}

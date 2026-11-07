@@ -1361,3 +1361,55 @@ Semua huruf Mandarin di situs (東 南 西 北 untuk angin, 胡 自 摸 牌 untu
 Hanya ada satu berkas font Hanzi sekarang: `assets/f/KaiTi_1.woff2` (5,1 MB). `KaiTi_1.TTF` (11,8 MB) dihapus dari `shared/fonts/` dan dari rujukan `src` di `shared/kai.css`. Semua browser yang memuat font web
 membaca WOFF2, jadi cadangan itu tidak diperlukan; browser tua yang tidak bisa membacanya akan memakai font Kai sistem atau serif, seperti sebelum ada font ini. Folder situs menyusut 11,8 MB.
 `tests/hanzi_font.test.mjs` kini memeriksa bahwa WOFF2 ada dengan nama persis dan sama dengan berkas sumber, bahwa TTF tidak ada, dan bahwa `kai.css` hanya menunjuk WOFF2 (18 pemeriksaan).
+
+## Update terbaru (v63): pemain bisa mengklaim halamannya, lalu mengedit avatar, tag, dan bio
+
+Cara kerjanya, tanpa Google dan tanpa layanan luar:
+
+1. Di halaman pemain, pengunjung melihat tombol **Want to edit your profile?** (menggantikan tombol "This is me"). Menekannya membuat sebuah permintaan. Tidak ada pesan yang terkirim dari situs.
+2. Di halaman admin pemain ada kartu baru **Profile logins**. Admin menekan **Send on WhatsApp**: pesan berisi tautan sekali pakai sudah siap dan terbuka di WhatsApp, ke nomor yang didaftarkan pemain.
+   Tautan berlaku sekali dan 30 menit sejak tombol ditekan, hanya disimpan sebagai hash, dan hanya ditampilkan sekali. Yang menekan tombol di halaman pemain tidak pernah melihat tautannya.
+3. Pemain membuka tautan (`/claim?t=...`), memilih kata sandi (minimal 8 karakter, bukan nama panggilan, bukan bagian dari nomor telepon), dan langsung masuk. Berikutnya masuk di `/claim` dengan nickname dan kata sandi.
+   Lupa kata sandi: minta tautan baru dengan cara yang sama.
+4. Pemilik melihat **Edit profile** dan **Share**, serta "Signed in as ... Sign out". Pengunjung hanya melihat profil. Halaman tetap publik; hanya tombolnya yang khusus pemilik.
+
+- **Isi profil:** avatar (salah satu dari 22 karakter chibi quiz, bebas dipilih, default Blank Tile), bio sampai 120 huruf, dan sampai 3 tag dari Chicken Hand, Riichi, TBT, MCR, HK, Others. Nickname hanya admin yang bisa mengubah. Level, varian lain, dan kartu bagikan menyusul.
+- **Keamanan:** kata sandi disimpan sebagai hash PBKDF2 bergaram; cookie `tbt_player` HttpOnly, Secure, SameSite=Strict, hanya untuk `/api/player`, berlaku 30 hari, paling banyak 5 ponsel; semua ponsel keluar bila kata sandi diganti atau admin menekan Reset login;
+  pembatasan: 3 permintaan per pemain per hari, 10 per alamat per jam, 5 salah masuk per 15 menit per alamat dan nickname (15 per nickname, 40 per alamat). Nomor WhatsApp yang ditampilkan ke peminta hanya awalan negara dan 3 digit terakhir.
+  Bio selalu ditampilkan sebagai teks biasa. Profil yang diubah selalu milik pemain yang masuk; id di permintaan diabaikan.
+- **Admin:** Send on WhatsApp, Dismiss (tolak permintaan), Reset login (lupakan kata sandi dan keluarkan semua ponsel, profil tetap), Clear profile (hapus avatar, tag, dan bio). Permintaan yang tidak dijawab 48 jam gugur sendiri.
+- **Pintasan My page** di menu kini terisi otomatis saat pemain masuk (tombol "This is me" tidak ada lagi). Yang sudah memilih "This is me" sebelumnya tetap mempunyai pintasannya di perangkat itu.
+- **Tabel baru** dibuat sendiri saat pertama dipakai (tanpa SQL): `player_accounts`, `player_logins`, `player_claims`, `player_profiles`.
+- **Gambar avatar:** `shared/avatars/<id>.svg` (dibuat dari modul quiz di `shared/quiz/` dengan `node tools/make-avatars.js`), disalin build ke `assets/a/`. Namanya tetap (bukan hash): bila gambar diganti, naikkan `AV_V` di `player.html`.
+- **Berkas baru:** `template/claim.html`, `template/functions/_playeraccount.js`, `api/player/` (claim-request, claim, login, logout, me, profile), `api/admin/claims.js`, `shared/avatars/`, `shared/quiz/`, `tools/make-avatars.js`.
+  Berkas yang berubah: `player.html`, `admin-pemain.html`, `_players.js` (profil ikut di data halaman pemain), `shared/nav.js` (mengekspos `setMe`), `build.py`.
+- **Tes:** `profile_server.test.mjs` (68) dan `profile_page.test.mjs` (35) baru; `nav_browser.test.mjs` diperbarui (bagian "This is me" diganti pemeriksaan tombol edit dan My page); `tests/lib.mjs` mengenal `.svg`.
+
+## Update terbaru (v64): Tile Personality Quiz di situs, pendaftaran terbuka, tag bebas
+
+- **Halaman quiz `/quiz`** (`template/quiz.html`): quiz "Kamu Tile yang Mana?" (16 pertanyaan, 22 tile, karakter chibi) di dalam kerangka situs: header situs, token warna, font situs (Playfair, Inter Tight, TBT Hanzi), mode gelap.
+  Judul tab: "Tile Personality Quiz: Kamu Tile yang Mana?". Sumbernya di `shared/quiz/` (`quiz-data.js` berisi 22 tile dan 16 pertanyaan; `quiz-faces.js`, `quiz-art.js`, `quiz-chibi.js` gambarnya; `quiz-app.js` aplikasinya).
+  Isinya dimasukkan ke `quiz.html` dengan skrip kecil; ubah teks di `quiz-data.js`, lalu masukkan lagi ke halaman (modul `shared/quiz/*.js` ditempel berurutan di akhir `quiz.html`). `shared/quiz/quiz.css` adalah CSS asli artifact dan tidak dipakai langsung: gaya yang berlaku ada di `quiz.html`.
+- **Bahasa quiz:** deskripsi, tips, dan satu tagline di 22 tile ditulis ulang dengan nada lebih lepas (label "Tips:" dihapus; pola "bukan X, tapi Y" dan susunan tiga serangkai dikurangi), teks halaman dan toast dirapikan. Pertanyaan dan pilihan jawaban tidak berubah. Emoji tetap di isi quiz (jawaban dan judul hasil); di kerangka halaman diganti ikon garis dan 牌.
+- **Form hasil:** nama, Instagram, domisili (diketik), WhatsApp (opsional), centang undangan, dan kalimat persetujuan ("Dengan menekan Buka Tile Aku, ..."). Level mahjong tidak ditanyakan. Hasil langsung tampil setelah form, diikuti kartu **Follow @tiles.by.tiles** (tidak ada gerbang follow).
+- **Penyimpanan:** `POST /api/quiz/lead` (header `x-tbt: quiz`) menulis ke tabel `quiz_leads` (dibuat otomatis saat pertama dipakai): satu baris per username Instagram (kirim lagi = memperbarui), paling banyak 10 kiriman per jam per alamat, kolom tersembunyi untuk bot, nomor WhatsApp disimpan dalam bentuk 62. Alamat pengunjung tidak disimpan.
+- **Admin pemain:** kartu **Tile quiz responses** (daftar terbaru, tile terbanyak, Download CSV, Delete; sel CSV yang diawali `=`, `+`, `-`, `@` dibuat tidak berbahaya di spreadsheet) lewat `api/admin/quiz.js`.
+- **Pendaftaran terbuka untuk umum:** saklar **Open to everyone** di kartu "Sign-up by link" (pengaturan `signup_open`). Saat terbuka: menu menampilkan **Sign up** dan `/daftar.html` menerima pendaftaran tanpa kode rahasia; tetap masuk daftar tunggu, tetap dibatasi laju, tetap perlu persetujuan admin; daftar nama tamu tidak ditampilkan tanpa tautan rahasia.
+  Saat tautan dimatikan, "open" tidak berarti apa-apa. Menu mengecek `GET /api/signup?status=1` (jawaban kecil, disimpan 60 detik).
+- **Tautan quiz:** menu header ("Tile Quiz"), kartu di bawah leaderboard (juga di tab Sessions), kartu "Sambil nunggu, cari tile kamu" di layar Thank you setelah mendaftar, dan tautan di lembar edit profil. Tiga karakter di kartu berganti-ganti tiap halaman dibuka (diundi sekali per kunjungan, bukan tiap digambar ulang).
+- **Mode gelap quiz:** palet krem (bukan hijau muda): tombol dan judul `#EFE6D6` dengan teks hijau tua, merah 牌 sedikit dicerahkan (`#F4A0A0`, di luar brand kit). Kontras setiap teks diukur otomatis (4,5; 3 untuk teks besar) di terang dan gelap pada lebar 320, 390, dan 1280.
+- **Tag profil tanpa batas** (dulu maksimal 3).
+- **Berkas baru:** `template/quiz.html`, `template/functions/_quiz.js`, `api/quiz/lead.js`, `api/admin/quiz.js`, `tests/quiz_server.test.mjs` (58), `tests/quiz_page.test.mjs` (28). Berkas yang berubah: `shared/nav.js` (Tile Quiz dan Sign up di menu), `index.html`, `daftar.html`, `player.html`, `admin-pemain.html`, `_players.js`, `_playeraccount.js`, `api/signup.js`, `api/admin/players.js`, `tests/nav_browser.test.mjs`, `tests/profile_*.test.mjs`.
+- **Catatan:** halaman quiz 364 KB (skrip dan seni di satu berkas, hanya dimuat di halaman itu). Gambar avatar bernama tetap (bukan hash): bila diganti, naikkan `?v=` pada rujukannya.
+
+## Update terbaru (v65): kartu share quiz dan link quiz
+
+- **Kartu story** (gambar 1080 x 1920 dari tombol "Download buat story"): memakai logo asli (PNG yang sama dengan header) dan wordmark TILES BY TILES (Playfair Display 900, huruf besar, berjarak seperti header).
+  Judul tile tegak (font miring dari Playfair tidak termasuk brand kit); teks Inter Tight, Hanzi TBT Hanzi; warna abu-abu liar diganti warna brand (`#1B4332`, `#587263`).
+  Footer: "Kamu tile yang mana?", **@tiles.by.tiles**, **Play. Learn. Connect.** Alamat situs dan slogan lama dihapus. Jarak footer dilonggarkan: pertanyaan naik 18 px (jarak ke handle 80 px).
+  Kanvas memakai `letterSpacing` (Chrome, Firefox, Safari 17 ke atas); di Safari lama wordmark tampil sedikit lebih rapat.
+- **Nama tile yang pucat** digelapkan hanya sebagai teks sampai kontrasnya minimal 4,5:1 di atas krem (fungsi `inkOn` di `quiz-app.js`): kini hanya Summer, Chrysanthemum, Blank Tile, dan Spring yang berubah. Berlaku di kartu story dan di halaman hasil (tampilan terang); glow dan gambar karakter tetap berwarna asli, mode gelap tetap krem.
+- **Yang dibagikan ada dua:** story (gambar) dan **link quiz**: tombol kini "Share link quiz" dan mengirim alamat `/quiz` itu sendiri (bukan alamat tile) dengan teks "Aku <tile> <emoji> (<judul>). Kamu tile yang mana?". Tombol salin juga menyalin alamat quiz.
+  Tautan lama `?tile=...` masih membuka tile itu. Kalimat di galeri disesuaikan ("kirim story atau link quiz-nya ke teman").
+- **Tes:** `tests/quiz_page.test.mjs` kini 45 pemeriksaan: tombol share mengirim alamat quiz tanpa tile; story berukuran 1080 x 1920; kartu memuat handle, tagline, wordmark berjarak, dan pertanyaan; tanpa alamat situs atau slogan lain;
+  semua font kartu adalah font brand kit dan tidak ada yang miring; logo asli dan gambar tile digambar; jarak footer; kontras nama keempat tile di kartu dan halaman.

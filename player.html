@@ -189,6 +189,54 @@ a{color:inherit}
 .pp-head h1{font-size:32px;font-weight:900;line-height:1.1;overflow-wrap:anywhere}
 .pp-share{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:-4px;padding:0 12px;border-radius:16px;border:1px solid var(--line);background:transparent;font-size:13px;font-weight:500;color:var(--text);flex:none}
 .pp-share:focus-visible,.pp-game:focus-visible,.pp-more:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+/* the profile: avatar, tags and bio, and what only the owner sees */
+.pf-who{display:flex;justify-content:space-between;align-items:center;margin:0 0 4px;font-size:12px;line-height:16px;color:var(--muted)}
+.pf-who b{color:var(--accent);font-weight:500}
+.pf-out{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;min-height:32px;padding:0 4px;cursor:pointer}
+.pf-head{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding:16px 0 12px}
+.pf-av{position:relative;display:block;width:72px;height:72px;padding:0;border-radius:20px;background:var(--field);border:1px solid var(--line);overflow:hidden}
+.pf-av img{display:block;width:100%;height:100%;object-fit:contain}
+button.pf-av{cursor:pointer}
+.pf-av.ed::after{content:"Edit";position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font:500 11px/18px var(--sans);text-align:center}
+.pf-head h1{font-size:32px;font-weight:900;line-height:1.1;overflow-wrap:anywhere}
+.pf-tags{display:flex;flex-wrap:wrap;gap:6px 8px;margin:8px 0 0}
+.pf-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--muted);font:500 12px var(--sans)}
+.pf-bio{margin:0 0 4px;font-size:14px;line-height:20px;overflow-wrap:anywhere}
+.pf-acts{display:flex;gap:8px;margin:12px 0 0}
+.pf-b{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line);background:transparent;color:var(--text);font:500 14px var(--sans);cursor:pointer;text-decoration:none}
+.pf-b.p{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.pf-b.s{min-height:40px;margin-top:12px}
+.pf-b:disabled{opacity:.5;cursor:default}
+.pf-b:focus-visible,.pf-av:focus-visible,.pf-out:focus-visible,.pf-t:focus-visible,.pf-c:focus-visible,.pf-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.pf-ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.pf-sh{background:var(--surface);color:var(--text);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:0 16px 20px}
+@media(min-width:700px){.pf-ov{align-items:center}.pf-sh{border-radius:20px;max-height:88vh}}
+.pf-sh header{display:flex;justify-content:space-between;align-items:center;padding:12px 0 8px}
+.pf-sh h2{font-size:20px;margin:0}
+.pf-x{width:44px;height:44px;border:0;background:transparent;font-size:28px;line-height:1;color:var(--muted);margin-right:-10px;cursor:pointer}
+.pf-lab{font-size:13px;font-weight:700;margin:16px 0 8px}
+.pf-lab small{font-weight:400;color:var(--muted)}
+.pf-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.pf-t{aspect-ratio:1;padding:0;border-radius:12px;border:1px solid var(--line);background:var(--field);overflow:hidden;cursor:pointer}
+.pf-t img{display:block;width:100%;height:100%;object-fit:contain}
+.pf-t[aria-pressed="true"]{border:2px solid var(--accent);box-shadow:0 0 0 2px var(--surface)}
+.pf-in{width:100%;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text);padding:12px;min-height:44px;resize:none}
+.pf-in:focus{outline:none;border-color:var(--accent)}
+.pf-lock{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--muted);font-size:15px}
+.pf-lock small{margin-left:auto;font-size:12px}
+.pf-cnt{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+.pf-chips{display:flex;flex-wrap:wrap;gap:8px}
+.pf-c{height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--text);font:500 14px var(--sans);cursor:pointer}
+.pf-c[aria-pressed="true"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.pf-foot{display:flex;gap:8px;margin-top:20px}
+.pf-foot .pf-b{flex:1}
+.pf-note{font-size:13px;line-height:20px;color:var(--muted);margin:12px 0 0}
+.pf-note.first{margin-top:0}
+.pf-note a{color:var(--accent);font-weight:500}
+.pf-err{font-size:13px;line-height:20px;color:var(--red);margin:12px 0 0}
+.pf-ok{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--onaccent);display:grid;place-items:center;font-size:28px;margin:16px auto 8px}
+.pf-c2{text-align:center}
+
 .pp-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:12px;margin:0 0 16px}
 .pp-strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
 .pp-strip>div{padding:12px 8px;text-align:center;border-left:1px solid var(--line);min-width:0}.pp-strip>div:first-child{border-left:0}
@@ -596,6 +644,8 @@ var TBTNAV = (function () {
     shield: '<svg viewBox="0 0 24 24" ' + P + '><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
     down: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 9l6 6 6-6"/></svg>',
     go: '<svg class="tn-go" viewBox="0 0 24 24" ' + P + '><path d="M9 6l6 6-6 6"/></svg>',
+    quiz: '<svg viewBox="0 0 24 24" ' + P + '><rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="10" cy="11" r=".6"/><circle cx="14" cy="11" r=".6"/><path d="M10 15c.6.7 3.4.7 4 0"/></svg>',
+    signup: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="10" cy="8" r="4"/><path d="M2.5 21c.8-4 3.4-6.5 7.5-6.5 1.6 0 3 .4 4.2 1.1"/><path d="M19 14v6M16 17h6"/></svg>',
     check: '<svg viewBox="0 0 24 24" width="18" height="18" ' + P + '><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
   };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -611,7 +661,7 @@ var TBTNAV = (function () {
   function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
-  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
+  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
   var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
@@ -694,6 +744,8 @@ var TBTNAV = (function () {
   function boot(cfg) {
     CFG.inView = cfg && cfg.inView || null; CFG.onMe = cfg && cfg.onMe || null;
     if (BOUND) return; BOUND = true;
+    // Sign up is in the menu only while the admin has opened sign-up to everyone (one small answer, kept 60 seconds)
+    if (!ST.suAsked) { ST.suAsked = true; try { fetch('/api/signup?status=1').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { if (j && j.open) { ST.su = true; var pn = document.getElementById('tnPanel'); if (pn && LAST) pn.innerHTML = panel(LAST.active, LAST.o); } }).catch(function () { }); } catch (e) { } }
     document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('click', function (e) {
@@ -731,7 +783,7 @@ var TBTNAV = (function () {
     }, true);
     window.addEventListener('resize', function () { if (window.innerWidth >= 720 && ST.searching) { ST.searching = false; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); } });
   }
-  return { boot: boot, header: header, thisIsMe: thisIsMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
+  return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
 
 function brandbar(){var m=TBTNAV.me();return TBTNAV.header(m&&m.id===ID?'me':'pl',{logo:LOGO,name:'Tiles by Tiles'});}
@@ -743,7 +795,7 @@ function content(){
   var since=P.since?'Registered '+MONTHS[+P.since.slice(5,7)-1]+' '+P.since.slice(0,4):'';
   var meta=[since,last?'Last played '+shortDate(last):(all.length?'':'No games yet')].filter(Boolean).join(' \u00b7 ');
   var filters=ddButton('period',periodLabel(),ICON.cal,false)+(modesIn().length>=2?ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all'):'');
-    var left='<div class="pp-head"><div><h1>'+esc(P.nickname)+'</h1><div class="upd">'+esc(meta)+'</div></div><button type="button" class="pp-share" data-share="1">'+ICON.share+'Share</button></div>'+TBTNAV.thisIsMe({id:ID,name:P.nickname})
+    var left=profHead(P,meta)
     +'<div class="pp-filters">'+filters+'</div>'
     +'<div class="pp-strip"><div><b>'+t.games+'</b><span>Games</span></div><div><b>'+t.winds+'</b><span>Wind rounds</span></div><div><b>'+t.wf+'</b><span>1st in wind rounds</span></div><div><b>'+(t.hands?Math.round(t.won/t.hands*100)+'%':'-')+'</b><span>Win rate</span></div></div>'
     +statsCard(t);
@@ -751,8 +803,97 @@ function content(){
   var right='<div class="pp-h"><h3>Games ('+t.games+')</h3><span>Newest first</span></div>'+(t.games?(S.shown=shown).map(gameCard).join('')+(t.games>shown.length?'<button type="button" class="pp-more" data-more="1">Show all '+t.games+' games</button>':''):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>');
   return '<div class="pp-two"><div>'+left+'</div><div>'+right+'</div></div>';
 }
+
+// ---- the profile: what everyone sees, and what only the signed-in owner can do
+var AV_V='1',BIO_MAX=120,AVATARS=['one-bamboo','nine-bamboo','one-character','nine-character','one-dot','nine-dot','red-dragon','green-dragon','white-dragon','east-wind','south-wind','west-wind','north-wind','spring','summer','autumn','winter','plum-blossom','orchid','chrysanthemum','bamboo','blank-tile'];
+var PTAGS=[['chicken-hand','Chicken Hand'],['riichi','Riichi'],['tbt','TBT'],['mcr','MCR'],['hk','HK'],['others','Others']];
+S.me=null;S.pf={sheet:'',busy:false,err:'',masked:'',draft:null};
+function avUrl(id){return '/assets/a/'+(AVATARS.indexOf(id)>=0?id:'blank-tile')+'.svg?v='+AV_V;}
+function avName(id){return id.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');}
+function isOwner(){return !!(S.me&&S.status==='ok'&&S.data&&S.data.player&&S.me.id===S.data.player.id);}
+function profHead(P,meta){
+  var pr=P.profile||{bio:'',tags:[],avatar:''},own=isOwner(),img='<img src="'+avUrl(pr.avatar)+'" alt="">';
+  var av=own?'<button type="button" class="pf-av ed" data-pf="edit" aria-label="Change your avatar">'+img+'</button>':'<span class="pf-av">'+img+'</span>';
+  var tags=(pr.tags||[]).map(function(id){var m=PTAGS.filter(function(x){return x[0]===id;})[0];return m?'<span class="pf-tag">'+esc(m[1])+'</span>':'';}).join('');
+  return (own?'<div class="pf-who"><span>Signed in as <b>'+esc(P.nickname)+'</b></span><button type="button" class="pf-out" data-pf="signout">Sign out</button></div>':'')
+    +'<div class="pf-head">'+av+'<div><h1>'+esc(P.nickname)+'</h1>'+(tags?'<div class="pf-tags">'+tags+'</div>':'')+'</div></div>'
+    +(pr.bio?'<p class="pf-bio">'+esc(pr.bio)+'</p>':'')
+    +'<div class="upd">'+esc(meta)+'</div>'
+    +(own?'<div class="pf-acts"><button type="button" class="pf-b p" data-pf="edit">Edit profile</button><button type="button" class="pf-b" data-share="1">'+ICON.share+'Share</button></div>'
+         :'<button type="button" class="pf-b s" data-pf="claim">Want to edit your profile?</button>');
+}
+function pfHead(title){return '<header><h2>'+title+'</h2><button type="button" class="pf-x" data-pf="close" aria-label="Close">\u00d7</button></header>';}
+function pfSheet(){
+  var s=S.pf.sheet;if(!s)return '';
+  var b='';
+  if(s==='claim'){
+    b=pfHead('Edit your profile')+'<p class="pf-note first">To make sure it is you, the admin sends a one-time link to the WhatsApp number you registered with. Open it to choose a password. After that you sign in with your nickname and password.</p>'
+      +(S.pf.err?'<p class="pf-err" role="alert">'+esc(S.pf.err)+'</p>':'')
+      +'<div class="pf-foot"><button type="button" class="pf-b" data-pf="close">Cancel</button><button type="button" class="pf-b p" data-pf="send"'+(S.pf.busy?' disabled':'')+'>'+(S.pf.busy?'Sending\u2026':'Request link')+'</button></div>'
+      +'<p class="pf-note"><a href="/claim">Already have a password? Sign in</a></p>';
+  }else if(s==='sent'){
+    b=pfHead('Edit your profile')+'<div class="pf-c2"><div class="pf-ok" aria-hidden="true">\u2713</div><h3 style="margin:0 0 8px;font-size:20px">Request sent</h3>'
+      +'<p class="pf-note" style="margin:0">The admin will send a link to your WhatsApp'+(S.pf.masked?' ('+esc(S.pf.masked)+')':'')+'. Open it on your phone to choose a password. It works once and expires 30 minutes after it is sent.</p>'
+      +'<p class="pf-note">Nothing after a while? Ask the admin.</p></div><div class="pf-foot"><button type="button" class="pf-b p" data-pf="close">Done</button></div>';
+  }else if(s==='edit'){
+    var d=S.pf.draft,P=S.data.player;
+    b=pfHead('Edit profile')
+      +'<div class="pf-lab">Avatar <small>(pick any character)</small></div><p class="pf-note first" style="margin:-4px 0 8px">Belum tahu pilih yang mana? <a href="/quiz">Cari tile kamu lewat quiz</a></p><div class="pf-grid">'+AVATARS.map(function(id){return '<button type="button" class="pf-t" data-pf="av" data-av="'+id+'" aria-pressed="'+(d.avatar===id)+'" aria-label="'+avName(id)+'"><img src="'+avUrl(id)+'" alt="" loading="lazy"></button>';}).join('')+'</div>'
+      +'<div class="pf-lab">Nickname</div><div class="pf-lock">'+esc(P.nickname)+'<small>Only the admin can change it</small></div>'
+      +'<div class="pf-lab"><label for="pfBio">Bio</label></div><textarea id="pfBio" class="pf-in" rows="3" maxlength="'+BIO_MAX+'">'+esc(d.bio)+'</textarea><div class="pf-cnt"><span id="pfCnt">'+d.bio.length+'</span> / '+BIO_MAX+'</div>'
+      +'<div class="pf-lab">How do you play? <small>(pick as many as you like)</small></div><div class="pf-chips">'+PTAGS.map(function(m){return '<button type="button" class="pf-c" data-pf="tag" data-tag="'+m[0]+'" aria-pressed="'+(d.tags.indexOf(m[0])>=0)+'">'+esc(m[1])+'</button>';}).join('')+'</div>'
+      +(S.pf.err?'<p class="pf-err" role="alert">'+esc(S.pf.err)+'</p>':'')
+      +'<div class="pf-foot"><button type="button" class="pf-b" data-pf="close">Cancel</button><button type="button" class="pf-b p" data-pf="save"'+(S.pf.busy?' disabled':'')+'>'+(S.pf.busy?'Saving\u2026':'Save')+'</button></div>'
+      +'<p class="pf-note">Your page stays public. Only you can edit it and see the Share button.</p>';
+  }
+  return '<div class="pf-ov" data-pf="scrim"><div class="pf-sh" role="dialog" aria-modal="true" aria-label="Profile">'+b+'</div></div>';
+}
+function pfOpen(sheet){S.pf.sheet=sheet;S.pf.err='';S.pf.busy=false;render();setTimeout(function(){var el=document.querySelector('.pf-sh .pf-b.p, .pf-sh textarea');if(el&&el.focus)el.focus();},30);}
+function pfClose(){S.pf.sheet='';S.pf.err='';S.pf.busy=false;render();}
+function pfPost(url,body){return fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-tbt':'player'},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,status:r.status,body:j};});});}
+function pfAct(b){
+  var a=b.dataset.pf;
+  if(a==='scrim'){pfClose();return;}
+  if(a==='claim'){pfOpen('claim');return;}
+  if(a==='close'){pfClose();return;}
+  if(a==='send'){
+    S.pf.busy=true;S.pf.err='';render();
+    pfPost('/api/player/claim-request',{id:S.data.player.id}).then(function(r){
+      S.pf.busy=false;
+      if(r.ok){S.pf.masked=r.body.masked||'';S.pf.sheet='sent';}
+      else S.pf.err=r.body.error==='no_whatsapp'?'We do not have a WhatsApp number for you yet. Ask the admin to add it.':r.body.error==='too_many'?'You asked a few times already. Please wait for the admin\u2019s message.':(r.body.error||'Could not send the request. Please try again.');
+      render();
+    }).catch(function(){S.pf.busy=false;S.pf.err='No connection. Please try again.';render();});
+    return;
+  }
+  if(a==='edit'){var pr=S.data.player.profile||{bio:'',tags:[],avatar:''};S.pf.draft={avatar:pr.avatar||'',bio:pr.bio||'',tags:(pr.tags||[]).slice()};pfOpen('edit');return;}
+  if(a==='av'){pfKeepBio();S.pf.draft.avatar=b.dataset.av;render();return;}
+  if(a==='tag'){
+    pfKeepBio();var tg=S.pf.draft.tags,i=tg.indexOf(b.dataset.tag);
+    if(i>=0)tg.splice(i,1);else tg.push(b.dataset.tag);
+    S.pf.err='';render();return;
+  }
+  if(a==='save'){
+    pfKeepBio();S.pf.busy=true;S.pf.err='';render();
+    pfPost('/api/player/profile',S.pf.draft).then(function(r){
+      S.pf.busy=false;
+      if(r.status===401){S.me=null;S.pf.sheet='';render();location.href='/claim';return;}
+      if(!r.ok){S.pf.err=r.body.error||'Could not save. Please try again.';render();return;}
+      S.data.player.profile=r.body.profile;S.pf.sheet='';render();toast('Saved');
+    }).catch(function(){S.pf.busy=false;S.pf.err='No connection. Please try again.';render();});
+    return;
+  }
+  if(a==='signout'){pfPost('/api/player/logout',{}).then(function(){S.me=null;render();toast('Signed out');}).catch(function(){S.me=null;render();});return;}
+}
+function pfKeepBio(){var el=document.getElementById('pfBio');if(el&&S.pf.draft)S.pf.draft.bio=el.value.slice(0,BIO_MAX);}
+function pfInit(){
+  fetch('/api/player/me').then(function(r){return r.json();}).then(function(j){
+    if(j&&j.signedIn){S.me={id:j.id,nickname:j.nickname};try{TBTNAV.setMe(j.id,j.nickname);}catch(e){}if(S.status==='ok')render();}
+  }).catch(function(){});
+}
 function render(){
   var sheet=(S.menu&&!isWide()&&S.status==='ok')?menuSheet(S.menu):'';
+  sheet+=(S.status==='ok'?pfSheet():'');
   document.getElementById('app').innerHTML=brandbar()+'<div class="wrap n"><a class="back" href="/index.html" style="display:inline-block;margin:14px 0 0;color:var(--accent);font-weight:700;text-decoration:none">\u2039 Leaderboard</a>'+content()+'</div>'+sheet+'<div id="toast" class="pp-toast" role="status" hidden></div>';
   if(sheet&&!S.locked){document.body.style.overflow='hidden';S.locked=true;}else if(!sheet&&S.locked){document.body.style.overflow='';S.locked=false;}
   if(S.status==='ok'){document.title=S.data.player.nickname+' | Tiles by Tiles';syncUrl();}
@@ -775,8 +916,11 @@ function share(){
   toast(url);
 }
 TBTNAV.boot({onMe:function(){render();}});
+document.getElementById('app').addEventListener('input',function(e){if(e.target&&e.target.id==='pfBio'){if(S.pf.draft)S.pf.draft.bio=e.target.value.slice(0,BIO_MAX);var c=document.getElementById('pfCnt');if(c)c.textContent=e.target.value.length;}});
+pfInit();
 document.getElementById('app').addEventListener('click',function(e){
   var t=e.target;
+  var pfb=t.closest?t.closest('[data-pf]'):null;if(pfb&&!(pfb.dataset.pf==='scrim'&&t!==pfb)){pfAct(pfb);return;}
   var gc=t.closest?t.closest('.pp-game[role="button"]'):null;if(gc){toggleGame(+gc.dataset.i);return;}
   if(t.closest&&t.closest('[data-close]')){closeMenu();return;}
   var b=t.closest?t.closest('button'):null;if(!b)return;
@@ -791,6 +935,7 @@ document.getElementById('app').addEventListener('click',function(e){
   if(b.dataset.retry){load();return;}
 });
 document.addEventListener('keydown',function(e){
+  if(S.pf.sheet&&e.key==='Escape'){e.preventDefault();pfClose();return;}
   var gk=e.target.closest?e.target.closest('.pp-game[role="button"]'):null;if(gk&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggleGame(+gk.dataset.i);return;}
   if(!S.menu)return;
   if(e.key==='Escape'){e.preventDefault();closeMenu();return;}

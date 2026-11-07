@@ -197,6 +197,12 @@ a{color:inherit}
 @media(min-width:980px){.n-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}.n-grid.one{display:block}.n-grid.d{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.n-side{position:sticky;top:16px}}
 @media(max-width:380px){.n-strip b{font-size:20px}.n-strip span{font-size:11px}}
 
+.qz-pl{display:grid;grid-template-columns:auto 1fr;gap:12px 16px;align-items:center;padding:16px;margin:0 0 12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);text-align:left}
+.qz-pl-art{display:flex}.qz-pl-art img{width:44px;height:48px;object-fit:contain;margin-right:-8px}
+.qz-pl-tx{display:flex;flex-direction:column;gap:2px;min-width:0}.qz-pl-tx b{font:900 18px/1.2 var(--display,"Playfair Display",serif);color:var(--text)}.qz-pl-tx span{font-size:13px;line-height:20px;color:var(--muted)}
+.qz-pl-b{grid-column:1/-1;display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:16px;background:var(--accent);color:var(--onaccent);font:500 14px var(--sans,"Inter Tight",sans-serif);text-decoration:none}
+.qz-pl-b:focus-visible{outline:2px solid var(--focus,var(--accent));outline-offset:2px}
+@media(min-width:640px){.qz-pl{grid-template-columns:auto 1fr auto}.qz-pl-b{grid-column:auto;padding:0 20px}}
 /* shared header: the brand name, the search, the menu (and Admin) on every public page */
 .tn-hd{position:relative}
 .tn-hd .tn-row{flex-wrap:nowrap}
@@ -464,6 +470,8 @@ var TBTNAV = (function () {
     shield: '<svg viewBox="0 0 24 24" ' + P + '><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
     down: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 9l6 6 6-6"/></svg>',
     go: '<svg class="tn-go" viewBox="0 0 24 24" ' + P + '><path d="M9 6l6 6-6 6"/></svg>',
+    quiz: '<svg viewBox="0 0 24 24" ' + P + '><rect x="6" y="3" width="12" height="18" rx="3"/><circle cx="10" cy="11" r=".6"/><circle cx="14" cy="11" r=".6"/><path d="M10 15c.6.7 3.4.7 4 0"/></svg>',
+    signup: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="10" cy="8" r="4"/><path d="M2.5 21c.8-4 3.4-6.5 7.5-6.5 1.6 0 3 .4 4.2 1.1"/><path d="M19 14v6M16 17h6"/></svg>',
     check: '<svg viewBox="0 0 24 24" width="18" height="18" ' + P + '><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
   };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -479,7 +487,7 @@ var TBTNAV = (function () {
   function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
-  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code]]; }
+  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
   var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
@@ -562,6 +570,8 @@ var TBTNAV = (function () {
   function boot(cfg) {
     CFG.inView = cfg && cfg.inView || null; CFG.onMe = cfg && cfg.onMe || null;
     if (BOUND) return; BOUND = true;
+    // Sign up is in the menu only while the admin has opened sign-up to everyone (one small answer, kept 60 seconds)
+    if (!ST.suAsked) { ST.suAsked = true; try { fetch('/api/signup?status=1').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { if (j && j.open) { ST.su = true; var pn = document.getElementById('tnPanel'); if (pn && LAST) pn.innerHTML = panel(LAST.active, LAST.o); } }).catch(function () { }); } catch (e) { } }
     document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
     document.addEventListener('click', function (e) {
@@ -599,7 +609,7 @@ var TBTNAV = (function () {
     }, true);
     window.addEventListener('resize', function () { if (window.innerWidth >= 720 && ST.searching) { ST.searching = false; var h = document.getElementById('tnHd'); if (h) h.classList.remove('searching'); } });
   }
-  return { boot: boot, header: header, thisIsMe: thisIsMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
+  return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
 
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
@@ -755,6 +765,11 @@ function sessionsGrid(ts){
     return '<button type="button" class="dcard" data-day="'+esc(d.id)+'"><div><div class="dname">'+esc(d.label)+'</div><div class="dmeta">'+esc(fmtDate(d.date))+' \u00b7 '+(n?tablesWord(n):'Not started')+'</div></div><span class="chev">\u203A</span></button>';
   }).join('')+'</div>';
 }
+var QZ_TILES=['one-bamboo','nine-bamboo','one-character','nine-character','one-dot','nine-dot','red-dragon','green-dragon','white-dragon','east-wind','south-wind','west-wind','north-wind','spring','summer','autumn','winter','plum-blossom','orchid','chrysanthemum','bamboo','blank-tile'],qzPick=null;
+// three different characters on the quiz card: drawn once when the page opens (not on every redraw), so they do not jump around
+function qzThree(){if(!qzPick){var a=QZ_TILES.slice(),i,j,t;for(i=a.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));t=a[i];a[i]=a[j];a[j]=t;}qzPick=a.slice(0,3);}return qzPick;}
+function qzArt(){return '<div class="qz-pl-art" aria-hidden="true">'+qzThree().map(function(id){return '<img src="/assets/a/'+id+'.svg?v=1" alt="" loading="lazy">';}).join('')+'</div>';}
+function quizCard(){return '<div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Kamu tile yang mana?</b><span>16 pertanyaan, 3 menit. Ketemu tile kamu, partner main, dan rival bebuyutanmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div>';}
 function viewMain(){
   var ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date)&&modeOk(t);});
   var st=statsOf(ts),inner,side='';
@@ -763,7 +778,7 @@ function viewMain(){
     inner=ts.length?'<div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(agg):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>';
     side=sideCard(ts);
   }else inner=sessionsGrid(ts);
-  return seasonBar()+'<div class="n-grid'+(S.tab==='total'&&side?'':' one')+'"><div>'+stripHtml(st)+tabsHtml()+inner+'</div>'+side+'</div>';
+  return seasonBar()+'<div class="n-grid'+(S.tab==='total'&&side?'':' one')+'"><div>'+stripHtml(st)+tabsHtml()+inner+'</div>'+side+'</div>'+quizCard();
 }
 function viewDay(id){
   var d=dayOf(id),back='<button type="button" class="back" data-back="1">\u2039 All sessions</button>';
