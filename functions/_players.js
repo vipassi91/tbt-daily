@@ -1,4 +1,5 @@
 import { statsFor, summarizePlayers } from './_tables.js';
+import { loadProfile } from './_playeraccount.js';
 import { json } from './_auth.js';
 
 // The player registry. An admin registers people by hand: full name, nickname (the only name shown
@@ -225,9 +226,9 @@ export async function loadSignup(env) {
     await env.DB.prepare('SELECT COUNT(*) AS n FROM registry_requests').first();
     const m = {};
     rows.results.forEach(function (r) { m[r.key] = r.value; });
-    return { ready: true, enabled: m.signup_enabled === '1', token: m.signup_token || '' };
+    return { ready: true, enabled: m.signup_enabled === '1', token: m.signup_token || '', open: m.signup_open === '1' };
   } catch (e) {
-    return { ready: false, enabled: false, token: '' };
+    return { ready: false, enabled: false, token: '', open: false };
   }
 }
 // The visitor's address is never stored as is: only a salted hash, to limit how often one device can send.
@@ -345,6 +346,7 @@ export async function playerPage(env, rawId, admin) {
     }
     games.sort(function (a, b) { return b.date < a.date ? -1 : b.date > a.date ? 1 : (a.table < b.table ? -1 : 1); });
     const out = { player: { id: id, nickname: pl.nickname, since: (pl.createdAt || '').slice(0, 10) }, games: games };
+    out.player.profile = await loadProfile(env, id);   // avatar, tags and bio the player chose; empty until they have claimed their page
     if (admin && skipped) out.skipped = skipped;   // games left out because their saved data could not be read
     return json(out);
   } catch (err) {

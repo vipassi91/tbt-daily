@@ -49,7 +49,7 @@ export async function onRequestGet({ request, env }) {
     }
     let hosts = []; try { if (reg.ready) hosts = await listHosts(env); } catch (e) { hosts = []; }   // who may make sessions and tables
     return json({ hosts: hosts, ready: reg.ready, seatsReady: reg.seatsReady, pageReady: reg.hiddenReady, ruleOn: guestRuleOn(reg), registered: registered, guests: guests, played: played, sql: reg.ready ? null : REGISTRY_SQL,
-      signup: { ready: sg.ready, enabled: sg.enabled, token: sg.token, requests: requests } });
+      signup: { ready: sg.ready, enabled: sg.enabled, token: sg.token, open: sg.open, requests: requests } });
   } catch (err) {
     return json({ error: String(err) }, 500);
   }
@@ -129,6 +129,14 @@ async function handlePost({ request, env }) {
         if (!dup) { created++; reg.names.set(w.key, 'x'); } else skippedOther++;
       }
       return json({ ok: true, created: created, skippedTwo: skippedTwo, skippedOther: skippedOther });
+    }
+
+    if (action === 'signupOpen' || action === 'signupClose') {
+      // open: anyone can ask to join without the secret link, and the menu shows Sign up. Requests still wait for approval.
+      const sg = await loadSignup(env);
+      if (!sg.ready || !sg.token) return json({ error: 'setup_needed', message: 'Create the sign-up link first.' }, 409);
+      await env.DB.prepare('INSERT INTO registry_settings (key, value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind('signup_open', action === 'signupOpen' ? '1' : '0').run();
+      return json({ ok: true });
     }
 
     if (action === 'signupEnable' || action === 'signupDisable' || action === 'signupReset') {

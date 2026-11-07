@@ -1,21 +1,30 @@
 import { json } from '../_auth.js';
 import { nameKey, cleanText, normWhatsapp, normInstagram, loadRegistry, loadSignup, gatherNames, seatRecords, ipHash, MAX_PENDING, RATE_PER_HOUR } from '../_players.js';
 
-// Public sign-up by link. Everything here is gated by the secret token in the link, and nothing submitted
-// shows anywhere until the admin approves it. Answers never include anybody's details.
+// Public sign-up by link. Everything here is gated by the secret token in the link (or, when the admin has opened sign-up to everyone,
+// by nothing but the admin's switch), and nothing submitted shows anywhere until the admin approves it. Answers never include anybody's details.
 async function openFor(env, token) {
   const sg = await loadSignup(env);
   const reg = await loadRegistry(env);
-  const ok = sg.ready && reg.ready && sg.enabled && sg.token && token === sg.token;
-  return { ok: !!ok, sg: sg, reg: reg };
+  const live = sg.ready && reg.ready && sg.enabled;
+  const withLink = !!(live && sg.token && token === sg.token);
+  return { ok: !!(live && (sg.open || withLink)), link: withLink, sg: sg, reg: reg };
 }
 
+// GET /api/signup?status=1 -> { open }: is sign-up open to everyone (the menu shows Sign up only then). Nothing else is said.
 // GET /api/signup?t=TOKEN -> { open, names }: the names people already used at tables and are not registered yet.
+// Those names are only given to whoever has the secret link: when sign-up is open to everyone the list is empty.
 export async function onRequestGet({ request, env }) {
   try {
-    const t = new URL(request.url).searchParams.get('t') || '';
+    const u = new URL(request.url);
+    if (u.searchParams.get('status') === '1') {
+      const sg = await loadSignup(env);
+      return new Response(JSON.stringify({ open: !!(sg.ready && sg.enabled && sg.open) }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, s-maxage=60', 'X-Content-Type-Options': 'nosniff' } });
+    }
+    const t = u.searchParams.get('t') || '';
     const o = await openFor(env, t);
     if (!o.ok) return json({ open: false });
+    if (!o.link) return json({ open: true, names: [] });
     const { typed } = await gatherNames(env);
     const seen = new Set(), names = [];
     seatRecords(o.reg, typed).forEach(function (r) { if (!r.owner && !seen.has(r.typedKey)) { seen.add(r.typedKey); names.push(r.typedName); } });
@@ -45,7 +54,7 @@ export async function onRequestPost({ request, env }) {
 
     const total = await env.DB.prepare('SELECT COUNT(*) AS n FROM registry_requests').first();
     if (total.n >= MAX_PENDING) return json({ error: 'Sign-ups are full right now. Please contact the admin.' }, 429);
-    const hash = await ipHash(request, o.sg.token);
+    const hash = await ipHash(request, o.sg.token || 'open');
     const since = new Date(Date.now() - 3600 * 1000).toISOString();
     const recent = await env.DB.prepare('SELECT COUNT(*) AS n FROM registry_requests WHERE ip_hash=? AND created_at>?').bind(hash, since).first();
     if (recent.n >= RATE_PER_HOUR) return json({ error: 'Too many attempts. Please try again later.' }, 429);
