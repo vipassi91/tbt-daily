@@ -1460,3 +1460,16 @@ Halaman yang digambar skrip (player, daftar pemain, leaderboard, admin sesi, adm
 - **Tes:** `tests/tile_modal.test.mjs` (313 pemeriksaan: 5 mode x Zi Mo/Hu x 3 lebar: ukuran bunga dan tile pemenang sama dengan palet, label, teks bonus per mode, nama Robbing a Kong, layar penuh di HP dan kartu di komputer) dan `tests/pattern_alias.test.mjs` (nama lama dan baru dihitung satu di statistik).
   `mcr_integration.test.mjs` disesuaikan dengan label baru, tetapi masih tidak bisa dijalankan di sini (lihat README).
 - **Berkas yang berubah:** `scoreboard.html`, dan di server `functions/_tables.js` (bagian `functions/` ikut diunggah).
+
+## Update terbaru (v70): pilihan ikut pindah saat pemenang diganti, dan Clear selection di Pick Patterns MCR
+
+- **Pilihan ikut pindah.** Dulu pilihan tile, pola dan poin terikat ke pemain yang dipilih; kalau pemenang diganti, pilihannya tertinggal di pemain lama dan tidak ikut terhitung. Kini, saat pemenang diganti (jenis kemenangan Zi Mo atau Hu, satu pemenang):
+  - **Tile yang dipilih** pindah apa adanya ke pemenang baru; pola dan poin yang dihitung dari tile itu dikosongkan, karena bergantung pada angin kursi pemenang. Di bawah tombol Pick Tiles muncul catatan "Tiles kept from <nama>. Open Pick Tiles to check the patterns for this winner."
+    Saat Pick Tiles dibuka tile sudah terisi dan pola dihitung ulang untuk pemenang baru (Check patterns, lalu Use total). Catatan hilang setelah Pick Tiles dibuka.
+  - **Pola yang dipilih manual** (Pick Patterns) dan **poin yang diketik** pindah apa adanya, termasuk totalnya.
+  - Pemenang baru yang sudah punya pilihan tidak ditimpa; pindah bolak-balik mengikuti. Mengganti jenis kemenangan tetap mengosongkan formulir (`resetForm`). Double dan Triple Hu tidak berubah.
+  - Kode: `picksOf`, `clearPicks`, `carryPicks`, `carryNote` di dekat `resetForm`; `carryPicks` dipanggil dari penanganan tombol pemenang (`data-a="win"`); bidang `carry` baru di formulir (`f.carry`).
+- **Clear selection di Pick Patterns MCR.** Jendela MCR sebenarnya sudah punya tombol "Reset", tetapi di paling bawah daftar (setelah Flower tiles) sehingga tidak ketemu. Kini tombol **Clear selection** (nama sama dengan mode lain) ada di bagian atas ringkasan, hanya muncul kalau sudah ada fan atau bunga terpilih, dan menghapus semuanya sekaligus (fan dan jumlah bunga). Tombol "Reset" di bawah dihapus.
+  Mode lain tidak berubah (sudah punya "Clear selection"); Pick Tiles sudah punya "Clear tiles".
+- **Tes:** `tests/entry_carry.test.mjs` (19 pemeriksaan): tile pindah ke pemenang baru dengan catatan, tile sudah terisi dan pola dihitung ulang, hand tersimpan atas nama pemenang baru, pola manual dan poin ketik pindah (dan bolak-balik), mode Default, serta Clear selection (tidak ada saat kosong, menghapus fan dan bunga, lalu hilang).
+- **Berkas yang berubah:** `scoreboard.html`.

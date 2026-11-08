@@ -2060,9 +2060,22 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 
   /* entry form state */
   var f,editIdx=-1,insIdx=-1;   // insIdx: a new hand is being put in front of the hand with this number (index), instead of at the end
-  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},tiles:{},who:-1,tenpai:[]};editIdx=-1;insIdx=-1;}
+  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},tiles:{},who:-1,tenpai:[],carry:null};editIdx=-1;insIdx=-1;}
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
+  // Picks (tiles, patterns or points) made for the wrong winner move to the winner chosen instead, so nothing is entered twice.
+  // Picked tiles move as they are; the patterns and points counted from them depend on the winner's seat wind, so those are recounted when Pick Tiles is opened again.
+  // Patterns picked by hand and typed points are the person's own choice and move unchanged. A winner that already has picks of their own is left alone.
+  function picksOf(p){return p>=0&&(f.tiles[p]||f.patterns[p]||f.pts[p]!==undefined)?{tiles:f.tiles[p],patterns:f.patterns[p],pts:f.pts[p],from:p}:null;}
+  function clearPicks(p){delete f.tiles[p];delete f.patterns[p];delete f.pts[p];}
+  function carryPicks(from,to){
+    if(to<0||to===from)return;
+    var src=picksOf(from);if(!src||picksOf(to))return;
+    clearPicks(from);
+    if(src.tiles){f.tiles[to]=src.tiles;f.carry={to:to,from:src.from};}
+    else{if(src.patterns)f.patterns[to]=src.patterns;if(src.pts!==undefined)f.pts[to]=src.pts;}
+  }
+  function carryNote(p){return (f.carry&&f.carry.to===p&&f.tiles[p])?'<p class="hint" style="margin:0 0 10px">Tiles kept'+(f.carry.from>=0&&f.carry.from!==p?' from '+esc(gname(f.carry.from)):'')+'. Open Pick Tiles to check the patterns for this winner.</p>':'';}
   // what is kept with a winner's points: the patterns counted, and the tiles they came from (numbers only)
   // Double and Triple Hu: the winners hold tiles from the same set. What the other winners already hold is not available to this one,
   // flowers and seasons exist once, and the winning tile is one shared tile that counts once.
@@ -2183,6 +2196,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='pattern')+'\" data-a=\"patpick\" data-p=\"'+p+'\">Pick Patterns</button>'
       +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='tiles')+'\" data-a=\"tilepick\" data-p=\"'+p+'\">Pick Tiles</button>'
       +'</div>';
+    h+=carryNote(p);
     if(pkMode==='points')return h+ptsTypedField(p,selected);
     var low=(selected!=null&&selected<base);
     if(pk&&pk.counted&&pk.counted.length)h+='<p class=\"hint\" style=\"margin-top:6px\">Patterns: '+pk.counted.map(function(it){return esc(patName(it.label))+' +'+it.p;}).join(', ')+'</p>';
@@ -2204,6 +2218,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       +'<button type="button" class="chip" aria-pressed="'+(pkMode==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button>'
       +'<button type="button" class="chip" aria-pressed="'+(pkMode==='tiles')+'" data-a="tilepick" data-p="'+p+'">Pick Tiles</button>'
       +'</div>';
+    h+=carryNote(p);
     h+='<div class="pts">';
     for(var n=min;n<=13;n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
     h+='</div>';
@@ -2321,7 +2336,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var a=b.dataset.a,v=b.dataset.v;
     if(a==='ptsinput')return;   // a typed field, not a button: clicking it just focuses it
     if(a==='kind'){var ei=editIdx,ii=insIdx;resetForm();editIdx=ei;insIdx=ii;f.kind=v;}
-    else if(a==='win'){f.winner=+v;if(f.disc===f.winner)f.disc=-1;}
+    else if(a==='win'){var ow=f.winner;f.winner=+v;if(f.disc===f.winner)f.disc=-1;carryPicks(ow,f.winner);}
     else if(a==='disc'){f.disc=+v;if(f.winner===f.disc)f.winner=-1;f.winners=f.winners.filter(function(x){return x!==f.disc;});}
     else if(a==='winm'){
       var pv=+v,ix=f.winners.indexOf(pv);
@@ -2352,6 +2367,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     else if(a==='tilepick'){
       // the winner's seat wind, the prevailing wind and how the hand was won all come from the game: nothing is asked twice
       var tp=+b.dataset.p;
+      if(f.carry&&f.carry.to===tp)f.carry=null;
       var saved=f.tiles[tp]||null,sh=sharedTiles(tp);
       delete f.pts[tp];
       renderGame();
@@ -5046,7 +5062,7 @@ function mpDrawSum() {
     : t.valid ? '<span class="mp-pill ok">Valid win: ' + t.patternPoints + ' of ' + MP.min + ' needed' + (t.flowers ? ', +' + t.flowers + ' flower' + (t.flowers > 1 ? 's' : '') : '') + '</span>'
     : '<span class="mp-pill bad">Invalid win: ' + t.patternPoints + ' point' + (t.patternPoints === 1 ? '' : 's') + ' of patterns, ' + MP.min + ' needed (flowers do not count)</span>';
   var picks = t.counted.map(function (c) { return '<span class="mp-tag">' + tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' <b>' + c.p + '</b><button type="button" data-mp="rm" data-id="' + c.id + '" aria-label="Remove ' + tesc(c.label) + '">\u00d7</button></span>'; }).join('');
-  $t('mpSum').innerHTML = '<div class="mp-nums"><div><b>' + t.patternPoints + '</b><span>Hand points</span></div><div><b>' + t.flowers + '</b><span>Flowers</span></div><div><b>' + (t.valid ? t.patternPoints + t.flowers : '\u2013') + '</b><span>Total</span></div></div><div style="text-align:center">' + verdict + '</div>' + (picks ? '<div class="mp-picks">' + picks + '</div>' : '');
+  $t('mpSum').innerHTML = '<div class="mp-nums"><div><b>' + t.patternPoints + '</b><span>Hand points</span></div><div><b>' + t.flowers + '</b><span>Flowers</span></div><div><b>' + (t.valid ? t.patternPoints + t.flowers : '\u2013') + '</b><span>Total</span></div></div><div style="text-align:center">' + verdict + '</div>' + (picks ? '<div class="mp-picks">' + picks + '</div>' : '') + (nothing ? '' : '<div style="text-align:center;margin-top:8px"><button type="button" class="btn" data-mp="reset" style="min-height:44px">Clear selection</button></div>');
   $t('mpUse').disabled = nothing;
 }
 function mpDrawTiers() {
@@ -5058,7 +5074,7 @@ function mpDrawTiers() {
   }).join('') || '<p class="tm-sub" style="text-align:center">No fan matches \u201c' + tesc(MP.q) + '\u201d.</p>';
   $t('mpTiers').innerHTML = h;
 }
-function mpDrawFl() { var n = MP.sel.FlowerTiles || 0; $t('mpFl').innerHTML = '<div class="mp-fl"><div><b>Flower tiles</b><div class="tm-sub" style="margin:2px 0 0">1 point each, up to 8. They do not count toward the minimum.</div></div><div class="st"><button type="button" data-mp="fl" data-d="-1" aria-label="One flower less">\u2212</button><output>' + n + '</output><button type="button" data-mp="fl" data-d="1" aria-label="One flower more">+</button></div></div><button type="button" class="btn" data-mp="reset">Reset</button>'; }
+function mpDrawFl() { var n = MP.sel.FlowerTiles || 0; $t('mpFl').innerHTML = '<div class="mp-fl"><div><b>Flower tiles</b><div class="tm-sub" style="margin:2px 0 0">1 point each, up to 8. They do not count toward the minimum.</div></div><div class="st"><button type="button" data-mp="fl" data-d="-1" aria-label="One flower less">\u2212</button><output>' + n + '</output><button type="button" data-mp="fl" data-d="1" aria-label="One flower more">+</button></div></div>'; }
 function mpDraw() { var sc = $t('mpBody').scrollTop; mpDrawSum(); mpDrawTiers(); mpDrawFl(); $t('mpBody').scrollTop = sc; }
 // onUse(result) gets { total, counted, state, patternPoints, flowers, valid }; restoreState is { mcr: 1, sel }; opts: { min, note, onCancel }
 window.openMcrPatternModal = function (onUse, restoreState, opts) {
