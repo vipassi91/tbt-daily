@@ -1,6 +1,9 @@
 import { genCode } from './_auth.js';
 import { scoreGame, modeConfig, isMcr, mcrBaseOf } from './_scoring.js';
 
+// Pattern names that were renamed: the old name in a saved hand counts under the new one in the statistics.
+const PATTERN_ALIAS = { 'Robbing the Kong': 'Robbing a Kong' };
+
 const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
 const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
 const MCR_KINDS = ['hu', 'zimo', 'invalid', 'false', 'draw'];   // MCR modes: one winner at most, no double or triple
@@ -148,7 +151,7 @@ export function buildStats(game, fallbackPlayers) {
           run++; if (run > streak) streak = run;
           const pk = ev && ev.patterns && ev.patterns[idx];
           if (pk && Array.isArray(pk.counted)) pk.counted.forEach(function (it) {
-            const label = String((it && it.label) || '').trim().slice(0, 80);
+            const raw = String((it && it.label) || '').trim().slice(0, 80), label = PATTERN_ALIAS[raw] || raw;   // hands saved before the rename carry the old name
             if (label) patterns[label] = (patterns[label] || 0) + 1;
           });
         } else run = 0;

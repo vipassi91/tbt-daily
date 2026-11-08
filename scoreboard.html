@@ -186,6 +186,9 @@ body.connected #gnew{display:none!important}
 .patmodal-x{background:none;border:none;font-size:24px;line-height:1;color:var(--muted);cursor:pointer;padding:0;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;margin:-8px -10px -8px 0}
 .patmodal-body{overflow-y:auto;padding:12px 16px;flex:1}
 .patmodal-footer{padding:12px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.patmodal-sheet{max-height:85dvh}   /* dvh: the visible height, so the buttons at the bottom are not hidden behind a phone browser's address bar (vh above is the fallback) */
+/* On a phone the pick tiles and pick patterns windows take the whole screen: they are long (tiles, flowers, conditions, patterns), and the extra height is worth more than seeing the table behind. Computers keep the card. */
+@media (max-width:600px){#tileModal .patmodal-sheet,#patModal .patmodal-sheet,#mcrPatModal .patmodal-sheet{max-width:none;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none}#tileModal .patmodal-header,#patModal .patmodal-header,#mcrPatModal .patmodal-header{padding-top:max(14px,env(safe-area-inset-top))}#tileModal .patmodal-footer,#patModal .patmodal-footer,#mcrPatModal .patmodal-footer{padding-bottom:max(12px,env(safe-area-inset-bottom))}}
 .sharePreviewWrap{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:4px}
 #shareCanvas{display:block;width:100%;height:auto;border-radius:6px}
 .sharetoggles{display:flex;flex-direction:column;gap:2px}
@@ -342,9 +345,9 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .tm-pt[disabled]{opacity:.28}
 .tm-pt .bd{position:absolute;right:-3px;top:-4px;min-width:16px;height:16px;border-radius:999px;background:var(--accent);color:var(--onaccent);font-size:10.5px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 4px}.tm-pt.has .bd{display:flex}
 .tm-pl{font-size:12px;line-height:16px;letter-spacing:0;text-transform:none;color:var(--muted);margin:16px 0 8px;font-weight:500}
-.tm-wt{display:flex;flex-wrap:wrap;gap:8px}.tm-wb{width:38px}
-.tm-wb[aria-pressed="true"],.tm-fb[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
-.tm-fls{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;padding:4px}.tm-fb[aria-pressed="false"]{opacity:.42}
+.tm-wt{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px 4px}.tm-wb{width:auto}   /* the winning tile choices are the size of the other tiles: the same 9 columns */
+.tm-wb[aria-pressed="true"],.tm-fb[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:1px}
+.tm-fls{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}   /* the same 9 columns as the tile palette: 8 flowers, one column empty, so they are the size of the other tiles */.tm-fb[aria-pressed="false"]{opacity:.42}
 .tm-fb[disabled]{opacity:1;cursor:not-allowed}.tm-fb[disabled]>*{opacity:.3;filter:grayscale(1)}.tm-fb[disabled]::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:3px;background:var(--red);transform:rotate(-35deg);border-radius:2px}.tm-wb[disabled]{opacity:1;cursor:default}
 .tm-foot{display:flex;gap:10px}.tm-foot .btn{flex:1}
 @media (max-width:380px){.tm-pr,.tm-tray{gap:4px}}
@@ -574,6 +577,9 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 </footer>
 
 <script>
+// Hands saved earlier carry the old pattern name "Robbing the Kong": it is shown with the new name, Robbing a Kong.
+var PAT_ALIAS = { 'Robbing the Kong': 'Robbing a Kong' };
+function patName(l) { return PAT_ALIAS[l] || l; }
 (function(){
   var FORMATS={
     story:{W:1080,H:1920,ratio:'9/16',label:'Story 9:16'},
@@ -2179,7 +2185,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
       +'</div>';
     if(pkMode==='points')return h+ptsTypedField(p,selected);
     var low=(selected!=null&&selected<base);
-    if(pk&&pk.counted&&pk.counted.length)h+='<p class=\"hint\" style=\"margin-top:6px\">Patterns: '+pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ')+'</p>';
+    if(pk&&pk.counted&&pk.counted.length)h+='<p class=\"hint\" style=\"margin-top:6px\">Patterns: '+pk.counted.map(function(it){return esc(patName(it.label))+' +'+it.p;}).join(', ')+'</p>';
     h+='<p class=\"hint\" style=\"margin-top:6px\"><b>'+(selected!=null?selected:0)+'</b> hand point'+(selected===1?'':'s')+(pk&&pk.flowers&&pk.valid!==false?' (flowers included)':'')+'</p>';
     return h+'<div class=\"warn\" id=\"ptsWarn\" role=\"alert\"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
   }
@@ -2202,7 +2208,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     for(var n=min;n<=13;n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
     h+='</div>';
     var pk=f.patterns&&f.patterns[p];
-    if(pk&&pk.counted&&pk.counted.length)h+='<p class="hint" style="margin-top:6px">Patterns: '+pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ')+'</p>';
+    if(pk&&pk.counted&&pk.counted.length)h+='<p class="hint" style="margin-top:6px">Patterns: '+pk.counted.map(function(it){return esc(patName(it.label))+' +'+it.p;}).join(', ')+'</p>';
     return h;
   }
   function deltaChips(d){
@@ -2302,7 +2308,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
     keys.forEach(function(k){
       var pk=patterns[k];
       if(!pk||!pk.counted||!pk.counted.length)return;
-      var list=pk.counted.map(function(it){return esc(it.label)+' +'+it.p;}).join(', ');
+      var list=pk.counted.map(function(it){return esc(patName(it.label))+' +'+it.p;}).join(', ');
       lines.push(multi?('Patterns, '+esc(gname(+k))+': '+list):('Patterns: '+list));
     });
     return lines.map(function(l){return '<p class="hint" style="margin-top:6px">'+l+'</p>';}).join('');
@@ -3644,7 +3650,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
         var listPx=fs(27),minPx=Math.max(14,Math.round(22*K));
         function listFits(px){
           return pk.counted.every(function(it){
-            ctx.font='600 '+px+'px '+INTER;var lw=ctx.measureText(it.label).width;
+            ctx.font='600 '+px+'px '+INTER;var lw=ctx.measureText(patName(it.label)).width;
             ctx.font='800 '+px+'px '+INTER;var pw=ctx.measureText('+'+it.p).width;
             return lw+16+pw<=colW;
           });
@@ -3656,7 +3662,7 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
           var ptxt='+'+it.p;
           ctx.font='800 '+listPx+'px '+INTER;
           var pwid=ctx.measureText(ptxt).width;
-          var lbl=clip(it.label,'600 '+listPx+'px '+INTER,colW-16-pwid);   // no-op unless even the smallest size does not fit
+          var lbl=clip(patName(it.label),'600 '+listPx+'px '+INTER,colW-16-pwid);   // no-op unless even the smallest size does not fit
           ctx.font='600 '+listPx+'px '+INTER;ctx.fillStyle=muted;
           ctx.fillText(lbl,x0,yy+24*K);
           ctx.font='800 '+listPx+'px '+INTER;ctx.fillStyle=ink;
@@ -4452,7 +4458,7 @@ const FANS = [
   ['SevenPairs', 'Seven Pairs', 24], ['GreaterHonorsKnitted', 'Greater Honors and Knitted Tiles', 24], ['AllEvenPungs', 'All Even Pungs', 24, 'p'], ['FullFlush', 'Full Flush', 24], ['PureTripleChow', 'Pure Triple Chow', 24, 'c'], ['PureShiftedPungs', 'Pure Shifted Pungs', 24, 'p'], ['UpperTiles', 'Upper Tiles', 24], ['MiddleTiles', 'Middle Tiles', 24], ['LowerTiles', 'Lower Tiles', 24],
   ['PureStraight', 'Pure Straight', 16, 'c'], ['ThreeSuitedTerminalChows', 'Three-Suited Terminal Chows', 16, 'c'], ['PureShiftedChows', 'Pure Shifted Chows', 16, 'c'], ['AllFives', 'All Fives', 16, 'o'], ['TriplePung', 'Triple Pung', 16, 'p'], ['ThreeConcealedPungs', 'Three Concealed Pungs', 16, 'p'],
   ['LesserHonorsKnitted', 'Lesser Honors and Knitted Tiles', 12], ['KnittedStraight', 'Knitted Straight', 12, 'c'], ['UpperFour', 'Upper Four', 12], ['LowerFour', 'Lower Four', 12], ['BigThreeWinds', 'Big Three Winds', 12, 'p'],
-  ['MixedStraight', 'Mixed Straight', 8, 'c'], ['ReversibleTiles', 'Reversible Tiles', 8], ['MixedTripleChow', 'Mixed Triple Chow', 8, 'c'], ['MixedShiftedPungs', 'Mixed Shifted Pungs', 8, 'p'], ['ChickenHand', 'Chicken Hand', 8], ['LastTileDraw', 'Last Tile Draw', 8], ['LastTileClaim', 'Last Tile Claim', 8], ['OutWithReplacementTile', 'Out with Replacement Tile', 8], ['RobbingTheKong', 'Robbing the Kong', 8],
+  ['MixedStraight', 'Mixed Straight', 8, 'c'], ['ReversibleTiles', 'Reversible Tiles', 8], ['MixedTripleChow', 'Mixed Triple Chow', 8, 'c'], ['MixedShiftedPungs', 'Mixed Shifted Pungs', 8, 'p'], ['ChickenHand', 'Chicken Hand', 8], ['LastTileDraw', 'Last Tile Draw', 8], ['LastTileClaim', 'Last Tile Claim', 8], ['OutWithReplacementTile', 'Out with Replacement Tile', 8], ['RobbingTheKong', 'Robbing a Kong', 8],
   ['AllPungs', 'All Pungs', 6, 'p'], ['HalfFlush', 'Half Flush', 6], ['MixedShiftedChows', 'Mixed Shifted Chows', 6, 'c'], ['AllTypes', 'All Types', 6], ['MeldedHand', 'Melded Hand', 6, 'o'], ['TwoConcealedKongs', 'Two Concealed Kongs', 8, 'p'], ['TwoDragonPungs', 'Two Dragon Pungs', 6, 'p'],
   ['MeldedAndConcealedKong', 'One Melded Kong and One Concealed Kong', 6, 'p'],
   ['OutsideHand', 'Outside Hand', 4, 'o'], ['FullyConcealedHand', 'Fully Concealed Hand', 4], ['TwoMeldedKongs', 'Two Melded Kongs', 4, 'p'], ['LastTile', 'Last Tile', 4],
@@ -4798,7 +4804,7 @@ var HINT = {
 var SEATN = ['East', 'South', 'West', 'North'];
 var FLN = ['Plum 1', 'Orchid 2', 'Chrysanthemum 3', 'Bamboo 4', 'Spring 1', 'Summer 2', 'Autumn 3', 'Winter 4'];
 var COND = [['last', 'Last tile'], ['replacement', 'Replacement tile'], ['double', 'Double replacement'], ['robbing', 'Robbing a kong']];
-var COND_MCR = [['lastTile', 'Last tile'], ['lastTileDraw', 'Last tile of the wall'], ['lastTileClaim', 'Last discard of the game'], ['outWithReplacement', 'Replacement tile after a kong'], ['robbingKong', 'Robbing the Kong']];
+var COND_MCR = [['lastTile', 'Last of its kind'], ['lastTileDraw', 'Last tile of the wall'], ['lastTileClaim', 'Last discard of the game'], ['outWithReplacement', 'Replacement tile after a kong'], ['robbingKong', 'Robbing a Kong']];
 function condList() { if (!M || !M.ctx || !M.ctx.mcr) return COND; var zimo = M.ctx.by === 'zimo'; return COND_MCR.filter(function (c) { return zimo ? c[0] === 'lastTile' || c[0] === 'lastTileDraw' || c[0] === 'outWithReplacement' : c[0] === 'lastTile' || c[0] === 'lastTileClaim' || c[0] === 'robbingKong'; }); }
 var M = null, tmUse = null, tmCancel = null, tmButtons = [];
 function $t(id) { return document.getElementById(id); }
@@ -4899,6 +4905,12 @@ function drawHand() {
   var melds = M.melds.map(function (m, i) { return '<button type="button" class="tm-meld" data-tm="rmMeld" data-i="' + i + '" aria-label="Remove ' + mLabel(m) + ' of ' + E.tileName(m.tile) + '"><span class="mt">' + mLabel(m) + '</span><span class="tl">' + mTiles(m).map(function (t) { return T(t); }).join('') + '</span><span class="x" aria-hidden="true">\u00d7</span></button>'; }).join('');
   $t('tmHand').innerHTML = '<div class="tm-cap"><h3>Hand</h3><span class="tm-count"><b>' + M.hand.length + '</b> of ' + n + ' tiles' + (M.melds.length ? ' + ' + M.melds.length + ' meld' + (M.melds.length > 1 ? 's' : '') : '') + '</span></div>' + (melds ? '<div class="tm-melds">' + melds + '</div>' : '') + '<div class="tm-tray">' + slots + '</div>';
 }
+// MCR has no bonus for holding no flowers, so then nothing is said; the other modes give a point for No Flower / Season
+function flowerNote(nfl) {
+  var mcr = !!(M && M.ctx && M.ctx.mcr), txt = nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : (mcr ? '' : 'None held: that is a bonus point (No Flower / Season)');
+  if (M.takenF.length) txt += (txt ? '. ' : '') + 'Greyed out: held by the other winner, each exists once';
+  return txt ? '<div class="tm-sub" style="margin-top:6px">' + txt + '</div>' : '';
+}
 function drawWin() {
   var an = anal(), valid = an.status === 'valid', distinct = [];
   M.hand.forEach(function (t) { if (distinct.indexOf(t) < 0) distinct.push(t); });
@@ -4909,7 +4921,7 @@ function drawWin() {
       : '<div class="tm-wt" role="group" aria-label="Winning tile">' + distinct.map(function (t) { return '<button type="button" class="tm-wb" data-tm="win" data-v="' + t + '" aria-pressed="' + (M.win === t) + '" aria-label="' + E.tileName(t) + '">' + T(t) + '</button>'; }).join('') + '</div>')
     : '<p class="tm-sub" style="margin:0">Complete a winning hand first, then tap the tile that won.' + (M.shared !== null ? ' It is the one shared with the other winner: <b>' + E.tileName(M.shared) + '</b>.' : '') + '</p>';
   var nfl = M.flowers.length;
-  var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '"' + (M.takenF.indexOf(id) >= 0 ? ' disabled' : '') + ' aria-label="' + FLN[id] + (M.takenF.indexOf(id) >= 0 ? ' (held by the other winner)' : '') + '">' + T(34 + id) + '</button>'; }).join('') + '</div><div class="tm-sub" style="margin-top:6px">' + (nfl ? nfl + ' flower or season tile' + (nfl > 1 ? 's' : '') + ' held' : 'None held: that is a bonus point (No Flower / Season)') + (M.takenF.length ? '. Greyed out: held by the other winner, each exists once' : '') + '</div>';
+  var flowers = '<div class="tm-fls" role="group" aria-label="Flowers and seasons held">' + [0, 1, 2, 3, 4, 5, 6, 7].map(function (id) { return '<button type="button" class="tm-fb" data-tm="flower" data-v="' + id + '" aria-pressed="' + (M.flowers.indexOf(id) >= 0) + '"' + (M.takenF.indexOf(id) >= 0 ? ' disabled' : '') + ' aria-label="' + FLN[id] + (M.takenF.indexOf(id) >= 0 ? ' (held by the other winner)' : '') + '">' + T(34 + id) + '</button>'; }).join('') + '</div>' + flowerNote(nfl);
   var conds = '<div class="tm-seg" role="group" aria-label="Win conditions">' + condList().map(function (c) { return '<button type="button" class="chip" data-tm="cond" data-v="' + c[0] + '" aria-pressed="' + !!M.cond[c[0]] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   $t('tmWin').innerHTML = '<div class="tm-pl">Winning tile</div>' + tiles + '<div class="tm-pl">Flowers and seasons held</div>' + flowers + '<div class="tm-pl">Win conditions</div>' + conds;
   if (M.focus) { var f = $t('tmWin').querySelector('[data-tm="' + M.focus[0] + '"][data-v="' + M.focus[1] + '"]'); if (f) f.focus(); M.focus = null; }

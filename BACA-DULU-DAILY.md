@@ -1446,3 +1446,17 @@ Halaman yang digambar skrip (player, daftar pemain, leaderboard, admin sesi, adm
 - `_headers`: catatan lama yang masih menyebut nama font Hanzi yang lama diperbaiki (kini `assets/f/KaiTi_1.woff2`).
 - Tes: `tests/blank_watchdog.test.mjs` (24 pemeriksaan): di enam halaman, kunjungan normal tidak pernah menampilkan pesan; saat semua skrip halaman dirusak dengan sengaja, pesan muncul setelah 4 detik dengan galatnya serta tombol Reload dan Leaderboard; saat server hanya tidak menjawab, pesan tidak muncul.
 - Berkas yang berubah: `player.html`, `players.html`, `index.html`, `admin-daily.html`, `admin-pemain.html`, `host.html`, `_headers`, dan catatan ini.
+
+## Update terbaru (v69): jendela Pick Tiles dan Pick Patterns
+
+- **Tile bunga** di Pick Tiles kini sebesar tile lain. Penyebabnya baris bunga memakai grid 8 kolom sedangkan palet tile 9 kolom; kini bunga memakai grid 9 kolom yang sama (8 bunga, satu kolom kosong). Berlaku di semua mode.
+- **Pilihan tile pemenang** ("Winning tile") juga memakai grid 9 kolom yang sama, jadi ukurannya sama dengan tile lain (dulu tetap 38 px). Garis sorot tile terpilih (`outline-offset` 1 px) tidak lagi menimpa tile di sebelahnya.
+- **MCR, Pick Tiles:** teks "None held: that is a bonus point (No Flower / Season)" tidak muncul lagi di MCR (tanpa bunga tidak ada poin tambahan di MCR); di mode lain tetap ada. Label kondisi menang MCR: **Last of its kind** (dulu "Last tile"), **Last tile of the wall** (khusus Zi Mo), **Last discard of the game** (khusus Hu, tidak berubah),
+  **Replacement tile after a kong**, **Robbing a Kong** (dulu "Robbing the Kong").
+- **Pick Patterns:** pola *Robbing the Kong* kini bernama **Robbing a Kong**; nama pola lain tidak berubah. Kuncinya (`RobbingTheKong`) tidak berubah. Game yang sudah tersimpan masih membawa nama lama di datanya: scoreboard menampilkannya dengan nama baru (`patName`, di skrip pertama halaman),
+  dan statistik pola di server (`_tables.js`, `PATTERN_ALIAS`) menghitung nama lama dan baru sebagai satu pola. Nama baru kelak cukup ditambahkan ke daftar alias itu.
+- **Layar penuh di HP** (lebar sampai 600 px) untuk Pick Tiles, Pick Patterns MCR dan Pick Patterns mode lain (`#tileModal`, `#mcrPatModal`, `#patModal`): tinggi `100dvh`, sudut tidak membulat, header dan tombol bawah menempel dan memperhitungkan area aman layar. Di komputer tetap kartu (maks. 640 px).
+  Tinggi kartu kini `85dvh` (dulu `85vh`, yang di sebagian browser HP mencakup area di balik bilah alamat dan bisa menutup tombol bawah).
+- **Tes:** `tests/tile_modal.test.mjs` (313 pemeriksaan: 5 mode x Zi Mo/Hu x 3 lebar: ukuran bunga dan tile pemenang sama dengan palet, label, teks bonus per mode, nama Robbing a Kong, layar penuh di HP dan kartu di komputer) dan `tests/pattern_alias.test.mjs` (nama lama dan baru dihitung satu di statistik).
+  `mcr_integration.test.mjs` disesuaikan dengan label baru, tetapi masih tidak bisa dijalankan di sini (lihat README).
+- **Berkas yang berubah:** `scoreboard.html`, dan di server `functions/_tables.js` (bagian `functions/` ikut diunggah).
