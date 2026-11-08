@@ -197,6 +197,7 @@ a{color:inherit}
 @media(min-width:980px){.n-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}.n-grid.one{display:block}.n-grid.d{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.n-side{position:sticky;top:16px}}
 @media(max-width:380px){.n-strip b{font-size:20px}.n-strip span{font-size:11px}}
 
+.qz-wrap{padding-top:12px}   /* padding, not margin: margins would merge with the list card's and leave 12px, as they did */
 .qz-pl{display:grid;grid-template-columns:auto 1fr;gap:12px 16px;align-items:center;padding:16px;margin:0 0 12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);text-align:left}
 .qz-pl-art{display:flex}.qz-pl-art img{width:44px;height:48px;object-fit:contain;margin-right:-8px}
 .qz-pl-tx{display:flex;flex-direction:column;gap:2px;min-width:0}.qz-pl-tx b{font:900 18px/1.2 var(--display,"Playfair Display",serif);color:var(--text)}.qz-pl-tx span{font-size:13px;line-height:20px;color:var(--muted)}
@@ -278,6 +279,16 @@ a{color:inherit}
 .n-dd:hover,.n-share:hover,.dcard:hover,.tn-sbtn:hover,.tn-mbtn:hover{border-color:var(--muted)}
 .n-o:hover{background:var(--field)}
 </style>
+<script>
+/* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
+   It stays quiet when the script did run and is only waiting for the server (the navigation script sets window.__tbtNav), unless an error was seen and nothing is drawn. */
+(function(){var errs=[];function note(m){if(m)errs.push(String(m).slice(0,160));}
+window.addEventListener('error',function(e){note((e&&e.message)||(e&&e.error)||'error');});
+window.addEventListener('unhandledrejection',function(e){note('promise: '+((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejected'));});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
+a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/index.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
+</script>
 </head>
 <body>
 <div id="app"></div>
@@ -611,6 +622,8 @@ var TBTNAV = (function () {
   }
   return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
+// Tells the safety message of the page (a head script) that the page's own script did run, from its first lines to here.
+try { window.__tbtNav = true; } catch (e) { }
 
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
 // the player's page opens with the same period and mode the visitor is looking at (nothing is added for the usual view)
@@ -769,7 +782,7 @@ var QZ_TILES=['one-bamboo','nine-bamboo','one-character','nine-character','one-d
 // three different characters on the quiz card: drawn once when the page opens (not on every redraw), so they do not jump around
 function qzThree(){if(!qzPick){var a=QZ_TILES.slice(),i,j,t;for(i=a.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));t=a[i];a[i]=a[j];a[j]=t;}qzPick=a.slice(0,3);}return qzPick;}
 function qzArt(){return '<div class="qz-pl-art" aria-hidden="true">'+qzThree().map(function(id){return '<img src="/assets/a/'+id+'.svg?v=1" alt="" loading="lazy">';}).join('')+'</div>';}
-function quizCard(){return '<div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Kamu tile yang mana?</b><span>16 pertanyaan, 3 menit. Ketemu tile kamu, partner main, dan rival bebuyutanmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div>';}
+function quizCard(){return '<div class="qz-wrap"><div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Kamu tile yang mana?</b><span>16 pertanyaan, 3 menit. Ketemu tile kamu, partner main, dan rival bebuyutanmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div></div>';}
 function viewMain(){
   var ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date)&&modeOk(t);});
   var st=statsOf(ts),inner,side='';

@@ -9,7 +9,7 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-# Note: the Hanzi font (assets/f/Kaiti-SC-Bold_1.TTF) keeps its own file name instead of a hash, so a new version of that file needs a new name (or the browsers keep the old one).
+# Note: the Hanzi font (assets/f/KaiTi_1.woff2) keeps its own file name instead of a hash, so a new version of that file needs a new name (or the browsers keep the old one).
 
 # Pages that carry a secret in the address (table codes, the sign-up token) or are for admins only:
 # keep them out of search engines and never send the address on to other sites.

@@ -1413,3 +1413,36 @@ Cara kerjanya, tanpa Google dan tanpa layanan luar:
   Tautan lama `?tile=...` masih membuka tile itu. Kalimat di galeri disesuaikan ("kirim story atau link quiz-nya ke teman").
 - **Tes:** `tests/quiz_page.test.mjs` kini 45 pemeriksaan: tombol share mengirim alamat quiz tanpa tile; story berukuran 1080 x 1920; kartu memuat handle, tagline, wordmark berjarak, dan pertanyaan; tanpa alamat situs atau slogan lain;
   semua font kartu adalah font brand kit dan tidak ada yang miring; logo asli dan gambar tile digambar; jarak footer; kontras nama keempat tile di kartu dan halaman.
+
+## Update terbaru (v66): jarak tombol edit di halaman pemain
+
+Di halaman pemain, tombol "Want to edit your profile?" (pengunjung) dan tombol "Edit profile" dan "Share" (pemilik) menempel ke filter tanggal dan mode (jarak 0 px). Kini ada jarak 16 px di bawahnya (`.pf-b.s` dan `.pf-acts`).
+`tests/profile_page.test.mjs` memeriksa jarak itu (minimal 16 px) di lebar 320, 390, dan 1280 untuk pengunjung dan pemilik (41 pemeriksaan).
+Berkas yang berubah: hanya `template/player.html` (jadi `player.html` di situs) dan catatan ini.
+
+## Update terbaru (v67): share story yang jalan di HP, dan jarak kartu quiz di leaderboard
+
+**Share story dan simpan gambar (halaman `/quiz`).** Penyebab di versi lama: gambar story baru dibuat *setelah* tombol ditekan (sekitar satu detik, termasuk memuat font), lalu `navigator.share` dipanggil. Safari dan sebagian browser Android menolak share kalau gambarnya baru dibuat
+sesudah ketukan, dan kode lama menelan penolakan itu tanpa pesan, jadi tombol tampak mati. Bila browser tidak bisa share berkas (browser di dalam Instagram atau Facebook, Firefox Android), kode lama diam-diam mencoba mengunduh lewat tautan `blob:`
+dan menampilkan "Udah ke-download" walau tidak terjadi apa-apa; unduhan dari halaman web juga sering mendarat di folder yang tidak dilihat galeri. Jendela gambar cadangan hanya muncul di bingkai preview dan masih berisi teks "Preview aja ... Di website asli".
+- Gambar story kini dibuat lebih dulu begitu hasil tampil (`warmStory`), jadi **Share story** memanggil lembar share HP dalam ketukan yang sama. Berkasnya PNG `tiles-by-tiles-<tile>.png`, dengan judul "Tile Personality Quiz" dan teks yang memuat alamat quiz.
+- Jika HP menolak share (bukan karena pengguna menutup lembarnya): gambar ditampilkan di jendela dengan petunjuk "Tahan gambarnya buat simpan ke galeri", tombol **Download**, dan tombol **Share** bila tersedia. Menutup lembar share tidak memunculkan apa pun.
+- Di browser dalam aplikasi (Instagram, Facebook): langsung jendela gambar dengan petunjuk membuka halaman di Chrome atau Safari.
+- Tombol baru **Simpan gambar ke galeri**: di komputer mengunduh berkas, di HP menampilkan gambarnya (tekan lama menyimpan ke galeri; di Safari menu "Add to Photos"). Tombol lama "Download buat story" kini "Share story". Esc, Tutup, dan klik di luar menutup jendela; fokus kembali ke tombol.
+- Tombol yang ditekan terlalu cepat (sebelum gambar siap) menunggu gambarnya lalu share.
+
+**Jarak kartu quiz di bawah leaderboard (`index.html`).** Jaraknya 12 px dari kartu daftar, dan di desktop terasa menempel. Kini 24 px di semua lebar (320 sampai 1440). Jarak dibuat dengan padding di pembungkus (`.qz-wrap`), bukan margin: margin kartu daftar (12 px) menyatu dengan margin kartu quiz di tata letak blok dan tetap menyisakan 12 px.
+
+**Tes (`tests/quiz_page.test.mjs`, 64 pemeriksaan):** share di HP (berkas PNG, judul, teks, dipanggil dalam ketukan yang sama selagi tap masih aktif; ditutup pengguna tidak membuka apa pun; ditolak membuka jendela gambar; browser Instagram; browser tanpa share berkas; ketukan terlalu dini; komputer mengunduh),
+jarak 24 sampai 40 px di enam lebar, dan teks jendela tidak lagi memuat "Preview aja". Pemeriksaan story lama kini berjalan di ukuran komputer karena di HP perilakunya memang berbeda.
+**Berkas yang berubah:** `quiz.html`, `index.html`, dan catatan ini.
+
+## Update terbaru (v68): pengaman untuk layar kosong
+
+Halaman yang digambar skrip (player, daftar pemain, leaderboard, admin sesi, admin pemain, host) bisa tetap kosong kalau skrip halamannya tidak mulai (berkas rusak atau terpotong saat diunggah, browser sangat tua, skrip diblokir). Layar kosongnya tidak memberi petunjuk apa pun.
+- Di `<head>` tiap halaman itu ada skrip kecil terpisah (jadi tetap jalan walau skrip utama salah sintaks). Setelah 4 detik, kalau skrip utama tidak mulai, atau ada galat dan belum ada yang tergambar, halaman menampilkan **"Can't load this page"**, tombol **Reload** dan **Leaderboard**, dan baris **Code:** berisi galat pertama
+  (misalnya "Uncaught SyntaxError: Unexpected token ')'"). Kalau skripnya berjalan dan hanya menunggu server yang lambat, pesan ini tidak muncul.
+- Tandanya: `shared/nav.js` mengisi `window.__tbtNav = true` di akhir (halaman admin dan host, yang tidak memakai nav.js, mengisinya di baris pertama skrip utamanya). Bendera ini menandai bahwa skrip halaman sampai di sana; kalau skripnya salah sintaks, bendera tidak pernah terisi.
+- `_headers`: catatan lama yang masih menyebut nama font Hanzi yang lama diperbaiki (kini `assets/f/KaiTi_1.woff2`).
+- Tes: `tests/blank_watchdog.test.mjs` (24 pemeriksaan): di enam halaman, kunjungan normal tidak pernah menampilkan pesan; saat semua skrip halaman dirusak dengan sengaja, pesan muncul setelah 4 detik dengan galatnya serta tombol Reload dan Leaderboard; saat server hanya tidak menjawab, pesan tidak muncul.
+- Berkas yang berubah: `player.html`, `players.html`, `index.html`, `admin-daily.html`, `admin-pemain.html`, `host.html`, `_headers`, dan catatan ini.

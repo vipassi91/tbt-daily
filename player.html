@@ -202,10 +202,10 @@ button.pf-av{cursor:pointer}
 .pf-tags{display:flex;flex-wrap:wrap;gap:6px 8px;margin:8px 0 0}
 .pf-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--muted);font:500 12px var(--sans)}
 .pf-bio{margin:0 0 4px;font-size:14px;line-height:20px;overflow-wrap:anywhere}
-.pf-acts{display:flex;gap:8px;margin:12px 0 0}
+.pf-acts{display:flex;gap:8px;margin:12px 0 16px}
 .pf-b{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line);background:transparent;color:var(--text);font:500 14px var(--sans);cursor:pointer;text-decoration:none}
 .pf-b.p{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
-.pf-b.s{min-height:40px;margin-top:12px}
+.pf-b.s{min-height:40px;margin:12px 0 16px}
 .pf-b:disabled{opacity:.5;cursor:default}
 .pf-b:focus-visible,.pf-av:focus-visible,.pf-out:focus-visible,.pf-t:focus-visible,.pf-c:focus-visible,.pf-x:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .pf-ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
@@ -405,6 +405,16 @@ button.pf-av{cursor:pointer}
 
 </style>
 <meta name="robots" content="noindex,nofollow">
+<script>
+/* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
+   It stays quiet when the script did run and is only waiting for the server (the navigation script sets window.__tbtNav), unless an error was seen and nothing is drawn. */
+(function(){var errs=[];function note(m){if(m)errs.push(String(m).slice(0,160));}
+window.addEventListener('error',function(e){note((e&&e.message)||(e&&e.error)||'error');});
+window.addEventListener('unhandledrejection',function(e){note('promise: '+((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejected'));});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
+a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/index.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
+</script>
 </head>
 <body>
 <div id="app"></div>
@@ -785,6 +795,8 @@ var TBTNAV = (function () {
   }
   return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
+// Tells the safety message of the page (a head script) that the page's own script did run, from its first lines to here.
+try { window.__tbtNav = true; } catch (e) { }
 
 function brandbar(){var m=TBTNAV.me();return TBTNAV.header(m&&m.id===ID?'me':'pl',{logo:LOGO,name:'Tiles by Tiles'});}
 function content(){

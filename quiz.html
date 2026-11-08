@@ -238,7 +238,12 @@ svg { user-select: none; -webkit-user-select: none; }
 
 .tq-modal { position: fixed; inset: 0; z-index: 80; background: rgba(15, 25, 20, .6); display: grid; place-items: center; padding: 16px; }
 .tq-modal-box { background: var(--surface); border-radius: 24px; padding: 16px; max-width: 380px; width: 100%; text-align: center; max-height: 100%; overflow: auto; }
-.tq-modal-box img { width: 100%; border-radius: 14px; display: block; margin-bottom: 8px; box-shadow: var(--shadow); }
+.tq-modal-box img { width: auto; max-width: 100%; max-height: 62vh; border-radius: 14px; display: block; margin: 0 auto 8px; box-shadow: var(--shadow); }
+.tq-modal-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.tq-modal-actions .btn { flex: 1 1 100px; }
+.tq-save-row { text-align: center; margin: 4px 0 0; }
+.tq-link { background: none; border: 0; color: var(--pine); font: 500 14px var(--sans); min-height: 44px; padding: 0 12px; text-decoration: underline; cursor: pointer; }
+.tq-link:focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
 
 .pv-style { display: inline-flex; align-items: center; gap: 6px; }
 
@@ -430,8 +435,9 @@ svg { user-select: none; -webkit-user-select: none; }
         <h2 class="tq-sec" id="tq-share-h">Share tile kamu</h2>
         <div class="tq-share-actions">
           <button type="button" class="btn btn-primary" id="tq-share">Share link quiz</button>
-          <button type="button" class="btn btn-ghost" id="tq-download">Download buat story</button>
+          <button type="button" class="btn btn-ghost" id="tq-download">Share story</button>
         </div>
+        <p class="tq-save-row"><button type="button" class="tq-link" id="tq-save">Simpan gambar ke galeri</button></p>
       </div>
     </section>
 
@@ -441,7 +447,7 @@ svg { user-select: none; -webkit-user-select: none; }
       <ul class="tq-grid" id="tq-grid"></ul>
     </section>
   </div>
-  <div class="tq-modal" id="tq-modal" hidden><div class="tq-modal-box"><img id="tq-modal-img" alt="Story image"><p class="tq-muted">Preview aja: tahan lama (HP) atau klik kanan (laptop) buat simpan gambarnya. Di website asli, tombolnya langsung download.</p><button type="button" class="btn btn-ghost" id="tq-modal-close">Tutup</button></div></div>
+  <div class="tq-modal" id="tq-modal" hidden role="dialog" aria-modal="true" aria-label="Gambar story"><div class="tq-modal-box"><img id="tq-modal-img" alt="Gambar story tile kamu"><p class="tq-muted" id="tq-modal-hint"></p><div class="tq-modal-actions"><button type="button" class="btn btn-primary" id="tq-modal-share" hidden>Share</button><a class="btn btn-ghost" id="tq-modal-dl" href="#" download style="text-decoration:none">Download</a><button type="button" class="btn btn-ghost" id="tq-modal-close">Tutup</button></div></div></div>
   <div class="tq-toast" id="tq-toast" role="status" aria-live="polite"></div>
 </main>
 <script>
@@ -604,6 +610,8 @@ var TBTNAV = (function () {
   }
   return { boot: boot, header: header, thisIsMe: thisIsMe, setMe: setMe, others: others, load: load, me: me, fold: fold, find: find, href: href, refresh: refresh, closeMenus: closeMenus, state: ST };
 })();
+// Tells the safety message of the page (a head script) that the page's own script did run, from its first lines to here.
+try { window.__tbtNav = true; } catch (e) { }
 
 document.getElementById('hdr').innerHTML=TBTNAV.header('tq',{logo:LOGO,name:'Tiles by Tiles'});
 TBTNAV.boot({});
@@ -1895,6 +1903,7 @@ TBTNAV.boot({});
     }
 
     function renderResult(t, isMine) {
+      setTimeout(function () { warmStory(t); }, 350);
       var color = A().accentFor(t.id);
       var card = $('#tq-result');
       card.style.setProperty('--tile-color', color);
@@ -2044,32 +2053,63 @@ TBTNAV.boot({});
       });
     }
 
-    function showStoryModal(blob) {
-      var m = $('#tq-modal');
-      var url = URL.createObjectURL(blob);
-      $('#tq-modal-img').src = url;
-      m.hidden = false;
-      m.onclick = function (e) { if (e.target === m || e.target.id === 'tq-modal-close') { m.hidden = true; URL.revokeObjectURL(url); } };
+    // ---- sharing the story picture
+    // The picture is made as soon as the result is on screen, so the Share button can open the phone's share sheet in the very same tap.
+    // (Safari and some Android browsers refuse to share when the picture is only made after the tap, and the old code swallowed that refusal.)
+    var storyCache = {}, lastFocus = null;
+    var IN_APP = /Instagram|FBAN|FBAV|FB_IAB|Line\//i.test(root.navigator.userAgent || '');
+    function isTouch() { return !!(root.matchMedia && root.matchMedia('(pointer: coarse)').matches); }
+    function storyFile(blob, t) { return typeof File === 'function' ? new File([blob], 'tiles-by-tiles-' + t.id + '.png', { type: 'image/png' }) : null; }
+    function canShareFile(file) { try { return !!(file && root.navigator.canShare && root.navigator.share && root.navigator.canShare({ files: [file] })); } catch (e) { return false; } }
+    function shareText(t) { return 'Aku ' + t.name + ' ' + t.emoji + ' (' + t.title + '). Kamu tile yang mana? ' + baseUrl(); }
+    function warmStory(t) {
+      if (storyCache[t.id]) return storyCache[t.id];
+      var entry = { t: t, blob: null, file: null, url: '' };
+      entry.promise = buildStory(t).then(function (blob) { entry.blob = blob; entry.file = storyFile(blob, t); entry.url = URL.createObjectURL(blob); return entry; })
+        .catch(function (err) { delete storyCache[t.id]; throw err; });
+      entry.promise.catch(function () {});
+      storyCache[t.id] = entry;
+      return entry;
     }
-
-    function downloadStory() {
-      var t = resultTile; var btn = $('#tq-download');
-      btn.disabled = true;
-      buildStory(t).then(function (blob) {
-        var name = 'tiles-by-tiles-' + t.id + '.png';
-        // Preview frames block downloads, so show the image to save by hand instead.
-        if (root.self !== root.top) { showStoryModal(blob); return; }
-        var file = typeof File === 'function' ? new File([blob], name, { type: 'image/png' }) : null;
-        if (file && root.navigator.canShare && root.navigator.canShare({ files: [file] }) && /Mobi|Android|iPhone|iPad/i.test(root.navigator.userAgent)) {
-          return root.navigator.share({ files: [file], title: t.name }).catch(function () {});
+    function closeStoryModal() { var m = $('#tq-modal'); m.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+    // The picture itself, to save by hand: a long press adds it to the gallery (Safari, Chrome), and there is a Download button too.
+    function showStoryModal(e) {
+      var m = $('#tq-modal'), sh = $('#tq-modal-share'), canShare = canShareFile(e.file) && !IN_APP;
+      $('#tq-modal-img').src = e.url;
+      var dl = $('#tq-modal-dl'); dl.href = e.url; dl.setAttribute('download', e.file ? e.file.name : 'tiles-by-tiles.png');
+      sh.hidden = !canShare;
+      $('#tq-modal-hint').textContent = IN_APP
+        ? 'Browser di dalam aplikasi ini sering nggak bisa simpan atau share langsung. Tahan gambarnya buat simpan ke galeri, atau buka halaman ini di Chrome atau Safari.'
+        : isTouch() ? 'Tahan gambarnya buat simpan ke galeri, atau tekan Download.' : 'Klik kanan gambarnya buat simpan, atau tekan Download.';
+      sh.onclick = function () { root.navigator.share({ files: [e.file], title: 'Tile Personality Quiz', text: shareText(e.t) }).catch(function () {}); };
+      m.onclick = function (ev) { if (ev.target === m || ev.target.id === 'tq-modal-close') closeStoryModal(); };
+      lastFocus = doc.activeElement; m.hidden = false; $('#tq-modal-close').focus();
+    }
+    // Save: on a computer the file is downloaded; on a phone (or inside Instagram or Facebook) the picture is shown to save by hand, because a download from a page often goes to a folder the gallery does not show, or nowhere.
+    function saveStory(e) {
+      if (IN_APP || isTouch()) { showStoryModal(e); track('tbt_quiz_share', { method: 'save', tile: e.t.id }); return; }
+      var a = doc.createElement('a'); a.href = e.url; a.download = e.file ? e.file.name : 'tiles-by-tiles.png';
+      doc.body.appendChild(a); a.click(); a.remove();
+      toast('Gambarnya ke-download. Cek folder Download');
+      track('tbt_quiz_share', { method: 'image', tile: e.t.id });
+    }
+    function afterReady(btn, fn) {
+      var entry = warmStory(resultTile);
+      if (entry.blob) { fn(entry); return; }
+      btn.disabled = true; toast('Lagi nyiapin gambarnya');
+      entry.promise.then(fn).catch(function () { toast('Gambarnya gagal dibuat. Screenshot aja dulu.'); }).then(function () { btn.disabled = false; });
+    }
+    function shareStory() {
+      afterReady($('#tq-download'), function (e) {
+        if (canShareFile(e.file) && !IN_APP) {
+          return root.navigator.share({ files: [e.file], title: 'Tile Personality Quiz', text: shareText(e.t) })
+            .then(function () { track('tbt_quiz_share', { method: 'story', tile: e.t.id }); })
+            .catch(function (err) { if (err && err.name === 'AbortError') return; showStoryModal(e); });   // closed by the person: nothing more; refused by the phone: show the picture
         }
-        var a = doc.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
-        doc.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-        toast('Udah ke-download. Tinggal posting 📸');
-      }).catch(function () { toast('Gambarnya gagal dibuat. Screenshot aja dulu.'); })
-        .then(function () { btn.disabled = false; track('tbt_quiz_share', { method: 'image', tile: t.id }); });
+        saveStory(e);
+      });
     }
+    function saveClick() { afterReady($('#tq-save'), saveStory); }
 
     function bind() {
       $('#tq-start').addEventListener('click', startQuiz);
@@ -2080,7 +2120,9 @@ TBTNAV.boot({});
       form().addEventListener('submit', onSubmit);
       $('#tq-info-back').addEventListener('click', function () { current = QUESTIONS.length - 1; saveProgress(); renderQuestion(); markSaved(); show('question'); });
       $('#tq-share').addEventListener('click', shareLink);
-      $('#tq-download').addEventListener('click', downloadStory);
+      $('#tq-download').addEventListener('click', shareStory);
+      $('#tq-save').addEventListener('click', saveClick);
+      doc.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#tq-modal').hidden) closeStoryModal(); });
       doc.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-tile]');
         if (!a) return;
