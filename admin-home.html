@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>TBT Admin &middot; Homepage</title>
+<link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/9e38e04780.woff2">
+<style>
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/8a53e5ecdb.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9401d0214a.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:900;font-display:swap;src:url(/assets/f/0ba66220fb.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/2c20035257.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:500;font-display:swap;src:url(/assets/f/5ab688ca8c.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9e38e04780.woff2) format("woff2");}
+</style>
+<style>
+:root{
+  --bg:#FAF7F2; --surface:#FFFFFF; --text:#1B4332; --muted:#587263; --line:#E4DDCD;
+  --field:#FBF9F4; --accent:#2D6A4F; --onaccent:#FAF7F2; --focus:#2D6A4F; --red:#B72323;
+  --sans:"Inter Tight","Helvetica Neue",Arial,sans-serif;
+  --display:"Playfair Display",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F2A20; --surface:#16382B; --text:#FAF7F2; --muted:#9DB8A9; --line:#26493B;
+    --field:#12302A; --accent:#8FD0AE; --onaccent:#0F2A20; --focus:#8FD0AE; --red:#EA8888;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;color:var(--text);font-weight:700}
+h2{font-size:28px;line-height:1.15;overflow-wrap:anywhere}
+h3{font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.topbar{border-bottom:1px solid var(--line);padding:12px 0}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tb{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.tb img{width:26px;height:auto}
+.lnk{background:none;border:0;color:var(--muted);font-size:13px;padding:4px 6px}
+.lnk:hover{color:var(--red)}
+main{padding:24px 0 72px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px}
+.field input{font:inherit;font-size:16px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+.field input:focus-visible,button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.frow{display:flex;gap:12px;flex-wrap:wrap}
+.frow .field{flex:1;min-width:130px}
+.btn{display:inline-block;border-radius:16px;padding:8px 16px;line-height:20px;border:1px solid var(--line);background:transparent;font-weight:500;text-decoration:none;color:var(--text);font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:500}
+.btn.sm{padding:6px 12px;font-size:13px}
+.dayrow{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;gap:10px}
+.dayrow:hover strong{color:var(--accent)}
+.meta{font-size:13px;color:var(--muted);margin-top:2px}
+.tcard{border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;background:var(--field)}
+.th{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}
+.cr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
+.cl{width:64px;font-size:13px;color:var(--muted)}
+.code{font-family:var(--display);font-weight:900;font-size:20px;letter-spacing:.06em;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 12px}
+.login{max-width:300px;margin:88px auto;text-align:center}
+.login img{width:48px;margin-bottom:12px}
+.login input{font:inherit;font-size:16px;width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text);margin:16px 0;text-align:center}
+.err{color:var(--red);font-size:13px;margin:6px 0}
+.mb{display:inline-block;font-size:12px;line-height:18px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:0 8px;margin-left:8px;vertical-align:middle}
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--accent);color:var(--onaccent);padding:8px 16px;line-height:24px;border-radius:999px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+/* navigation: the same bar on every admin page, with the current page marked */
+.tbrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tbrow .lnk{padding:10px 6px;min-height:40px}
+.anav{display:flex;gap:8px;margin-top:12px}
+@media (max-width:360px){.anav{gap:6px}.anav a{font-size:13px;padding:0 4px}}
+.anav a{flex:1;display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--text);font-size:14px;font-weight:500;white-space:nowrap}
+.anav a[aria-current="page"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:500}
+.btn.sm{padding:8px 12px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+.back{display:inline-flex;align-items:center;min-height:38px}
+.topbar .wrap{display:block}
+main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padding:8px}
+main .meta .lnk{padding:8px 6px!important}
+main .meta a{display:inline-flex;align-items:center;min-height:38px}
+
+/* Fix players */
+.fxo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}.fxo[hidden]{display:none}
+.fxs{background:var(--surface);color:var(--text);width:100%;max-width:520px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;border:1px solid var(--line)}
+@media (min-width:700px){.fxo{align-items:center}.fxs{border-radius:18px}}
+.fxh{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 12px 20px;border-bottom:1px solid var(--line)}.fxh h2{margin:0;font-family:var(--display);font-size:19px}
+.fxx{border:0;background:none;font-size:26px;line-height:1;color:var(--muted);min-width:44px;min-height:44px;cursor:pointer}
+.fxb{padding:16px 20px;overflow:auto}.fxb p{margin:0 0 12px;font-size:14px;line-height:20px;color:var(--muted)}.fxb p b{color:var(--text)}
+.fxr{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fxn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--field);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.fxc{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.fxin{width:100%;min-width:0;font:inherit;font-size:16px;font-weight:700;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px}.fxin:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.fxtags{display:flex;flex-wrap:wrap;gap:4px 8px}.fxtag{font-size:12px;font-weight:500;color:var(--accent);white-space:nowrap}.fxtag.chg{color:var(--muted)}
+.fxm{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:18px;cursor:pointer}.fxm[disabled]{opacity:.3;cursor:default}
+.fxres{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:12px 16px;background:var(--field)}
+.fxp{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px}.fxp b{font-variant-numeric:tabular-nums;white-space:nowrap}.fxp.chg b{color:var(--accent)}
+.fxt{margin:12px 0 0;font-size:13px;line-height:20px;color:var(--muted)}.fxt.warn{color:var(--red)}
+.fxerr{margin-top:12px;color:var(--red);font-size:13px}
+.fxf{display:flex;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}.fxf .btn{flex:1;text-align:center;min-height:44px;cursor:pointer}
+.btn[disabled]{opacity:.4;cursor:default}
+</style>
+<style>
+.tq-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.tq-sheet{background:var(--surface,#fff);color:var(--text,#111);width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:20px 18px 22px;max-height:94vh;overflow:auto;text-align:center;font-family:var(--sans,sans-serif)}
+@media(min-width:600px){.tq-ov{align-items:center}.tq-sheet{border-radius:20px}}
+.tq-sheet h3{font-family:var(--display,serif);font-size:20px;margin:0 0 4px}
+.tq-note{font-size:13.5px;color:var(--muted,#666);margin:0 0 12px;line-height:1.45}
+.tq-chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px;margin-bottom:8px;border:1px solid}
+.tq-ok{color:var(--accent,#2d6a4f);border-color:color-mix(in srgb,var(--accent,#2d6a4f) 40%,transparent);background:color-mix(in srgb,var(--accent,#2d6a4f) 12%,transparent)}
+.tq-warn{color:var(--red,#b00);border-color:color-mix(in srgb,var(--red,#b00) 40%,transparent);background:color-mix(in srgb,var(--red,#b00) 11%,transparent)}
+.tq-box{display:inline-block;background:#fff;padding:8px;border-radius:14px;border:1px solid var(--line,#ddd);line-height:0}
+.tq-box svg{width:min(210px,60vw);height:auto;display:block}
+.tq-cd{font:700 26px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;margin:12px 0 2px;padding-left:.18em}
+.tq-url{font-size:11.5px;color:var(--muted,#666);margin:4px 0 10px;line-height:1.4}.tq-url span{display:block;overflow-wrap:anywhere}
+.tq-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.tq-b{font:inherit;font-size:13px;min-height:38px;padding:8px 14px;border-radius:999px;border:1px solid var(--line,#ddd);background:transparent;color:var(--text,#111);cursor:pointer}
+.tq-b.tq-p{background:var(--accent,#2d6a4f);color:var(--onaccent,#fff);border-color:var(--accent,#2d6a4f);font-weight:700}
+.tq-b:focus-visible{outline:2px solid var(--focus,#2d6a4f);outline-offset:2px}
+.tq-printroot{display:none}
+.tq-card{width:105mm;max-width:100%;min-height:148mm;margin:0 auto;background:#fff;color:#1B4332;padding:9mm 8mm;text-align:center;font-family:var(--sans,sans-serif);display:flex;flex-direction:column;align-items:center;justify-content:space-between;box-sizing:border-box}
+.tq-card .tq-br{font:700 12px var(--sans,sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.tq-card .tq-tn{font:900 34px/1.1 var(--display,serif);margin:6px 0 2px}
+.tq-card .tq-scan{font-size:14px;color:#587263;margin:0 0 10px}
+.tq-card .tq-box{border-color:#E4DDCD;padding:6px}.tq-card .tq-box svg{width:62mm}
+.tq-card .tq-cd{color:#1B4332;font-size:30px}
+.tq-card .tq-how{font-size:12px;color:#587263;line-height:1.4;margin:0}.tq-card .tq-site{font-size:11px;color:#587263;margin-top:8px}
+@media print{body.tq-printing>*:not(.tq-printroot){display:none!important}body.tq-printing .tq-printroot{display:block}@page{margin:8mm}}
+
+</style>
+<script>
+/* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
+   It stays quiet when the script did run and is only waiting for the server (the navigation script sets window.__tbtNav), unless an error was seen and nothing is drawn. */
+(function(){var errs=[];function note(m){if(m)errs.push(String(m).slice(0,160));}
+window.addEventListener('error',function(e){note((e&&e.message)||(e&&e.error)||'error');});
+window.addEventListener('unhandledrejection',function(e){note('promise: '+((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejected'));});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
+a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/leaderboard" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
+</script>
+<style>
+.field textarea{font:inherit;font-size:16px;line-height:1.45;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;resize:vertical}
+.field textarea:focus-visible,.field input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.field label{display:flex;justify-content:space-between;gap:8px;color:var(--text);font-weight:700;margin-bottom:4px}
+.hp-help{font-size:12px;line-height:16px;color:var(--muted);margin:0 0 8px}
+.hp-cnt{font-weight:500;font-size:12px;color:var(--muted)}.hp-cnt.over{color:var(--red);font-weight:700}
+.hp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hp-chip{border-radius:999px;padding:6px 12px;min-height:36px;border:1px solid var(--line);background:var(--field);font-size:14px;font-weight:500}
+.hp-chip:hover{border-color:var(--muted)}
+.hp-pv{border:1.5px dashed var(--line);border-radius:18px;padding:18px;margin:0 0 12px;background:radial-gradient(600px 200px at 90% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
+.hp-pvk{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.hp-kick{font-size:12px;letter-spacing:.14em;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+.hp-h1{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.06;overflow-wrap:anywhere}
+.hp-h1 em{font-style:italic;color:var(--red)}
+.hp-h1s{display:block;font-family:var(--sans);font-weight:500;font-size:19px;line-height:1.3;color:var(--muted);margin-top:10px}
+.hp-h1s em{font-family:var(--display);font-weight:900}
+.hp-intro{font-size:15px;line-height:1.5;color:var(--muted);margin:12px 0 0}
+.serp{margin-top:8px;padding:14px;border-radius:12px;background:#fff;border:1px solid #E4DDCD;font-family:Arial,sans-serif}
+.serp-u{font-size:12px;color:#4d5156}
+.serp-t{font-size:19px;color:#1a0dab;margin:3px 0;line-height:1.3}
+.serp-d{font-size:14px;color:#4d5156;line-height:1.5}
+.hp-acts{display:flex;flex-wrap:wrap;gap:8px}
+.hp-acts .btn{min-height:42px;display:inline-flex;align-items:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>window.__tbtNav=true;   /* tells the safety message in the head that this script did run */
+
+var LOGO='/assets/i/cfad30e8e7.png';
+var password=sessionStorage.getItem('tbt-admin-pw')||'';
+var authed=false,loginError='',loadError='',busy=false;
+var text=null,saved=null,defaults=null;
+// starting points the admin can pick, then change freely
+var SUGGEST=[
+ {name:'Surabaya search',kick:'Komunitas Mahjong Surabaya',l1:'Play. Learn. Connect.',hl:'Connect',l2:'The mahjong community in Surabaya: classes, open play and tournaments.',intro:'Start from your first tile in a beginner class, come back every week for open play, and see every game you play land on the TBT leaderboard.',title:'Tiles by Tiles | Komunitas & Belajar Mahjong Surabaya',desc:'Komunitas mahjong di Surabaya. Belajar mahjong dari nol di kelas pemula, main bareng tiap minggu dan ikut turnamen. Booking kursi online.'},
+ {name:'Tagline first',kick:'Tiles by Tiles · Surabaya',l1:'Play. Learn. Connect.',hl:'Connect',l2:'Mahjong classes, open play and tournaments in Surabaya.',intro:'Start from your first tile in a beginner class, come back every week for open play, and see every game you play land on the TBT leaderboard.',title:'Tiles by Tiles | Mahjong Classes & Open Play in Surabaya',desc:'Learn mahjong in Surabaya with beginner classes, weekly open play and tournaments. Book a seat online and follow every game on the TBT leaderboard.'},
+ {name:'Warm invite',kick:'Play. Learn. Connect.',l1:'Pull up a chair.',hl:'chair',l2:'Mahjong in Surabaya, at a real table.',intro:'Classes for first timers, open play every week and tournaments when the season heats up. Every game you play lands on the leaderboard.',title:'Tiles by Tiles | Mahjong Community in Surabaya',desc:'A mahjong community in Surabaya: beginner classes, weekly open play and tournaments, with a live leaderboard. Book your seat online.'},
+ {name:'Learn first',kick:'Play. Learn. Connect.',l1:'Learn mahjong in Surabaya.',hl:'Surabaya',l2:'Then stay for the people.',intro:'Beginner classes with a guide at a real table, open play when you are ready, and a leaderboard that remembers every win.',title:'Learn Mahjong in Surabaya | Tiles by Tiles',desc:'Beginner mahjong classes in Surabaya, weekly open play and tournaments. No experience needed, tiles provided. Book a seat online.'}
+];
+// [key, label, recommended length, hard limit (the server's), help]
+var FIELDS=[
+ ['kick','Small line above',40,60,'Shown in green capitals above the headline.'],
+ ['l1','Headline',40,60,'The big line. Keep it short.'],
+ ['l2','Second line',70,110,'Also part of the headline for Google: a good place for “mahjong” and “Surabaya”.'],
+ ['hl','Word in red italic',20,30,'Must appear in the headline or the second line. Leave empty for none.'],
+ ['intro','Intro',220,320,'One or two sentences under the headline.']
+];
+var SEO=[['title','Page title',60,90,'The blue link in search results. About 60 characters fit.'],['desc','Description',155,300,'The grey text under the link. About 155 characters fit.']];
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function H(){return {'Authorization':'Bearer '+password,'Content-Type':'application/json'};}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},2200);}
+function copy(o){return JSON.parse(JSON.stringify(o));}
+function same(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+// the same drawing as the home page (functions/_home.js headlineHtml)
+function headlineHtml(h){
+  var hl=h.hl?esc(h.hl):'';
+  function mark(t){var i=hl?t.indexOf(hl):-1;return i<0?t:t.slice(0,i)+'<em>'+hl+'</em>'+t.slice(i+hl.length);}
+  var l1=esc(h.l1),l2=esc(h.l2||''),m1=mark(l1);
+  if(m1!==l1)l1=m1;else l2=mark(l2);
+  return l1+(l2?'<span class="hp-h1s">'+l2+'</span>':'');
+}
+
+function checkLogin(){
+  if(!password)return Promise.resolve(false);
+  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){return r.ok;}).catch(function(){return false;});
+}
+function loadText(){
+  return fetch('/api/admin/home',{headers:H()}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
+    text=copy(d.text);saved=copy(d.text);defaults=d.defaults;loadError='';
+  }).catch(function(){loadError='Can’t load the homepage text. Check your connection and reload.';});
+}
+function doLogin(){
+  password=document.getElementById('pw').value;
+  checkLogin().then(function(ok){
+    if(!ok){loginError='Wrong password.';render();return;}
+    sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';
+    return loadText().then(render);
+  });
+}
+function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;render();}
+
+function count(v,rec,max){var n=v.length;return '<span class="hp-cnt'+(n>rec?' over':'')+'">'+n+'/'+rec+'</span>';}
+function fieldHtml(f){
+  var v=text[f[0]]||'',big=f[0]==='intro'||f[0]==='desc';
+  return '<div class="field"><label for="f_'+f[0]+'">'+f[1]+count(v,f[2],f[3])+'</label><p class="hp-help">'+f[4]+'</p>'
+    +(big?'<textarea id="f_'+f[0]+'" data-k="'+f[0]+'" rows="3" maxlength="'+f[3]+'">'+esc(v)+'</textarea>':'<input id="f_'+f[0]+'" data-k="'+f[0]+'" maxlength="'+f[3]+'" value="'+esc(v)+'">')+'</div>';
+}
+function previewHtml(){
+  return '<div class="hp-kick">'+esc(text.kick)+'</div><div class="hp-h1">'+headlineHtml(text)+'</div><p class="hp-intro">'+esc(text.intro)+'</p>';
+}
+function serpHtml(){
+  var t=text.title.length>60?text.title.slice(0,58)+'…':text.title,d=text.desc.length>155?text.desc.slice(0,153)+'…':text.desc;
+  return '<div class="serp-u">tilesbytilesleaderboard.pages.dev</div><div class="serp-t">'+esc(t)+'</div><div class="serp-d">'+esc(d)+'</div>';
+}
+function warnHtml(){
+  return text.hl&&(text.l1+' '+text.l2).indexOf(text.hl)<0?'The red word is not in the headline or the second line, so nothing turns red.':'';
+}
+function render(){
+  var app=document.getElementById('app');
+  if(!authed){
+    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Sign in</button></div>';
+    var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
+    return;
+  }
+  var top='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/admin-home" aria-current="page">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';
+  if(!text){app.innerHTML=top+'<main class="wrap"><div class="empty">'+(loadError||'Loading…')+'</div></main>';return;}
+  var dirty=!same(text,saved);
+  app.innerHTML=top+'<main class="wrap"><h2>Homepage text</h2><p class="meta" style="margin:6px 0 16px">The words at the top of the home page, and what Google shows for it. Saved words show on the home page within a minute, no upload needed.</p>'
+    +'<div class="card"><div class="meta" style="margin:0 0 8px">Start from a suggestion</div><div class="hp-chips">'+SUGGEST.map(function(s,i){return '<button type="button" class="hp-chip" data-sug="'+i+'">'+esc(s.name)+'</button>';}).join('')+'</div></div>'
+    +'<div class="hp-pv" aria-label="Preview"><div class="hp-pvk">Preview</div><div id="pv">'+previewHtml()+'</div></div>'
+    +'<div class="card"><h3 style="margin-bottom:12px">Headline</h3>'+FIELDS.map(fieldHtml).join('')+'<p class="err" id="hlWarn">'+warnHtml()+'</p></div>'
+    +'<div class="card"><h3 style="margin-bottom:12px">On Google</h3>'+SEO.map(fieldHtml).join('')+'<div class="serp" id="serp">'+serpHtml()+'</div></div>'
+    +'<div class="hp-acts"><button type="button" class="btn primary" id="save" onclick="save()"'+(dirty&&!busy?'':' disabled')+'>'+(busy?'Saving…':'Save')+'</button><button type="button" class="btn" id="undo" onclick="undo()"'+(dirty&&!busy?'':' disabled')+'>Undo changes</button><a class="btn" href="/" target="_blank" rel="noopener">See the home page &#8599;</a></div>'
+    +'<p class="meta" style="margin-top:16px">Need the original words back? Pick “Surabaya search” above and save.</p></main>';
+}
+// typing updates the preview, the counters and the buttons without redrawing the field being typed in
+function refreshParts(){
+  document.getElementById('pv').innerHTML=previewHtml();
+  document.getElementById('serp').innerHTML=serpHtml();
+  document.getElementById('hlWarn').textContent=warnHtml();
+  FIELDS.concat(SEO).forEach(function(f){var el=document.querySelector('label[for="f_'+f[0]+'"] .hp-cnt');if(el){var n=(text[f[0]]||'').length;el.textContent=n+'/'+f[2];el.classList.toggle('over',n>f[2]);}});
+  var dirty=!same(text,saved);document.getElementById('save').disabled=!dirty||busy;document.getElementById('undo').disabled=!dirty||busy;
+}
+document.addEventListener('input',function(e){var k=e.target&&e.target.dataset&&e.target.dataset.k;if(!k||!text)return;text[k]=e.target.value;refreshParts();});
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-sug]');if(!b)return;var s=copy(SUGGEST[+b.dataset.sug]);delete s.name;text=s;render();});
+function undo(){text=copy(saved);render();}
+function save(){
+  if(!text.l1.trim()){toast('The headline cannot be empty.');return;}
+  busy=true;render();
+  fetch('/api/admin/home',{method:'POST',headers:H(),body:JSON.stringify(text)}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,j:j};});}).then(function(r){
+    busy=false;
+    if(!r.ok){toast(r.j.error||'Could not save. Please try again.');render();return;}
+    text=copy(r.j.text);saved=copy(r.j.text);render();toast('Saved. The home page shows it within a minute.');
+  }).catch(function(){busy=false;render();toast('No connection. Please try again.');});
+}
+checkLogin().then(function(ok){authed=ok;if(ok)return loadText();}).then(render);
+render();
+</script>
+</body>
+</html>

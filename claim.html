@@ -80,7 +80,7 @@ function done(j){
   try{localStorage.setItem('tbt-me',JSON.stringify({id:j.id,name:j.nickname}));}catch(e){}
   location.replace('/players/'+encodeURIComponent(j.id)+'/'+slug(j.nickname));
 }
-function bad(msg){h.hidden=true;hint.hidden=true;view.innerHTML='<div class="done"><b>This link does not work</b><span>'+esc(msg)+'</span><a class="lk" href="/claim">Sign in</a><a class="lk" href="/index.html" style="margin-top:0">View leaderboard</a></div>';}
+function bad(msg){h.hidden=true;hint.hidden=true;view.innerHTML='<div class="done"><b>This link does not work</b><span>'+esc(msg)+'</span><a class="lk" href="/claim">Sign in</a><a class="lk" href="/leaderboard" style="margin-top:0">View leaderboard</a></div>';}
 function val(id){return document.getElementById(id).value;}
 function setPassword(nick){
   h.textContent='Set your password';hint.textContent='This link was made for '+nick+'. Pick a password you will remember: you use it with your nickname to sign in.';

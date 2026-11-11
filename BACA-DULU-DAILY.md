@@ -1473,3 +1473,27 @@ Halaman yang digambar skrip (player, daftar pemain, leaderboard, admin sesi, adm
   Mode lain tidak berubah (sudah punya "Clear selection"); Pick Tiles sudah punya "Clear tiles".
 - **Tes:** `tests/entry_carry.test.mjs` (19 pemeriksaan): tile pindah ke pemenang baru dengan catatan, tile sudah terisi dan pola dihitung ulang, hand tersimpan atas nama pemenang baru, pola manual dan poin ketik pindah (dan bolak-balik), mode Default, serta Clear selection (tidak ada saat kosong, menghapus fan dan bunga, lalu hilang).
 - **Berkas yang berubah:** `scoreboard.html`.
+
+## Update terbaru (v71): homepage baru, leaderboard pindah ke /leaderboard, teks homepage dari admin
+
+**Homepage baru (`/`).** Alamat utama situs kini halaman depan, bukan leaderboard. Isinya: teks pembuka (diatur dari admin, lihat di bawah), angka musim ini (pemain, meja, sesi), kartu hijau **Latest session** (sesi terakhir, jumlah meja, pemain teratas, tombol ke hasilnya),
+daftar **Latest sessions**, kartu "Never played before?" ke Instagram @tiles.by.tiles, **Leaderboard** musim berjalan (6 teratas, tampilan sama dengan leaderboard: lingkaran, garis, tint, dan permata Diamond, Ruby, Jade, Pearl), dan baris **At the table**
+(isi table code langsung, Find your name, Tile Quiz). Karakter tile di halaman diacak saat dibuka, lalu satu karakter berganti tiap 6 detik (tidak pernah kembar; berhenti saat tab tidak dibuka; diacak sekali saja bila HP memakai "kurangi animasi").
+Data diambil dari `/api/overview` yang sama dengan leaderboard, jadi angkanya selalu sama, dan diperbarui tiap 60 detik. Bagian event (Next up, Coming up, My booking) belum ada: menyusul bersama booking event.
+
+**Leaderboard pindah ke `/leaderboard`** (`leaderboard.html`, isinya tidak berubah). Link lama tetap jalan: alamat dengan filter (`/?p=...`, `?m=`, `?tab=`, `?sesi=`, juga lewat `index.html`) diteruskan ke `/leaderboard` dengan filter yang sama (301).
+Semua link ke `index.html` di halaman lain diganti: tombol Leaderboard dan tautan sesi ke `/leaderboard`, logo situs ke `/`. Menu kini dimulai dengan **Home**. Bar admin (Sessions, Players) dapat link **Homepage**.
+**Layar venue:** ganti alamatnya ke `/leaderboard` (refresh otomatis tiap 30 detik tetap ada).
+
+**Teks homepage dari admin (`/admin-home`).** Baris kecil di atas, headline, baris kedua, kata merah miring, intro, serta judul dan deskripsi untuk Google. Ada empat titik awal (Surabaya search, Tagline first, Warm invite, Learn first), preview langsung, penghitung karakter, dan contoh tampilan di Google.
+Default: "Surabaya search" (judul "Tiles by Tiles | Komunitas & Belajar Mahjong Surabaya"). Teks disimpan di tabel D1 baru `site_settings`, yang dibuat otomatis saat pertama kali menekan Save: **tidak perlu menjalankan apa pun di Console D1.**
+Server menulis teks itu ke HTML halaman sebelum dikirim (`functions/index.js`, HTMLRewriter), jadi judul, deskripsi, dan headline sudah ada untuk Google tanpa menjalankan skrip. Perubahan tampil dalam satu menit, tanpa upload ulang.
+
+**SEO:** `robots.txt` (admin, host, scoreboard, daftar, claim, dan `/api/` tidak diindeks), `sitemap.xml` (`/`, `/leaderboard`, `/quiz`), `canonical` di homepage dan leaderboard, dan data terstruktur Organization (nama, logo, tagline, Surabaya, Instagram) di homepage.
+Langkah yang perlu dilakukan sendiri: daftarkan situs di Google Search Console dan kirim `sitemap.xml`; buat Google Business Profile Tiles by Tiles (area layanan Surabaya).
+
+**Diuji di sini** dengan `wrangler pages dev` dan database D1 lokal berisi data contoh: semua alamat lama dan baru, pengalihan, teks dari admin (termasuk karakter `<` yang di-escape), table code dari homepage (kode benar ke scoreboard, kode salah memberi pesan), tampilan HP 390 px dan desktop 1280 px tanpa scroll ke samping, menu, dan halaman admin.
+
+**Berkas baru:** `leaderboard.html` (isi `index.html` lama), `admin-home.html`, `functions/index.js`, `functions/_home.js`, `functions/api/admin/home.js`, `robots.txt`, `sitemap.xml`.
+**Berkas yang berubah:** `index.html` (kini homepage), `404.html`, `_headers`, `admin-daily.html`, `admin-pemain.html`, `claim.html`, `daftar.html`, `host.html`, `masuk.html`, `player.html`, `players.html`, `quiz.html`, `scoreboard.html`, dan catatan ini.
+Upload seluruh isi folder seperti biasa (bagian `functions/` ikut diunggah). Binding `DB` dan `ADMIN_PASSWORD` tidak berubah.

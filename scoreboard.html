@@ -361,8 +361,8 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 </div>
 <header class="brandbar">
   <div class="brandin">
-    <a class="brandmark" href="index.html" aria-label="Leaderboard"><img id="brandLogo" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a>
-    <a class="backlink" id="backLink" href="index.html">&lsaquo; Leaderboard</a>
+    <a class="brandmark" href="/" aria-label="Home"><img id="brandLogo" alt="" width="23" height="28"><span class="brandname">Tiles by Tiles</span></a>
+    <a class="backlink" id="backLink" href="/leaderboard">&lsaquo; Leaderboard</a>
   </div>
 </header>
 <div class="tabs" role="group" aria-label="Sections">
@@ -3766,7 +3766,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 (function(){
   try{
     var f=new URLSearchParams(location.search).get('from'),a=document.getElementById('backLink');
-    if(f&&a)a.href='index.html?sesi='+encodeURIComponent(f);
+    if(f&&a)a.href='/leaderboard?sesi='+encodeURIComponent(f);
     var badge=document.getElementById('syncBadge'),base=document.title;
     function retitle(){var m=/^(.+?)(?: \(| \u00b7 )/.exec(badge.textContent.trim());if(m)document.title=m[1]+' \u00b7 '+base;}
     if(badge&&window.MutationObserver){new MutationObserver(retitle).observe(badge,{childList:true,characterData:true,subtree:true});retitle();}

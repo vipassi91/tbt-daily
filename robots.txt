@@ -1,0 +1,11 @@
+# Tiles by Tiles: the public pages are open to search engines; admin, host and table pages are not.
+User-agent: *
+Disallow: /admin
+Disallow: /admin-
+Disallow: /host
+Disallow: /scoreboard
+Disallow: /daftar
+Disallow: /claim
+Disallow: /api/
+
+Sitemap: https://tilesbytilesleaderboard.pages.dev/sitemap.xml

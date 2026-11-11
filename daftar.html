@@ -80,7 +80,7 @@ var T=new URLSearchParams(location.search).get('t')||'';
 var view=document.getElementById('view');
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function only(){document.querySelector('h1').hidden=true;document.querySelector('.hint').hidden=true;}
-function closed(){only();view.innerHTML='<div class="done"><b>This link is not valid</b><span>This sign-up link has been closed or is wrong. Ask the admin for the latest link.</span><a class="lk" href="index.html">View leaderboard</a></div>';}
+function closed(){only();view.innerHTML='<div class="done"><b>This link is not valid</b><span>This sign-up link has been closed or is wrong. Ask the admin for the latest link.</span><a class="lk" href="/leaderboard">View leaderboard</a></div>';}
 function showForm(names){
   var opts=names.map(function(n){return '<option value="'+esc(n)+'">';}).join('');
   view.innerHTML='<div class="f">'
@@ -106,7 +106,7 @@ function submit(){
     .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};});})
     .then(function(r){
       if(!r.ok){err.textContent=r.body.error||'Could not send. Please try again.';btn.disabled=false;return;}
-      only();view.innerHTML='<div class="done"><b>Thank you</b><span>Your sign-up has been sent. The admin will check it. Once approved, your name appears on the leaderboard.</span></div><div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Sambil nunggu, cari tile kamu</b><span>Hasilnya bisa jadi avatar di halaman profilmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div><div class="done" style="padding-top:0"><a class="lk" href="index.html">View leaderboard</a></div>';
+      only();view.innerHTML='<div class="done"><b>Thank you</b><span>Your sign-up has been sent. The admin will check it. Once approved, your name appears on the leaderboard.</span></div><div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Sambil nunggu, cari tile kamu</b><span>Hasilnya bisa jadi avatar di halaman profilmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div><div class="done" style="padding-top:0"><a class="lk" href="/leaderboard">View leaderboard</a></div>';
     })
     .catch(function(){err.textContent='No connection. Please try again.';btn.disabled=false;});
 }

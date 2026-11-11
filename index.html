@@ -5,21 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Tiles by Tiles mahjong leaderboard. Player rankings and results from every session.">
+<meta name="description" content="Komunitas mahjong di Surabaya. Belajar mahjong dari nol di kelas pemula, main bareng tiap minggu dan ikut turnamen. Booking kursi online.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Tiles by Tiles">
-<meta property="og:title" content="Tiles by Tiles Leaderboard">
-<meta property="og:description" content="Tiles by Tiles mahjong leaderboard. Player rankings and results from every session.">
+<meta property="og:title" content="Tiles by Tiles | Komunitas &amp; Belajar Mahjong Surabaya">
+<meta property="og:description" content="Komunitas mahjong di Surabaya. Belajar mahjong dari nol di kelas pemula, main bareng tiap minggu dan ikut turnamen. Booking kursi online.">
 <meta property="og:url" content="https://tilesbytilesleaderboard.pages.dev/">
 <meta property="og:image" content="https://tilesbytilesleaderboard.pages.dev/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/jpeg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tiles by Tiles Leaderboard">
-<meta name="twitter:description" content="Tiles by Tiles mahjong leaderboard. Player rankings and results from every session.">
+<meta name="twitter:title" content="Tiles by Tiles | Komunitas &amp; Belajar Mahjong Surabaya">
+<meta name="twitter:description" content="Komunitas mahjong di Surabaya. Belajar mahjong dari nol di kelas pemula, main bareng tiap minggu dan ikut turnamen. Booking kursi online.">
 <meta name="twitter:image" content="https://tilesbytilesleaderboard.pages.dev/og-image.jpg">
-<title>Tiles by Tiles Leaderboard</title>
+<title>Tiles by Tiles | Komunitas &amp; Belajar Mahjong Surabaya</title>
+<link rel="canonical" href="https://tilesbytilesleaderboard.pages.dev/">
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -278,7 +279,97 @@ a{color:inherit}
 .n-dd:active,.n-share:active,.btn:active,.t10acts button:active,.chips button:active,.seg button:active,.tn-sbtn:active,.tn-mbtn:active{transform:scale(.98)}
 .n-dd:hover,.n-share:hover,.dcard:hover,.tn-sbtn:hover,.tn-mbtn:hover{border-color:var(--muted)}
 .n-o:hover{background:var(--field)}
+/* ---- the home page ---- */
+.h-hero{background:radial-gradient(1200px 420px at 85% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
+.h-hero-in{display:grid;gap:28px;padding-top:28px;padding-bottom:28px}
+@media(min-width:880px){.h-hero-in{grid-template-columns:1.15fr .85fr;align-items:center;padding-top:44px;padding-bottom:40px}}
+.h-kick{font-size:12px;letter-spacing:.14em;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+.h-copy h1{font-size:44px;line-height:1.04;font-weight:900}
+@media(min-width:880px){.h-copy h1{font-size:60px}}
+.h-copy h1 em{font-style:italic;color:var(--red);font-weight:900}
+.h-h1s{display:block;font-family:var(--sans);font-weight:500;font-size:20px;line-height:1.3;color:var(--muted);margin-top:12px;letter-spacing:-.005em}
+.h-h1s em{font-family:var(--display);font-style:italic;color:var(--red);font-weight:900}
+@media(min-width:880px){.h-h1s{font-size:24px}}
+.h-intro{font-size:16px;line-height:1.5;color:var(--muted);max-width:520px;margin:14px 0 0}
+.h-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:18px}
+.h-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:16px;border:1px solid var(--line);background:transparent;color:var(--text);font:500 14px var(--sans);text-decoration:none;cursor:pointer}
+.h-btn svg{width:18px;height:18px;flex:none}
+.h-btn.pri{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.h-btn:focus-visible,.h-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.h-link{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;color:var(--accent);font:500 14px var(--sans);text-decoration:none}
+.h-link svg{width:16px;height:16px}
+.h-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:22px;font-size:13px;color:var(--muted);min-height:24px}
+.h-facts b{color:var(--text);font-family:var(--display);font-weight:900;font-size:18px;font-variant-numeric:lining-nums tabular-nums;margin-right:3px}
+/* the green card on the right of the hero */
+.h-feat{position:relative;padding-top:56px;max-width:360px;width:100%;justify-self:center}
+.h-peek{position:absolute;top:0;height:66px;width:auto;z-index:2;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
+.h-peek1{left:22px;transform:rotate(-8deg)}
+.h-peek2{right:26px;top:6px;height:60px;transform:rotate(7deg)}
+.h-card{position:relative;z-index:1;background:var(--accent);color:var(--onaccent);border-radius:20px;padding:16px 18px;box-shadow:0 20px 40px -18px rgba(27,67,50,.55)}
+.h-card-k{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:.75}
+.h-top{display:flex;gap:14px;align-items:center;margin-top:8px}
+.h-cal{flex:none;width:58px;text-align:center;border-radius:14px;background:color-mix(in srgb,var(--onaccent) 14%,transparent);padding:6px 0}
+.h-cal span{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.h-cal b{display:block;font-family:var(--display);font-weight:900;font-size:28px;line-height:1.05;font-variant-numeric:lining-nums}
+.h-card h2{color:var(--onaccent);font-size:21px;line-height:1.15;margin:0 0 2px;overflow-wrap:anywhere}
+.h-card .s{font-size:13px;line-height:18px;opacity:.85}
+.h-win{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--onaccent) 22%,transparent)}
+.h-win b{font-size:15px}
+.h-win .v{font-family:var(--display);font-weight:900;font-size:20px;font-variant-numeric:lining-nums tabular-nums}
+.h-card .h-btn{background:var(--onaccent);color:var(--accent);border-color:var(--onaccent);font-weight:700;min-height:38px;padding:0 16px;margin-top:12px;width:100%}
+/* the two columns under the hero */
+.h-grid{display:grid;gap:8px 32px;padding-bottom:12px}
+@media(min-width:880px){.h-grid{grid-template-columns:1fr 1fr}}
+.h-sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:8px 0 12px}
+.h-sec h2{font-size:24px;font-weight:900}
+.h-sec a{font-size:14px;font-weight:500;color:var(--accent);text-decoration:none;min-height:32px;display:inline-flex;align-items:center}
+.h-list{border-top:1px solid var(--line)}
+.h-it{display:flex;gap:14px;align-items:center;width:100%;padding:14px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--text)}
+.h-it:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.h-it:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.h-d{width:46px;flex:none;text-align:center}
+.h-d b{display:block;font-family:var(--display);font-weight:900;font-size:28px;line-height:1;font-variant-numeric:lining-nums}
+.h-d span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.h-m{flex:1;min-width:0}.h-m b{display:block;font-size:16px;overflow-wrap:anywhere}.h-m span{font-size:13px;color:var(--muted)}
+.h-r{text-align:right;font-size:13px;color:var(--muted)}.h-r b{display:block;color:var(--text);font-size:14px}
+.h-empty{padding:16px 4px;color:var(--muted);font-size:14px;border-bottom:1px solid var(--line)}
+.h-new{display:flex;gap:14px;align-items:center;margin-top:16px;padding:14px 16px;border-radius:18px;background:color-mix(in srgb,var(--red) 7%,var(--surface));border:1px solid color-mix(in srgb,var(--red) 18%,var(--line));flex-wrap:wrap}
+.h-new img{height:58px;width:auto;flex:none}
+.h-new>div{flex:1;min-width:180px}.h-new b{display:block}.h-new span{font-size:13px;color:var(--muted);line-height:1.45}
+.h-lb{padding:14px 16px 6px}
+.h-lbh{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.h-pill{font-size:13px;font-weight:500;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--field)}
+.h-day{margin-left:auto;font-size:12px;color:var(--muted)}
+.h-prog{height:4px;border-radius:99px;background:var(--line);margin:10px 0 4px;overflow:hidden}.h-prog i{display:block;height:100%;background:var(--accent)}
+.h-lb .row:first-of-type{border-top:0}
+/* At the table */
+.h-three{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);margin-bottom:24px}
+.h-three>*{min-width:0}
+@media(min-width:720px){.h-three{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr)}}
+.h-tc{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--surface);text-decoration:none;color:var(--text)}
+.h-tc>b{font-family:var(--display);font-weight:900;font-size:18px}
+.h-tc>span{font-size:13px;color:var(--muted)}
+.h-tc.code{background:color-mix(in srgb,var(--accent) 7%,var(--surface));border-color:color-mix(in srgb,var(--accent) 22%,var(--line))}
+a.h-tc:hover{border-color:var(--muted)}
+a.h-tc:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.h-codein{display:flex;gap:8px;margin-top:8px}
+.h-codein input{flex:1;min-width:0;font:700 16px var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:10px 14px;border:1px solid var(--line);border-radius:16px;background:var(--field);color:var(--text)}
+.h-codein input:focus{outline:none;border-color:var(--accent)}
+.h-codein input::placeholder{letter-spacing:.06em;text-transform:none;font-weight:500}
+.h-cerr{color:var(--red);font-size:13px;min-height:18px}
+.h-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold);margin-bottom:4px}
+.h-ic svg{width:20px;height:20px}
+.h-go{margin-top:auto;padding-top:8px;display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:500;color:var(--accent)!important}
+.h-go svg{width:16px;height:16px}
+.h-art{display:flex;margin-bottom:2px}.h-art img{width:42px;height:46px;object-fit:contain;margin-right:-8px}
+/* the tile characters change one at a time */
+img.h-rot{transition:opacity .45s ease,transform .45s ease}
+img.h-rot.out{opacity:0;transform:translateY(4px) scale(.96)}
+@media (prefers-reduced-motion:reduce){img.h-rot{transition:none}}
+/* before the script runs (and for search engines): the words alone */
+#seo{max-width:1120px;margin:0 auto;padding:44px 20px}
 </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Tiles by Tiles","url":"https://tilesbytilesleaderboard.pages.dev/","logo":"https://tilesbytilesleaderboard.pages.dev/assets/i/cfad30e8e7.png","slogan":"Play. Learn. Connect.","description":"Komunitas mahjong di Surabaya: kelas pemula, main bareng dan turnamen.","areaServed":{"@type":"City","name":"Surabaya"},"sameAs":["https://www.instagram.com/tiles.by.tiles/"]}</script>
 <script>
 /* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
    It stays quiet when the script did run and is only waiting for the server (the navigation script sets window.__tbtNav), unless an error was seen and nothing is drawn. */
@@ -287,11 +378,12 @@ window.addEventListener('error',function(e){note((e&&e.message)||(e&&e.error)||'
 window.addEventListener('unhandledrejection',function(e){note('promise: '+((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejected'));});
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
-a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/index.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
+a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/leaderboard" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
 </script>
 </head>
 <body>
-<div id="app"></div>
+<div id="app"><div id="seo"><div class="h-kick" id="seoKick">Komunitas Mahjong Surabaya</div><h1 id="seoH1">Play. Learn. <em>Connect.</em><span class="h-h1s">The mahjong community in Surabaya: classes, open play and tournaments.</span></h1><p class="h-intro" id="seoIntro">Start from your first tile in a beginner class, come back every week for open play, and see every game you play land on the TBT leaderboard.</p></div></div>
+<script type="application/json" id="homeText"></script>
 <script>
 var LOGO='/assets/i/cfad30e8e7.png';
 var WINDS=[['\u6771','East'],['\u5357','South'],['\u897F','West'],['\u5317','North']];
@@ -471,6 +563,7 @@ var TBTNAV = (function () {
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {
     search: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    home: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>',
     menu: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     close: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 6l12 12M18 6L6 18"/></svg>',
     board: '<svg viewBox="0 0 24 24" ' + P + '><path d="M7 21V11M12 21V4M17 21v-7"/></svg>',
@@ -498,7 +591,7 @@ var TBTNAV = (function () {
   function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
-  function links(o) { return [['lb', 'Leaderboard', '/index.html', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
+  function links(o) { return [['hm', 'Home', '/', IC.home], ['lb', 'Leaderboard', '/leaderboard', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
   var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
@@ -509,7 +602,7 @@ var TBTNAV = (function () {
   function header(active, o) {
     o = o || {}; LAST = { active: active, o: o };
     var show = !!fold(ST.q) && !ST.hide && (ST.searching || window.innerWidth >= 720);
-    var mark = '<a class="brandmark" href="/index.html" aria-label="' + esc(o.name || '') + ' leaderboard"><img src="' + (o.logo || '') + '" alt="" width="23" height="28"><span class="brandname">' + esc(o.name || '') + '</span></a>';
+    var mark = '<a class="brandmark" href="/" aria-label="' + esc(o.name || '') + ' home"><img src="' + (o.logo || '') + '" alt="" width="23" height="28"><span class="brandname">' + esc(o.name || '') + '</span></a>';
     return '<header class="brandbar tn-hd' + (ST.searching ? ' searching' : '') + '" id="tnHd"><div class="brandin tn-row">' + mark + '<span class="tn-gap"></span>'
       + '<div class="tn-search"><label class="tn-field">' + IC.search + '<input id="tnQ" type="search" aria-label="Find your name" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Find your name" value="' + esc(ST.q) + '"><button type="button" class="tn-x" id="tnX" data-tn="clear" aria-label="Clear search"' + (ST.q ? '' : ' hidden') + '>\u00d7</button></label><div class="tn-res" id="tnRes" role="region" aria-label="Search results" aria-live="polite"' + (show ? '' : ' hidden') + '>' + (show ? resultsHtml() : '') + '</div></div>'
       + '<button type="button" class="tn-sbtn" id="tnSbtn" data-tn="sopen" aria-label="Search players">' + IC.search + '</button>'
@@ -626,108 +719,8 @@ var TBTNAV = (function () {
 try { window.__tbtNav = true; } catch (e) { }
 
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
-// the player's page opens with the same period and mode the visitor is looking at (nothing is added for the usual view)
-function playerQuery(){
-  var qs=[];
-  if(S.period!==currentSeason())qs.push('p='+periodParam());
-  if(S.mode!==DEFAULT_MODE&&modesInData().length>=2)qs.push('m='+S.mode);
-  return qs.length?'?'+qs.join('&'):'';
-}
-function board(list,session){
-  if(!list.length)return '<p class="empty">No games recorded yet.</p>';
-  var html='',pq=session?'':playerQuery();
-  rankList(list).forEach(function(r){
-    var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+TBTGEM.icon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
-  });
-  return '<div class="card">'+html+'</div>';
-}
-
-function setCard(list,sub,sub2,session){
-  if(!list.length){S.card=null;return false;}
-  S.card={title:'Top 10',sub:sub,sub2:sub2,rows:rankList(list).slice(0,10).map(function(r){var p=r.p;return {name:p.name,games:p.games,firsts:p.firsts,meta:session?sessionSub(p):totalSub(p),rank:r.rank,text:r.key==='net'?fmtNet(p.net):fmtLg(p.league),neg:r.key==='net'&&r.v<0};})};
-  return true;
-}
-var ICON={
-  cal:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
-  mode:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>',
-  chev:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-  check:'<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
-  share:'<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>'
-};
-function shareBtn(){return S.card?'<button type="button" class="n-share" data-share="1">'+ICON.share+'Share top 10</button>':'';}
-function seg(name,opts,cur){return '<div class="seg">'+opts.map(function(o){return '<button type="button" data-set="'+name+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>';}).join('')+'</div>';}
 function played(fn){return DATA.tables.filter(function(t){return t.events>0&&fn(t);});}
-function progress(t){
-  if(!t.events)return 'Not started';
-  if(t.locked)return 'Final \u2713';
-  if(t.progress.done)return 'Finished';
-  var w=WINDS[t.progress.wind];
-  return 'In progress \u00b7 <span class="han">'+w[0]+'</span> '+w[1];
-}
-
-function tableCard(t){
-  var h='<div class="card tcard"><div class="thead"><div class="tname">'+esc(t.label)+'<span class="mbadge">'+esc(MODE_LABEL[modeOf(t)]||'Casual')+'</span></div><div class="tprog">'+progress(t)+'</div></div>';
-  if(t.rules)h+='<div class="dmeta" style="margin-bottom:6px">'+esc(rulesLine(t))+'</div>';
-  if(t.events){
-    t.players.slice().sort(function(a,b){return a.rank-b.rank||b.netTotal-a.netTotal;}).forEach(function(p){
-      h+='<div class="prow"><span class="pr">'+p.rank+'</span><span class="pn">'+esc(p.name)+(p.guest?' <span class="mbadge">guest</span>':'')+'</span><span class="pv'+(p.netTotal<0?' neg':'')+'">'+fmtNet(p.netTotal)+'</span></div>';
-    });
-  }else h+='<div class="dmeta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div>';
-  if(t.view_code)h+='<a class="btn primary" href="scoreboard.html?view='+encodeURIComponent(t.view_code)+'&from='+encodeURIComponent(t.day_id)+'">Open table</a>';
-  return h+'</div>';
-}
-
-function isWide(){try{if(window.matchMedia)return window.matchMedia('(min-width:980px)').matches;}catch(e){}return window.innerWidth>=980;}
-// ---- the two filter menus: a small menu under the button on wide screens, a sheet from the bottom on phones ----
-function optBtn(opt,label,on,extra){
-  return '<button type="button" role="option" class="n-o'+(on?' on':'')+'" data-opt="'+esc(opt)+'" aria-selected="'+(on?'true':'false')+'"><span>'+label+'</span>'+(extra?'<span class="c">'+extra+'</span>':'')+(on?'<span class="ck">'+ICON.check+'</span>':'')+'</button>';
-}
 function tablesWord(n){return n+(n===1?' table':' tables');}
-function periodMenu(){
-  var cur=currentSeason(),html='<div class="n-g">Season</div>';
-  seasons().forEach(function(ym){html+=optBtn('period|'+ym,esc(monthLabel(ym))+(ym===cur?' <span class="n-cur">Current</span>':''),S.period===ym);});
-  html+='<div class="n-g">Quick range</div>'+optBtn('period|today','Today',S.period==='today')+optBtn('period|yesterday','Yesterday',S.period==='yesterday')+optBtn('period|week','This week',S.period==='week')+optBtn('period|lastweek','Last week',S.period==='lastweek')+optBtn('period|all','All time',S.period==='all');
-  html+='<div class="n-g">Custom</div>';
-  if(!S.cust.open)html+='<button type="button" class="n-o'+(S.period==='custom'?' on':'')+'" data-cust="1"><span>Custom range\u2026</span><span class="c">\u203A</span></button>';
-  else{var t=todayStr();html+='<div class="n-cust"><div class="r"><div><label for="cFrom">From</label><input type="date" id="cFrom" value="'+esc(S.from||'')+'" max="'+t+'"></div><div><label for="cTo">To</label><input type="date" id="cTo" value="'+esc(S.to||'')+'" max="'+t+'"></div></div>'+(S.cust.err?'<div class="err" role="alert">'+esc(S.cust.err)+'</div>':'')+'<button type="button" class="go" data-apply="1">Apply range</button></div>';}
-  return html;
-}
-// the mode choices: the usual modes and "All modes" (without MCR), then a group for the MCR modes
-function modeChoices(list,pick,cur,countOf){
-  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&list.some(function(t){return modeOf(t)===k;})});
-  var mcr=['mcr4','mcr8','mcrc'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
-  var html='';
-  std.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
-  if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return !isMcrMode(modeOf(t));})));
-  if(mcr.length){
-    html+='<div class="n-g">MCR</div>';
-    if(mcr.length>1)html+=optBtn(pick+'|mcr','MCR',cur==='mcr',tablesWord(countOf(function(t){return isMcrMode(modeOf(t));})));
-    mcr.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
-  }
-  return html;
-}
-function modeMenu(){   // counts follow the period that is selected
-  var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
-  var all=DATA.tables.filter(function(t){return t.events>0;});
-  return modeChoices(all,'mode',S.mode,function(f){return inP.filter(f).length;});
-}
-function dayModeMenu(id){
-  var ts=DATA.tables.filter(function(t){return t.day_id===id&&t.events>0;});
-  return modeChoices(ts,'dmode',S.dmode,function(f){return ts.filter(f).length;});
-}
-var MENU_TITLE={period:'Period',mode:'Mode',dmode:'Mode'};
-function menuInner(which){return which==='period'?periodMenu():(which==='mode'?modeMenu():dayModeMenu(S.day));}
-function menuPop(which){
-  return '<div class="n-clear" data-close="1"></div><div class="n-menu'+(which==='period'?'':' md')+'" role="listbox" aria-label="'+MENU_TITLE[which]+'">'+menuInner(which)+'</div>';
-}
-function menuSheet(which){
-  return '<div class="n-dim" data-close="1"></div><div class="n-sheet" role="listbox" aria-label="'+MENU_TITLE[which]+'"><div class="n-grab"></div><div class="n-st">'+MENU_TITLE[which]+'</div>'+menuInner(which)+'</div>';
-}
-function ddButton(which,label,icon,active){
-  return '<span class="n-anchor"><button type="button" class="n-dd'+(active?' act':'')+'" data-menu="'+which+'" aria-haspopup="listbox" aria-expanded="'+(S.menu===which)+'"><span class="l">'+icon+'<span>'+esc(label)+'</span></span>'+ICON.chev+'</button>'+(S.menu===which&&isWide()?menuPop(which):'')+'</span>';
-}
-// ---- the page ----
 function statsOf(ts){
   var pl={},ds={},winds=0;
   ts.forEach(function(t){
@@ -737,422 +730,133 @@ function statsOf(ts){
   });
   return {winds:winds,sessions:Object.keys(ds).length,tables:ts.length,players:Object.keys(pl).length};
 }
-function stripHtml(st){
-  function c(n,l){return '<div><b>'+n+'</b><span>'+l+'</span></div>';}
-  return '<div class="n-strip">'+c(st.winds,'Wind rounds')+c(st.sessions,'Sessions')+c(st.tables,'Tables')+c(st.players,'Players')+'</div>';
+
+// ================= the home page =================
+// Old leaderboard links (?p= ?m= ?tab= ?sesi=) are sent on by the server; this is the same rule for a browser that got here anyway.
+(function(){try{if(/[?&](sesi|tab|p|m)=/.test(location.search))location.replace('/leaderboard'+location.search);}catch(e){}})();
+
+// The words at the top: chosen by the admin on admin-home.html, put into #homeText by the server (functions/index.js).
+var HOME_DEFAULT={kick:'Komunitas Mahjong Surabaya',l1:'Play. Learn. Connect.',hl:'Connect',l2:'The mahjong community in Surabaya: classes, open play and tournaments.',intro:'Start from your first tile in a beginner class, come back every week for open play, and see every game you play land on the TBT leaderboard.'};
+var HOME=(function(){try{var t=document.getElementById('homeText');var o=t&&t.textContent.trim()?JSON.parse(t.textContent):null;return o&&o.l1?o:HOME_DEFAULT;}catch(e){return HOME_DEFAULT;}})();
+// the same drawing as headlineHtml in functions/_home.js: the red word in <em>, the second line inside the <h1>
+function headlineHtml(h){
+  var hl=h.hl?esc(h.hl):'';
+  function mark(t){var i=hl?t.indexOf(hl):-1;return i<0?t:t.slice(0,i)+'<em>'+hl+'</em>'+t.slice(i+hl.length);}
+  var l1=esc(h.l1),l2=esc(h.l2||''),m1=mark(l1);
+  if(m1!==l1)l1=m1;else l2=mark(l2);
+  return l1+(l2?'<span class="h-h1s">'+l2+'</span>':'');
 }
-function seasonBar(){   // only for the season that is running now: how far through it we are, in days
-  var cur=currentSeason();if(S.period!==cur)return '';
-  var d=+todayStr().slice(8,10),n=daysInMonth(cur);
-  return '<div class="n-prog"><div class="bar" role="progressbar" aria-label="Season progress" aria-valuemin="1" aria-valuemax="'+n+'" aria-valuenow="'+d+'"><i style="width:'+Math.round(d/n*100)+'%"></i></div><div class="lab"><span>Day '+d+' of '+n+'</span><span>Ends '+shortDate(cur+'-'+pad2(n))+'</span></div></div>';
+
+var HI={
+  board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21V11M12 21V4M17 21v-7"/></svg>',
+  people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>',
+  go:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg>'
+};
+var DAYS3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ---- the tile characters: a random set when the page opens, then one of them changes every 6 seconds (never two alike on screen)
+var ROT_TILES=['one-bamboo','nine-bamboo','one-character','nine-character','one-dot','nine-dot','red-dragon','green-dragon','white-dragon','east-wind','south-wind','west-wind','north-wind','spring','summer','autumn','winter','plum-blossom','orchid','chrysanthemum','bamboo','blank-tile'];
+var ROT={keys:{},i:0,timer:null};
+function artSrc(k){return '/assets/a/'+k+'.svg?v=1';}
+function rotPick(except){var pool=ROT_TILES.filter(function(k){return except.indexOf(k)<0;});return pool[Math.floor(Math.random()*pool.length)];}
+// each place keeps its character across redraws (the page redraws when new results come in)
+function rotImg(slot,cls){var k=ROT.keys[slot];if(!k){var used=Object.keys(ROT.keys).map(function(s){return ROT.keys[s];});k=ROT.keys[slot]=rotPick(used);}return '<img class="h-rot'+(cls?' '+cls:'')+'" data-slot="'+slot+'" src="'+artSrc(k)+'" alt="" width="60" height="66">';}
+function rotStart(){
+  if(ROT.timer)return;
+  try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;}catch(e){}
+  ROT.timer=setInterval(function(){
+    if(document.hidden)return;
+    var els=[].slice.call(document.querySelectorAll('img.h-rot'));if(!els.length)return;
+    var el=els[ROT.i++%els.length],slot=el.dataset.slot,shown=els.map(function(x){return ROT.keys[x.dataset.slot];}),k=rotPick(shown);
+    el.classList.add('out');
+    setTimeout(function(){ROT.keys[slot]=k;el.src=artSrc(k);el.classList.remove('out');},450);
+  },6000);
 }
-function headHtml(){
-  var upd=S.updated?'Updated '+pad2(S.updated.getHours())+':'+pad2(S.updated.getMinutes()):'';
-  var f=ddButton('period',periodLabel(),ICON.cal,false);
-  if(S.loaded&&modesInData().length>=2)f+=ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all');
-  return '<div class="n-head"><div class="t"><h1>Leaderboard</h1><div class="upd">'+upd+'</div></div><div class="n-filters">'+f+'</div></div>';
-}
-function tabsHtml(){return '<div class="n-tabs" role="tablist">'+[['total','Total'],['sessions','Sessions']].map(function(o){return '<button type="button" role="tab" data-set="tab" data-v="'+o[0]+'" aria-selected="'+(S.tab===o[0])+'" class="'+(S.tab===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>';}
-function sideCard(ts){
-  var by={};ts.forEach(function(t){(by[t.day_id]=by[t.day_id]||[]).push(t);});
-  var ds=Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);}).slice(0,5);
-  if(!ds.length)return '';
-  return '<aside class="n-side"><div class="card"><h3>Latest sessions</h3>'+ds.map(function(d){
-    var x=by[d.id],net={};x.forEach(function(t){t.players.forEach(function(p){if(!p.placeholder&&!p.guest)net[p.name]=(net[p.name]||0)+p.netTotal;});});
+
+// ---- what the page shows, from the same data as the leaderboard (/api/overview)
+var HS={loaded:false,failed:false};
+function seasonDays(){var cur=currentSeason();return {d:+todayStr().slice(8,10),n:daysInMonth(cur)};}
+function latestSessions(){
+  var by={};DATA.tables.forEach(function(t){if(t.events>0)(by[t.day_id]=by[t.day_id]||[]).push(t);});
+  return Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);}).map(function(d){
+    var x=by[d.id],net={};
+    x.forEach(function(t){t.players.forEach(function(p){if(!p.placeholder&&!p.guest)net[p.name]=(net[p.name]||0)+p.netTotal;});});
     var w=Object.keys(net).sort(function(a,b){return net[b]-net[a];})[0];
-    return '<button type="button" class="n-ls" data-day="'+esc(d.id)+'"><div class="d"><b>'+(+d.date.slice(8,10))+'</b>'+MONTHS[+d.date.slice(5,7)-1].slice(0,3)+'</div><div class="t"><b>'+esc(d.label)+'</b><span>'+tablesWord(x.length)+'</span></div>'+(w?'<div class="w"><b>'+esc(w)+'</b>'+fmtNet(net[w])+'</div>':'')+'</button>';
-  }).join('')+'</div></aside>';
-}
-function sessionsGrid(ts){
-  var by={};ts.forEach(function(t){(by[t.day_id]=by[t.day_id]||[]).push(t);});
-  // sessions that have not started yet stay listed (in the period), so a table can still be found before its first hand
-  DATA.days.forEach(function(d){
-    if(by[d.id]||!periodOk(d.date))return;
-    var mine=DATA.tables.filter(function(t){return t.day_id===d.id;});
-    if(mine.length&&!mine.some(function(t){return t.events>0;}))by[d.id]=[];
+    return {day:d,tables:x.length,top:w||'',topNet:w?net[w]:0};
   });
-  var ds=Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);});
-  if(!ds.length)return '<p class="empty">No sessions in this period and mode yet.<br>Try another period or mode.</p>';
-  return '<div class="n-dl">'+ds.map(function(d){
-    var n=by[d.id].length;
-    return '<button type="button" class="dcard" data-day="'+esc(d.id)+'"><div><div class="dname">'+esc(d.label)+'</div><div class="dmeta">'+esc(fmtDate(d.date))+' \u00b7 '+(n?tablesWord(n):'Not started')+'</div></div><span class="chev">\u203A</span></button>';
-  }).join('')+'</div>';
 }
-var QZ_TILES=['one-bamboo','nine-bamboo','one-character','nine-character','one-dot','nine-dot','red-dragon','green-dragon','white-dragon','east-wind','south-wind','west-wind','north-wind','spring','summer','autumn','winter','plum-blossom','orchid','chrysanthemum','bamboo','blank-tile'],qzPick=null;
-// three different characters on the quiz card: drawn once when the page opens (not on every redraw), so they do not jump around
-function qzThree(){if(!qzPick){var a=QZ_TILES.slice(),i,j,t;for(i=a.length-1;i>0;i--){j=Math.floor(Math.random()*(i+1));t=a[i];a[i]=a[j];a[j]=t;}qzPick=a.slice(0,3);}return qzPick;}
-function qzArt(){return '<div class="qz-pl-art" aria-hidden="true">'+qzThree().map(function(id){return '<img src="/assets/a/'+id+'.svg?v=1" alt="" loading="lazy">';}).join('')+'</div>';}
-function quizCard(){return '<div class="qz-wrap"><div class="qz-pl">'+qzArt()+'<div class="qz-pl-tx"><b>Kamu tile yang mana?</b><span>16 pertanyaan, 3 menit. Ketemu tile kamu, partner main, dan rival bebuyutanmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div></div>';}
-function viewMain(){
-  var ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date)&&modeOk(t);});
-  var st=statsOf(ts),inner,side='';
-  if(S.tab==='total'){
-    var agg=aggregate(ts);setCard(agg,periodLabel(),modeLabel()+(SHOW_RATING&&S.metric==='league'?' \u00b7 '+RATING_LABEL:''));
-    inner=ts.length?'<div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(agg):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>';
-    side=sideCard(ts);
-  }else inner=sessionsGrid(ts);
-  return seasonBar()+'<div class="n-grid'+(S.tab==='total'&&side?'':' one')+'"><div>'+stripHtml(st)+tabsHtml()+inner+'</div>'+side+'</div>'+quizCard();
+function factsHtml(){
+  if(!HS.loaded)return '';
+  var ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date);}),st=statsOf(ts);
+  if(!st.tables)return '<span>A new season has started. The first game is yours.</span>';
+  function f(n,one,many){return '<span><b>'+n+'</b>'+(n===1?one:many)+'</span>';}
+  return f(st.players,'player this season','players this season')+f(st.tables,'table played','tables played')+f(st.sessions,'session','sessions');
 }
-function viewDay(id){
-  var d=dayOf(id),back='<button type="button" class="back" data-back="1">\u2039 All sessions</button>';
-  if(!d)return back+'<p class="empty">Session not found.</p>';
-  var ts=DATA.tables.filter(function(t){return t.day_id===id;}),pl=ts.filter(function(t){return t.events>0;});
-  var many=MODE_ORDER.filter(function(k){return pl.some(function(t){return modeOf(t)===k;});}).length>=2,dm=many?S.dmode:'all';
-  var dl=aggregate(pl.filter(function(t){return !many||modeMatch(t,dm);}));
-  setCard(dl,d.label,fmtDate(d.date)+(!many||dm==='all'?'':' \u00b7 '+filterLabel(dm)),true);
-  return back+'<div class="n-dhead"><div><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta">'+esc(fmtDate(d.date))+'</div></div>'+(many?'<div class="n-filters one">'+ddButton('dmode',filterLabel(dm),ICON.mode,dm!=='all')+'</div>':'')+'</div>'
-    +'<div class="n-grid d"><div><div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(dl,true)+'</div>'
-    +'<div><h3 class="sub" style="margin-top:0">Tables</h3>'+(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>')+'</div></div>';
+function featureHtml(){
+  var s=HS.loaded?latestSessions()[0]:null,peeks=rotImg('p1','h-peek h-peek1')+rotImg('p2','h-peek h-peek2');
+  if(!s)return '<div class="h-feat">'+peeks+'<div class="h-card"><div class="h-card-k">At the table</div><h2 style="margin-top:8px">Got a table code?</h2><div class="s">Type it on the Table code page and keep score as you play.</div><a class="h-btn" href="/masuk.html">Open Table code</a></div></div>';
+  var d=new Date(s.day.date+'T00:00:00');
+  return '<div class="h-feat">'+peeks+'<div class="h-card"><div class="h-card-k">Latest session</div><div class="h-top"><div class="h-cal"><span>'+DAYS3[d.getDay()]+'</span><b>'+d.getDate()+'</b><span>'+MONTHS[d.getMonth()].slice(0,3)+'</span></div><div style="min-width:0"><h2>'+esc(s.day.label)+'</h2><div class="s">'+tablesWord(s.tables)+'</div></div></div>'
+    +(s.top?'<div class="h-win"><span><span class="s">Top of the session</span><br><b>'+esc(s.top)+'</b></span><span class="v">'+fmtNet(s.topNet)+'</span></div>':'')
+    +'<a class="h-btn" href="/leaderboard?sesi='+encodeURIComponent(s.day.id)+'">See the results</a></div></div>';
 }
-var NAV=false;   // set when the visitor moves to another view, so Back can step back through the views
-function viewUrl(){
-  if(S.tab==='sessions'&&S.day)return '?sesi='+encodeURIComponent(S.day);
-  var qs=[];
-  if(S.tab==='sessions')qs.push('tab=sessions');
-  if(S.period!==currentSeason())qs.push('p='+periodParam());
-  if(S.modeSet&&S.mode!==DEFAULT_MODE&&modesInData().length>=2)qs.push('m='+S.mode);   // only a mode the visitor chose; the automatic fallback leaves the address clean
-  return qs.length?'?'+qs.join('&'):location.pathname;
+function sessionsHtml(){
+  var list=HS.loaded?latestSessions().slice(1,5):[];
+  var rows=!HS.loaded?'<div class="h-empty">'+(HS.failed?'Can’t load the sessions right now.':'Loading…')+'</div>'
+    :(list.length?list.map(function(s){var d=s.day.date;
+      return '<a class="h-it" href="/leaderboard?sesi='+encodeURIComponent(s.day.id)+'"><span class="h-d"><b>'+(+d.slice(8,10))+'</b><span>'+MONTHS[+d.slice(5,7)-1].slice(0,3)+'</span></span><span class="h-m"><b>'+esc(s.day.label)+'</b><span>'+tablesWord(s.tables)+'</span></span>'+(s.top?'<span class="h-r"><b>'+esc(s.top)+'</b>'+fmtNet(s.topNet)+'</span>':'')+'</a>';}).join('')
+      :'<div class="h-empty">Earlier sessions show here.</div>');
+  return '<div class="h-sec"><h2>Latest sessions</h2><a href="/leaderboard?tab=sessions">All sessions</a></div><div class="h-list">'+rows+'</div>'
+    +'<div class="h-new">'+rotImg('n1')+'<div><b>Never played before?</b><span>Follow @tiles.by.tiles on Instagram to catch the next beginner class.</span></div><a class="h-btn" href="https://www.instagram.com/tiles.by.tiles/" target="_blank" rel="noopener">'+HI.ig+'Follow</a></div>';
+}
+function boardHtml(){
+  var head='<div class="h-sec"><h2>Leaderboard</h2><a href="/leaderboard">Full leaderboard</a></div>';
+  if(!HS.loaded)return head+'<div class="card h-lb"><p class="empty">'+(HS.failed?'Can’t load the leaderboard right now.':'Loading…')+'</p></div>';
+  var sd=seasonDays(),ts=played(function(t){var d=dayOf(t.day_id);return d&&periodOk(d.date)&&modeOk(t);}),agg=aggregate(ts);
+  var rows=rankList(agg).slice(0,6).map(function(r){var p=r.p,rank=r.rank,v=r.v;
+    return '<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+TBTGEM.icon(rank)+'</div><div class="rsub">'+totalSub(p)+'</div></div><div class="rv'+(v<0?' neg':'')+'">'+fmtNet(p.net)+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+'" aria-label="Open '+esc(p.name)+'’s page"></a>':'')+'</div>';}).join('');
+  return head+'<div class="card h-lb"><div class="h-lbh"><span class="h-pill">'+esc(monthLabel(currentSeason()))+'</span><span class="h-pill">'+esc(modeLabel())+'</span><span class="h-day">Day '+sd.d+' of '+sd.n+'</span></div><div class="h-prog"><i style="width:'+Math.round(sd.d/sd.n*100)+'%"></i></div>'
+    +(rows||'<p class="empty">No games this season yet.</p>')+'</div>';
+}
+function tableHtml(){
+  return '<div class="h-sec" style="margin-top:20px"><h2>At the table</h2></div><div class="h-three">'
+    +'<div class="h-tc code"><b>Got a table code?</b><span>Open your table and keep score.</span><form class="h-codein" id="hCode"><input id="hCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Your code" aria-label="Table code"><button class="h-btn pri" type="submit">Open</button></form><div class="h-cerr" id="hCodeErr" role="status"></div></div>'
+    +'<a class="h-tc" href="/players"><span class="h-ic">'+HI.people+'</span><b>Find your name</b><span>Every registered player and their page.</span><span class="h-go">All players '+HI.go+'</span></a>'
+    +'<a class="h-tc" href="/quiz"><span class="h-art">'+rotImg('q1')+rotImg('q2')+rotImg('q3')+'</span><b>Which tile are you?</b><span>Sixteen questions, twenty-two tiles.</span><span class="h-go">Take the Tile Quiz '+HI.go+'</span></a>'
+    +'</div>';
 }
 function render(){
-  var body;
-  if(!S.loaded&&S.failed)body='<div class="n-head"><div class="t"><h1>Leaderboard</h1></div></div><p class="empty">Can\u2019t load the leaderboard right now.</p><div style="text-align:center"><button type="button" class="btn primary" data-refresh="1">Try again</button></div>';
-  else if(!S.loaded)body='<div class="n-head"><div class="t"><h1>Leaderboard</h1></div></div><p class="empty">Loading\u2026</p>';
-  else if(S.tab==='sessions'&&S.day)body=viewDay(S.day);
-  else body=headHtml()+viewMain();
-  var sheet=(S.menu&&!isWide()&&S.loaded)?menuSheet(S.menu):'';
-  document.getElementById('app').innerHTML=TBTNAV.header('lb',{logo:LOGO,name:'Tiles by Tiles',players:'/players'+playerQuery()})+'<div class="wrap n">'+body+'</div>'+sheet;
-  // the page scroll is locked only while the sheet is open, and only unlocked by whoever locked it (the share card has its own lock)
-  if(sheet&&!S.locked){document.body.style.overflow='hidden';S.locked=true;}else if(!sheet&&S.locked){document.body.style.overflow='';S.locked=false;}
-  try{var nu=viewUrl();if(NAV&&nu!==location.pathname+location.search)history.pushState({v:1},'',nu);else history.replaceState(history.state,'',nu);}catch(e){}
-  NAV=false;
+  var codeVal=(document.getElementById('hCodeIn')||{}).value||'',hadFocus=document.activeElement&&document.activeElement.id==='hCodeIn';
+  document.getElementById('app').innerHTML=TBTNAV.header('hm',{logo:LOGO,name:'Tiles by Tiles',players:'/players'})
+    +'<main><section class="h-hero"><div class="wrap h-hero-in" style="padding-bottom:28px"><div class="h-copy"><div class="h-kick">'+esc(HOME.kick)+'</div><h1>'+headlineHtml(HOME)+'</h1><p class="h-intro">'+esc(HOME.intro)+'</p>'
+    +'<div class="h-acts"><a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a></div><div class="h-facts">'+factsHtml()+'</div></div>'
+    +featureHtml()+'</div></section>'
+    +'<div class="wrap" style="padding-bottom:0"><div class="h-grid"><section>'+sessionsHtml()+'</section><section>'+boardHtml()+'</section></div>'+tableHtml()+'</div></main>';
+  var inp=document.getElementById('hCodeIn');if(inp){inp.value=codeVal;if(hadFocus)inp.focus();}
+  rotStart();
 }
-function focusMenu(sel){setTimeout(function(){var el=sel?document.querySelector(sel):(document.querySelector('.n-menu [aria-selected="true"], .n-sheet [aria-selected="true"]')||document.querySelector('.n-menu .n-o, .n-sheet .n-o'));if(el&&el.focus)el.focus();},0);}
-function closeMenu(){var w=S.menu;S.menu=null;S.cust.open=false;S.cust.err='';render();if(w){var b=document.querySelector('[data-menu="'+w+'"]');if(b&&b.focus)b.focus();}}
-function toggleMenu(w){if(S.menu===w){closeMenu();return;}S.menu=w;S.cust.open=false;S.cust.err='';render();focusMenu();}
-function pickOpt(v){
-  var i=v.indexOf('|'),k=v.slice(0,i),val=v.slice(i+1);
-  if(k==='period')S.period=val;
-  else if(k==='mode'){S.mode=val;S.modeSet=true;}
-  else if(k==='dmode')S.dmode=val;
-  closeMenu();
-}
-function applyCustom(){
-  var f=document.getElementById('cFrom'),t=document.getElementById('cTo'),a=f?f.value:'',b=t?t.value:'';
-  S.from=a;S.to=b;
-  if(!a||!b){S.cust.err='Pick a start and an end date.';render();focusMenu(a?'#cTo':'#cFrom');return;}
-  if(a>b){S.cust.err='The start date is after the end date.';render();focusMenu('#cFrom');return;}
-  S.period='custom';closeMenu();
-}
-TBTNAV.boot({inView:function(id){return !!document.querySelector('.rlink[href*="/players/'+id+'/"]');},onMe:function(){render();}});
-document.getElementById('app').addEventListener('click',function(e){
-  var t=e.target;
-  if(t.closest&&t.closest('[data-close]')){closeMenu();return;}
-  var b=t.closest?t.closest('button'):null;if(!b)return;
-  if(b.dataset.menu){toggleMenu(b.dataset.menu);return;}
-  if(b.dataset.opt){pickOpt(b.dataset.opt);return;}
-  if(b.dataset.cust){S.cust.open=true;S.cust.err='';render();focusMenu('#cFrom');return;}
-  if(b.dataset.apply){applyCustom();return;}
-  if(b.dataset.set){var moved=(b.dataset.set==='tab'&&S.tab!==b.dataset.v);S[b.dataset.set]=b.dataset.v;if(b.dataset.set==='tab')S.day=null;NAV=moved;render();}
-  else if(b.dataset.day){S.day=b.dataset.day;S.tab='sessions';S.dmode='all';NAV=true;render();window.scrollTo(0,0);}
-  else if(b.dataset.back){if(history.state&&history.state.v)history.back();else{S.day=null;render();}}
-  else if(b.dataset.share){if(window.openTop10Card&&S.card)window.openTop10Card(S.card);}
-  else if(b.dataset.refresh){load();}
+// the table code: the same check as the Table code page (masuk.html), then straight to the table
+document.addEventListener('submit',function(e){
+  if(!e.target||e.target.id!=='hCode')return;
+  e.preventDefault();
+  var inp=document.getElementById('hCodeIn'),err=document.getElementById('hCodeErr'),code=inp.value.trim().toUpperCase();
+  if(!code){err.textContent='Type a code first.';inp.focus();return;}
+  err.textContent='';
+  fetch('/api/resolve/'+encodeURIComponent(code)).then(function(r){if(!r.ok)throw new Error('notfound');return r.json();}).then(function(d){
+    location.href='/scoreboard.html?'+(d.type==='host'?'code':'view')+'='+encodeURIComponent(d.code);
+  }).catch(function(){err.textContent='That code doesn’t match anything. Check it with your host.';});
 });
-document.addEventListener('keydown',function(e){
-  if(!S.menu)return;
-  if(e.key==='Escape'){e.preventDefault();closeMenu();return;}
-  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
-    var os=[].slice.call(document.querySelectorAll('.n-menu .n-o, .n-sheet .n-o'));if(!os.length)return;
-    e.preventDefault();var i=os.indexOf(document.activeElement);i=e.key==='ArrowDown'?(i+1)%os.length:(i-1+os.length)%os.length;os[i].focus();
-  }
-});
-window.addEventListener('resize',function(){if(S.menu)render();});
 function load(){
   return fetch('/api/overview').then(function(r){if(!r.ok)throw new Error('bad');return r.json();}).then(function(o){
-    DATA=o;S.loaded=true;S.failed=false;S.updated=new Date();
-    if(!S.autoDone){S.autoDone=true;autoMode();}
-    if(!S.menu)render();   // an open menu stays as it is; the new numbers show when it closes
-  }).catch(function(){S.failed=true;if(!S.loaded)render();});
+    DATA=o;HS.loaded=true;HS.failed=false;
+    if(!S.autoDone){S.autoDone=true;S.loaded=true;autoMode();}
+    render();
+  }).catch(function(){HS.failed=true;if(!HS.loaded)render();});
 }
-window.addEventListener('popstate',function(){readUrl();autoMode();render();window.scrollTo(0,0);});
+TBTNAV.boot({});
 render();load();
-setInterval(function(){if(!document.hidden)load();},30000);   // stays fresh on a venue screen
-</script>
-<script>
-/* Share top 10: a card in the same family as the scoreboard story and the share-hand card
-   (same five styles, fonts, backdrop, logo header and footer). It shows the top ten of the
-   board that is on screen, and is drawn on a canvas so it can be saved or shared as a picture. */
-(function(){
-  var PLAY='"Playfair Display",Georgia,"Times New Roman",serif';
-  var INTER='"Inter Tight","Helvetica Neue",Arial,sans-serif';
-  var KAI='"TBT Hanzi",KaiTi,"Kaiti SC",STKaiti,BiauKai,"KaiTi_GB2312",serif';
-  var CREAM='#FAF7F2',RED='#B72323';
-  var HANDLE='@tiles.by.tiles',TAGLINE='Play. Learn. Connect.';
-  var WINDS=['\u6771','\u5357','\u897F','\u5317'];
-  var LOGO_ASPECT=217/260;
-  var FORMATS={story:{W:1080,H:1920,label:'Story 9:16'},portrait:{W:1080,H:1350,label:'Post 4:5'}};
-  var THEMES={
-    midnight:{label:'Midnight',bg1:'#1C2C4E',bg2:'#0A1226',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(170,190,255,.12)',vig:'rgba(0,0,12,.36)',grain:.12,sw:'linear-gradient(160deg,#1C2C4E,#0A1226)'},
-    red:{label:'Red',bg1:'#8B1A1A',bg2:'#3A0A0A',text:CREAM,muted:'rgba(250,247,242,.74)',line:'rgba(250,247,242,.32)',loss:'#F6B3AB',wm:.06,bloom:'rgba(255,190,150,.14)',vig:'rgba(20,0,0,.42)',grain:.12,sw:'linear-gradient(160deg,#8B1A1A,#3A0A0A)'},
-    forest:{label:'Forest',bg1:'#1F4B39',bg2:'#0D231A',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(255,255,235,.11)',vig:'rgba(0,0,0,.32)',grain:.12,sw:'linear-gradient(160deg,#1F4B39,#0D231A)'},
-    black:{label:'Black',bg1:'#2A2A2A',bg2:'#080808',text:CREAM,muted:'rgba(250,247,242,.72)',line:'rgba(250,247,242,.3)',loss:'#F2A09A',wm:.06,bloom:'rgba(255,255,255,.09)',vig:'rgba(0,0,0,.5)',grain:.13,sw:'linear-gradient(160deg,#2A2A2A,#080808)'},
-    cream:{label:'Cream',light:true,bg1:'#FAF7F2',bg2:'#EBE1CE',text:'#1B4332',muted:'rgba(27,67,50,.7)',line:'rgba(45,106,79,.4)',loss:RED,wm:.075,bloom:'rgba(255,255,255,.6)',vig:'rgba(110,80,30,.16)',grain:.09,sw:'linear-gradient(160deg,#FAF7F2,#EBE1CE)'}
-  };
-  var st={format:'story',theme:'forest'};
-  var card=null,modal=null,canvas=null,ctx=null,logoImg=null,assets=null,W=1080,H=1920,NOISE=null;
-
-  function $(id){return document.getElementById(id);}
-  function rgba(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
-  function spacing(px){if(ctx&&'letterSpacing' in ctx)ctx.letterSpacing=px+'px';}
-  function fit(text,maxW,weight,fam,start,min){
-    var s=start;
-    while(s>min){ctx.font=weight+' '+s+'px '+fam;if(ctx.measureText(text).width<=maxW)break;s-=2;}
-    ctx.font=weight+' '+s+'px '+fam;
-    return s;
-  }
-  function rr(x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  }
-  // KaiTi, semibold: regular weight plus a fine same-colour stroke, so the look holds on every device
-  function kai(glyph,x,y,size,color,align,base){
-    ctx.save();
-    ctx.font='400 '+size+'px '+KAI;
-    ctx.textAlign=align||'left';ctx.textBaseline=base||'alphabetic';
-    ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=size*0.03;ctx.lineJoin='round';
-    spacing(0);
-    ctx.strokeText(glyph,x,y);ctx.fillText(glyph,x,y);
-    ctx.restore();
-  }
-  function hline(x1,x2,y,color,w,alpha){
-    ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=color;ctx.lineWidth=w;
-    ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();ctx.restore();
-  }
-  function noisePattern(){
-    if(NOISE)return NOISE;
-    var c=document.createElement('canvas');c.width=c.height=256;
-    var x=c.getContext('2d'),d=x.createImageData(256,256),s=12345;
-    for(var i=0;i<d.data.length;i+=4){
-      s=(s*1664525+1013904223)>>>0;
-      var v=s>>>24;
-      d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;
-    }
-    x.putImageData(d,0,0);
-    NOISE=ctx.createPattern(c,'repeat');
-    return NOISE;
-  }
-  function background(t){
-    var g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,t.bg1);g.addColorStop(1,t.bg2);
-    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    var b=ctx.createRadialGradient(W/2,120,0,W/2,120,1000);
-    b.addColorStop(0,t.bloom);b.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=b;ctx.fillRect(0,0,W,H);
-    var v=ctx.createRadialGradient(W/2,H*0.46,H*0.28,W/2,H*0.46,H*0.82);
-    v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,t.vig);
-    ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
-    // all four winds, huge and barely there, bleeding off the corners: the backdrop of the whole-game scoreboard
-    var wc=document.createElement('canvas');wc.width=W;wc.height=H;
-    var sv=ctx;ctx=wc.getContext('2d');
-    var px=[.84,.84,.16,.16],py=[.78,.22,.22,.78];
-    WINDS.forEach(function(w,i){kai(w,W*px[i],H*py[i],860*(H/1920),t.text,'center','middle');});
-    ctx=sv;
-    ctx.save();ctx.globalAlpha=t.wm;ctx.drawImage(wc,0,0);ctx.restore();
-    ctx.save();ctx.globalCompositeOperation='overlay';ctx.globalAlpha=t.grain;
-    ctx.fillStyle=noisePattern();ctx.fillRect(0,0,W,H);
-    ctx.restore();
-  }
-
-  function draw(){
-    if(!card||!canvas)return;
-    var fm=FORMATS[st.format]||FORMATS.story;
-    W=fm.W;H=fm.H;
-    if(canvas.width!==W)canvas.width=W;
-    if(canvas.height!==H)canvas.height=H;
-    ctx=canvas.getContext('2d');
-    var t=THEMES[st.theme]||THEMES.forest;
-    var isStory=st.format==='story';
-    var rows=card.rows.slice(0,10),n=rows.length,mx=90,x1=W-mx,cx=W/2;
-    background(t);
-    ctx.textBaseline='alphabetic';ctx.textAlign='left';spacing(0);
-
-    // the same frame as the scoreboard card: header pinned to the top safe zone, footer to the bottom
-    var TOP=isStory?256:64,tH=isStory?176:122,headerGap=isStory?38:26;
-    var footLh=isStory?72:48,FOOT_TOP=isStory?1500:H-(footLh+58+56);   // a slimmer header and footer give the ten rows room to breathe
-    var tW=tH*LOGO_ASPECT;
-    if(logoImg)ctx.drawImage(logoImg,mx,TOP,tW,tH);
-    var tx=mx+tW+(isStory?44:34),tmax=W-mx-tx;
-    var title=card.title||'Top 10',sub=card.sub||'',sub2=card.sub2||'';
-    if(isStory){
-      var b1=TOP+60,b2=TOP+114,b3=TOP+160;
-      fit(title,tmax,900,PLAY,66,34);
-      ctx.fillStyle=t.text;ctx.fillText(title,tx,b1);
-      var ly=b2;
-      if(sub){fit(sub,tmax,400,PLAY,30,20);ctx.fillStyle=t.muted;ctx.fillText(sub,tx,b2);ly=b3;}
-      if(sub2){fit(sub2,tmax,400,PLAY,30,20);ctx.fillStyle=sub?t.text:t.muted;ctx.fillText(sub2,tx,ly);}
-    }else{
-      var ts=fit(title,tmax,900,PLAY,60,26);
-      var lh2=ts+30,by2=TOP+tH/2-lh2/2+ts*0.78;
-      ctx.fillStyle=t.text;ctx.fillText(title,tx,by2);
-      var line2=[sub,sub2].filter(Boolean).join('   \u00b7   ');
-      if(line2){fit(line2,tmax,400,PLAY,34,18);ctx.fillStyle=t.muted;ctx.fillText(line2,tx,by2+lh2*0.62);}
-    }
-
-    // the ranking: a fixed row height so the card always has the same rhythm, centred when fewer than ten
-    var zoneTop=TOP+tH+headerGap,zoneBottom=FOOT_TOP-(isStory?30:24);
-    hline(mx,x1,zoneTop-14,t.text,2.5,.95);
-    var rowH=Math.min(100,Math.floor((zoneBottom-zoneTop-12)/10));
-    var by=zoneTop+6+Math.max(0,((zoneBottom-zoneTop-12)-rowH*n)/2);
-    var pal=[1,2,3,4].map(function(k){return TBTGEM.ring(k,t.light);});   // Diamond, Ruby, Jade, Pearl
-    rows.forEach(function(r,i){
-      var y=by+i*rowH,cy=y+rowH/2,offN=Math.round(rowH*0.155),offM=Math.round(rowH*0.225),top4=r.rank<=4,col=top4?pal[r.rank-1]:null,bx=mx+34,br=25;
-      // the same hairline between every row
-      if(i>0)hline(mx,x1,y,t.text,2,.14);
-      if(top4){
-        // a slim bar and a faint tint in the colour of the gem: marks the place without boxing the row
-        var gt=ctx.createLinearGradient(mx-16,0,x1+16,0);
-        gt.addColorStop(0,rgba(col,t.light?.17:.14));gt.addColorStop(.75,rgba(col,0));
-        ctx.fillStyle=gt;ctx.fillRect(mx-16,y+2,(x1-mx)+32,rowH-4);
-        ctx.fillStyle=col;rr(mx-16,y+13,5,rowH-26,2.5);ctx.fill();
-      }
-      // rank ring in the colour of the gem
-      ctx.beginPath();ctx.arc(bx,cy,br,0,Math.PI*2);
-      if(top4){ctx.lineWidth=3;ctx.strokeStyle=col;ctx.stroke();}
-      else{ctx.lineWidth=2.5;ctx.strokeStyle=t.line;ctx.stroke();}
-      ctx.textAlign='center';ctx.textBaseline='middle';spacing(0);
-      ctx.font='700 '+(r.rank>=10?24:28)+'px '+INTER;
-      ctx.fillStyle=top4?t.text:t.muted;
-      ctx.fillText(String(r.rank),bx,cy+1);
-      // net score at the right, name and games to its left, a small gem after the name of ranks 1 to 4
-      var nx=bx+br+32;
-      ctx.textAlign='right';ctx.textBaseline='middle';
-      ctx.font='700 40px '+INTER;
-      var sw=ctx.measureText(r.text).width;
-      ctx.fillStyle=r.neg?t.loss:t.text;ctx.fillText(r.text,x1-8,cy);
-      var maxW=(x1-8-sw)-nx-36-(top4?50:0);
-      var meta=r.meta||(r.games+(r.games===1?' game':' games')+' \u00b7 '+r.firsts+(r.firsts===1?' first place':' first places'));
-      ctx.textAlign='left';
-      fit(r.name,maxW,700,INTER,34,20);
-      var nw=ctx.measureText(r.name).width;
-      ctx.fillStyle=t.text;ctx.fillText(r.name,nx,cy-offN);
-      if(top4)TBTGEM.draw(ctx,nx+nw+26,cy-offN,32,r.rank,t.light);
-      fit(meta,maxW,400,INTER,22,15);
-      ctx.fillStyle=t.muted;ctx.fillText(meta,nx,cy+offM);
-    });
-
-    // footer, as on the scoreboard card
-    if(isStory){
-      if(logoImg)ctx.drawImage(logoImg,cx-72*LOGO_ASPECT/2,FOOT_TOP,72*LOGO_ASPECT,72);
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      if(HANDLE){ctx.font='400 32px '+INTER;spacing(2);ctx.fillStyle=t.text;ctx.fillText(HANDLE,cx,FOOT_TOP+72+38);spacing(0);}
-      if(TAGLINE){fit(TAGLINE,W-2*mx,400,INTER,30,20);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+72+80);}
-    }else{
-      ctx.font='400 34px '+INTER;spacing(2);
-      var fw=HANDLE?ctx.measureText(HANDLE).width:0,gapL=HANDLE?16:0,lw=footLh*LOGO_ASPECT,rowW=lw+gapL+fw,x0=cx-rowW/2;
-      if(logoImg)ctx.drawImage(logoImg,x0,FOOT_TOP,lw,footLh);
-      if(HANDLE){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=t.text;ctx.fillText(HANDLE,x0+lw+gapL,FOOT_TOP+footLh/2);}
-      spacing(0);
-      if(TAGLINE){ctx.textAlign='center';ctx.textBaseline='middle';fit(TAGLINE,W-2*mx,400,INTER,28,18);ctx.fillStyle=t.muted;ctx.fillText(TAGLINE,cx,FOOT_TOP+footLh+30);}
-    }
-  }
-
-  /* ---------- loading what the card needs: the fonts and the logo ---------- */
-  function loadAssets(){
-    if(assets)return assets;
-    var fonts=(document.fonts&&document.fonts.load)?Promise.all([
-      document.fonts.load('900 76px "Playfair Display"'),document.fonts.load('700 40px "Playfair Display"'),document.fonts.load('400 34px "Playfair Display"'),
-      document.fonts.load('400 34px "Inter Tight"'),document.fonts.load('700 34px "Inter Tight"'),
-      document.fonts.load('400 48px "TBT Hanzi"',WINDS.join(''))
-    ]).catch(function(){}):Promise.resolve();
-    var logo=new Promise(function(res){
-      var im=new Image(),done=false;
-      function fin(v){if(!done){done=true;res(v);}}
-      im.onload=function(){fin(im);};im.onerror=function(){fin(null);};
-      setTimeout(function(){fin(im.complete&&im.naturalWidth?im:null);},2500);
-      im.src=LOGO;
-    });
-    assets=Promise.all([fonts,logo]).then(function(r){logoImg=r[1];});
-    return assets;
-  }
-
-  /* ---------- the window ---------- */
-  function status(msg){var el=$('t10Status');if(el)el.textContent=msg||'';}
-  function toBlob(){return new Promise(function(res){try{canvas.toBlob(function(b){res(b);},'image/png');}catch(e){res(null);}});}
-  function isIOS(){return /iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
-  // Save goes straight to the phone: a download on Android and desktop, the share sheet on iPhone and iPad
-  // (that is where "Save Image" puts it in Photos), a new tab only when the browser blocks the download.
-  async function save(){
-    status('');
-    var blob=await toBlob();
-    if(!blob){status('Could not create the image. Try again.');return;}
-    var file=null;
-    try{file=new File([blob],'top10.png',{type:'image/png'});}catch(e){file=null;}
-    if(isIOS()&&file&&navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file]});return;}
-      catch(err){if(err&&err.name==='AbortError')return;}
-    }
-    var url=URL.createObjectURL(blob);
-    try{
-      var a=document.createElement('a');
-      a.href=url;a.download='top10.png';
-      document.body.appendChild(a);a.click();document.body.removeChild(a);
-      setTimeout(function(){URL.revokeObjectURL(url);},4000);
-      status('Saved. Check your gallery or Downloads.');
-    }catch(err){
-      var opened=null;
-      try{opened=window.open(url,'_blank');}catch(e){opened=null;}
-      if(opened){status('Opened the image in a new tab. Press and hold it, then choose Save or Download image.');setTimeout(function(){URL.revokeObjectURL(url);},60000);}
-      else{status('Could not save the image here. Try the Share button instead.');URL.revokeObjectURL(url);}
-    }
-  }
-  async function share(){
-    status('');
-    try{
-      var blob=await toBlob();
-      if(!blob){status('Could not create the image. Try again.');return;}
-      var file=new File([blob],'top10.png',{type:'image/png'});
-      if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]});
-      else status('Sharing is not available here. Use Save image instead.');
-    }catch(err){
-      if(err&&err.name==='AbortError')return;
-      status('Sharing is not available here. Use Save image instead.');
-    }
-  }
-  function syncControls(){
-    Array.prototype.forEach.call(document.querySelectorAll('#t10Fmt button'),function(b){b.setAttribute('aria-pressed',b.dataset.f===st.format?'true':'false');});
-    Array.prototype.forEach.call(document.querySelectorAll('#t10Themes button'),function(b){b.setAttribute('aria-pressed',b.dataset.t===st.theme?'true':'false');});
-  }
-  function close(){if(modal){modal.hidden=true;document.body.style.overflow='';}}
-  function build(){
-    if(modal)return;
-    modal=document.createElement('div');modal.id='t10Modal';modal.hidden=true;
-    modal.innerHTML='<div class="t10box" role="dialog" aria-label="Share top 10"><div class="t10head"><h3>Share top 10</h3><button type="button" class="t10x" id="t10Close" aria-label="Close">&times;</button></div>'
-      +'<div class="t10prev"><canvas id="t10Canvas"></canvas></div>'
-      +'<div class="t10row">Format</div><div class="chips" id="t10Fmt"></div>'
-      +'<div class="t10row">Style</div><div class="t10sw" id="t10Themes"></div>'
-      +'<div class="t10acts"><button type="button" class="pri" id="t10Save">Save image</button><button type="button" id="t10Share" hidden>Share</button></div><div class="t10st" id="t10Status"></div></div>';
-    document.body.appendChild(modal);
-    canvas=$('t10Canvas');
-    $('t10Fmt').innerHTML=Object.keys(FORMATS).map(function(k){return '<button type="button" data-f="'+k+'" aria-pressed="false">'+FORMATS[k].label+'</button>';}).join('');
-    $('t10Themes').innerHTML=Object.keys(THEMES).map(function(k){return '<button type="button" data-t="'+k+'" aria-pressed="false" aria-label="'+THEMES[k].label+'" title="'+THEMES[k].label+'" style="background:'+THEMES[k].sw+'"></button>';}).join('');
-    $('t10Fmt').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;st.format=b.dataset.f;syncControls();draw();});
-    $('t10Themes').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;st.theme=b.dataset.t;syncControls();draw();});
-    $('t10Close').addEventListener('click',close);
-    modal.addEventListener('click',function(e){if(e.target===modal)close();});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)close();});
-    $('t10Save').addEventListener('click',save);
-    $('t10Share').addEventListener('click',share);
-    try{var probe=new File([new Blob(['x'],{type:'image/png'})],'p.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[probe]}))$('t10Share').hidden=false;}catch(e){}
-  }
-  window.openTop10Card=function(c){
-    card=c;build();status('');syncControls();
-    modal.hidden=false;modal.scrollTop=0;document.body.style.overflow='hidden';
-    loadAssets().then(draw);
-  };
-})();
+setInterval(function(){if(!document.hidden)load();},60000);
 </script>
 </body>
 </html>
