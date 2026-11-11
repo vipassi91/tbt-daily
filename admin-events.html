@@ -203,6 +203,22 @@ a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0
 .ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:14px}
 .ck input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--accent)}
 </style>
+<style>
+main.wrap{padding-top:24px;padding-bottom:72px}
+.src{display:block;font-size:12px;font-weight:700;color:#9a7618;margin-top:2px}
+@media (prefers-color-scheme: dark){.src{color:#E0C171}}
+.pick{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--field);margin-top:6px;cursor:pointer;font-size:14px}
+.pick input{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:none}
+.pick.off{opacity:.5;cursor:not-allowed}
+.regpick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 4px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.regpick .lnk{margin-left:auto;color:var(--accent);font-weight:500}
+.hits{margin-top:6px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.hit{display:flex;flex-direction:column;align-items:flex-start;width:100%;padding:8px 12px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left}
+.hit:first-child{border-top:0}.hit:hover{background:var(--field)}
+.hchips{display:flex;flex-wrap:wrap;gap:6px}
+.hchip{display:inline-flex;align-items:center;gap:2px;padding:4px 4px 4px 12px;border-radius:999px;background:var(--accent);color:var(--onaccent);font-weight:700;font-size:14px}
+.hchip button{width:28px;height:28px;border-radius:50%;border:0;background:transparent;color:var(--onaccent);font-size:18px;line-height:1;padding:0}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -213,7 +229,9 @@ a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0
 var LOGO='/assets/i/cfad30e8e7.png';
 var password=sessionStorage.getItem('tbt-admin-pw')||'';
 var authed=false,loginError='';
-var A={events:null,defaults:{banks:[],contactWa:'',place:''},err:'',view:'list',id:null,ev:null,edit:null,busy:false,ses:'all',open:{},rm:null};
+var ROLE='admin',ME='';
+function BASE(){return ROLE==='host'?'/api/host':'/api/admin';}
+var A={hostOptions:[],add:null,events:null,defaults:{banks:[],contactWa:'',place:''},err:'',view:'list',id:null,ev:null,edit:null,busy:false,ses:'all',open:{},rm:null};
 var LEVELS=[['first','First timer'],['beg','Beginner'],['cas','Casual'],['int','Intermediate'],['adv','Advanced']];
 var TYPES=[['cls','Class'],['open','Open Play'],['tour','Tournament'],['other','Event']];
 var MODES=[['default','Default'],['casual','Casual'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom']];
@@ -222,7 +240,7 @@ var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec
 var HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function H(){return {'Authorization':'Bearer '+password,'Content-Type':'application/json'};}
+function H(){return ROLE==='host'?{'Content-Type':'application/json','X-TBT':'host'}:{'Authorization':'Bearer '+password,'Content-Type':'application/json'};}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},2400);}
 function pad2(n){return ('0'+n).slice(-2);}
 function rp(n){return n===0?'Free':'Rp '+Number(n).toLocaleString('id-ID');}
@@ -237,34 +255,37 @@ function when(iso){if(!iso)return '';var d=new Date(Date.parse(iso)+7*3600e3);re
 function waNum(n){var d=String(n||'').replace(/\D/g,'');if(d.charAt(0)==='0')d='62'+d.slice(1);return d;}
 function showWa(n){var d=String(n||'');return d.indexOf('62')===0?'0'+d.slice(2):d;}
 function copyText(v,label){try{navigator.clipboard.writeText(v).then(function(){toast(label||'Copied');},function(){prompt('Copy this:',v);});}catch(e){prompt('Copy this:',v);}}
-function api(method,url,body){return fetch(url,{method:method,headers:H(),body:body?JSON.stringify(body):undefined}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.error||'Something went wrong');return j;});});}
+function api(method,url,body){return fetch(url,{method:method,headers:H(),credentials:'same-origin',body:body?JSON.stringify(body):undefined}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){if(!r.ok)throw new Error(j.error||'Something went wrong');return j;});});}
 
 // ---- sign in ----
 function checkLogin(){if(!password)return Promise.resolve(false);return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){return r.ok;}).catch(function(){return false;});}
 function doLogin(){password=document.getElementById('pw').value;checkLogin().then(function(ok){if(!ok){loginError='Wrong password.';render();return;}sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';go();});}
-function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;render();}
+function logout(){if(ROLE==='host'){location.href='/host.html';return;}sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;render();}
+// a host who is signed in on the Host desk comes in without the admin password
+function hostLogin(){return fetch('/api/host/me',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.nickname&&!d.mustChange){ROLE='host';ME=d.nickname;return true;}return false;}).catch(function(){return false;});}
 
 // ---- the address keeps the view: #new, #edit=<id>, #bookings=<id>
 function go(){
   var h=location.hash.slice(1),m;A.err='';
-  if(h==='new'){A.view='edit';A.id=null;A.edit=null;loadList().then(function(){A.edit=blankEvent();render();});return;}
+  if(h==='new'){if(ROLE==='host'){location.hash='';return;}A.view='edit';A.id=null;A.edit=null;loadList().then(function(){A.edit=blankEvent();render();});return;}
   if((m=/^edit=(\w+)$/.exec(h))){A.view='edit';A.id=m[1];A.edit=null;render();loadOne(m[1]).then(function(){A.edit=toForm(A.ev);render();});return;}
+  if((m=/^add=(\w+)$/.exec(h))){A.view='add';A.id=m[1];A.add=null;A.find={};if(!A.ev||A.ev.id!==m[1]){A.ev=null;render();loadOne(m[1]).then(function(){render();});}else render();return;}
   if((m=/^bookings=(\w+)$/.exec(h))){A.view='bookings';A.id=m[1];if(!A.ev||A.ev.id!==m[1]){A.ev=null;A.ses='all';}render();loadOne(m[1]).then(render);return;}
   A.view='list';render();loadList().then(render);
 }
 window.addEventListener('hashchange',function(){if(authed){go();window.scrollTo(0,0);}});
-function loadList(){return api('GET','/api/admin/events').then(function(d){A.events=d.events;A.defaults=d.defaults||A.defaults;}).catch(function(e){A.err=e.message;});}
-function loadOne(id){return api('GET','/api/admin/events/'+encodeURIComponent(id)).then(function(d){A.ev=d;}).catch(function(e){A.err=e.message;render();});}
+function loadList(){return api('GET',BASE()+'/events').then(function(d){A.events=d.events;A.defaults=d.defaults||A.defaults;A.hostOptions=d.hostOptions||[];}).catch(function(e){A.err=e.message;});}
+function loadOne(id){return api('GET',BASE()+'/events/'+encodeURIComponent(id)).then(function(d){A.ev=d;}).catch(function(e){A.err=e.message;render();});}
 
-function topBar(){return '<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/admin-events" aria-current="page">Events</a><a href="/admin-home">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';}
+function topBar(){if(ROLE==='host')return '<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT HOST DESK</div><span class="meta">'+esc(ME)+'</span></div><nav class="anav" aria-label="Host"><a href="/host.html">Sessions</a><a href="/admin-events" aria-current="page">Events</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';return '<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/admin-events" aria-current="page">Events</a><a href="/admin-home">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';}
 function render(){
   var app=document.getElementById('app');
   if(!authed){
-    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Sign in</button></div>';
+    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Sign in</button><p class="meta" style="margin-top:16px">Hosting an event? <a href="/host.html">Sign in on the Host desk</a>, then open Events.</p></div>';
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};return;
   }
   var y=window.scrollY,f=document.activeElement,fid=f&&f.id,pos=null;try{pos=f&&f.selectionStart;}catch(e){}
-  app.innerHTML=topBar()+'<main class="wrap">'+(A.view==='edit'?vEdit():(A.view==='bookings'?vBookings():vList()))+'</main>';
+  app.innerHTML=topBar()+'<main class="wrap">'+(A.view==='edit'?vEdit():(A.view==='add'?vAdd():(A.view==='bookings'?vBookings():vList())))+'</main>';
   if(fid){var n=document.getElementById(fid);if(n){n.focus();try{if(pos!=null)n.setSelectionRange(pos,pos);}catch(e){}}}
   window.scrollTo(0,y);
 }
@@ -273,7 +294,7 @@ function render(){
 function vList(){
   if(A.err&&!A.events)return '<div class="empty">'+esc(A.err)+'</div>';
   if(!A.events)return '<div class="empty">Loading…</div>';
-  return '<div class="ah"><h2>Events</h2><a class="btn primary" href="#new">+ New event</a></div><p class="meta" style="margin:4px 0 16px">Classes, open play, tournaments. Bookings, transfers and refunds per event.</p>'
+  return (ROLE==='host'?'<div class="ah"><h2>Events you host</h2></div><p class="meta" style="margin:4px 0 16px">Events the admin asked you to host. You can manage their bookings, payments and details.</p>':'<div class="ah"><h2>Events</h2><a class="btn primary" href="#new">+ New event</a></div><p class="meta" style="margin:4px 0 16px">Classes, open play, tournaments. Bookings, transfers and refunds per event.</p>')
     +(A.events.length?A.events.map(function(e){
       var cap=0,tk=0,modes=[];e.sessions.forEach(function(s){cap+=s.seats;tk+=s.taken;if(modes.indexOf(s.mode)<0)modes.push(s.mode);});
       var rev=e.bookings.review||0;
@@ -281,14 +302,14 @@ function vList(){
         +'<div class="meta">'+(e.sessions[0]?shortDate(e.sessions[0].start)+' '+e.sessions[0].start.slice(0,4)+' · ':'')+e.sessions.length+' session'+(e.sessions.length===1?'':'s')+' · '+tk+'/'+cap+' seats · '+modes.map(modeName).join(', ')+'</div>'
         +(rev?'<div class="note">'+rev+' transfer'+(rev===1?'':'s')+' to check</div>':'')+(e.refunds?'<div class="note">'+e.refunds+' refund'+(e.refunds===1?'':'s')+' to send</div>':'')
         +'<div class="acts"><a class="btn primary" href="#bookings='+e.id+'">Bookings</a><a class="btn" href="#edit='+e.id+'">Edit</a>'+(e.status==='published'?'<a class="btn" href="/events/'+e.id+'/'+e.slug+'" target="_blank" rel="noopener">Event page &#8599;</a>':'')+'</div></div>';
-    }).join(''):'<div class="empty">No events yet. Make the first one.</div>');
+    }).join(''):'<div class="empty">'+(ROLE==='host'?'No events to host yet. The admin picks the hosts of each event.':'No events yet. Make the first one.')+'</div>');
 }
 
 // ---- making and editing an event ----
 function today(){var d=new Date(Date.now()+7*3600e3+7*86400e3);return d.getUTCFullYear()+'-'+pad2(d.getUTCMonth()+1)+'-'+pad2(d.getUTCDate());}
 function blankSession(){return {id:'',date:today(),time:'19:00',hours:'3',seats:'16',price:'50000',levels:[],mode:'default',taken:0};}
-function blankEvent(){var d=A.defaults||{};return {id:'',type:'open',title:'',place:d.place||'',about:'',contactWa:showWa(d.contactWa||''),banks:[(d.banks||[])[0]||{bank:'',number:'',name:''},(d.banks||[])[1]||{bank:'',number:'',name:''}],venuePay:false,fours:false,showGoing:true,closeHours:'2',status:'draft',sessions:[blankSession()]};}
-function toForm(e){if(!e)return null;return {id:e.id,type:e.type,title:e.title,place:e.place,about:e.about,contactWa:showWa(e.contactWa),banks:[e.banks[0]||{bank:'',number:'',name:''},e.banks[1]||{bank:'',number:'',name:''}],venuePay:e.venuePay,fours:e.fours,showGoing:e.showGoing,closeHours:String(e.closeHours),status:e.status,
+function blankEvent(){var d=A.defaults||{};return {id:'',type:'open',title:'',place:d.place||'',about:'',contactWa:showWa(d.contactWa||''),banks:[(d.banks||[])[0]||{bank:'',number:'',name:''},(d.banks||[])[1]||{bank:'',number:'',name:''}],venuePay:false,fours:false,showGoing:true,closeHours:'2',status:'draft',hosts:[],sessions:[blankSession()]};}
+function toForm(e){if(!e)return null;return {id:e.id,type:e.type,title:e.title,place:e.place,about:e.about,contactWa:showWa(e.contactWa),banks:[e.banks[0]||{bank:'',number:'',name:''},e.banks[1]||{bank:'',number:'',name:''}],venuePay:e.venuePay,fours:e.fours,showGoing:e.showGoing,closeHours:String(e.closeHours),status:e.status,hosts:(e.hosts||[]).slice(),
   sessions:e.sessions.map(function(s){return {id:s.id,date:s.start.slice(0,10),time:s.start.slice(11,16),hours:String(s.hours),seats:String(s.seats),price:String(s.price),levels:s.levels.slice(),mode:s.mode,taken:s.taken};})};}
 function inp(id,val,attrs){return '<input id="'+id+'" data-e="'+id+'" value="'+esc(val)+'"'+(attrs||'')+'>';}
 function tg(key,label,sub){var on=!!A.edit[key];return '<div class="toggle"><div><b>'+label+'</b><div class="meta">'+sub+'</div></div><label class="sw"><input type="checkbox" data-t="'+key+'"'+(on?' checked':'')+' aria-label="'+esc(label)+'"><span></span></label></div>';}
@@ -314,20 +335,29 @@ function vEdit(){
     +'<div class="card"><h3>Payment</h3><p class="meta" style="margin:4px 0 8px">Bookers transfer the total plus a unique code (Rp 1 to 99) and write the booking note. No receipt is uploaded: you check the bank statement.</p>'
     +[0,1].map(function(k){var b=e.banks[k];return '<div class="meta" style="margin:10px 0 4px">Bank account '+(k+1)+(k?' (optional)':'')+'</div><div class="bg"><div class="field">'+inp('b'+k+'bank',b.bank,' placeholder="BCA" maxlength="30" aria-label="Bank"')+'</div><div class="field">'+inp('b'+k+'number',b.number,' placeholder="Account number" inputmode="numeric" maxlength="30" aria-label="Account number"')+'</div><div class="field">'+inp('b'+k+'name',b.name,' placeholder="Account name" maxlength="60" aria-label="Account name"')+'</div></div>';}).join('')
     +tg('venuePay','Pay at the venue for TBT players','Only when every player in the booking is registered with TBT')+'</div>'
+    +(ROLE==='admin'?hostsCard(e):'')
     +'<div class="card"><h3>Rules for booking</h3>'+tg('fours','Seats in fours','For tournaments with no standby: seats in multiples of 4')+tg('showGoing','Show who is coming','Nicknames of registered players only; guests are just counted')
     +'<div class="field" style="margin-top:12px"><label for="closeHours">Booking closes, hours before each session</label>'+inp('closeHours',e.closeHours,' type="number" min="0" max="72" step="0.5"')+'</div>'
     +'<div class="field"><label for="contactWa">Contact on WhatsApp (for questions)</label>'+inp('contactWa',e.contactWa,' type="tel" inputmode="tel" placeholder="0812..."')+'</div></div>'
     +'<div class="err" id="err">'+esc(A.err)+'</div>'
     +'<div class="acts"><button type="button" class="btn primary" data-a="save" data-v="published"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Save':'Publish')+'</button><button type="button" class="btn" data-a="save" data-v="draft"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Unpublish (draft)':'Save as draft')+'</button></div>';
 }
+function hostName(id){var o=(A.ev&&A.ev.hostOptions)||A.hostOptions||[];for(var i=0;i<o.length;i++)if(o[i].id===id)return o[i].nickname;return id;}
+function hostsCard(e){
+  var opts=(A.ev&&A.ev.hostOptions)||A.hostOptions||[],avail=opts.filter(function(h){return e.hosts.indexOf(h.id)<0;});
+  return '<div class="card"><h3>Event hosts</h3><p class="meta" style="margin:4px 0 10px">Hosts you pick here see this event on their Host desk and can do what you do for it: bookings, adding bookings by hand, checking transfers, payments, refunds, and editing the event. Only you choose the hosts, and only you make new events.</p>'
+    +(e.hosts.length?'<div class="hchips">'+e.hosts.map(function(id){return '<span class="hchip">'+esc(hostName(id))+'<button type="button" data-a="hrm" data-v="'+esc(id)+'" aria-label="Remove '+esc(hostName(id))+'">&times;</button></span>';}).join('')+'</div>':'<p class="meta">No hosts yet: only you manage this event.</p>')
+    +(avail.length?'<div class="frow" style="margin-top:10px;align-items:center"><div class="field" style="margin:0"><select id="hostPick" aria-label="Add a host"><option value="">Add a host…</option>'+avail.map(function(h){return '<option value="'+esc(h.id)+'">'+esc(h.nickname)+'</option>';}).join('')+'</select></div><button type="button" class="btn" data-a="hadd">Add</button></div>':(opts.length?'':'<p class="meta">Nobody has a host account yet. Make one on the Players page.</p>'))
+    +(opts.length?'<p class="meta" style="margin-top:8px">The list shows players who have a host account (made on the Players page).</p>':'')+'</div>';
+}
 function formToApi(st){
   var e=A.edit;
-  return {id:e.id||undefined,type:e.type,title:e.title,place:e.place,about:e.about,contactWa:e.contactWa,banks:e.banks.filter(function(b){return b.bank||b.number;}),venuePay:e.venuePay,fours:e.fours,showGoing:e.showGoing,closeHours:e.closeHours,status:st,
+  return {id:e.id||undefined,type:e.type,title:e.title,place:e.place,about:e.about,contactWa:e.contactWa,banks:e.banks.filter(function(b){return b.bank||b.number;}),venuePay:e.venuePay,fours:e.fours,showGoing:e.showGoing,closeHours:e.closeHours,status:st,hosts:ROLE==='admin'?e.hosts:undefined,
     sessions:e.sessions.map(function(s){return {id:s.id||undefined,start:s.date+'T'+s.time,hours:s.hours,seats:s.seats,price:s.price,levels:s.levels.length?s.levels:LEVELS.map(function(l){return l[0];}),mode:s.mode};})};
 }
 function save(st){
   A.err='';A.busy=true;render();
-  api('POST','/api/admin/events',formToApi(st)).then(function(d){A.busy=false;toast(st==='published'?'Saved and published':'Saved as draft');A.events=null;location.hash='bookings='+d.id;})
+  api('POST',BASE()+'/events',formToApi(st)).then(function(d){A.busy=false;toast(st==='published'?'Saved and published':'Saved as draft');A.events=null;location.hash='bookings='+d.id;})
     .catch(function(e){A.busy=false;A.err=e.message;render();var er=document.getElementById('err');if(er)er.scrollIntoView({block:'center'});});
 }
 
@@ -349,21 +379,24 @@ function waText(b,kind){
 }
 function waSheet(b,kind){
   var c=b.contact||{name:'',wa:''},txt=waText(b,kind);
+  if(!c.wa){sheet('<h3>No WhatsApp number</h3><p class="meta" style="margin:4px 0 10px">'+esc(c.name)+' was added without a number. Copy the message and send it where they wrote to you (Instagram DM).</p><textarea id="watx" rows="7">'+esc(txt)+'</textarea><div class="acts"><button type="button" class="btn primary" data-a="copytx">Copy message</button><button type="button" class="btn" data-a="close">Close</button></div>');return;}
   sheet('<h3>WhatsApp to '+esc(c.name)+'</h3><p class="meta" style="margin:4px 0 10px">'+esc(showWa(c.wa))+'. Change the message if you like, then open WhatsApp to send it.</p><textarea id="watx" rows="7">'+esc(txt)+'</textarea><div class="acts"><a class="btn primary" id="wago" href="https://wa.me/'+waNum(c.wa)+'?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">Open WhatsApp</a><button type="button" class="btn" data-a="close">Close</button></div>');
 }
 function sheet(html){document.getElementById('layer').innerHTML='<div class="dim" data-a="close"><div class="sheet" role="dialog" aria-modal="true">'+html+'</div></div>';}
 function closeSheet(){document.getElementById('layer').innerHTML='';}
 function bkRow(b){
   var open=!!A.open[b.id],st=STATUS[b.status]||[b.status,'grey'],active=['held','review','rejected','confirmed','venue'].indexOf(b.status)>=0,seats=seatsOf(b);
-  var head='<button type="button" class="bk-h" data-a="tgl" data-id="'+b.id+'" aria-expanded="'+open+'"><span class="who"><b>'+esc(b.contact?b.contact.name:'')+(b.players.length>1?' +'+(b.players.length-1):'')+'</b><span class="meta">'+seats+' seat'+(seats===1?'':'s')+' · '+(b.pay==='venue'?'pays at venue':(b.pay==='free'?'free':rp(b.toTransfer)))+' · TBT-'+esc(b.ref)+'</span></span><span class="bk-tags"><span class="tag '+st[1]+'">'+st[0]+'</span>'+(b.refund?'<span class="tag gold">Refund to send</span>':'')+'</span></button>';
+  var head='<button type="button" class="bk-h" data-a="tgl" data-id="'+b.id+'" aria-expanded="'+open+'"><span class="who"><b>'+esc(b.contact?b.contact.name:'')+(b.players.length>1?' +'+(b.players.length-1):'')+'</b><span class="meta">'+seats+' seat'+(seats===1?'':'s')+' · '+(b.pay==='venue'?'pays at venue':(b.pay==='free'?'free':(b.pay==='manual'?'paid '+rp(b.paidAmount||0):rp(b.toTransfer))))+' · TBT-'+esc(b.ref)+'</span>'+(b.source&&b.source!=='online'?'<span class="src">Added by '+esc(b.addedBy==='admin'||!b.addedBy?'admin':b.addedBy)+' · '+({wa:'WhatsApp',ig:'Instagram DM',walk:'Walk-in',other:'by hand'})[b.source]+'</span>':'')+'</span><span class="bk-tags"><span class="tag '+st[1]+'">'+st[0]+'</span>'+(b.refund?'<span class="tag gold">Refund to send</span>':'')+'</span></button>';
   if(!open)return '<div class="bk">'+head+'</div>';
   var body='<div class="bk-b">'+b.players.map(function(p){
     return '<div class="pl">'+(b.players.length>1&&active?'<button type="button" class="x" data-a="rmp" data-id="'+b.id+'" data-p="'+p.id+'">Remove</button>':'')+'<div class="n"><b>'+esc(p.name)+'</b> '+(p.registered?'<span class="tag ok">TBT: '+esc(p.nickname)+'</span>':'<span class="tag grey">Guest</span>')
-      +'<small><a href="https://wa.me/'+waNum(p.wa)+'" target="_blank" rel="noopener">'+esc(showWa(p.wa))+'</a>'+(p.ig?' · <a href="https://instagram.com/'+encodeURIComponent(p.ig)+'" target="_blank" rel="noopener">@'+esc(p.ig)+'</a>':'')+' · '+lvl(p.level)+'</small><small>'+p.sessions.map(function(id){var s=sById(id);return s?shortDate(s.start)+' '+s.start.slice(11,16)+' '+modeName(s.mode):'';}).join(', ')+'</small></div></div>';
+      +'<small>'+(p.wa?'<a href="https://wa.me/'+waNum(p.wa)+'" target="_blank" rel="noopener">'+esc(showWa(p.wa))+'</a>':'No WhatsApp')+(p.ig?' · <a href="https://instagram.com/'+encodeURIComponent(p.ig)+'" target="_blank" rel="noopener">@'+esc(p.ig)+'</a>':'')+' · '+(p.level?lvl(p.level):'Level not given')+'</small><small>'+p.sessions.map(function(id){var s=sById(id);return s?shortDate(s.start)+' '+s.start.slice(11,16)+' '+modeName(s.mode):'';}).join(', ')+'</small></div></div>';
   }).join('')
     +'<div class="kv"><span>Booked</span><span>'+when(b.createdAt)+'</span></div>'
     +(b.pay==='transfer'?'<div class="kv"><span>'+(b.status==='confirmed'?'Paid':(b.status==='cancelled'||b.status==='expired'?'Booked for':'Look for this transfer'))+'</span><span class="amt">'+rpCode(b.toTransfer)+'</span></div>'+(b.paidAmount&&b.paidAmount!==b.total+b.code?'<div class="kv"><span>Total now</span><span>'+rp(b.total)+'</span></div>':'')+'<div class="kv"><span>Transfer note</span><span><b>'+esc(b.note)+'</b></span></div>'
-      :'<div class="kv"><span>'+(b.pay==='venue'?'To pay at the venue':'Price')+'</span><span><b>'+rp(b.total)+'</b></span></div>')
+      :(b.pay==='manual'?'<div class="kv"><span>Paid</span><span><b>'+rp(b.paidAmount||0)+'</b></span></div>'+(b.paidAmount!==b.total?'<div class="kv"><span>Total</span><span>'+rp(b.total)+'</span></div>':'')
+      :'<div class="kv"><span>'+(b.pay==='venue'?'To pay at the venue':(b.pay==='free'?'Free (complimentary)':'Price'))+'</span><span><b>'+(b.pay==='free'?rp(0)+' <span class="meta">(worth '+rp(b.total)+')</span>':rp(b.total))+'</b></span></div>'))
+    +(b.memo?'<div class="kv"><span>Note</span><span>'+esc(b.memo)+'</span></div>':'')
     +(b.markedAt?'<div class="kv"><span>Marked transferred</span><span>'+when(b.markedAt)+'</span></div>':'')
     +(b.holdUntil&&(b.status==='held'||b.status==='rejected')?'<div class="kv"><span>Seats held until</span><span>'+when(b.holdUntil)+' WIB</span></div>':'')
     +(b.removed.length?'<div class="kv"><span>Taken out</span><span>'+b.removed.map(esc).join(', ')+'</span></div>':'')
@@ -391,8 +424,57 @@ function vBookings(){
   return '<a class="back" href="#">&lsaquo; Events</a><div class="ah" style="margin-top:4px"><h2>'+esc(e.title)+'</h2>'+(e.status==='draft'?'<span class="tag grey">Draft</span>':'')+'</div><p class="meta" style="margin:4px 0 12px">Bookings · <a href="#edit='+e.id+'">Edit event</a>'+(e.status==='published'?' · <a href="/events/'+e.id+'/'+e.slug+'" target="_blank" rel="noopener">Event page &#8599;</a>':'')+'</p>'
     +'<div class="stat"><div><b>'+tk+'/'+cap+'</b><span>Seats</span></div><div><b>'+cnt('review')+'</b><span>To check</span></div><div><b>'+(cnt('held')+cnt('rejected')+cnt('venue'))+'</b><span>Not paid</span></div><div><b>'+cnt('confirmed')+'</b><span>Confirmed</span></div></div>'
     +(e.sessions.length>1?'<div class="chips" style="margin:12px 0">'+[['all','All sessions']].concat(e.sessions.map(function(s){return [s.id,shortDate(s.start)+' '+s.start.slice(11,16)+' · '+s.taken+'/'+s.seats];})).map(function(t){return '<button type="button" class="chip" data-a="ses" data-v="'+t[0]+'" aria-pressed="'+(A.ses===t[0])+'">'+t[1]+'</button>';}).join('')+'</div>':'<div style="height:12px"></div>')
+    +'<div class="acts" style="margin:0 0 14px"><a class="btn primary" href="#add='+e.id+'">+ Add a booking</a><span class="meta" style="align-self:center">For people who book by WhatsApp, Instagram DM or at the door</span></div>'
     +(list.length?list.map(bkRow).join(''):'<div class="empty">No bookings yet.</div>')
     +'<div class="acts"><button type="button" class="btn" data-a="list">Copy player list</button><button type="button" class="btn" data-a="reload">Refresh</button></div>';
+}
+function newAP(){return {name:'',wa:'',ig:'',level:'',sessions:A.ev&&A.ev.sessions.length===1?[A.ev.sessions[0].id]:[],registryId:'',nick:''};}
+function regById(id){var l=(A.ev&&A.ev.registry)||[];for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];return null;}
+function addTotal(){return A.add.players.reduce(function(t,p){return t+p.sessions.reduce(function(u,id){var s=sById(id);return u+(s?s.price:0);},0);},0);}
+function addCard(p,i){
+  var q=(A.find&&A.find[i])||'',ql=q.toLowerCase(),used=A.add.players.map(function(x){return x.registryId;});
+  var hits=q?(A.ev.registry||[]).filter(function(r){return used.indexOf(r.id)<0&&(r.nickname+' '+r.fullName).toLowerCase().indexOf(ql)>=0;}).slice(0,5):[];
+  var want={};A.add.players.forEach(function(x){x.sessions.forEach(function(id){want[id]=(want[id]||0)+1;});});
+  return '<div class="card"><div class="ah"><h3>Player '+(i+1)+'</h3>'+(i?'<button type="button" class="btn sm" data-a="aprm" data-i="'+i+'">Remove</button>':'')+'</div>'
+    +(p.registryId?'<div class="regpick"><span class="tag ok">TBT: '+esc(p.nick)+'</span><span class="meta">Their registered WhatsApp and Instagram are used</span><button type="button" class="lnk" data-a="aunpick" data-i="'+i+'">Change</button></div>'
+      :'<div class="field" style="margin-top:10px"><label for="af'+i+'">Find a TBT player</label><input id="af'+i+'" data-find="'+i+'" placeholder="Nickname or name" value="'+esc(q)+'" autocomplete="off">'
+        +(hits.length?'<div class="hits">'+hits.map(function(r){return '<button type="button" class="hit" data-a="apick" data-i="'+i+'" data-v="'+esc(r.id)+'"><b>'+esc(r.nickname)+'</b>'+(r.fullName&&r.fullName!==r.nickname?'<span class="meta">'+esc(r.fullName)+'</span>':'')+'</button>';}).join('')+'</div>':(q?'<p class="meta">Not in the player list: fill in below as a guest.</p>':''))+'</div>')
+    +'<div class="frow"><div class="field"><label for="an'+i+'">Name *</label><input id="an'+i+'" data-af="name" data-i="'+i+'" value="'+esc(p.name)+'" maxlength="40"></div>'
+    +(p.registryId?'':'<div class="field"><label for="aw'+i+'">WhatsApp</label><input id="aw'+i+'" type="tel" inputmode="tel" data-af="wa" data-i="'+i+'" value="'+esc(p.wa)+'" placeholder="0812..."></div>')+'</div>'
+    +(p.registryId?'':'<div class="field"><label for="ai'+i+'">Instagram</label><input id="ai'+i+'" data-af="ig" data-i="'+i+'" value="'+esc(p.ig)+'" placeholder="username" autocapitalize="none"></div>')
+    +'<div class="meta" style="margin-bottom:6px">Level (optional)</div><div class="chips">'+LEVELS.map(function(l){return '<button type="button" class="chip" data-a="alvl" data-i="'+i+'" data-v="'+l[0]+'" aria-pressed="'+(p.level===l[0])+'">'+l[1]+'</button>';}).join('')+'</div>'
+    +'<div class="meta" style="margin:12px 0 2px">Coming to *</div>'+A.ev.sessions.map(function(s){var on=p.sessions.indexOf(s.id)>=0,room=s.seats-s.taken-(want[s.id]||0)+(on?1:0),off=!on&&room<=0&&!A.add.over;
+      return '<label class="pick'+(off?' off':'')+'"><input type="checkbox" data-as="'+s.id+'" data-i="'+i+'"'+(on?' checked':'')+(off?' disabled':'')+'><span><b>'+shortDate(s.start)+' '+s.start.slice(11,16)+'</b><br><span class="meta">'+(s.taken>=s.seats?'Full ('+s.taken+'/'+s.seats+')':(s.seats-s.taken)+' left')+' · '+rp(s.price)+'</span></span></label>';}).join('')+'</div>';
+}
+function vAdd(){
+  var e=A.ev;
+  if(A.err&&!e)return '<a class="back" href="#">&lsaquo; Events</a><div class="empty">'+esc(A.err)+'</div>';
+  if(!e)return '<div class="empty">Loading…</div>';
+  if(!A.add)A.add={src:'wa',players:[newAP()],pay:'paid',paid:'',note:'',over:false,err:''};
+  var d=A.add,t=addTotal(),seats=d.players.reduce(function(a,p){return a+p.sessions.length;},0);
+  var pays=[['paid','Already paid'],['link','Send transfer link'],['venue','Pay at the venue'],['free','Free (complimentary)']];
+  var why={paid:'Confirmed straight away. Write what was paid.',link:'Made like an online booking: seats held 2 hours, a unique code and a transfer note. Then send the link on WhatsApp.',venue:'Seats kept until the event; mark it paid at the door. Guests are fine here: the member-only rule is for online bookings.',free:'Confirmed, nothing to pay. For invited guests, partners or teachers.'}[d.pay];
+  return '<a class="back" href="#bookings='+e.id+'">&lsaquo; '+esc(e.title)+'</a><h2 style="margin:4px 0 4px">Add a booking</h2><p class="meta" style="margin:0 0 14px">For people who booked by WhatsApp, Instagram DM or at the door.</p>'
+    +'<div class="card"><div class="meta" style="margin-bottom:6px">Booked through</div><div class="chips">'+[['wa','WhatsApp'],['ig','Instagram DM'],['walk','Walk-in'],['other','Other']].map(function(x){return '<button type="button" class="chip" data-a="asrc" data-v="'+x[0]+'" aria-pressed="'+(d.src===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>'
+    +d.players.map(addCard).join('')
+    +(d.players.length<8?'<button type="button" class="btn" style="width:100%;margin-bottom:12px" data-a="apadd">+ Add a player</button>':'')
+    +'<div class="card"><h3>Payment</h3><div class="chips" style="margin-top:8px">'+pays.map(function(x){return '<button type="button" class="chip" data-a="apay" data-v="'+x[0]+'" aria-pressed="'+(d.pay===x[0])+'">'+x[1]+'</button>';}).join('')+'</div><p class="meta" style="margin:8px 0 0">'+why+'</p>'
+    +(d.pay==='paid'?'<div class="field" style="margin-top:10px"><label for="apaid">Amount received (Rp)</label><input id="apaid" data-ad="paid" inputmode="numeric" value="'+esc(d.paid===''?String(t):d.paid)+'"></div>':'')+'</div>'
+    +'<div class="card"><div class="toggle" style="border-top:0;margin-top:0;padding-top:0"><div><b>Allow over the seat limit</b><div class="meta">For a walk-in when the session is full. The session then shows more seats taken than it has.</div></div><label class="sw"><input type="checkbox" id="aover"'+(d.over?' checked':'')+' aria-label="Allow over the seat limit"><span></span></label></div>'
+    +'<div class="field" style="margin-top:8px"><label for="anote">Note (only admin and hosts see it)</label><input id="anote" data-ad="note" value="'+esc(d.note)+'" maxlength="200" placeholder="e.g. paid cash to Andre"></div></div>'
+    +'<div class="err" id="aerr">'+esc(d.err)+'</div>'
+    +'<div class="acts"><button type="button" class="btn primary" data-a="asave"'+(A.busy?' disabled':'')+'>'+(A.busy?'Adding…':'Add booking · '+seats+' seat'+(seats===1?'':'s')+' · '+(d.pay==='free'?'Free':rp(t)))+'</button><a class="btn" href="#bookings='+e.id+'">Cancel</a></div>';
+}
+function saveAdd(){
+  var d=A.add;d.err='';
+  for(var i=0;i<d.players.length;i++){var p=d.players[i];if(!p.name.trim()){d.err='Player '+(i+1)+': name is required.';render();return;}if(!p.sessions.length){d.err='Player '+(i+1)+': pick a session.';render();return;}}
+  A.busy=true;render();
+  var t=addTotal();
+  api('POST',BASE()+'/events/'+encodeURIComponent(A.ev.id),{source:d.src,pay:d.pay,paid:d.pay==='paid'?(d.paid===''?t:d.paid):undefined,over:d.over,note:d.note,
+    players:d.players.map(function(p){return {name:p.name,wa:p.wa,ig:p.ig,level:p.level,sessions:p.sessions,registryId:p.registryId||undefined};})})
+  .then(function(b){A.busy=false;A.add=null;A.open={};A.open[b.id]=true;location.hash='bookings='+A.ev.id;
+    loadOne(A.ev.id).then(function(){render();var x=findB(b.id)||b;waSheet(x,x.status==='held'?'held':(x.status==='venue'?'venue':'confirm'));});})
+  .catch(function(e){A.busy=false;d.err=e.message;render();var er=document.getElementById('aerr');if(er)er.scrollIntoView({block:'center'});});
 }
 function playerList(){
   var e=A.ev,out=[e.title];
@@ -405,7 +487,7 @@ function playerList(){
 }
 function act(id,body,then){
   A.busy=true;
-  api('POST','/api/admin/bookings/'+encodeURIComponent(id),body).then(function(b){
+  api('POST',BASE()+'/bookings/'+encodeURIComponent(id),body).then(function(b){
     A.busy=false;var l=A.ev.bookingList;for(var i=0;i<l.length;i++)if(l[i].id===id)l[i]=b;A.open[id]=true;
     return loadOne(A.ev.id).then(function(){render();if(then)then(A.ev.bookingList.filter(function(x){return x.id===id;})[0]||b);});
   }).catch(function(e){A.busy=false;toast(e.message);});
@@ -419,8 +501,13 @@ function setField(id,v){
   else if(['title','place','about','contactWa','closeHours'].indexOf(id)>=0)e[id]=v;
 }
 document.addEventListener('input',function(ev){var t=ev.target;if(t.dataset&&t.dataset.e)setField(t.dataset.e,t.value);
+  if(t.dataset&&t.dataset.find!==undefined&&A.add){A.find[t.dataset.find]=t.value;render();return;}
+  if(t.dataset&&t.dataset.af!==undefined&&A.add){A.add.players[+t.dataset.i][t.dataset.af]=t.value;}
+  if(t.dataset&&t.dataset.ad!==undefined&&A.add){A.add[t.dataset.ad]=t.value;}
   if(t.id==='watx'){var g=document.getElementById('wago');if(g)g.href=g.href.split('?')[0]+'?text='+encodeURIComponent(t.value);}});
-document.addEventListener('change',function(ev){var t=ev.target;if(t.dataset&&t.dataset.e)setField(t.dataset.e,t.value);if(t.dataset&&t.dataset.t&&A.edit){A.edit[t.dataset.t]=t.checked;if(t.dataset.t==='fours')render();}});
+document.addEventListener('change',function(ev){var t=ev.target;
+  if(t.dataset&&t.dataset.as!==undefined&&A.add){var pp=A.add.players[+t.dataset.i],k=pp.sessions.indexOf(t.dataset.as);if(t.checked&&k<0)pp.sessions.push(t.dataset.as);if(!t.checked&&k>=0)pp.sessions.splice(k,1);render();return;}
+  if(t.id==='aover'&&A.add){A.add.over=t.checked;render();return;}if(t.dataset&&t.dataset.e)setField(t.dataset.e,t.value);if(t.dataset&&t.dataset.t&&A.edit){A.edit[t.dataset.t]=t.checked;if(t.dataset.t==='fours')render();}});
 document.addEventListener('click',function(ev){
   var b=ev.target.closest?ev.target.closest('[data-a]'):null;if(!b)return;var a=b.dataset.a,e=A.edit;
   if(a==='close'){if(ev.target===b||b.tagName==='BUTTON')closeSheet();return;}
@@ -435,6 +522,17 @@ document.addEventListener('click',function(ev){
   else if(a==='reload'){loadOne(A.ev.id).then(function(){render();toast('Up to date');});}
   else if(a==='list')copyText(playerList(),'Player list copied');
   else if(a==='copy')copyText(b.dataset.v,'Booking link copied');
+  else if(a==='copytx'){var tx=document.getElementById('watx');copyText(tx?tx.value:'','Message copied');}
+  else if(a==='hrm'){e.hosts=e.hosts.filter(function(x){return x!==b.dataset.v;});render();}
+  else if(a==='hadd'){var hp=document.getElementById('hostPick');if(hp&&hp.value){e.hosts.push(hp.value);render();}}
+  else if(a==='asrc'){A.add.src=b.dataset.v;render();}
+  else if(a==='apay'){A.add.pay=b.dataset.v;render();}
+  else if(a==='apadd'){A.add.players.push(newAP());render();}
+  else if(a==='aprm'){A.add.players.splice(+b.dataset.i,1);render();}
+  else if(a==='alvl'){var ap=A.add.players[+b.dataset.i];ap.level=ap.level===b.dataset.v?'':b.dataset.v;render();}
+  else if(a==='apick'){var ap2=A.add.players[+b.dataset.i],r=regById(b.dataset.v);ap2.registryId=r.id;ap2.nick=r.nickname;ap2.name=r.fullName||r.nickname;ap2.wa='';ap2.ig='';A.find[b.dataset.i]='';render();}
+  else if(a==='aunpick'){var ap3=A.add.players[+b.dataset.i];ap3.registryId='';ap3.nick='';render();}
+  else if(a==='asave')saveAdd();
   else if(a==='wa'){var bk=findB(b.dataset.id);if(bk)waSheet(bk,b.dataset.k);}
   else if(a==='act'){var v2=b.dataset.v;act(b.dataset.id,{action:v2},function(x){if(v2==='confirm')waSheet(x,'confirm');else if(v2==='notfound')waSheet(x,'reject');else toast('Marked as refunded');});}
   else if(a==='rmb'){var bk2=findB(b.dataset.id),paid=bk2.status==='confirmed'||bk2.status==='review';A.rm={reason:'Asked to cancel'};
@@ -452,7 +550,7 @@ document.addEventListener('click',function(ev){
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&document.querySelector('.dim'))closeSheet();});
 function findB(id){var l=A.ev?A.ev.bookingList:[];for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];return null;}
 
-checkLogin().then(function(ok){authed=ok;if(ok)go();else render();});
+checkLogin().then(function(ok){if(ok){authed=true;go();return;}return hostLogin().then(function(h){authed=h;if(h)go();else render();});});
 render();
 </script>
 </body>

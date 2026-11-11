@@ -1533,3 +1533,26 @@ Semua alamat untuk Google dan link preview kini memakai **https://tilesbytiles.i
 Alamat lama `tilesbytilesleaderboard.pages.dev` tetap jalan (link lama, QR meja yang sudah dicetak, layar venue); karena canonical menunjuk ke domain baru, Google menggabungkan keduanya ke tilesbytiles.id.
 Link yang dibuat situs sendiri (link booking, link dan QR meja dari admin dan host) memakai alamat yang sedang dibuka, jadi buka admin lewat tilesbytiles.id supaya link baru ikut domain baru.
 **Berkas yang berubah:** `index.html`, `leaderboard.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-home.html`, `robots.txt`, `sitemap.xml`, dan catatan ini. Tidak ada perubahan database.
+
+## Update terbaru (v74): booking manual, host event, dan jarak di halaman admin
+
+**Tambah booking manual** (`/admin-events`, buka Bookings sebuah event, tombol **+ Add a booking**), untuk orang yang daftar lewat WhatsApp, DM Instagram, atau datang langsung:
+- **Booked through:** WhatsApp, Instagram DM, Walk-in, Other. Tampil di daftar sebagai "Added by admin · Instagram DM" (atau nama host yang menambahkan).
+- **Find a TBT player:** ketik nickname, pilih, maka pemain langsung tertaut ke registry dan server memakai WhatsApp serta Instagram yang terdaftar (nomornya tidak dikirim ke layar). Yang tidak terdaftar diisi sebagai guest.
+- WhatsApp dan level **boleh kosong**. Tanpa nomor WA, setelah disimpan muncul pesan untuk disalin dan dikirim lewat DM.
+- **Payment:** *Already paid* (langsung confirmed, dengan jumlah yang diterima), *Send transfer link* (seperti booking online: ditahan 2 jam, kode unik, berita transfer), *Pay at the venue* (boleh untuk guest), *Free (complimentary)*.
+- **Allow over the seat limit** untuk walk-in saat sesi penuh. **Note** internal yang hanya terlihat admin dan host.
+- Setelah disimpan, langsung muncul pesan WhatsApp yang sesuai (link transfer, catatan bayar di venue, atau konfirmasi).
+
+**Host event:**
+- Di **Edit event** ada kartu **Event hosts**: pilih dari pemain yang punya akun host (dibuat di halaman Players). Hanya admin yang memilih host dan membuat event baru.
+- Host membuka **Events** dari Host desk (link baru di bar Host desk), lalu masuk `/admin-events` dengan login host-nya sendiri (tanpa password admin) dan hanya melihat event yang dia pegang.
+  Di event itu host bisa melakukan semua yang admin lakukan: melihat dan menambah booking, confirm transfer, not found, mark paid, hapus booking atau pemain, refund, dan mengedit event (termasuk rekening). Event lain dijawab "You are not a host of this event."
+- Server: logika admin event dipindah ke `functions/_eventsadmin.js` dan dipakai bersama oleh `/api/admin/...` (password admin) dan `/api/host/...` (login host, cookie yang sudah ada).
+
+**Jarak di halaman admin:** judul dan kartu pertama tidak lagi menempel ke garis di bawah bar navigasi (jarak 24 px) di Events, Homepage, Sessions, dan Players.
+
+**Database:** kolom baru `events.hosts`, `bookings.source`, `bookings.note`, `bookings.added_by`, ditambahkan otomatis saat halaman event pertama kali dibuka. Tidak perlu Console D1.
+**Diuji di sini** dengan `wrangler pages dev`: admin memilih host, menambah booking manual (pemain dari registry plus guest tanpa WA, bayar di venue, sumber Instagram DM, note), booking walk-in sudah bayar tanpa WA; host login, hanya melihat eventnya, punya semua tombol, ditolak di event lain, tidak melihat kartu Event hosts.
+**Berkas baru:** `functions/_eventsadmin.js`, `functions/api/host/events.js`, `functions/api/host/events/[id].js`, `functions/api/host/bookings/[id].js`.
+**Berkas yang berubah:** `admin-events.html`, `admin-home.html`, `admin-daily.html`, `admin-pemain.html`, `host.html`, `events.html`, `functions/_events.js`, `functions/api/admin/events.js`, `functions/api/admin/events/[id].js`, `functions/api/admin/bookings/[id].js`, dan catatan ini.

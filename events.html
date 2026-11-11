@@ -928,7 +928,7 @@ function vBooking(){
   var b=V.bk;
   if(!b)return '<main class="e-wrap"><div class="e-narrow"><a class="e-back" href="/events">'+EI.back+'Events</a><div class="e-empty">'+(V.err||'Loading…')+'</div></div></main>';
   var e=b.event,st=b.status,pay=b.pay,link=location.origin+'/b/'+V.token;
-  var step2=pay==='venue'?'Pay at venue':(pay==='free'?'Free':'Transferred'),done2=st!=='held'&&st!=='rejected',done3=st==='confirmed';
+  var step2=pay==='venue'?'Pay at venue':(pay==='free'?'Free':(pay==='manual'?'Paid':'Transferred')),done2=st!=='held'&&st!=='rejected',done3=st==='confirmed';
   var head='<div class="e-kick">Booking TBT-'+esc(b.ref)+'</div><h1 class="e-h1">'+esc(e?e.title:'Booking')+'</h1>'+(e&&e.place?'<p class="e-lead">'+esc(e.place)+'</p>':'');
   var status='<div class="e-card" style="margin-top:16px"><div class="e-row e-between"><b>Status</b><span class="e-tag '+STATUS[st][1]+'">'+STATUS[st][0]+'</span></div>'
     +(st==='expired'||st==='cancelled'?'':'<div class="e-steps"><div class="on"><i></i>Reserved</div><div'+(done2?' class="on"':'')+'><i></i>'+step2+'</div><div'+(done3?' class="on"':'')+'><i></i>Confirmed</div></div>')

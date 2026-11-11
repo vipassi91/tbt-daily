@@ -33,10 +33,18 @@ export const EVENTS_SQL = [
   'CREATE INDEX IF NOT EXISTS idx_booking_seats_booking ON booking_seats(booking_id)',
 ];
 // The tables are made the first time anything about events is asked (no D1 console needed). Once per worker.
+// Columns added after v72 (an error only means the column is already there).
+const EVENTS_ALTERS = [
+  'ALTER TABLE events ADD COLUMN hosts TEXT',
+  'ALTER TABLE bookings ADD COLUMN source TEXT',
+  'ALTER TABLE bookings ADD COLUMN note TEXT',
+  'ALTER TABLE bookings ADD COLUMN added_by TEXT',
+];
 let ready = false;
 export async function ensureEventTables(env) {
   if (ready) return;
   await env.DB.batch(EVENTS_SQL.map(function (s) { return env.DB.prepare(s); }));
+  for (const q of EVENTS_ALTERS) { try { await env.DB.prepare(q).run(); } catch (e) { /* already there */ } }
   ready = true;
 }
 
@@ -70,7 +78,7 @@ export function eventRow(r) {
   return {
     id: r.id, slug: slugOf(r.title), type: r.type, title: r.title, place: r.place || '', about: r.about || '', contactWa: r.contact_wa || '',
     banks: parseJson(r.banks, []), venuePay: !!r.venue_pay, fours: !!r.fours, showGoing: !!r.show_going, closeHours: Number(r.close_hours) || 0,
-    status: r.status, createdAt: r.created_at, updatedAt: r.updated_at
+    status: r.status, hosts: parseJson(r.hosts, []), createdAt: r.created_at, updatedAt: r.updated_at
   };
 }
 export function sessionRow(r, taken) {
@@ -212,11 +220,12 @@ function viewFrom(b, ev, playerRows, seatRows, nick, admin) {
     note: noteOf(b.ref, players[0] ? players[0].name : (playerRows[0] ? playerRows[0].name : '')),
     holdUntil: b.hold_until, markedAt: b.marked_at, confirmedAt: b.confirmed_at, cancelledAt: b.cancelled_at,
     reason: b.reason || '', refund: b.refund || 0, removed: parseJson(b.removed, []), createdAt: b.created_at, players: players,
+    source: b.source || 'online',
     canCancel: ACTIVE.indexOf(b.status) >= 0 && firstMs - Date.now() > CANCEL_HOURS * 3600e3,
     event: ev ? { id: ev.id, slug: ev.slug, title: ev.title, place: ev.place, type: ev.type, contactWa: ev.contactWa, banks: ev.banks, sessions: ev.sessions.map(function (s) { return { id: s.id, start: s.start, hours: s.hours, price: s.price, mode: s.mode }; }) } : null
   };
   if (admin) {
-    view.id = b.id; view.token = b.token;
+    view.id = b.id; view.token = b.token; view.memo = b.note || ''; view.addedBy = b.added_by || '';
     // the booker (first player) is who the admin writes to, even after they were taken out of the booking
     const first = playerRows[0]; view.contact = first ? { name: first.name, wa: first.wa } : null;
   }
