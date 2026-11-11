@@ -244,7 +244,7 @@ function previewHtml(){
 }
 function serpHtml(){
   var t=text.title.length>60?text.title.slice(0,58)+'…':text.title,d=text.desc.length>155?text.desc.slice(0,153)+'…':text.desc;
-  return '<div class="serp-u">tilesbytilesleaderboard.pages.dev</div><div class="serp-t">'+esc(t)+'</div><div class="serp-d">'+esc(d)+'</div>';
+  return '<div class="serp-u">tilesbytiles.id</div><div class="serp-t">'+esc(t)+'</div><div class="serp-d">'+esc(d)+'</div>';
 }
 function warnHtml(){
   return text.hl&&(text.l1+' '+text.l2).indexOf(text.hl)<0?'The red word is not in the headline or the second line, so nothing turns red.':'';

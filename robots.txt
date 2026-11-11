@@ -9,4 +9,4 @@ Disallow: /claim
 Disallow: /api/
 Disallow: /b/
 
-Sitemap: https://tilesbytilesleaderboard.pages.dev/sitemap.xml
+Sitemap: https://tilesbytiles.id/sitemap.xml

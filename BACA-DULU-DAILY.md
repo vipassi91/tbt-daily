@@ -1526,3 +1526,10 @@ I have transferred, Not found, tandai lagi, confirm, keluarkan satu pemain denga
 **Berkas baru:** `events.html`, `admin-events.html`, `functions/_events.js`, `functions/api/events.js`, `functions/api/events/[id].js`, `functions/api/book.js`, `functions/api/booking/[token].js`, `functions/api/admin/events.js`, `functions/api/admin/events/[id].js`, `functions/api/admin/bookings/[id].js`.
 **Berkas yang berubah:** `index.html`, `leaderboard.html`, `player.html`, `players.html`, `quiz.html`, `admin-daily.html`, `admin-pemain.html`, `admin-home.html`, `_redirects`, `_headers`, `robots.txt`, `sitemap.xml`, dan catatan ini.
 **Catatan domain:** alamat `tilesbytilesleaderboard.pages.dev` masih tertulis di canonical, `og:url`, `sitemap.xml`, `robots.txt` dan data Organization. Link booking di WhatsApp memakai alamat yang sedang dibuka, jadi otomatis ikut domain baru. Saat `tilesbytiles.id` aktif, alamat-alamat tadi diganti di satu update.
+
+## Update terbaru (v73): domain tilesbytiles.id
+
+Semua alamat untuk Google dan link preview kini memakai **https://tilesbytiles.id**: `canonical` (homepage, leaderboard, events), `og:url` dan `og:image` di semua halaman publik, `sitemap.xml`, baris Sitemap di `robots.txt`, data Organization di homepage, dan contoh tampilan Google di halaman admin Homepage text.
+Alamat lama `tilesbytilesleaderboard.pages.dev` tetap jalan (link lama, QR meja yang sudah dicetak, layar venue); karena canonical menunjuk ke domain baru, Google menggabungkan keduanya ke tilesbytiles.id.
+Link yang dibuat situs sendiri (link booking, link dan QR meja dari admin dan host) memakai alamat yang sedang dibuka, jadi buka admin lewat tilesbytiles.id supaya link baru ikut domain baru.
+**Berkas yang berubah:** `index.html`, `leaderboard.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-home.html`, `robots.txt`, `sitemap.xml`, dan catatan ini. Tidak ada perubahan database.
