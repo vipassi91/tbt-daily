@@ -165,6 +165,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp
 setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
 a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/leaderboard" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
 </script>
+<style>.anav{overflow-x:auto;scrollbar-width:none}.anav::-webkit-scrollbar{display:none}.anav a{flex:1 0 auto;padding:0 12px}</style>
 </head>
 <body>
 <div id="app"></div>
@@ -559,7 +560,7 @@ function render(){
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
     return;
   }
-  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html" aria-current="page">Players</a><a href="/admin-home">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
+  app.innerHTML='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" data-a="logout">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html" aria-current="page">Players</a><a href="/admin-events">Events</a><a href="/admin-home">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>'
     +'<main class="wrap">'+viewSetup()+viewSignup()+viewHosts()+viewClaims()+viewQuiz()
     +'<div class="card"><input class="search" id="q" placeholder="Search by nickname, full name or Instagram" value="'+esc(q)+'"></div>'
     +'<div class="card"><h3 style="margin-bottom:10px">Guests, not registered ('+data.guests.length+')</h3>'+(data.guests.length?pickBar():'')+'<div id="glist">'+viewGuests()+'</div></div>'

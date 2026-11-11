@@ -7,5 +7,6 @@ Disallow: /scoreboard
 Disallow: /daftar
 Disallow: /claim
 Disallow: /api/
+Disallow: /b/
 
 Sitemap: https://tilesbytilesleaderboard.pages.dev/sitemap.xml

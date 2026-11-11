@@ -10,3 +10,12 @@
 /players/ /players 301
 /players/* /player 200
 /player/* /player 200
+
+# events: the list is events.html (served at /events); one event is /events/<id>/<name>, served by the same page.
+# A trailing slash goes to the list first, before the rule below takes it for an event.
+/events/ /events 301
+/events/* /events 200
+# a booking: /b/<private token>, served by the events page
+/b/* /events 200
+# the admin page for events
+/admin-events/ /admin-events 301

@@ -1497,3 +1497,32 @@ Langkah yang perlu dilakukan sendiri: daftarkan situs di Google Search Console d
 **Berkas baru:** `leaderboard.html` (isi `index.html` lama), `admin-home.html`, `functions/index.js`, `functions/_home.js`, `functions/api/admin/home.js`, `robots.txt`, `sitemap.xml`.
 **Berkas yang berubah:** `index.html` (kini homepage), `404.html`, `_headers`, `admin-daily.html`, `admin-pemain.html`, `claim.html`, `daftar.html`, `host.html`, `masuk.html`, `player.html`, `players.html`, `quiz.html`, `scoreboard.html`, dan catatan ini.
 Upload seluruh isi folder seperti biasa (bagian `functions/` ikut diunggah). Binding `DB` dan `ADMIN_PASSWORD` tidak berubah.
+
+## Update terbaru (v72): events dan booking
+
+**Halaman publik (satu berkas `events.html`, tiga alamat):**
+- **`/events`**: daftar event (filter Classes, Open Play, Tournaments; Upcoming dan Past), kursi tersisa, harga. Bagian "My bookings on this phone" muncul kalau HP itu pernah booking.
+- **`/events/<id>/<nama>`**: halaman event (sesi, level, mode leaderboard per sesi, Good to know, Who is coming), dan form booking di `#book`: satu kartu per orang (maks. 8), nama, WhatsApp, Instagram, level (First timer, Beginner, Casual, Intermediate, Advanced), sesi dipilih per orang. Sesi penuh, tutup, atau beda level tidak bisa dipilih.
+- **`/b/<kode rahasia>`**: halaman booking. Transfer persis total plus kode unik Rp 1 sampai 99, tulis berita transfer (contoh `TBT-4RSH DINDA`), ke salah satu dari dua rekening, lalu tekan **I have transferred** (tanpa upload bukti). Ada status, link untuk disimpan, tombol WhatsApp ke admin (bahasa Indonesia casual), dan **Cancel booking** sampai 24 jam sebelum sesi.
+
+**Aturan yang dijaga server:** kursi ditahan 2 jam; lewat dari itu booking kedaluwarsa dan kursinya kembali (dihitung tiap kali ada yang membuka event, tanpa timer). Kuota tidak bisa terlewati walau dua orang booking bersamaan (kursi ditulis dalam satu transaksi yang menghitung ulang).
+Kode unik tidak pernah sama dengan booking terbuka lain yang nominalnya sama di event itu. Booking ditutup N jam sebelum tiap sesi (diatur per event, default 2). **Bayar di venue** hanya kalau event mengizinkan dan **semua** nomor WA di booking terdaftar di registry; campuran member dan guest wajib transfer.
+Nomor WA yang terdaftar otomatis menautkan pemain ke registry (namanya di Who is coming memakai nickname; pemain yang menyembunyikan halamannya dan guest hanya dihitung). Maks. 8 booking per jam dari satu perangkat; ada kolom jebakan bot.
+
+**Admin (`/admin-events`, juga di bar admin dan menu):**
+- Buat dan edit event: jenis, judul, tempat, deskripsi, sesi (tanggal, jam, durasi, kursi, harga, level, **mode leaderboard per sesi**), dua rekening, bayar di venue untuk member, kursi kelipatan 4, Who is coming, jam tutup booking, kontak WA. Publish atau simpan draft. Sesi yang sudah ada booking-nya tidak bisa dihapus dan kursinya tidak bisa di bawah yang sudah dipesan.
+- Daftar booking per event dan per sesi: nominal yang dicari di mutasi rekening dan berita transfernya, nomor WA dan Instagram (bisa diklik), tanda TBT atau Guest.
+  Tombol **Money is in: confirm**, **Not found** (kursi ditahan 2 jam lagi), **Mark paid** (venue), **Confirm anyway**, **Remove booking** (alasan, catat refund), **Remove** per pemain (kursinya kembali, total baru, catat refund bagiannya), **Refund sent**, **Copy booking link**, **Copy player list**.
+  Setelah confirm, not found, atau remove, muncul pesan WhatsApp bahasa Indonesia casual yang bisa diedit lalu dibuka di WhatsApp ke nomor pemesan.
+- Tabel D1 baru (`events`, `event_sessions`, `bookings`, `booking_players`, `booking_seats`) dibuat otomatis saat halaman event pertama kali dibuka: **tidak perlu Console D1.** Tidak ada binding baru (tidak ada upload gambar, jadi tidak perlu R2).
+
+**Homepage:** kalau ada event, kartu hijau menjadi **Next up** (event terdekat, titik kursi, tombol Book), kolom kiri menjadi **Coming up**, tombol utama **See events**, dan kartu tengah di At the table menjadi **My booking** bila HP itu pernah booking. Tanpa event, homepage tetap seperti v71.
+**Menu:** Home, **Events**, Leaderboard, Players, Table code, Tile Quiz; bagian admin dimulai dengan Events. Bar admin bisa digeser ke samping di HP kecil.
+**SEO:** `/events` masuk `sitemap.xml`; `/b/` tidak diindeks (`robots.txt`, `_headers`).
+
+**Diuji di sini** dengan `wrangler pages dev` dan D1 lokal: membuat event dua sesi dari admin; booking dua orang (salah level, belum centang persetujuan, sesi penuh); 7 booking serentak untuk 5 kursi tersisa (5 masuk, 2 ditolak); bayar di venue dengan guest (ditolak, menyebut nama) dan semua member (masuk);
+I have transferred, Not found, tandai lagi, confirm, keluarkan satu pemain dengan refund, Refund sent, batal oleh pemesan; booking kedaluwarsa mengembalikan kursi; tampilan 360, 390 dan 1280 px tanpa scroll ke samping.
+
+**Berkas baru:** `events.html`, `admin-events.html`, `functions/_events.js`, `functions/api/events.js`, `functions/api/events/[id].js`, `functions/api/book.js`, `functions/api/booking/[token].js`, `functions/api/admin/events.js`, `functions/api/admin/events/[id].js`, `functions/api/admin/bookings/[id].js`.
+**Berkas yang berubah:** `index.html`, `leaderboard.html`, `player.html`, `players.html`, `quiz.html`, `admin-daily.html`, `admin-pemain.html`, `admin-home.html`, `_redirects`, `_headers`, `robots.txt`, `sitemap.xml`, dan catatan ini.
+**Catatan domain:** alamat `tilesbytilesleaderboard.pages.dev` masih tertulis di canonical, `og:url`, `sitemap.xml`, `robots.txt` dan data Organization. Link booking di WhatsApp memakai alamat yang sedang dibuka, jadi otomatis ikut domain baru. Saat `tilesbytiles.id` aktif, alamat-alamat tadi diganti di satu update.

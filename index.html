@@ -368,6 +368,12 @@ img.h-rot.out{opacity:0;transform:translateY(4px) scale(.96)}
 @media (prefers-reduced-motion:reduce){img.h-rot{transition:none}}
 /* before the script runs (and for search engines): the words alone */
 #seo{max-width:1120px;margin:0 auto;padding:44px 20px}
+
+.h-dots{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0 4px}
+.h-dots i{width:9px;height:9px;border-radius:3px;border:1.5px solid color-mix(in srgb,var(--onaccent) 55%,transparent)}
+.h-dots i.on{background:var(--onaccent);border-color:var(--onaccent)}
+.h-etag{display:inline-flex;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
+.h-etag.gold{background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--gold)}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Tiles by Tiles","url":"https://tilesbytilesleaderboard.pages.dev/","logo":"https://tilesbytilesleaderboard.pages.dev/assets/i/cfad30e8e7.png","slogan":"Play. Learn. Connect.","description":"Komunitas mahjong di Surabaya: kelas pemula, main bareng dan turnamen.","areaServed":{"@type":"City","name":"Surabaya"},"sameAs":["https://www.instagram.com/tiles.by.tiles/"]}</script>
 <script>
@@ -564,6 +570,7 @@ var TBTNAV = (function () {
   var IC = {
     search: '<svg viewBox="0 0 24 24" ' + P + '><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
     home: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>',
+    ticket: '<svg viewBox="0 0 24 24" ' + P + '><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/></svg>',
     menu: '<svg viewBox="0 0 24 24" ' + P + '><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     close: '<svg viewBox="0 0 24 24" ' + P + '><path d="M6 6l12 12M18 6L6 18"/></svg>',
     board: '<svg viewBox="0 0 24 24" ' + P + '><path d="M7 21V11M12 21V4M17 21v-7"/></svg>',
@@ -591,8 +598,8 @@ var TBTNAV = (function () {
   function setMe(id, name) { try { localStorage.setItem(ME_KEY, JSON.stringify({ id: id, name: name })); return true; } catch (e) { return false; } }
   function clearMe() { try { localStorage.removeItem(ME_KEY); } catch (e) { } }
   // ---- the navigation: the menu on phones and tablets, the tabs from 1280px
-  function links(o) { return [['hm', 'Home', '/', IC.home], ['lb', 'Leaderboard', '/leaderboard', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
-  var ADMIN = [['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
+  function links(o) { return [['hm', 'Home', '/', IC.home], ['ev', 'Events', '/events', IC.ticket], ['lb', 'Leaderboard', '/leaderboard', IC.board], ['pl', 'Players', (o && o.players) || '/players', IC.people], ['tc', 'Table code', '/masuk.html', IC.code], ['tq', 'Tile Quiz', '/quiz', IC.quiz]].concat(ST.su ? [['su', 'Sign up', '/daftar.html', IC.signup]] : []); }
+  var ADMIN = [['Events', '/admin-events', IC.ticket], ['Sessions', '/admin-daily.html', IC.cal], ['Players', '/admin-pemain.html', IC.people], ['Host desk', '/host.html', IC.code]];
   function panel(active, o) {
     var m = me(), h = links(o).map(function (i) { return '<a href="' + esc(i[2]) + '"' + (i[0] === active ? ' aria-current="page"' : '') + '>' + i[3] + '<span>' + i[1] + '</span>' + IC.go + '</a>'; }).join('');
     if (m) h += '<a href="' + esc(href(m)) + '"' + (active === 'me' ? ' aria-current="page"' : '') + '>' + IC.me + '<span>My page \u00b7 <b>' + esc(m.name) + '</b></span>' + IC.go + '</a>';
@@ -751,6 +758,7 @@ var HI={
   board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21V11M12 21V4M17 21v-7"/></svg>',
   people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>',
   go:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  ticket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/></svg>',
   ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg>'
 };
 var DAYS3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -775,7 +783,22 @@ function rotStart(){
 }
 
 // ---- what the page shows, from the same data as the leaderboard (/api/overview)
-var HS={loaded:false,failed:false};
+var HS={loaded:false,failed:false,events:null};
+// upcoming events (published, not finished): the next sessions anyone can still book or come to
+var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var EVT={cls:'Class',open:'Open Play',tour:'Tournament',other:'Event'};
+function upcomingSessions(){
+  if(!HS.events)return [];
+  var out=[],now=Date.now();
+  HS.events.forEach(function(e){e.sessions.forEach(function(s){if(Date.parse(s.start+':00+07:00')+s.hours*3600e3>now)out.push({e:e,s:s});});});
+  return out.sort(function(a,b){return a.s.start.localeCompare(b.s.start);});
+}
+function sDay(st){var d=new Date(+st.slice(0,4),+st.slice(5,7)-1,+st.slice(8,10));return DAYS3[d.getDay()];}
+function sEnd(st,h){var m=(+st.slice(11,13))*60+(+st.slice(14,16))+Math.round(h*60);m%=1440;return pad2(Math.floor(m/60))+':'+pad2(m%60);}
+function evHref(e){return '/events/'+encodeURIComponent(e.id)+'/'+(e.slug||'event');}
+function rpS(n){return n===0?'Free':'Rp '+Number(n).toLocaleString('id-ID');}
+function myBookings(){try{var a=JSON.parse(localStorage.getItem('tbt-bookings')||'[]');return Array.isArray(a)?a.filter(function(x){return x&&/^[A-Za-z0-9_-]{16,40}$/.test(x.t);}):[];}catch(e){return [];}}
+function lvlsS(a){var N={first:'First timer',beg:'Beginner',cas:'Casual',int:'Intermediate',adv:'Advanced'};return (!a||!a.length||a.length===5)?'All levels':a.map(function(k){return N[k]||k;}).join(' \u00b7 ');}
 function seasonDays(){var cur=currentSeason();return {d:+todayStr().slice(8,10),n:daysInMonth(cur)};}
 function latestSessions(){
   var by={};DATA.tables.forEach(function(t){if(t.events>0)(by[t.day_id]=by[t.day_id]||[]).push(t);});
@@ -794,14 +817,30 @@ function factsHtml(){
   return f(st.players,'player this season','players this season')+f(st.tables,'table played','tables played')+f(st.sessions,'session','sessions');
 }
 function featureHtml(){
-  var s=HS.loaded?latestSessions()[0]:null,peeks=rotImg('p1','h-peek h-peek1')+rotImg('p2','h-peek h-peek2');
+  var peeks=rotImg('p1','h-peek h-peek1')+rotImg('p2','h-peek h-peek2'),up=upcomingSessions()[0];
+  if(up){
+    var e=up.e,x=up.s,dots='';for(var i=0;i<Math.min(x.seats,32);i++)dots+='<i'+(i<x.seats-x.left?' class="on"':'')+'></i>';
+    return '<div class="h-feat">'+peeks+'<div class="h-card"><div class="h-card-k">Next up</div><div class="h-top"><div class="h-cal"><span>'+sDay(x.start)+'</span><b>'+(+x.start.slice(8,10))+'</b><span>'+MON3[+x.start.slice(5,7)-1]+'</span></div><div style="min-width:0"><h2>'+esc(e.title)+'</h2><div class="s">'+x.start.slice(11,16)+' to '+sEnd(x.start,x.hours)+' \u00b7 '+(EVT[e.type]||'Event')+'</div><div class="s">'+lvlsS(x.levels)+'</div></div></div>'
+      +(x.seats<=32?'<div class="h-dots" aria-label="'+(x.seats-x.left)+' of '+x.seats+' seats taken">'+dots+'</div>':'')
+      +'<div class="h-win" style="border-top:0;padding-top:0;margin-top:10px"><span><b>'+rpS(x.price)+'</b> <span class="s">\u00b7 '+(x.left?x.left+' seat'+(x.left===1?'':'s')+' left':'Full')+'</span></span><a class="h-btn" style="width:auto;margin:0" href="'+evHref(e)+'">'+(x.left&&x.open?'Book':'See event')+'</a></div></div></div>';
+  }
+  var s=HS.loaded?latestSessions()[0]:null;
   if(!s)return '<div class="h-feat">'+peeks+'<div class="h-card"><div class="h-card-k">At the table</div><h2 style="margin-top:8px">Got a table code?</h2><div class="s">Type it on the Table code page and keep score as you play.</div><a class="h-btn" href="/masuk.html">Open Table code</a></div></div>';
   var d=new Date(s.day.date+'T00:00:00');
   return '<div class="h-feat">'+peeks+'<div class="h-card"><div class="h-card-k">Latest session</div><div class="h-top"><div class="h-cal"><span>'+DAYS3[d.getDay()]+'</span><b>'+d.getDate()+'</b><span>'+MONTHS[d.getMonth()].slice(0,3)+'</span></div><div style="min-width:0"><h2>'+esc(s.day.label)+'</h2><div class="s">'+tablesWord(s.tables)+'</div></div></div>'
     +(s.top?'<div class="h-win"><span><span class="s">Top of the session</span><br><b>'+esc(s.top)+'</b></span><span class="v">'+fmtNet(s.topNet)+'</span></div>':'')
     +'<a class="h-btn" href="/leaderboard?sesi='+encodeURIComponent(s.day.id)+'">See the results</a></div></div>';
 }
+function comingHtml(){
+  var list=upcomingSessions().slice(1,5);
+  var rows=list.length?list.map(function(x){var e=x.e,s=x.s;
+    return '<a class="h-it" href="'+evHref(e)+'"><span class="h-d"><b>'+(+s.start.slice(8,10))+'</b><span>'+MON3[+s.start.slice(5,7)-1]+'</span></span><span class="h-m"><b>'+esc(e.title)+'</b><span>'+sDay(s.start)+' '+s.start.slice(11,16)+' \u00b7 '+lvlsS(s.levels)+'</span></span><span class="h-r"><span class="h-etag'+(e.type==='tour'?' gold':'')+'">'+(EVT[e.type]||'Event')+'</span><br>'+(s.left?s.left+' left':'<span style="color:var(--red);font-weight:700">Full</span>')+'</span></a>';}).join('')
+    :'<div class="h-empty">More events are on the way. Follow @tiles.by.tiles to hear first.</div>';
+  return '<div class="h-sec"><h2>Coming up</h2><a href="/events">All events</a></div><div class="h-list">'+rows+'</div>'
+    +'<div class="h-new">'+rotImg('n1')+'<div><b>Never played before?</b><span>Start with a First timer class. We bring the tiles, you bring a friend.</span></div><a class="h-btn" href="/events?type=cls">Find a class</a></div>';
+}
 function sessionsHtml(){
+  if(upcomingSessions().length)return comingHtml();
   var list=HS.loaded?latestSessions().slice(1,5):[];
   var rows=!HS.loaded?'<div class="h-empty">'+(HS.failed?'Can’t load the sessions right now.':'Loading…')+'</div>'
     :(list.length?list.map(function(s){var d=s.day.date;
@@ -822,7 +861,8 @@ function boardHtml(){
 function tableHtml(){
   return '<div class="h-sec" style="margin-top:20px"><h2>At the table</h2></div><div class="h-three">'
     +'<div class="h-tc code"><b>Got a table code?</b><span>Open your table and keep score.</span><form class="h-codein" id="hCode"><input id="hCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Your code" aria-label="Table code"><button class="h-btn pri" type="submit">Open</button></form><div class="h-cerr" id="hCodeErr" role="status"></div></div>'
-    +'<a class="h-tc" href="/players"><span class="h-ic">'+HI.people+'</span><b>Find your name</b><span>Every registered player and their page.</span><span class="h-go">All players '+HI.go+'</span></a>'
+    +(myBookings().length?'<a class="h-tc" href="/b/'+encodeURIComponent(myBookings()[0].t)+'"><span class="h-ic">'+HI.ticket+'</span><b>My booking</b><span>'+esc(myBookings()[0].title)+'</span><span class="h-go">Seats, transfer and status '+HI.go+'</span></a>'
+      :'<a class="h-tc" href="/players"><span class="h-ic">'+HI.people+'</span><b>Find your name</b><span>Every registered player and their page.</span><span class="h-go">All players '+HI.go+'</span></a>')
     +'<a class="h-tc" href="/quiz"><span class="h-art">'+rotImg('q1')+rotImg('q2')+rotImg('q3')+'</span><b>Which tile are you?</b><span>Sixteen questions, twenty-two tiles.</span><span class="h-go">Take the Tile Quiz '+HI.go+'</span></a>'
     +'</div>';
 }
@@ -830,7 +870,7 @@ function render(){
   var codeVal=(document.getElementById('hCodeIn')||{}).value||'',hadFocus=document.activeElement&&document.activeElement.id==='hCodeIn';
   document.getElementById('app').innerHTML=TBTNAV.header('hm',{logo:LOGO,name:'Tiles by Tiles',players:'/players'})
     +'<main><section class="h-hero"><div class="wrap h-hero-in" style="padding-bottom:28px"><div class="h-copy"><div class="h-kick">'+esc(HOME.kick)+'</div><h1>'+headlineHtml(HOME)+'</h1><p class="h-intro">'+esc(HOME.intro)+'</p>'
-    +'<div class="h-acts"><a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a></div><div class="h-facts">'+factsHtml()+'</div></div>'
+    +'<div class="h-acts">'+(upcomingSessions().length?'<a class="h-btn pri" href="/events">'+HI.ticket+'See events</a><a class="h-link" href="/leaderboard">Leaderboard '+HI.go+'</a>':'<a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a>')+'</div><div class="h-facts">'+factsHtml()+'</div></div>'
     +featureHtml()+'</div></section>'
     +'<div class="wrap" style="padding-bottom:0"><div class="h-grid"><section>'+sessionsHtml()+'</section><section>'+boardHtml()+'</section></div>'+tableHtml()+'</div></main>';
   var inp=document.getElementById('hCodeIn');if(inp){inp.value=codeVal;if(hadFocus)inp.focus();}
@@ -854,9 +894,10 @@ function load(){
     render();
   }).catch(function(){HS.failed=true;if(!HS.loaded)render();});
 }
+function loadEvents(){return fetch('/api/events').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.events){HS.events=d.events;render();}}).catch(function(){});}
 TBTNAV.boot({});
-render();load();
-setInterval(function(){if(!document.hidden)load();},60000);
+render();load();loadEvents();
+setInterval(function(){if(!document.hidden){load();loadEvents();}},60000);
 </script>
 </body>
 </html>

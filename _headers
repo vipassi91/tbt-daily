@@ -43,6 +43,15 @@
 /admin-pemain.html
   X-Robots-Tag: noindex, nofollow
   Referrer-Policy: no-referrer
+/admin-events
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/admin-events.html
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
+/b/*
+  X-Robots-Tag: noindex, nofollow
+  Referrer-Policy: no-referrer
 /admin-home
   X-Robots-Tag: noindex, nofollow
   Referrer-Policy: no-referrer

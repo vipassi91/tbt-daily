@@ -171,6 +171,7 @@ a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0
 .serp-d{font-size:14px;color:#4d5156;line-height:1.5}
 .hp-acts{display:flex;flex-wrap:wrap;gap:8px}
 .hp-acts .btn{min-height:42px;display:inline-flex;align-items:center}
+.anav{overflow-x:auto;scrollbar-width:none}.anav::-webkit-scrollbar{display:none}.anav a{flex:1 0 auto;padding:0 12px}
 </style>
 </head>
 <body>
@@ -255,7 +256,7 @@ function render(){
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
     return;
   }
-  var top='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/admin-home" aria-current="page">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';
+  var top='<div class="topbar"><div class="wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN</div><button class="lnk" onclick="logout()">Sign out</button></div><nav class="anav" aria-label="Admin"><a href="/admin-daily.html">Sessions</a><a href="/admin-pemain.html">Players</a><a href="/admin-events">Events</a><a href="/admin-home" aria-current="page">Homepage</a><a href="/leaderboard" target="_blank" rel="noopener">Leaderboard &#8599;</a></nav></div></div>';
   if(!text){app.innerHTML=top+'<main class="wrap"><div class="empty">'+(loadError||'Loading…')+'</div></main>';return;}
   var dirty=!same(text,saved);
   app.innerHTML=top+'<main class="wrap"><h2>Homepage text</h2><p class="meta" style="margin:6px 0 16px">The words at the top of the home page, and what Google shows for it. Saved words show on the home page within a minute, no upload needed.</p>'
