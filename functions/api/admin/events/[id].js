@@ -1,7 +1,7 @@
 import { isAdmin, json, unauthorized } from '../../../_auth.js';
-import { getEvent, addBooking } from '../../../_eventsadmin.js';
+import { getEvent, addBooking, deleteEvent } from '../../../_eventsadmin.js';
 
-// GET: one event with every booking. POST: a booking added by hand (WhatsApp, Instagram DM, walk-in). Admin password.
+// GET: one event with every booking. POST: a booking added by hand (WhatsApp, Instagram DM, walk-in). DELETE: the event, when nothing is active. Admin password.
 export async function onRequestGet({ request, env, params }) {
   if (!isAdmin(request, env)) return unauthorized();
   try {
@@ -20,3 +20,10 @@ export async function onRequestPost({ request, env, params }) {
   } catch (err) { return json({ error: 'Something went wrong: ' + String(err) }, 500); }
 }
 
+export async function onRequestDelete({ request, env, params }) {
+  if (!isAdmin(request, env)) return unauthorized();
+  try {
+    const r = await deleteEvent(env, { admin: true }, params.id);
+    return json(r.error ? { error: r.error } : r, r.error ? (r.status || 400) : 200);
+  } catch (err) { return json({ error: 'Something went wrong: ' + String(err) }, 500); }
+}

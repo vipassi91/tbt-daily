@@ -858,35 +858,18 @@ function boardHtml(){
   return head+'<div class="card h-lb"><div class="h-lbh"><span class="h-pill">'+esc(monthLabel(currentSeason()))+'</span><span class="h-pill">'+esc(modeLabel())+'</span><span class="h-day">Day '+sd.d+' of '+sd.n+'</span></div><div class="h-prog"><i style="width:'+Math.round(sd.d/sd.n*100)+'%"></i></div>'
     +(rows||'<p class="empty">No games this season yet.</p>')+'</div>';
 }
+// The Tile Quiz card, the same one as under the leaderboard (table code is in the menu, find your name in the header)
 function tableHtml(){
-  return '<div class="h-sec" style="margin-top:20px"><h2>At the table</h2></div><div class="h-three">'
-    +'<div class="h-tc code"><b>Got a table code?</b><span>Open your table and keep score.</span><form class="h-codein" id="hCode"><input id="hCodeIn" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Your code" aria-label="Table code"><button class="h-btn pri" type="submit">Open</button></form><div class="h-cerr" id="hCodeErr" role="status"></div></div>'
-    +(myBookings().length?'<a class="h-tc" href="/b/'+encodeURIComponent(myBookings()[0].t)+'"><span class="h-ic">'+HI.ticket+'</span><b>My booking</b><span>'+esc(myBookings()[0].title)+'</span><span class="h-go">Seats, transfer and status '+HI.go+'</span></a>'
-      :'<a class="h-tc" href="/players"><span class="h-ic">'+HI.people+'</span><b>Find your name</b><span>Every registered player and their page.</span><span class="h-go">All players '+HI.go+'</span></a>')
-    +'<a class="h-tc" href="/quiz"><span class="h-art">'+rotImg('q1')+rotImg('q2')+rotImg('q3')+'</span><b>Which tile are you?</b><span>Sixteen questions, twenty-two tiles.</span><span class="h-go">Take the Tile Quiz '+HI.go+'</span></a>'
-    +'</div>';
+  return '<div class="qz-wrap" style="padding:20px 0 24px"><div class="qz-pl"><div class="qz-pl-art" aria-hidden="true">'+rotImg('q1')+rotImg('q2')+rotImg('q3')+'</div><div class="qz-pl-tx"><b>Kamu tile yang mana?</b><span>16 pertanyaan, 3 menit. Ketemu tile kamu, partner main, dan rival bebuyutanmu.</span></div><a class="qz-pl-b" href="/quiz">Ikut quiz</a></div></div>';
 }
 function render(){
-  var codeVal=(document.getElementById('hCodeIn')||{}).value||'',hadFocus=document.activeElement&&document.activeElement.id==='hCodeIn';
   document.getElementById('app').innerHTML=TBTNAV.header('hm',{logo:LOGO,name:'Tiles by Tiles',players:'/players'})
     +'<main><section class="h-hero"><div class="wrap h-hero-in" style="padding-bottom:28px"><div class="h-copy"><div class="h-kick">'+esc(HOME.kick)+'</div><h1>'+headlineHtml(HOME)+'</h1><p class="h-intro">'+esc(HOME.intro)+'</p>'
     +'<div class="h-acts">'+(upcomingSessions().length?'<a class="h-btn pri" href="/events">'+HI.ticket+'See events</a><a class="h-link" href="/leaderboard">Leaderboard '+HI.go+'</a>':'<a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a>')+'</div><div class="h-facts">'+factsHtml()+'</div></div>'
     +featureHtml()+'</div></section>'
     +'<div class="wrap" style="padding-bottom:0"><div class="h-grid"><section>'+sessionsHtml()+'</section><section>'+boardHtml()+'</section></div>'+tableHtml()+'</div></main>';
-  var inp=document.getElementById('hCodeIn');if(inp){inp.value=codeVal;if(hadFocus)inp.focus();}
   rotStart();
 }
-// the table code: the same check as the Table code page (masuk.html), then straight to the table
-document.addEventListener('submit',function(e){
-  if(!e.target||e.target.id!=='hCode')return;
-  e.preventDefault();
-  var inp=document.getElementById('hCodeIn'),err=document.getElementById('hCodeErr'),code=inp.value.trim().toUpperCase();
-  if(!code){err.textContent='Type a code first.';inp.focus();return;}
-  err.textContent='';
-  fetch('/api/resolve/'+encodeURIComponent(code)).then(function(r){if(!r.ok)throw new Error('notfound');return r.json();}).then(function(d){
-    location.href='/scoreboard.html?'+(d.type==='host'?'code':'view')+'='+encodeURIComponent(d.code);
-  }).catch(function(){err.textContent='That code doesn’t match anything. Check it with your host.';});
-});
 function load(){
   return fetch('/api/overview').then(function(r){if(!r.ok)throw new Error('bad');return r.json();}).then(function(o){
     DATA=o;HS.loaded=true;HS.failed=false;

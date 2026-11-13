@@ -1,4 +1,5 @@
-import { cleanText, normWhatsapp, normInstagram } from './_players.js';
+import { cleanText, normWhatsapp, normInstagram, nameKey, ensureRegistryTables } from './_players.js';
+import { createTableRow } from './_tables.js';
 import { ensureEventTables, expireNow, loadEvents, takenBySession, cleanBanks, validStart, randomId, randomToken, newRef, nowIso, pickCode, registryByWa, eventBookings, goingOf, bookingView,
   TYPES, MODES, LEVELS, ACTIVE, HOLD_MINUTES, MAX_PLAYERS } from './_events.js';
 
@@ -251,4 +252,128 @@ export async function addBooking(env, actor, eventId, b) {
   }
   const fresh = await env.DB.prepare('SELECT * FROM bookings WHERE id = ?').bind(id).first();
   return bookingView(env, fresh, true);
+}
+
+// ---- deleting an event (admin only) ----
+// Allowed only when no booking still holds a seat and no refund is waiting, so no seat or money disappears from view.
+// Everything that belongs to the event goes: sessions, bookings, players, seats. Leaderboard sessions and tables are separate and stay.
+export async function deleteEvent(env, actor, id) {
+  if (!actor.admin) return { error: 'Only the admin deletes events.', status: 403 };
+  await ensureEventTables(env);
+  await expireNow(env);
+  const ev = await env.DB.prepare('SELECT id FROM events WHERE id = ?').bind(String(id)).first();
+  if (!ev) return { error: 'This event was not found.', status: 404 };
+  const act = await env.DB.prepare("SELECT COUNT(*) AS n FROM bookings WHERE event_id = ? AND status IN ('held','review','rejected','confirmed','venue')").bind(ev.id).first();
+  if (act && act.n) return { error: act.n + ' booking' + (act.n === 1 ? ' is' : 's are') + ' still active. Remove ' + (act.n === 1 ? 'it' : 'them') + ' first.', status: 409 };
+  const rf = await env.DB.prepare('SELECT COUNT(*) AS n FROM bookings WHERE event_id = ? AND refund > 0').bind(ev.id).first();
+  if (rf && rf.n) return { error: rf.n + ' refund' + (rf.n === 1 ? ' is' : 's are') + ' still waiting. Mark ' + (rf.n === 1 ? 'it' : 'them') + ' as sent first.', status: 409 };
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM booking_seats WHERE booking_id IN (SELECT id FROM bookings WHERE event_id = ?)').bind(ev.id),
+    env.DB.prepare('DELETE FROM booking_players WHERE booking_id IN (SELECT id FROM bookings WHERE event_id = ?)').bind(ev.id),
+    env.DB.prepare('DELETE FROM bookings WHERE event_id = ?').bind(ev.id),
+    env.DB.prepare('DELETE FROM event_sessions WHERE event_id = ?').bind(ev.id),
+    env.DB.prepare('DELETE FROM events WHERE id = ?').bind(ev.id),
+  ]);
+  return { ok: true };
+}
+
+// ---- event day: the booked players of one session go to scoreboard tables ----
+// One leaderboard session (a "days" row) per event session, made the first time; later calls add tables to it.
+// Players are sent by their booking player id; the server writes the name (a registered player's nickname, otherwise the booked name)
+// and ties each registered player to their seat, so the leaderboard counts them for the right person.
+// Event day tables do not count toward a host's 24 tables a day.
+export const DAY_MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
+const SEATED = "('held','review','rejected','confirmed','venue')";
+
+async function sessionPlayers(env, sessionId) {
+  const r = await env.DB.prepare('SELECT p.id, p.name, p.level, p.registry_id, b.status, b.pay, b.ref, b.created_at FROM booking_seats s JOIN booking_players p ON p.id = s.player_id JOIN bookings b ON b.id = s.booking_id WHERE s.session_id = ? AND b.status IN ' + SEATED + ' ORDER BY b.created_at, p.position').bind(sessionId).all();
+  const rids = r.results.map(function (p) { return p.registry_id; }).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+  const nick = {};
+  if (rids.length) {
+    try { const n = await env.DB.prepare('SELECT id, nickname FROM registry WHERE id IN (' + rids.map(function () { return '?'; }).join(',') + ')').bind(...rids).all(); n.results.forEach(function (x) { nick[x.id] = x.nickname; }); } catch (e) { }
+  }
+  return r.results.map(function (p) {
+    const reg = p.registry_id && nick[p.registry_id] ? p.registry_id : '';
+    return { id: p.id, name: p.name, table: reg ? nick[reg] : p.name, registryId: reg, level: p.level, status: p.status, pay: p.pay, ref: p.ref };
+  });
+}
+async function dayTables(env, dayId) {
+  if (!dayId) return null;
+  const d = await env.DB.prepare('SELECT id, label, date FROM days WHERE id = ?').bind(dayId).first();
+  if (!d) return null;
+  const t = await env.DB.prepare('SELECT id, code, view_code, label, players, rounds FROM tables WHERE day_id = ? ORDER BY created_at').bind(dayId).all();
+  return { id: d.id, label: d.label, date: d.date, tables: t.results.map(function (x) {
+    let mode = 'casual'; try { mode = JSON.parse(x.rounds).mode || 'casual'; } catch (e) { }
+    let players = []; try { players = JSON.parse(x.players) || []; } catch (e) { }
+    return { id: x.id, code: x.code, viewCode: x.view_code, label: x.label, players: players, mode: mode };
+  }) };
+}
+export async function getEventDay(env, actor, eventId, sessionId) {
+  await ensureEventTables(env);
+  await expireNow(env);
+  const ev = (await loadEvents(env, 'id = ?', [String(eventId)]))[0];
+  if (!ev) return { error: 'This event was not found.', status: 404 };
+  if (!mayManage(actor, ev)) return NOT_YOURS;
+  const s = ev.sessions.filter(function (x) { return x.id === String(sessionId); })[0];
+  if (!s) return { error: 'This session was not found.', status: 404 };
+  return { event: { id: ev.id, title: ev.title, place: ev.place, sessions: ev.sessions }, session: s, players: await sessionPlayers(env, s.id), day: await dayTables(env, s.dayId), role: actor.admin ? 'admin' : 'host' };
+}
+export async function makeEventDay(env, actor, eventId, b) {
+  await ensureEventTables(env);
+  await expireNow(env);
+  const ev = (await loadEvents(env, 'id = ?', [String(eventId)]))[0];
+  if (!ev) return { error: 'This event was not found.', status: 404 };
+  if (!mayManage(actor, ev)) return NOT_YOURS;
+  const s = ev.sessions.filter(function (x) { return x.id === String(b && b.sessionId); })[0];
+  if (!s) return { error: 'This session was not found.', status: 404 };
+  if (s.mode === 'chicken') return { error: 'Chicken Hand sessions are not on the leaderboard, so they have no tables.', status: 400 };
+  const asked = Array.isArray(b.tables) ? b.tables.slice(0, 40) : [];
+  if (!asked.length) return { error: 'There are no tables to make.', status: 400 };
+  const players = await sessionPlayers(env, s.id), byId = {};
+  players.forEach(function (p) { byId[p.id] = p; });
+  let day = await dayTables(env, s.dayId);
+  // a player already at a table of this session is not seated twice (a second tap, two people on two phones)
+  const used = {}, plan = [], seated = {};
+  if (day) day.tables.forEach(function (t) { t.players.forEach(function (n) { seated[nameKey(n)] = 1; }); });
+  players.forEach(function (p) { if (seated[nameKey(p.table)]) used[p.id] = 1; });
+  for (const t of asked) {
+    const ids = (Array.isArray(t.players) ? t.players : []).map(String).filter(function (id) { return byId[id] && !used[id]; }).slice(0, 4);
+    if (!ids.length) continue;
+    ids.forEach(function (id) { used[id] = 1; });
+    plan.push({ mode: DAY_MODES.indexOf(t.mode) >= 0 ? t.mode : (DAY_MODES.indexOf(s.mode) >= 0 ? s.mode : 'casual'), players: ids.map(function (id) { return byId[id]; }) });
+  }
+  if (!plan.length) return { error: 'There are no players at these tables.', status: 400 };
+  const hostId = actor.host ? actor.host.id : null;
+  if (hostId) { for (const q of ['ALTER TABLE tables ADD COLUMN created_by TEXT', 'ALTER TABLE days ADD COLUMN created_by TEXT']) { try { await env.DB.prepare(q).run(); } catch (e) { } } }
+  if (!day) {
+    const date = s.start.slice(0, 10);
+    const sameDay = ev.sessions.filter(function (x) { return x.start.slice(0, 10) === date; }).length > 1;
+    const label = (sameDay ? ev.title.slice(0, 33) + ' ' + s.start.slice(11, 16) : ev.title.slice(0, 40)).trim();
+    const id = 'day-' + Date.now() + '-' + randomId('').slice(0, 4);
+    if (hostId) await env.DB.prepare('INSERT INTO days (id, label, date, created_at, created_by) VALUES (?,?,?,?,?)').bind(id, label, date, nowIso(), hostId).run();
+    else await env.DB.prepare('INSERT INTO days (id, label, date, created_at) VALUES (?,?,?,?)').bind(id, label, date, nowIso()).run();
+    await env.DB.prepare('UPDATE event_sessions SET day_id = ? WHERE id = ?').bind(id, s.id).run();
+    day = { id: id, label: label, date: date, tables: [] };
+  }
+  // seat links: a registered player is tied to their seat; a guest who shares a name with a registered player is marked as a guest
+  let names = new Map();
+  try {
+    await ensureRegistryTables(env);
+    const n = await env.DB.prepare('SELECT name_key, registry_id FROM registry_names').all();
+    n.results.forEach(function (x) { names.set(x.name_key, x.registry_id); });
+  } catch (e) { names = null; }
+  let number = day.tables.length;
+  for (const t of plan) {
+    number++;
+    const made = await createTableRow(env, { id: day.id, date: day.date }, 'Table ' + number, t.players.map(function (p) { return p.table; }), hostId, t.mode);
+    if (names) {
+      const now = nowIso();
+      for (let i = 0; i < t.players.length; i++) {
+        const p = t.players[i], key = nameKey(p.table), to = p.registryId || (names.has(key) ? 'guest' : '');
+        if (!to || to === names.get(key)) continue;   // the name already points to the right person
+        try { await env.DB.prepare('INSERT INTO registry_seats (table_id, seat, name_key, registry_id, created_at) VALUES (?,?,?,?,?) ON CONFLICT(table_id, seat) DO UPDATE SET name_key=excluded.name_key, registry_id=excluded.registry_id').bind(made.id, i, key, to, now).run(); } catch (e) { }
+      }
+    }
+  }
+  return { ok: true, day: await dayTables(env, day.id) };
 }

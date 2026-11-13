@@ -219,6 +219,8 @@ main.wrap{padding-top:24px;padding-bottom:72px}
 .hchip{display:inline-flex;align-items:center;gap:2px;padding:4px 4px 4px 12px;border-radius:999px;background:var(--accent);color:var(--onaccent);font-weight:700;font-size:14px}
 .hchip button{width:28px;height:28px;border-radius:50%;border:0;background:transparent;color:var(--onaccent);font-size:18px;line-height:1;padding:0}
 </style>
+<style>.danger-zone{margin-top:28px;border-color:color-mix(in srgb,var(--red) 35%,var(--line))}.danger-zone h3{color:var(--red)}</style>
+<style id="daycss">.dayrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;border:1px dashed var(--line);border-radius:14px;padding:10px 12px;margin:0 0 14px}.note{border-left:3px solid var(--gold,#b8912e);padding:8px 12px;background:rgba(184,145,46,.08);border-radius:0 12px 12px 0;font-size:13px;margin:12px 0}.drow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:12px 0}.dtbls{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media(min-width:640px){.dtbls{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:980px){.dtbls{grid-template-columns:repeat(3,minmax(0,1fr))}}.dtb{border:1px solid var(--line);border-radius:16px;background:var(--surface,var(--card));padding:12px 14px;min-width:0}.dtb h3{font-size:17px;display:flex;justify-content:space-between;align-items:center;margin:0;font-variant-numeric:lining-nums}.dtb h3 .bad{color:var(--red);font-weight:700}.mrow{display:flex;justify-content:space-between;align-items:center;margin:6px 0 4px}.modesel{font-size:12px;padding:3px 6px;border-radius:8px;border:1px solid var(--line);background:var(--field,transparent);font-weight:700;color:var(--accent);width:auto}.seat{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}.seat .nm{flex:1;min-width:0}.seat .w{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--field,transparent);border:1px solid var(--line);color:var(--red);font-family:"TBT Hanzi",KaiTi,serif}.seat select{width:auto;font-size:13px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--field,transparent)}.dtb>.seat:first-child{border-top:0}.dayrow a.chip{text-decoration:none}.dtb .tag{font-family:inherit}.seat .unp{color:#9a7618}.dlinks{display:flex;gap:6px;margin-top:10px}.dlinks .btn{flex:1;min-height:36px;padding:0 8px;font-size:13px;white-space:nowrap}</style>
 </head>
 <body>
 <div id="app"></div>
@@ -234,7 +236,7 @@ function BASE(){return ROLE==='host'?'/api/host':'/api/admin';}
 var A={hostOptions:[],add:null,events:null,defaults:{banks:[],contactWa:'',place:''},err:'',view:'list',id:null,ev:null,edit:null,busy:false,ses:'all',open:{},rm:null};
 var LEVELS=[['first','First timer'],['beg','Beginner'],['cas','Casual'],['int','Intermediate'],['adv','Advanced']];
 var TYPES=[['cls','Class'],['open','Open Play'],['tour','Tournament'],['other','Event']];
-var MODES=[['default','Default'],['casual','Casual'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom']];
+var MODES=[['default','Default'],['casual','Casual'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom'],['chicken','Chicken Hand']];
 var STATUS={held:['Not transferred yet','grey'],review:['Transferred: check bank','gold'],rejected:['Transfer not found','red'],confirmed:['Confirmed','ok'],venue:['Pays at the venue','gold'],expired:['Expired','red'],cancelled:['Cancelled','red']};
 var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DAY3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -270,6 +272,7 @@ function go(){
   if(h==='new'){if(ROLE==='host'){location.hash='';return;}A.view='edit';A.id=null;A.edit=null;loadList().then(function(){A.edit=blankEvent();render();});return;}
   if((m=/^edit=(\w+)$/.exec(h))){A.view='edit';A.id=m[1];A.edit=null;render();loadOne(m[1]).then(function(){A.edit=toForm(A.ev);render();});return;}
   if((m=/^add=(\w+)$/.exec(h))){A.view='add';A.id=m[1];A.add=null;A.find={};if(!A.ev||A.ev.id!==m[1]){A.ev=null;render();loadOne(m[1]).then(function(){render();});}else render();return;}
+  if((m=/^day=(\w+)\.(\w+)$/.exec(h))){A.view='day';A.id=m[1];A.day=null;render();loadDay(m[1],m[2]);return;}
   if((m=/^bookings=(\w+)$/.exec(h))){A.view='bookings';A.id=m[1];if(!A.ev||A.ev.id!==m[1]){A.ev=null;A.ses='all';}render();loadOne(m[1]).then(render);return;}
   A.view='list';render();loadList().then(render);
 }
@@ -285,7 +288,7 @@ function render(){
     var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};return;
   }
   var y=window.scrollY,f=document.activeElement,fid=f&&f.id,pos=null;try{pos=f&&f.selectionStart;}catch(e){}
-  app.innerHTML=topBar()+'<main class="wrap">'+(A.view==='edit'?vEdit():(A.view==='add'?vAdd():(A.view==='bookings'?vBookings():vList())))+'</main>';
+  app.innerHTML=topBar()+'<main class="wrap">'+(A.view==='edit'?vEdit():(A.view==='add'?vAdd():(A.view==='day'?vDay():(A.view==='bookings'?vBookings():vList()))))+'</main>';
   if(fid){var n=document.getElementById(fid);if(n){n.focus();try{if(pos!=null)n.setSelectionRange(pos,pos);}catch(e){}}}
   window.scrollTo(0,y);
 }
@@ -323,7 +326,7 @@ function vEdit(){
       +'<div class="sg"><div class="field"><label for="s'+i+'date">Date</label>'+inp('s'+i+'date',s.date,' type="date"')+'</div><div class="field"><label for="s'+i+'time">Start</label>'+inp('s'+i+'time',s.time,' type="time"')+'</div>'
       +'<div class="field"><label for="s'+i+'hours">Hours</label>'+inp('s'+i+'hours',s.hours,' type="number" min="0.5" max="24" step="0.5"')+'</div><div class="field"><label for="s'+i+'seats">Seats</label>'+inp('s'+i+'seats',s.seats,' type="number" min="1" max="400" step="'+(e.fours?4:1)+'"')+'</div>'
       +'<div class="field"><label for="s'+i+'price">Price (Rp)</label>'+inp('s'+i+'price',s.price,' type="number" min="0" step="1000"')+'</div>'
-      +'<div class="field"><label for="s'+i+'mode">Leaderboard mode</label><select id="s'+i+'mode" data-e="s'+i+'mode">'+MODES.map(function(m){return '<option value="'+m[0]+'"'+(m[0]===s.mode?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select></div></div>'
+      +'<div class="field"><label for="s'+i+'mode">Game mode</label><select id="s'+i+'mode" data-e="s'+i+'mode">'+MODES.map(function(m){return '<option value="'+m[0]+'"'+(m[0]===s.mode?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select></div></div>'
       +'<div class="meta" style="margin:4px 0 6px">Levels '+(all?'(all levels)':'')+'</div><div class="chips">'+LEVELS.map(function(l){var on=all||s.levels.indexOf(l[0])>=0;return '<button type="button" class="chip" data-a="slv" data-i="'+i+'" data-v="'+l[0]+'" aria-pressed="'+on+'">'+l[1]+'</button>';}).join('')+'</div></div>';
   }).join('');
   return '<a class="back" href="#">&lsaquo; Events</a><h2 style="margin:4px 0 16px">'+(e.id?'Edit event':'New event')+'</h2>'
@@ -331,7 +334,7 @@ function vEdit(){
     +'<div class="field" style="margin-top:14px"><label for="title">Title</label>'+inp('title',e.title,' maxlength="80" placeholder="Friday Night Mabar"')+'</div>'
     +'<div class="field"><label for="place">Place</label>'+inp('place',e.place,' maxlength="120" placeholder="Four Winds Citraland, Surabaya"')+'</div>'
     +'<div class="field"><label for="about">About</label><textarea id="about" data-e="about" rows="4" maxlength="2000">'+esc(e.about)+'</textarea></div></div>'
-    +'<div class="card"><div class="ah"><h3>Sessions</h3><button type="button" class="btn sm" data-a="sadd">+ Add session</button></div><p class="meta" style="margin:4px 0 0">Times are Surabaya time. The mode is what the event-day tables start with; each table can still change it.</p>'+ses+'</div>'
+    +'<div class="card"><div class="ah"><h3>Sessions</h3><button type="button" class="btn sm" data-a="sadd">+ Add session</button></div><p class="meta" style="margin:4px 0 0">Times are Surabaya time. The game mode is what the session plays and what its tables start with on the event day.</p>'+ses+'</div>'
     +'<div class="card"><h3>Payment</h3><p class="meta" style="margin:4px 0 8px">Bookers transfer the total plus a unique code (Rp 1 to 99) and write the booking note. No receipt is uploaded: you check the bank statement.</p>'
     +[0,1].map(function(k){var b=e.banks[k];return '<div class="meta" style="margin:10px 0 4px">Bank account '+(k+1)+(k?' (optional)':'')+'</div><div class="bg"><div class="field">'+inp('b'+k+'bank',b.bank,' placeholder="BCA" maxlength="30" aria-label="Bank"')+'</div><div class="field">'+inp('b'+k+'number',b.number,' placeholder="Account number" inputmode="numeric" maxlength="30" aria-label="Account number"')+'</div><div class="field">'+inp('b'+k+'name',b.name,' placeholder="Account name" maxlength="60" aria-label="Account name"')+'</div></div>';}).join('')
     +tg('venuePay','Pay at the venue for TBT players','Only when every player in the booking is registered with TBT')+'</div>'
@@ -340,7 +343,23 @@ function vEdit(){
     +'<div class="field" style="margin-top:12px"><label for="closeHours">Booking closes, hours before each session</label>'+inp('closeHours',e.closeHours,' type="number" min="0" max="72" step="0.5"')+'</div>'
     +'<div class="field"><label for="contactWa">Contact on WhatsApp (for questions)</label>'+inp('contactWa',e.contactWa,' type="tel" inputmode="tel" placeholder="0812..."')+'</div></div>'
     +'<div class="err" id="err">'+esc(A.err)+'</div>'
-    +'<div class="acts"><button type="button" class="btn primary" data-a="save" data-v="published"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Save':'Publish')+'</button><button type="button" class="btn" data-a="save" data-v="draft"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Unpublish (draft)':'Save as draft')+'</button></div>';
+    +'<div class="acts"><button type="button" class="btn primary" data-a="save" data-v="published"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Save':'Publish')+'</button><button type="button" class="btn" data-a="save" data-v="draft"'+(A.busy?' disabled':'')+'>'+(e.status==='published'?'Unpublish (draft)':'Save as draft')+'</button></div>'
+    +(e.id&&ROLE==='admin'?'<div class="card danger-zone"><h3>Delete this event</h3><p class="meta" style="margin:4px 0 10px">The event, its sessions and its booking list are deleted for good, and booking links stop working. Games already on the leaderboard are not touched. To only hide it from the site, use '+(e.status==='published'?'Unpublish':'Save as draft')+' instead.</p><button type="button" class="btn danger" data-a="del">Delete event</button></div>':'');
+}
+// deleting: only when no booking is still active and no refund is waiting, so no seat or money is lost from view
+function activeCount(){var l=(A.ev&&A.ev.bookingList)||[];return l.filter(function(b){return ['held','review','rejected','confirmed','venue'].indexOf(b.status)>=0;}).length;}
+function refundCount(){var l=(A.ev&&A.ev.bookingList)||[];return l.filter(function(b){return b.refund>0;}).length;}
+function askDelete(){
+  var e=A.ev,act=activeCount(),rf=refundCount(),old=(e.bookingList||[]).length-act;
+  if(act||rf){sheet('<h3>This event can\u2019t be deleted yet</h3><p class="meta" style="margin:4px 0 10px">'+(act?act+' booking'+(act===1?' is':'s are')+' still active (reserved, paid or paying at the venue). Remove '+(act===1?'it':'them')+' first, so nobody is left holding a seat.':'')+(act&&rf?' ':'')+(rf?rf+' refund'+(rf===1?' is':'s are')+' still waiting. Send '+(rf===1?'it':'them')+' and mark Refund sent first.':'')+'</p><p class="meta">To hide the event from the site now, use Unpublish.</p><div class="acts"><a class="btn primary" href="#bookings='+e.id+'" data-a="close">Open bookings</a><button type="button" class="btn" data-a="close">Close</button></div>');return;}
+  sheet('<h3>Delete \u201c'+esc(e.title)+'\u201d?</h3><p class="meta" style="margin:4px 0 10px">'+e.sessions.length+' session'+(e.sessions.length===1?'':'s')+(old?' and '+old+' cancelled or expired booking'+(old===1?'':'s'):'')+' will be deleted. This cannot be undone.</p><div class="field"><label for="delname">Type the title to confirm</label><input id="delname" autocomplete="off" placeholder="'+esc(e.title)+'"></div><div class="acts"><button type="button" class="btn danger" data-a="delok">Delete for good</button><button type="button" class="btn" data-a="close">Keep it</button></div>');
+}
+function doDelete(){
+  var inp=document.getElementById('delname');
+  if(!inp||inp.value.trim().toLowerCase()!==A.ev.title.trim().toLowerCase()){toast('Type the title exactly to delete');if(inp)inp.focus();return;}
+  closeSheet();A.busy=true;
+  api('DELETE',BASE()+'/events/'+encodeURIComponent(A.ev.id)).then(function(){A.busy=false;A.ev=null;A.events=null;toast('Event deleted');location.hash='';})
+    .catch(function(er){A.busy=false;toast(er.message);});
 }
 function hostName(id){var o=(A.ev&&A.ev.hostOptions)||A.hostOptions||[];for(var i=0;i<o.length;i++)if(o[i].id===id)return o[i].nickname;return id;}
 function hostsCard(e){
@@ -425,6 +444,7 @@ function vBookings(){
     +'<div class="stat"><div><b>'+tk+'/'+cap+'</b><span>Seats</span></div><div><b>'+cnt('review')+'</b><span>To check</span></div><div><b>'+(cnt('held')+cnt('rejected')+cnt('venue'))+'</b><span>Not paid</span></div><div><b>'+cnt('confirmed')+'</b><span>Confirmed</span></div></div>'
     +(e.sessions.length>1?'<div class="chips" style="margin:12px 0">'+[['all','All sessions']].concat(e.sessions.map(function(s){return [s.id,shortDate(s.start)+' '+s.start.slice(11,16)+' · '+s.taken+'/'+s.seats];})).map(function(t){return '<button type="button" class="chip" data-a="ses" data-v="'+t[0]+'" aria-pressed="'+(A.ses===t[0])+'">'+t[1]+'</button>';}).join('')+'</div>':'<div style="height:12px"></div>')
     +'<div class="acts" style="margin:0 0 14px"><a class="btn primary" href="#add='+e.id+'">+ Add a booking</a><span class="meta" style="align-self:center">For people who book by WhatsApp, Instagram DM or at the door</span></div>'
+    +'<div class="dayrow"><span class="meta"><b>Event day</b> · put the booked players at scoreboard tables</span><div class="chips">'+e.sessions.map(function(s){return '<a class="chip" href="#day='+e.id+'.'+s.id+'">'+(e.sessions.length>1?shortDate(s.start)+' '+s.start.slice(11,16):'Open event day')+(s.dayId?' ✓':'')+'</a>';}).join('')+'</div></div>'
     +(list.length?list.map(bkRow).join(''):'<div class="empty">No bookings yet.</div>')
     +'<div class="acts"><button type="button" class="btn" data-a="list">Copy player list</button><button type="button" class="btn" data-a="reload">Refresh</button></div>';
 }
@@ -476,6 +496,83 @@ function saveAdd(){
     loadOne(A.ev.id).then(function(){render();var x=findB(b.id)||b;waSheet(x,x.status==='held'?'held':(x.status==='venue'?'venue':'confirm'));});})
   .catch(function(e){A.busy=false;d.err=e.message;render();var er=document.getElementById('aerr');if(er)er.scrollIntoView({block:'center'});});
 }
+// ---- event day: the booked players of one session go to scoreboard tables ----
+var WIND=['東','南','西','北'],DAY_MODES=MODES.filter(function(m){return m[0]!=='chicken';}),LORDER={adv:0,int:1,cas:2,beg:3,first:4};
+function keyOf(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ');}
+function loadDay(evId,sesId){
+  return api('GET',BASE()+'/events/'+encodeURIComponent(evId)+'/day?session='+encodeURIComponent(sesId)).then(function(d){
+    var seated={};((d.day&&d.day.tables)||[]).forEach(function(t){t.players.forEach(function(n){if(n)seated[keyOf(n)]=1;});});
+    d.waiting=d.players.filter(function(p){return !seated[keyOf(p.table)];});
+    A.day=d;arrange('order');render();
+  }).catch(function(e){A.err=e.message;A.day={error:e.message};render();});
+}
+function tableCount(){return Math.max(1,Math.ceil(A.day.waiting.length/4));}
+function arrange(how){
+  var d=A.day,arr=d.waiting.slice();
+  if(how==='level')arr.sort(function(x,y){return (LORDER[x.level]==null?5:LORDER[x.level])-(LORDER[y.level]==null?5:LORDER[y.level]);});
+  else if(how==='shuffle'){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=arr[i];arr[i]=arr[j];arr[j]=t;}}
+  d.how=how;d.at={};arr.forEach(function(p,i){d.at[p.id]=Math.floor(i/4);});d.order=arr.map(function(p){return p.id;});
+  var n=tableCount(),def=DAY_MODES.some(function(m){return m[0]===d.session.mode;})?d.session.mode:'casual';
+  d.modes=d.modes||[];for(var k=0;k<n;k++)if(!d.modes[k])d.modes[k]=def;
+}
+function dayPlayer(id){var l=A.day.players;for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];return null;}
+function unpaid(p){return p.status==='held'||p.status==='rejected'||p.status==='review'?' · <b class="unp">Not paid yet</b>':(p.status==='venue'?' · Pays at venue':'');}
+function seatHtml(p,i,n,t){
+  return '<div class="seat"><span class="w">'+(i<4?WIND[i]:'+')+'</span><span class="nm"><b>'+esc(p.table)+'</b> '+(p.registryId?'':'<span class="tag grey">Guest</span>')
+    +'<br><span class="meta">'+(p.level?lvl(p.level):'Level not given')+(p.registryId&&p.table!==p.name?' · '+esc(p.name):'')+unpaid(p)+'</span></span>'
+    +(n>1?'<select data-mv="'+p.id+'" aria-label="Move '+esc(p.table)+'">'+Array.from({length:n},function(_,k){return '<option value="'+k+'"'+(k===t?' selected':'')+'>T'+(k+1)+'</option>';}).join('')+'</select>':'')+'</div>';
+}
+function madeTable(t){
+  var url=location.origin+'/scoreboard.html?';
+  return '<div class="dtb"><h3><span>'+esc(t.label)+'</span><span class="tag">'+esc(t.code)+'</span></h3><div class="meta" style="margin:2px 0 6px">'+esc(modeName(t.mode))+(t.mode==='casual'?' mode':'')+'</div>'
+    +t.players.map(function(n,i){var empty=!n||/^Player [1-4]$/.test(n);return '<div class="seat"><span class="w">'+WIND[i]+'</span><span class="nm">'+(empty?'<span class="meta">Empty seat</span>':'<b>'+esc(n)+'</b>')+'</span></div>';}).join('')
+    +'<div class="dlinks"><button type="button" class="btn sm" data-a="dcopy" data-v="'+esc(url+'code='+t.code)+'" data-l="Scorekeeper link copied">Scorekeeper link</button><button type="button" class="btn sm" data-a="dcopy" data-v="'+esc(url+'view='+t.viewCode)+'" data-l="Players link copied">Players link</button></div></div>';
+}
+function vDay(){
+  var d=A.day,back='<a class="back" href="#bookings='+A.id+'">&lsaquo; Bookings</a>';
+  if(!d)return back+'<div class="empty">Loading…</div>';
+  if(d.error)return back+'<div class="empty">'+esc(d.error)+'</div>';
+  var s=d.session,e=d.event,day=d.day,chicken=s.mode==='chicken';
+  var head=back+'<h2 style="margin:4px 0 4px">Event day</h2><p class="meta" style="margin:0 0 12px">'+esc(e.title)+' · '+shortDate(s.start)+' · '+s.start.slice(11,16)+' · '+(chicken?'Chicken Hand':modeName(s.mode)+' mode')+'</p>';
+  var reg=d.players.filter(function(p){return p.registryId;}).length;
+  var count='<b style="color:var(--text)">'+d.players.length+' booked</b> · '+reg+' TBT player'+(reg===1?'':'s')+', '+(d.players.length-reg)+' guest'+(d.players.length-reg===1?'':'s');
+  if(chicken)return head+'<div class="note">Chicken Hand sessions are not on the leaderboard, so no scoreboard tables are made. Seat the players as you like; the list below is everyone booked.</div>'
+    +'<p class="meta" style="margin:12px 0 8px">'+count+'</p><div class="dtb">'+(d.players.length?d.players.map(function(p,i){return '<div class="seat"><span class="w">'+(i+1)+'</span><span class="nm"><b>'+esc(p.table)+'</b> '+(p.registryId?'':'<span class="tag grey">Guest</span>')+'<br><span class="meta">'+(p.level?lvl(p.level):'Level not given')+unpaid(p)+'</span></span></div>';}).join(''):'<div class="meta">Nobody has booked this session yet.</div>')+'</div>'
+    +'<div class="acts"><button type="button" class="btn" data-a="dlist">Copy player list</button></div>';
+  var out=head;
+  if(day&&day.tables.length){
+    out+='<div class="card" style="margin-bottom:14px"><b>Session “'+esc(day.label)+'” has '+day.tables.length+' table'+(day.tables.length===1?'':'s')+'.</b><p class="meta" style="margin:4px 0 0">It is on the leaderboard like any other session. The names are already in the seats and registered players are linked. '+(ROLE==='host'?'Print the QR cards from your Host desk.':'Print the QR cards from the Host desk or open them in Sessions.')+'</p></div>'
+      +'<div class="dtbls">'+day.tables.map(madeTable).join('')+'</div>';
+  }
+  if(!d.waiting.length){
+    out+=d.players.length?(day?'<p class="meta" style="margin:14px 0">Everyone booked is at a table.</p>':''):'<div class="empty">Nobody has booked this session yet.</div>';
+    return out+'<div class="acts"><button type="button" class="btn" data-a="dreload">Refresh</button></div>';
+  }
+  var n=tableCount(),tables='',over=false;
+  for(var t=0;t<n;t++){
+    var at=d.order.filter(function(id){return d.at[id]===t;}).map(dayPlayer);if(at.length>4)over=true;
+    tables+='<div class="dtb"><h3><span>Table '+((day?day.tables.length:0)+t+1)+'</span><span class="meta'+(at.length>4?' bad':'')+'">'+at.length+'/4</span></h3>'
+      +'<div class="mrow"><span class="meta">Game mode</span><select class="modesel" data-tm="'+t+'" aria-label="Game mode of table '+(t+1)+'">'+DAY_MODES.map(function(m){return '<option value="'+m[0]+'"'+(m[0]===d.modes[t]?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select></div>'
+      +(at.length?at.map(function(p,i){return seatHtml(p,i,n,t);}).join(''):'<div class="meta" style="padding:8px 0">Empty. Move players here or leave it; empty tables are skipped.</div>')+'</div>';
+  }
+  var made=d.order.length?Array.from({length:n},function(_,k){return k;}).filter(function(k){return d.order.some(function(id){return d.at[id]===k;});}).length:0;
+  out+=(day?'<h3 style="margin:22px 0 4px">Not at a table yet</h3>':'')
+    +'<div class="note">'+(day?'These players booked but are not at a table. Make more tables for them below.':'Make the leaderboard session and tables from the bookings. Scoring, table codes and the leaderboard work exactly as they do today, and each table may have its own game mode.')+(ROLE==='host'?' Event day tables do not count toward your 24 tables a day.':'')+'</div>'
+    +'<div class="drow"><span class="meta">'+(day?d.waiting.length+' not seated':count)+'</span><div class="chips">'+[['level','Group by level'],['shuffle','Shuffle'],['order','Booking order']].map(function(x){return '<button type="button" class="chip" data-a="darr" data-v="'+x[0]+'" aria-pressed="'+(d.how===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>'
+    +'<div class="dtbls">'+tables+'</div>'
+    +(over?'<div class="err" style="margin-top:10px">A table has more than 4 players. Move someone first.</div>':'')
+    +'<div class="acts" style="margin-top:14px"><button type="button" class="btn primary" data-a="dmake"'+(A.busy||over||!made?' disabled':'')+'>'+(A.busy?'Making tables…':(day?'Add '+made+' table'+(made===1?'':'s'):'Create session and '+made+' table'+(made===1?'':'s')))+'</button><button type="button" class="btn" data-a="dreload">Refresh</button></div>';
+  return out;
+}
+function makeDay(){
+  var d=A.day,n=tableCount(),tables=[];
+  for(var t=0;t<n;t++){var ids=d.order.filter(function(id){return d.at[id]===t;});if(ids.length)tables.push({mode:d.modes[t],players:ids});}
+  A.busy=true;render();
+  api('POST',BASE()+'/events/'+encodeURIComponent(d.event.id)+'/day',{sessionId:d.session.id,tables:tables}).then(function(r){
+    A.busy=false;d.modes=null;toast(r.day.tables.length+' tables on the leaderboard session');return loadDay(d.event.id,d.session.id);
+  }).catch(function(e){A.busy=false;render();toast(e.message);});
+}
+function dayList(){var d=A.day;return [d.event.title+' · '+shortDate(d.session.start)+' '+d.session.start.slice(11,16)].concat(d.players.map(function(p,i){return (i+1)+'. '+p.table+(p.registryId?'':' [guest]')+(p.level?' · '+lvl(p.level):'');})).join('\n');}
 function playerList(){
   var e=A.ev,out=[e.title];
   e.sessions.forEach(function(s){
@@ -507,16 +604,20 @@ document.addEventListener('input',function(ev){var t=ev.target;if(t.dataset&&t.d
   if(t.id==='watx'){var g=document.getElementById('wago');if(g)g.href=g.href.split('?')[0]+'?text='+encodeURIComponent(t.value);}});
 document.addEventListener('change',function(ev){var t=ev.target;
   if(t.dataset&&t.dataset.as!==undefined&&A.add){var pp=A.add.players[+t.dataset.i],k=pp.sessions.indexOf(t.dataset.as);if(t.checked&&k<0)pp.sessions.push(t.dataset.as);if(!t.checked&&k>=0)pp.sessions.splice(k,1);render();return;}
-  if(t.id==='aover'&&A.add){A.add.over=t.checked;render();return;}if(t.dataset&&t.dataset.e)setField(t.dataset.e,t.value);if(t.dataset&&t.dataset.t&&A.edit){A.edit[t.dataset.t]=t.checked;if(t.dataset.t==='fours')render();}});
+  if(t.id==='aover'&&A.add){A.add.over=t.checked;render();return;}
+  if(t.dataset&&t.dataset.mv&&A.day){A.day.at[t.dataset.mv]=+t.value;A.day.how='';render();return;}
+  if(t.dataset&&t.dataset.tm!==undefined&&A.day){A.day.modes[+t.dataset.tm]=t.value;return;}if(t.dataset&&t.dataset.e)setField(t.dataset.e,t.value);if(t.dataset&&t.dataset.t&&A.edit){A.edit[t.dataset.t]=t.checked;if(t.dataset.t==='fours')render();}});
 document.addEventListener('click',function(ev){
   var b=ev.target.closest?ev.target.closest('[data-a]'):null;if(!b)return;var a=b.dataset.a,e=A.edit;
-  if(a==='close'){if(ev.target===b||b.tagName==='BUTTON')closeSheet();return;}
+  if(a==='close'){if(ev.target===b||b.tagName==='BUTTON'||b.tagName==='A')closeSheet();return;}
   if(a==='type'){e.type=b.dataset.v;if(e.type==='tour'&&!e.id)e.fours=true;render();}
   else if(a==='sadd'){var last=e.sessions[e.sessions.length-1],s=blankSession();if(last){s.date=last.date;s.time=last.time;s.hours=last.hours;s.seats=last.seats;s.price=last.price;s.levels=last.levels.slice();s.mode=last.mode;}e.sessions.push(s);render();}
   else if(a==='srm'){e.sessions.splice(+b.dataset.i,1);render();}
   else if(a==='slv'){var se=e.sessions[+b.dataset.i],v=b.dataset.v,cur=se.levels.length?se.levels.slice():LEVELS.map(function(l){return l[0];}),k=cur.indexOf(v);if(k>=0)cur.splice(k,1);else cur.push(v);
     if(!cur.length){toast('Keep at least one level');return;}se.levels=cur.length===LEVELS.length?[]:LEVELS.map(function(l){return l[0];}).filter(function(x){return cur.indexOf(x)>=0;});render();}
   else if(a==='save')save(b.dataset.v);
+  else if(a==='del')askDelete();
+  else if(a==='delok')doDelete();
   else if(a==='ses'){A.ses=b.dataset.v;render();}
   else if(a==='tgl'){A.open[b.dataset.id]=!A.open[b.dataset.id];render();}
   else if(a==='reload'){loadOne(A.ev.id).then(function(){render();toast('Up to date');});}
@@ -533,6 +634,11 @@ document.addEventListener('click',function(ev){
   else if(a==='apick'){var ap2=A.add.players[+b.dataset.i],r=regById(b.dataset.v);ap2.registryId=r.id;ap2.nick=r.nickname;ap2.name=r.fullName||r.nickname;ap2.wa='';ap2.ig='';A.find[b.dataset.i]='';render();}
   else if(a==='aunpick'){var ap3=A.add.players[+b.dataset.i];ap3.registryId='';ap3.nick='';render();}
   else if(a==='asave')saveAdd();
+  else if(a==='darr'){arrange(b.dataset.v);render();}
+  else if(a==='dmake')makeDay();
+  else if(a==='dreload'){loadDay(A.day.event.id,A.day.session.id).then(function(){toast('Up to date');});}
+  else if(a==='dcopy')copyText(b.dataset.v,b.dataset.l);
+  else if(a==='dlist')copyText(dayList(),'Player list copied');
   else if(a==='wa'){var bk=findB(b.dataset.id);if(bk)waSheet(bk,b.dataset.k);}
   else if(a==='act'){var v2=b.dataset.v;act(b.dataset.id,{action:v2},function(x){if(v2==='confirm')waSheet(x,'confirm');else if(v2==='notfound')waSheet(x,'reject');else toast('Marked as refunded');});}
   else if(a==='rmb'){var bk2=findB(b.dataset.id),paid=bk2.status==='confirmed'||bk2.status==='review';A.rm={reason:'Asked to cancel'};

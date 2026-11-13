@@ -745,7 +745,9 @@ var EI={
 };
 var LEVELS=[['first','First timer'],['beg','Beginner'],['cas','Casual'],['int','Intermediate'],['adv','Advanced']];
 var TYPES={cls:'Class',open:'Open Play',tour:'Tournament',other:'Event'};
-var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
+var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',chicken:'Chicken Hand'};
+function scoresText(ss){var ch=(ss||[]).filter(function(x){return x.mode==='chicken';}).length;if(!ch)return 'On the TBT leaderboard';if(ch===ss.length)return 'Chicken Hand, not on the leaderboard';return 'On the TBT leaderboard, except Chicken Hand sessions';}
+function modeTag(m){return m==='chicken'?'Chicken Hand':(MODE_NAMES[m]||m)+' mode';}
 var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DAY3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 function lvl(k){for(var i=0;i<LEVELS.length;i++)if(LEVELS[i][0]===k)return LEVELS[i][1];return k;}
@@ -820,7 +822,7 @@ function vEvent(){
   var anyOpen=e.sessions.some(function(s){return s.left>0&&s.open;}),allClosed=!e.sessions.some(function(s){return s.open;});
   var sess=e.sessions.map(function(s){
     var note=!s.open?'Booking closed':(s.left===0?'Full':s.left+' of '+s.seats+' left');
-    return '<div class="e-sess"><div style="flex:1;min-width:0"><div class="t">'+longDate(s.start)+'</div><div class="e-small e-muted">'+win(s)+' · '+lvls(s.levels)+'</div><div style="margin-top:4px"><span class="e-tag grey">'+(MODE_NAMES[s.mode]||s.mode)+' mode</span></div></div>'
+    return '<div class="e-sess"><div style="flex:1;min-width:0"><div class="t">'+longDate(s.start)+'</div><div class="e-small e-muted">'+win(s)+' · '+lvls(s.levels)+'</div><div style="margin-top:4px"><span class="e-tag grey">'+modeTag(s.mode)+'</span></div></div>'
       +'<div style="text-align:right"><div class="e-price">'+rp(s.price)+'</div><div class="e-small" style="'+(s.left===0||!s.open?'color:var(--red);font-weight:700':'color:var(--muted)')+'">'+note+'</div></div></div>';
   }).join('');
   var g=e.going;
@@ -834,7 +836,7 @@ function vEvent(){
     +'<div class="e-kv"><span>Booking closes</span><span>'+(e.closeHours?e.closeHours+' hour'+(e.closeHours===1?'':'s')+' before each session':'When the session starts')+'</span></div>'
     +'<div class="e-kv"><span>Cancel</span><span>Up to 24 hours before</span></div>'
     +(e.fours?'<div class="e-kv"><span>Format</span><span>Seats in fours, no standby</span></div>':'')
-    +'<div class="e-kv"><span>Scores</span><span>On the TBT leaderboard</span></div>'
+    +'<div class="e-kv"><span>Scores</span><span>'+scoresText(e.sessions)+'</span></div>'
     +(e.contactWa?'<div class="e-kv"><span>Questions</span><span><a href="'+waLink(e.contactWa,'Halo admin TBT! Mau tanya soal '+e.title+' ya.')+'" target="_blank" rel="noopener">WhatsApp the admin</a></span></div>':'')+'</div>'
     +(g&&(g.names.length||g.guests)?'<div class="e-card"><h3>Who is coming</h3>'+(g.names.length?'<div class="e-going">'+g.names.map(function(n){return '<span>'+esc(n)+'</span>';}).join('')+'</div>':'')+(g.guests?'<p class="e-small e-muted" style="margin:8px 0 0">'+(g.names.length?'and ':'')+g.guests+' guest'+(g.guests===1?'':'s')+'. Only registered TBT players are named.</p>':'')+'</div>':'')
     +'</div><div class="e-sticky"><div class="e-card"><h3>'+(e.sessions.length>1?e.sessions.length+' sessions':'Session')+'</h3>'+sess
@@ -951,7 +953,7 @@ function vBooking(){
     +'<div class="e-card"><h3>Who is coming</h3>'+(b.players.length?plList(b):'<p class="e-small e-muted" style="margin:0">Nobody left in this booking.</p>')+(b.removed&&b.removed.length?'<p class="e-small e-muted" style="margin:6px 0 0">Taken out: '+b.removed.map(esc).join(', ')+'</p>':'')
     +(pay!=='free'&&st!=='cancelled'&&st!=='expired'?'<div class="e-hr"></div><div class="e-kv"><span>Total</span><span class="e-price">'+(pay==='transfer'?rpCode(b.toTransfer):rp(b.total))+'</span></div>':'')+'</div>'
     +'<div class="e-card"><h3>Keep this link</h3><p class="e-small e-muted" style="margin:0 0 8px">It is the only way back to this booking from another phone.</p><div class="e-copy"><code>'+esc(link.replace(/^https?:\/\//,''))+'</code><button type="button" class="e-btn sm" data-x="copy" data-v="'+esc(link)+'">Copy</button></div></div>'
-    +(st==='confirmed'||st==='venue'||st==='review'?'<div class="e-card"><h3>On the day</h3><p class="e-small e-muted" style="margin:0">The host seats you at a table and keeps score. Your games land on the TBT leaderboard.</p></div>':'')
+    +(st==='confirmed'||st==='venue'||st==='review'?'<div class="e-card"><h3>On the day</h3><p class="e-small e-muted" style="margin:0">The host seats you at a table'+(e&&e.sessions&&e.sessions.every(function(x){return x.mode==='chicken';})?'. Chicken Hand games are just for fun and stay off the leaderboard.':' and keeps score. Your games land on the TBT leaderboard.')+'</p></div>':'')
     +'<div class="e-acts">'+ask+(b.canCancel?'<button type="button" class="e-btn dng" data-x="cancel">Cancel booking</button>':'')+(e?'<a class="e-btn" href="'+evHref(e)+'">Event page</a>':'')+'</div>'
     +(b.canCancel?'<p class="e-small e-muted" style="margin:8px 0 0">You can cancel up to 24 hours before your session.'+(pay==='transfer'&&done2?' For a refund, message the admin.':'')+'</p>':'')
     +'</div></main>';

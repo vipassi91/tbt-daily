@@ -253,7 +253,9 @@ export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.str
 
 // Makes a table with its two codes: the host code (6 characters, it lets whoever has it enter scores) and the players code (5 characters, read only).
 // `createdBy` is the registry id of the host who made it; an admin leaves it out.
-export async function createTableRow(env, day, label, rawPlayers, createdBy) {
+// mode is optional (event day tables start with the game mode the session or table was given); anything unknown falls back to casual
+export async function createTableRow(env, day, label, rawPlayers, createdBy, mode) {
+  const m = MODES.indexOf(mode) >= 0 ? mode : 'casual';
   let players = Array.isArray(rawPlayers) ? rawPlayers.slice(0, 4).map(function (p) { return String(p || '').trim(); }) : [];
   while (players.length < 4) players.push('');
   const code = await uniqueCode(env, undefined, 6);
@@ -262,7 +264,7 @@ export async function createTableRow(env, day, label, rawPlayers, createdBy) {
   try { dateText = new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dateText = ''; }
   const game = {
     names: players, title: String(label).slice(0, 30), date: dateText,
-    useStart: false, start: '200', mode: 'casual', seatRotation: true, bankrupt: false,
+    useStart: false, start: '200', mode: m, seatRotation: !isMcr(m), bankrupt: false,
     custom: { minPoint: 2, maxStreak: 4, deadwall: false }, events: [],
   };
   const stats = buildStats(game, players);

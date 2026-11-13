@@ -1556,3 +1556,23 @@ Link yang dibuat situs sendiri (link booking, link dan QR meja dari admin dan ho
 **Diuji di sini** dengan `wrangler pages dev`: admin memilih host, menambah booking manual (pemain dari registry plus guest tanpa WA, bayar di venue, sumber Instagram DM, note), booking walk-in sudah bayar tanpa WA; host login, hanya melihat eventnya, punya semua tombol, ditolak di event lain, tidak melihat kartu Event hosts.
 **Berkas baru:** `functions/_eventsadmin.js`, `functions/api/host/events.js`, `functions/api/host/events/[id].js`, `functions/api/host/bookings/[id].js`.
 **Berkas yang berubah:** `admin-events.html`, `admin-home.html`, `admin-daily.html`, `admin-pemain.html`, `host.html`, `events.html`, `functions/_events.js`, `functions/api/admin/events.js`, `functions/api/admin/events/[id].js`, `functions/api/admin/bookings/[id].js`, dan catatan ini.
+
+## Update terbaru (v75): Event day, Game mode dan Chicken Hand, hapus event, homepage lebih ringkas
+
+**Event day** (`/admin-events`, buka Bookings sebuah event, kotak **Event day**, satu tombol per sesi; tanda ✓ berarti sesi itu sudah punya meja):
+- Semua yang booking sesi itu tampil, otomatis 4 orang per meja. Pemain terdaftar memakai nickname, guest diberi tanda Guest, yang belum bayar diberi tanda "Not paid yet".
+- Urutan: **Group by level**, **Shuffle**, atau **Booking order**. Tiap pemain bisa dipindah meja (T1, T2, ...). Tiap meja punya **Game mode** sendiri (awalnya mengikuti mode sesi).
+- **Create session and N tables** membuat satu sesi leaderboard (nama event dan tanggalnya) beserta mejanya: nama sudah di kursi, pemain terdaftar tertaut ke profilnya, tiap meja punya kode, Scorekeeper link, dan Players link. QR untuk dicetak tetap dari Host desk atau Sessions.
+- Pemain yang booking belakangan muncul di **Not at a table yet**, tinggal tambah meja. Orang yang sudah duduk tidak dimasukkan dua kali.
+- Host event juga bisa memakai Event day. Meja yang dibuat host di sini **tidak dihitung** ke batas 24 meja per hari, dan sesinya muncul di Host desk host itu.
+
+**Game mode dan Chicken Hand:** label "Leaderboard mode" di form event diganti **Game mode**, dengan pilihan baru **Chicken Hand**. Sesi Chicken Hand bisa dibooking seperti biasa tetapi **tidak masuk leaderboard**: Event day hanya menampilkan daftar pemain (dengan Copy player list), tanpa membuat meja. Di halaman event publik baris Scores menjelaskannya.
+
+**Hapus event:** di bawah Edit event (hanya admin) ada **Delete this event**. Hanya bisa kalau tidak ada booking aktif dan tidak ada refund yang belum dikirim, dan harus mengetik judul event untuk konfirmasi. Sesi leaderboard yang sudah dibuat dari Event day tetap ada.
+
+**Homepage:** kartu "Got a table code?" dan "My booking / Find your name" dihapus dari bawah homepage; yang tersisa kartu quiz.
+
+**Database:** kolom baru `event_sessions.day_id`, ditambahkan otomatis. Tidak perlu Console D1.
+**Diuji di sini** dengan `wrangler pages dev`: 11 pemain (7 terdaftar, 4 guest) jadi 3 meja dengan mode berbeda (Default dan MCR-4), sesi leaderboard tercipta, booking walk-in dan transfer setelahnya masuk ke meja ke-4, sesi Chicken Hand tanpa meja, layar 390 px tanpa geser ke samping.
+**Berkas baru:** `functions/api/admin/events/[id]/day.js`, `functions/api/host/events/[id]/day.js`.
+**Berkas yang berubah:** `index.html`, `admin-events.html`, `events.html`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/_tables.js`, `functions/api/admin/events/[id].js`, dan catatan ini.

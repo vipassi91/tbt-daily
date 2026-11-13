@@ -12,7 +12,8 @@ import { cleanText, normWhatsapp, normInstagram } from './_players.js';
 export const LEVELS = ['first', 'beg', 'cas', 'int', 'adv'];
 export const LEVEL_NAMES = { first: 'First timer', beg: 'Beginner', cas: 'Casual', int: 'Intermediate', adv: 'Advanced' };
 export const TYPES = ['cls', 'open', 'tour', 'other'];
-export const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
+// the game a session plays. 'chicken' (Chicken Hand) is for events only: the leaderboard scoreboard has no such mode.
+export const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'chicken'];
 // a booking holds its seats while it is in one of these
 export const ACTIVE = ['held', 'review', 'rejected', 'confirmed', 'venue'];
 const ACTIVE_SQL = "('held','review','rejected','confirmed','venue')";
@@ -39,6 +40,7 @@ const EVENTS_ALTERS = [
   'ALTER TABLE bookings ADD COLUMN source TEXT',
   'ALTER TABLE bookings ADD COLUMN note TEXT',
   'ALTER TABLE bookings ADD COLUMN added_by TEXT',
+  'ALTER TABLE event_sessions ADD COLUMN day_id TEXT',
 ];
 let ready = false;
 export async function ensureEventTables(env) {
@@ -82,7 +84,7 @@ export function eventRow(r) {
   };
 }
 export function sessionRow(r, taken) {
-  return { id: r.id, position: r.position, start: r.start, hours: Number(r.hours), seats: r.seats, price: r.price, levels: parseJson(r.levels, []), mode: r.mode || 'default', taken: taken || 0 };
+  return { id: r.id, position: r.position, start: r.start, hours: Number(r.hours), seats: r.seats, price: r.price, levels: parseJson(r.levels, []), mode: r.mode || 'default', dayId: r.day_id || null, taken: taken || 0 };
 }
 // Seats taken per session, for the given sessions.
 export async function takenBySession(env, sessionIds) {
