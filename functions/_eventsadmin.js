@@ -166,6 +166,29 @@ export async function bookingAction(env, actor, bookingId, body) {
     if (paidNow) stmts.push(env.DB.prepare('UPDATE bookings SET paid_amount = ?, refund = refund + ?, removed = ?, amount = ? WHERE id = ?').bind(paidNow, body.refund ? cost : 0, JSON.stringify(removed), v.total - cost, b.id));
     else stmts.push(env.DB.prepare('UPDATE bookings SET removed = ?, amount = ? WHERE id = ?').bind(JSON.stringify(removed), v.total - cost, b.id));
     await env.DB.batch(stmts);
+  } else if (a === 'movePlayer') {
+    // move one player to other sessions of the same event (another time or another game mode)
+    if (!active) return { error: 'This booking is not active.', status: 409 };
+    const p = v.players.filter(function (x) { return x.id === String(body.player || ''); })[0];
+    if (!p) return { error: 'This player was not found in the booking.', status: 404 };
+    const byId = {}; ev.sessions.forEach(function (s) { byId[s.id] = s; });
+    const to = (Array.isArray(body.sessions) ? body.sessions : []).map(String).filter(function (id, i, arr) { return byId[id] && arr.indexOf(id) === i; });
+    if (!to.length) return { error: 'Pick at least one session.', status: 400 };
+    const added = to.filter(function (id) { return p.sessions.indexOf(id) < 0; }), gone = p.sessions.filter(function (id) { return to.indexOf(id) < 0; });
+    if (!added.length && !gone.length) return { error: 'Nothing changed.', status: 400 };
+    if (!body.over) {
+      for (const id of added) { const s = byId[id]; if (s.taken + 1 > s.seats) return { error: 'The session at ' + s.start.slice(11, 16) + ' (' + ({ casual: 'Casual', 'default': 'Default', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', chicken: 'Chicken Hand' }[s.mode] || s.mode) + ') is full. Tick "Allow over the seat limit" to move them anyway.', status: 409 }; }
+    }
+    const cost = function (ids) { return ids.reduce(function (t, id) { return t + (byId[id] ? byId[id].price : 0); }, 0); };
+    const diff = cost(to) - cost(p.sessions);
+    const stmts = [env.DB.prepare('DELETE FROM booking_seats WHERE booking_id = ? AND player_id = ?').bind(b.id, p.id)];
+    to.forEach(function (id) { stmts.push(env.DB.prepare('INSERT INTO booking_seats (booking_id, player_id, session_id) VALUES (?,?,?)').bind(b.id, p.id, id)); });
+    let memo = b.note || '';
+    if (paidNow && diff > 0 && paidNow < v.total + diff + (b.pay === 'transfer' ? b.code : 0)) memo = (memo ? memo + ' | ' : '') + p.name + ' moved: owes Rp ' + (v.total + diff + (b.pay === 'transfer' ? b.code : 0) - paidNow).toLocaleString('id-ID') + ' more';
+    // a booking already paid keeps what was paid; a cheaper move may become a refund, a dearer one is noted to collect
+    if (paidNow) stmts.push(env.DB.prepare('UPDATE bookings SET paid_amount = ?, refund = refund + ?, amount = ?, note = ? WHERE id = ?').bind(paidNow, diff < 0 && body.refund ? Math.min(-diff, Math.max(0, paidNow - (v.total + diff))) : 0, v.total + diff, memo.slice(0, 300), b.id));
+    else stmts.push(env.DB.prepare('UPDATE bookings SET amount = ? WHERE id = ?').bind(v.total + diff, b.id));
+    await env.DB.batch(stmts);
   } else if (a === 'refunded') {
     await env.DB.prepare('UPDATE bookings SET refund = 0 WHERE id = ?').bind(b.id).run();
   } else {

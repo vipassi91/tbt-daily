@@ -1576,3 +1576,22 @@ Link yang dibuat situs sendiri (link booking, link dan QR meja dari admin dan ho
 **Diuji di sini** dengan `wrangler pages dev`: 11 pemain (7 terdaftar, 4 guest) jadi 3 meja dengan mode berbeda (Default dan MCR-4), sesi leaderboard tercipta, booking walk-in dan transfer setelahnya masuk ke meja ke-4, sesi Chicken Hand tanpa meja, layar 390 px tanpa geser ke samping.
 **Berkas baru:** `functions/api/admin/events/[id]/day.js`, `functions/api/host/events/[id]/day.js`.
 **Berkas yang berubah:** `index.html`, `admin-events.html`, `events.html`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/_tables.js`, `functions/api/admin/events/[id].js`, dan catatan ini.
+
+## Update terbaru (v76): game mode di setiap pilihan sesi, dan pindah sesi per pemain
+
+**Game mode terlihat di mana-mana:** kalau ada beberapa sesi di jam yang sama, pilihan sesinya sekarang menyebut game mode-nya:
+- Admin Bookings: tombol filter sesi ("Fri 27 Nov 19:00 · **MCR-4** · 0/8") dan tombol Event day.
+- Form booking peserta: setiap pilihan di "Coming to" punya label mode (Default mode, MCR-4 mode, Chicken Hand). Halaman booking peserta juga menulis mode di setiap sesi yang diikuti.
+- Add a booking (admin/host): setiap pilihan sesi menyebut mode-nya.
+
+**Move (pindah sesi atau game mode):** di setiap pemain dalam booking aktif ada tombol **Move** (selama event punya lebih dari satu sesi).
+- Pilih sesi tujuan; yang sekarang diberi tanda "Now". Hanya pemain itu yang pindah, sisa booking tetap.
+- Sesi penuh: centang "Allow over the seat limit".
+- Harga berbeda: booking yang belum bayar langsung ikut total baru (nominal transfer ikut berubah). Yang sudah bayar dan pindah ke sesi lebih murah bisa dicatat refund-nya (maksimal kelebihan bayarnya). Yang pindah ke sesi lebih mahal dapat catatan internal "owes Rp X more" untuk ditagih di venue.
+- Setelah pindah, muncul pesan WhatsApp siap kirim.
+- Kalau pemain sudah duduk di meja Event day di sesi lamanya, muncul peringatan: meja itu dibetulkan manual di scoreboard.
+- Host event juga bisa memakai Move.
+
+**Database:** tidak ada perubahan.
+**Diuji di sini** dengan `wrangler pages dev`: pindah ke sesi lain dengan harga sama, pindah ke sesi lebih murah dengan refund, sesi penuh, pesan WhatsApp.
+**Berkas yang berubah:** `admin-events.html`, `events.html`, `functions/_eventsadmin.js`, dan catatan ini.

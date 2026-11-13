@@ -866,7 +866,7 @@ function pcard(p,i){
   var picks=e.sessions.map(function(s){
     var on=p.sessions.indexOf(s.id)>=0,room=s.left-demand(s.id)+(on?1:0),lvOk=!p.level||!s.levels.length||s.levels.indexOf(p.level)>=0,off=!on&&(!s.open||room<=0||!lvOk);
     var why=!s.open?'Booking closed':(s.left===0?'Full':(!lvOk?'For '+lvls(s.levels)+' only':(room<=0?'No seat left for one more':win(s)+' · '+rp(s.price))));
-    return '<label class="e-pick'+(off?' off':'')+'"><input type="checkbox" data-x="psess" data-i="'+i+'" data-v="'+s.id+'"'+(on?' checked':'')+(off?' disabled':'')+'><span class="pk"><b>'+shortDate(s.start)+' · '+s.start.slice(11,16)+'</b><br><span class="e-small e-muted">'+why+'</span></span></label>';
+    return '<label class="e-pick'+(off?' off':'')+'"><input type="checkbox" data-x="psess" data-i="'+i+'" data-v="'+s.id+'"'+(on?' checked':'')+(off?' disabled':'')+'><span class="pk"><b>'+shortDate(s.start)+' · '+s.start.slice(11,16)+'</b> <span class="e-tag grey">'+modeTag(s.mode)+'</span><br><span class="e-small e-muted">'+why+'</span></span></label>';
   }).join('');
   return '<div class="e-pc"><div class="e-pc-h"><b>'+(i===0?'You':'Player '+(i+1))+'</b>'+(i>0?'<button type="button" class="e-btn sm" data-x="prm" data-i="'+i+'">Remove</button>':'')+'</div>'
     +'<div class="e-f"><div class="e-g2"><div><label class="l" for="pn'+i+'">Name *</label><input class="e-in" id="pn'+i+'" data-f="name" data-i="'+i+'" value="'+esc(p.name)+'" maxlength="40" autocomplete="'+(i?'off':'name')+'"></div>'
@@ -925,7 +925,7 @@ function refreshSeats(){fetch('/api/events/'+encodeURIComponent(V.ev.id)).then(f
 // ---------- one booking ----------
 var STATUS={held:['Not transferred yet','grey'],review:['Waiting for the admin','gold'],rejected:['Transfer not found yet','red'],confirmed:['Confirmed',''],venue:['Pay at the venue','gold'],expired:['Expired','red'],cancelled:['Cancelled','red']};
 function sById(b,id){for(var i=0;i<b.event.sessions.length;i++)if(b.event.sessions[i].id===id)return b.event.sessions[i];return null;}
-function plList(b){return b.players.map(function(p){return '<div class="e-pl"><div class="n"><b>'+esc(p.name)+'</b><small>'+lvl(p.level)+' · '+p.sessions.map(function(id){var s=sById(b,id);return s?shortDate(s.start)+' '+s.start.slice(11,16):'';}).join(', ')+'</small></div></div>';}).join('');}
+function plList(b){return b.players.map(function(p){return '<div class="e-pl"><div class="n"><b>'+esc(p.name)+'</b><small>'+lvl(p.level)+' · '+p.sessions.map(function(id){var s=sById(b,id);return s?shortDate(s.start)+' '+s.start.slice(11,16)+' ('+(s.mode==='chicken'?'Chicken Hand':(MODE_NAMES[s.mode]||s.mode))+')':'';}).join(', ')+'</small></div></div>';}).join('');}
 function vBooking(){
   var b=V.bk;
   if(!b)return '<main class="e-wrap"><div class="e-narrow"><a class="e-back" href="/events">'+EI.back+'Events</a><div class="e-empty">'+(V.err||'Loading…')+'</div></div></main>';
