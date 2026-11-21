@@ -1595,3 +1595,24 @@ Link yang dibuat situs sendiri (link booking, link dan QR meja dari admin dan ho
 **Database:** tidak ada perubahan.
 **Diuji di sini** dengan `wrangler pages dev`: pindah ke sesi lain dengan harga sama, pindah ke sesi lebih murah dengan refund, sesi penuh, pesan WhatsApp.
 **Berkas yang berubah:** `admin-events.html`, `events.html`, `functions/_eventsadmin.js`, dan catatan ini.
+
+## Update terbaru (v77): perhitungan MCR disesuaikan dengan buku MCR WMO
+
+Tiga perbaikan di kalkulator MCR (MCR-4, MCR-8, MCR-Custom), baik hitung otomatis dari tile maupun pilih pola manual:
+- **Seven Pairs tidak lagi mendapat All Types.** Dasar: definisi All Types "each of the five sets" dan bagian 3.7.2.1 (set = Chow, Pung, atau Kong), sedangkan Seven Pairs tidak punya set. All Terminals, All Honors, dan All Terminals and Honors tetap boleh dengan Seven Pairs (definisinya menyebut "pair(s)").
+- **All Green berbentuk Seven Pairs tidak mendapat Tile Hog.** Hanya ada 6 jenis tile hijau, jadi empat tile kembar pasti ada; contoh 3 All Green di buku tidak menghitung Tile Hog.
+- **Tile Hog hanya untuk suit tile** ("all four of a single suit tile", fan 64). Empat honor kembar di Seven Pairs tidak dihitung. Di pilih pola manual, Tile Hog terkunci kalau All Honors dipilih.
+
+Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bunga = 31 (sebelumnya 37).
+**Poin lama tidak berubah otomatis.** Hand yang terkena perlu dibuka dan disimpan ulang oleh host supaya leaderboard ikut terkoreksi.
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html` dan catatan ini.
+
+## Update terbaru (v78): Seven Pairs tidak digabung dengan fan chow
+
+- Di layar **pilih pola manual** (MCR-4, MCR-8, MCR-Custom), kalau Seven Pairs dipilih maka Pure Double Chow, Pure Triple Chow, Quadruple Chow, Mixed Double Chow, Short Straight, dan Two Terminal Chows terkunci, dan sebaliknya.
+- Alasannya: Seven Pairs tidak punya chow. Kalau hand bisa dibaca sebagai Seven Pairs dan sebagai 4 set + 1 pair (misalnya 11 22 33 dalam satu suit), yang dipakai adalah bacaan dengan nilai tertinggi, tanpa mencampur fan dari dua bacaan.
+- Hitung otomatis dari tile sudah bekerja seperti ini sejak awal; sekarang pilih pola manual sama.
+
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html` dan catatan ini.

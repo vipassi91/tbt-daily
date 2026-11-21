@@ -4503,9 +4503,9 @@ const PAIRS = {
   AllGreen: ['OneVoidedSuit'], ReversibleTiles: ['OneVoidedSuit'],
   UpperTiles: ['UpperFour', 'NoHonors'], LowerTiles: ['LowerFour', 'NoHonors'], MiddleTiles: ['NoHonors'], UpperFour: ['NoHonors'], LowerFour: ['NoHonors'], AllFives: ['NoHonors'], AllEvenPungs: ['NoHonors'],
   NineGates: ['FullFlush', 'HalfFlush', 'OneVoidedSuit', 'NoHonors', 'ConcealedHand', 'EdgeWait', 'ClosedWait', 'SingleWait', 'TwoConcealedPungs'],   // combines with Fully Concealed Hand if self-drawn; its 111 and 999 pungs are part of the fan, so they are not counted again (the book says so for Pung of Terminals; Two Concealed Pungs follows the same reasoning)
-  SevenShiftedPairs: ['SevenPairs', 'FullFlush', 'HalfFlush', 'OneVoidedSuit', 'NoHonors', 'ConcealedHand', 'SingleWait'],
+  SevenShiftedPairs: ['SevenPairs', 'AllTypes', 'FullFlush', 'HalfFlush', 'OneVoidedSuit', 'NoHonors', 'ConcealedHand', 'SingleWait'],
   ThirteenOrphans: ['AllTypes', 'ConcealedHand', 'SingleWait'],
-  SevenPairs: ['ConcealedHand', 'SingleWait', 'AllEvenPungs'],   // may combine with Fully Concealed Hand if self-drawn; the book also adds All Terminals, All Honors, flushes, ranges, Tile Hog ...
+  SevenPairs: ['ConcealedHand', 'SingleWait', 'AllEvenPungs', 'AllTypes'],   // TBT rule: All Types needs four sets and a pair, so it never counts with Seven Pairs. May combine with Fully Concealed Hand if self-drawn; the book also adds All Terminals, All Honors, flushes, ranges, Tile Hog ...
   GreaterHonorsKnitted: ['LesserHonorsKnitted', 'AllTypes', 'ConcealedHand', 'SingleWait'], LesserHonorsKnitted: ['AllTypes', 'ConcealedHand', 'SingleWait'],
   FourConcealedPungs: ['ConcealedHand'],   // does combine with Fully Concealed Hand if self-drawn
   FourKongs: ['SingleWait'], TwoConcealedKongs: ['TwoConcealedPungs'],   // Non-Repeat: the two kongs already are two concealed pungs
@@ -4523,8 +4523,7 @@ const WAITS = ['EdgeWait', 'ClosedWait', 'SingleWait'];                         
 const CHOWSMALL = ['PureDoubleChow', 'MixedDoubleChow', 'ShortStraight', 'TwoTerminalChows'];                                                  // capped as a group by the Count-Once principle
 const FOUR_CHOWS = ['PureTerminalChows', 'QuadrupleChow', 'FourShiftedChows', 'ThreeSuitedTerminalChows'], THREE_CHOWS = ['PureTripleChow', 'PureStraight', 'PureShiftedChows', 'MixedStraight', 'MixedTripleChow', 'MixedShiftedChows'];
 const IRREGULAR = ['SevenPairs', 'SevenShiftedPairs', 'ThirteenOrphans', 'GreaterHonorsKnitted', 'LesserHonorsKnitted'];
-const SEVEN_PAIRS_CHOWS = ['PureDoubleChow', 'PureTripleChow', 'QuadrupleChow', 'MixedDoubleChow', 'ShortStraight', 'TwoTerminalChows'];
-const ALLOWED_SETS = { SevenPairs: SEVEN_PAIRS_CHOWS, LesserHonorsKnitted: ['KnittedStraight'] };   // fans of a standard hand that an irregular hand may still show
+const ALLOWED_SETS = { LesserHonorsKnitted: ['KnittedStraight'] };   // TBT: Seven Pairs takes no chow fans; a hand that reads both ways scores its highest reading (freedom to choose the highest)   // fans of a standard hand that an irregular hand may still show
 // how many Pungs of Terminals or Honors can still count: the pungs that form a fan are not counted again, nor the Dragon, Seat and Prevalent Wind pungs
 function terminalPungCap(sel) {
   const has = id => (sel[id] || 0) > 0;
@@ -4548,12 +4547,15 @@ function analyze(sel) {
   const waitPicked = WAITS.find(k => count(k) > 0); if (waitPicked) WAITS.forEach(k => lock(k, 'Only one wait counts (' + NAME(waitPicked) + ')'));
   const ccap = chowSmallCap(sel); groupCap(CHOWSMALL, ccap, ccap === 0 ? 'Every chow is already used by the four-chow fan' : ccap === 1 ? 'With a three-chow fan only one more of these counts' : 'At most three of these count');
   const picks = picked.length; if (count('ChickenHand') > 0) FANS.forEach(f => { if (f.id !== 'FlowerTiles' && f.id !== 'ChickenHand') lock(f.id, 'Chicken Hand scores no other fan'); }); else if (picks > 0) lock('ChickenHand', 'Chicken Hand scores no other fan');
-  // irregular hands have no sets; Seven Pairs may still show chows that its pairs form (the book combines it with Pure Triple Chow)
+  // irregular hands have no sets, so no fan that needs a chow, pung or kong (Lesser Honors may still add Knitted Straight)
   for (const i of IRREGULAR) if (count(i) > 0) FANS.forEach(f => { if (f.sets && !(ALLOWED_SETS[i] || []).includes(f.id)) lock(f.id, 'This hand has no four sets and a pair (' + NAME(i) + ')'); });
   for (const i of IRREGULAR) { const blocker = picked.find(id => BY[id].sets && !(ALLOWED_SETS[i] || []).includes(id)); if (blocker) lock(i, 'Not with a hand of four sets and a pair (' + NAME(blocker) + ')'); }
   const max = {}; for (const f of FANS) max[f.id] = MAXCOUNT[f.id] || 1;
   max.PungOfTerminalsOrHonors = terminalPungCap(sel);
   for (const id of CHOWSMALL) max[id] = Math.min(max[id], Math.max(count(id), ccap - CHOWSMALL.reduce((a, o) => a + (o === id ? 0 : count(o)), 0)));
+  // All Green as Seven Pairs: only six green tiles exist, so one of them is always held four times; Tile Hog is part of the hand and is not added (MCR 2021, All Green example 3)
+  if (count('AllHonors') > 0) { lock('TileHog', 'Tile Hog is only for suit tiles'); max.TileHog = 0; }
+  if (count('SevenPairs') > 0 && count('AllGreen') > 0) { lock('TileHog', 'All Green as Seven Pairs always holds four of one tile'); max.TileHog = 0; }
   for (const id of Object.keys(locked)) if (count(id) === 0) max[id] = 0;
   if (count('PungOfTerminalsOrHonors') === 0 && max.PungOfTerminalsOrHonors === 0 && !locked.PungOfTerminalsOrHonors) locked.PungOfTerminalsOrHonors = 'Every pung here is already part of a fan';
   return { locked, max };
@@ -4682,13 +4684,13 @@ function candidates(rd, ctx) {
   // the flags the host gives
   if (selfDrawn) add('SelfDrawn'); if (flags.lastTile) add('LastTile'); if (flags.lastTileDraw) add('LastTileDraw'); if (flags.lastTileClaim) add('LastTileClaim'); if (flags.outWithReplacement) add('OutWithReplacementTile'); if (flags.robbingKong) add('RobbingTheKong');
   if (noMelded) add(selfDrawn ? 'FullyConcealedHand' : 'ConcealedHand');
-  const hog = counts => { for (let t = 0; t < 34; t++) if (counts[t] === 4) add('TileHog'); };
+  const hog = counts => { for (let t = 0; t < 27; t++) if (counts[t] === 4) add('TileHog'); };   // Tile Hog: "all four of a single suit tile" (MCR 2021, fan 64), so honors never count
   if (rd.kind === 'thirteenOrphans') { add('ThirteenOrphans'); return items; }
   if (rd.kind === 'greater' || rd.kind === 'lesser') { add(rd.kind === 'greater' ? 'GreaterHonorsKnitted' : 'LesserHonorsKnitted'); if (rd.kind === 'lesser' && knittedOf(rd.perm).every(t => ctx.counts[t] > 0)) add('KnittedStraight'); return items; }
   if (rd.kind === 'sevenPairs' || rd.kind === 'sevenShifted') {
     const T = []; ctx.counts.forEach((c, t) => { for (let i = 0; i < c; i++) T.push(t); });
-    add(rd.kind === 'sevenPairs' ? 'SevenPairs' : 'SevenShiftedPairs'); tileFans(T, add); hog(ctx.counts);
-    const ty = new Set(T.map(t => (t >= 31 ? 4 : t >= 27 ? 3 : suitOf(t)))); if (ty.size === 5) add('AllTypes'); return items;
+    add(rd.kind === 'sevenPairs' ? 'SevenPairs' : 'SevenShiftedPairs'); tileFans(T, add); if (!T.every(t => GREEN.has(t))) hog(ctx.counts);   // All Green as Seven Pairs always holds four of one tile: no Tile Hog
+    return items;   // no All Types: it needs four sets and a pair
   }
   // a standard hand (or one with a knitted straight)
   const sets = rd.sets, T = [], rawCounts = new Array(34).fill(0);
