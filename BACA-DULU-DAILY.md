@@ -1616,3 +1616,20 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 
 **Database:** tidak ada perubahan.
 **Berkas yang berubah:** `scoreboard.html` dan catatan ini.
+
+## Update terbaru (v79): iPhone/iPad di scoreboard, dan guest di ranking sesi
+
+**Scoreboard di iPhone dan iPad:**
+- Ketukan cepat pada tile tidak lagi memicu zoom (double tap), dan tidak ada lagi jeda sekitar 0,3 detik di setiap ketukan. Zoom dua jari tetap bisa.
+- Tile tidak memunculkan menu tahan-lama atau seleksi teks; scroll di dalam jendela tidak menggeser halaman di belakangnya.
+- **Pick tiles** dan **Pick patterns** sekarang layar penuh di semua ukuran (sebelumnya hanya di layar sampai 600 px, jadi di iPad tampil sebagai panel 85%). Di iPad dan komputer isinya selebar 680 px di tengah.
+- Perhitungan MCR yang sama tidak lagi diulang beberapa kali di setiap ketukan.
+
+**Guest di ranking sesi:**
+- Ranking per sesi (semua sesi, termasuk turnamen) sekarang ikut memberi peringkat ke guest, dengan label "guest". Judulnya menjadi "Ranked by net points · guests included". Share top 10 sesi ikut memuat guest.
+- Pemenang di kotak "Latest sessions" juga menghitung guest.
+- Leaderboard utama (Total), halaman pemain, dan rekap pemain tetap hanya pemain terdaftar.
+- Catatan: guest dikenali dari namanya. Dua guest berbeda dengan nama sama di satu sesi tergabung jadi satu baris; beri nama berbeda (misalnya "Andi B").
+
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, dan catatan ini.

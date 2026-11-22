@@ -117,7 +117,7 @@ a{color:inherit}
 .row.r2{--mc:var(--c2);--mt:var(--t2)}
 .row.r3{--mc:var(--c3);--mt:var(--t3)}
 .row.r4{--mc:var(--c4);--mt:var(--t4)}
-.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rname .mbadge.gst{margin-left:0;flex:none;font-size:11px;padding:1px 7px}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -392,20 +392,21 @@ function fmtNet(n){var r=Math.round(n*10)/10;return (r>0?'+':r<0?'\u2212':'')+Ma
 function fmtLg(n){return (Math.round(n*10)/10).toFixed(1);}
 function dayOf(id){for(var i=0;i<DATA.days.length;i++)if(DATA.days[i].id===id)return DATA.days[i];return null;}
 // one entry per person across the given tables; names match ignoring case and extra spaces
-function aggregate(tables){
+// withGuests: a session's board ranks everyone who played it, guests included; the main board ranks registered players only
+function aggregate(tables,withGuests){
   var map={};
   tables.forEach(function(t){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
-      if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
-      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:''});
+      if(p.placeholder||(p.guest&&!withGuests))return;   // an unnamed seat never counts; a guest (not in the player registry) only on a session's board
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:'',guest:!!p.guest});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
       if(p.reg)m.pid=p.key;   // a registered player whose page is open: the key is the id that opens it
       if(p.windFirsts===undefined||t.winds===undefined)m.nofx=true;else{m.hands+=t.hands;m.wf+=p.windFirsts;m.winds+=t.winds;}   // a table whose statistics are not renewed yet has no wind-round facts
     });
   });
-  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid};});
+  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid,guest:m.guest};});
 }
 // On the main board: the wind rounds a player has played and how many of them they finished first.
 // (A table whose statistics are not renewed yet has no wind-round facts: it shows the old games line until its turn comes.)
@@ -641,7 +642,7 @@ function board(list,session){
   var html='',pq=session?'':playerQuery();
   rankList(list).forEach(function(r){
     var p=r.p,v=r.v,rank=r.rank,key=r.key;
-    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+TBTGEM.icon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
+    html+='<div class="row'+(rank<=4?' m r'+rank:'')+(p.pid?' lk':'')+'"><div class="rn">'+rank+'</div><div class="rm"><div class="rname"><span class="nm">'+esc(p.name)+'</span>'+(p.guest?'<span class="mbadge gst">guest</span>':'')+TBTGEM.icon(rank)+'</div><div class="rsub">'+((session&&sessionSub(p))||totalSub(p))+'</div></div><div class="rv'+(key==='net'&&v<0?' neg':'')+'">'+(key==='net'?fmtNet(p.net):fmtLg(p.league))+'</div>'+(p.pid?'<a class="rlink" href="/players/'+encodeURIComponent(p.pid)+'/'+slugOf(p.name)+pq+'" aria-label="Open '+esc(p.name)+'\u2019s page"></a>':'')+'</div>';
   });
   return '<div class="card">'+html+'</div>';
 }
@@ -761,7 +762,7 @@ function sideCard(ts){
   var ds=Object.keys(by).map(dayOf).filter(Boolean).sort(function(a,b){return b.date.localeCompare(a.date)||a.label.localeCompare(b.label);}).slice(0,5);
   if(!ds.length)return '';
   return '<aside class="n-side"><div class="card"><h3>Latest sessions</h3>'+ds.map(function(d){
-    var x=by[d.id],net={};x.forEach(function(t){t.players.forEach(function(p){if(!p.placeholder&&!p.guest)net[p.name]=(net[p.name]||0)+p.netTotal;});});
+    var x=by[d.id],net={};x.forEach(function(t){t.players.forEach(function(p){if(!p.placeholder)net[p.name]=(net[p.name]||0)+p.netTotal;});});
     var w=Object.keys(net).sort(function(a,b){return net[b]-net[a];})[0];
     return '<button type="button" class="n-ls" data-day="'+esc(d.id)+'"><div class="d"><b>'+(+d.date.slice(8,10))+'</b>'+MONTHS[+d.date.slice(5,7)-1].slice(0,3)+'</div><div class="t"><b>'+esc(d.label)+'</b><span>'+tablesWord(x.length)+'</span></div>'+(w?'<div class="w"><b>'+esc(w)+'</b>'+fmtNet(net[w])+'</div>':'')+'</button>';
   }).join('')+'</div></aside>';
@@ -801,10 +802,10 @@ function viewDay(id){
   if(!d)return back+'<p class="empty">Session not found.</p>';
   var ts=DATA.tables.filter(function(t){return t.day_id===id;}),pl=ts.filter(function(t){return t.events>0;});
   var many=MODE_ORDER.filter(function(k){return pl.some(function(t){return modeOf(t)===k;});}).length>=2,dm=many?S.dmode:'all';
-  var dl=aggregate(pl.filter(function(t){return !many||modeMatch(t,dm);}));
+  var dl=aggregate(pl.filter(function(t){return !many||modeMatch(t,dm);}),true);
   setCard(dl,d.label,fmtDate(d.date)+(!many||dm==='all'?'':' \u00b7 '+filterLabel(dm)),true);
   return back+'<div class="n-dhead"><div><h2 class="dtitle">'+esc(d.label)+'</h2><div class="dmeta">'+esc(fmtDate(d.date))+'</div></div>'+(many?'<div class="n-filters one">'+ddButton('dmode',filterLabel(dm),ICON.mode,dm!=='all')+'</div>':'')+'</div>'
-    +'<div class="n-grid d"><div><div class="n-ch"><span>Ranked by net points \u00b7 registered players</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(dl,true)+'</div>'
+    +'<div class="n-grid d"><div><div class="n-ch"><span>Ranked by net points \u00b7 guests included</span>'+shareBtn()+'</div>'+(SHOW_RATING?seg('metric',[['net','Net points'],['league',RATING_LABEL]],S.metric):'')+board(dl,true)+'</div>'
     +'<div><h3 class="sub" style="margin-top:0">Tables</h3>'+(ts.length?ts.map(tableCard).join(''):'<p class="empty">No tables yet.</p>')+'</div></div>';
 }
 var NAV=false;   // set when the visitor moves to another view, so Back can step back through the views

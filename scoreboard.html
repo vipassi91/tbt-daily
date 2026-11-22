@@ -351,6 +351,20 @@ a.brandmark{text-decoration:none;color:inherit;min-height:40px}
 .tm-fb[disabled]{opacity:1;cursor:not-allowed}.tm-fb[disabled]>*{opacity:.3;filter:grayscale(1)}.tm-fb[disabled]::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:3px;background:var(--red);transform:rotate(-35deg);border-radius:2px}.tm-wb[disabled]{opacity:1;cursor:default}
 .tm-foot{display:flex;gap:10px}.tm-foot .btn{flex:1}
 @media (max-width:380px){.tm-pr,.tm-tray{gap:4px}}
+/* v79: phones and tablets (iPhone, iPad). Quick taps on tiles are taps, never a double-tap zoom, and there is no tap delay; pinch zoom still works.
+   The pick tiles and pick patterns windows take the whole screen at every size; on a tablet or computer their content stays a readable width (680 px) in the middle. */
+html{touch-action:manipulation}
+button,.chip,.btn,[data-tm],.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld,.tm-t{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.patmodal-body{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#tileModal .patmodal-sheet,#patModal .patmodal-sheet,#mcrPatModal .patmodal-sheet{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;box-shadow:none}
+#tileModal .patmodal-header,#patModal .patmodal-header,#mcrPatModal .patmodal-header{padding-top:max(14px,env(safe-area-inset-top))}
+#tileModal .patmodal-footer,#patModal .patmodal-footer,#mcrPatModal .patmodal-footer{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+@media (min-width:601px){
+  #tileModal .patmodal-header,#patModal .patmodal-header,#mcrPatModal .patmodal-header,
+  #tileModal .patmodal-body,#patModal .patmodal-body,#mcrPatModal .patmodal-body,
+  #tileModal .patmodal-footer,#patModal .patmodal-footer,#mcrPatModal .patmodal-footer,#patModal .patmodal-note{padding-left:max(24px,calc((100% - 680px) / 2));padding-right:max(24px,calc((100% - 680px) / 2))}
+}
 </style>
 </head>
 <body>
@@ -4870,8 +4884,11 @@ function mcrInput(win) {
 }
 function mcrAnal() {
   var n = mNeed(); if (M.hand.length < n) return { status: 'short', missing: n - M.hand.length }; if (M.hand.length > n) return { status: 'long', extra: M.hand.length - n };
-  var r = ME.score(mcrInput(M.hand[0])); return { status: r.valid ? 'valid' : 'invalid', reason: r.reason };
+  var r = meScore(mcrInput(M.hand[0])); return { status: r.valid ? 'valid' : 'invalid', reason: r.reason };
 }
+// one tap draws the hand, the winning tile and the result, and each asks for the same score: keep the last results (slow phones felt every repeat)
+var meMemo = {};
+function meScore(inp) { var k = JSON.stringify(inp); if (meMemo.hasOwnProperty(k)) return meMemo[k]; if (Object.keys(meMemo).length > 60) meMemo = {}; return (meMemo[k] = ME.score(inp)); }
 function anal() { return M.ctx.mcr ? mcrAnal() : E.analyze({ hand: M.hand, melds: M.melds }); }
 function mcrVerdict() {
   var h = '', ok = false, invalid = false, an = mcrAnal(), min = M.ctx.min || 0, over = [];
@@ -4882,7 +4899,7 @@ function mcrVerdict() {
   else if (an.status === 'invalid') h = pill('bad', 'Not a winning hand') + '<p class="tm-sub">These tiles do not make a winning hand. Check them against the real tiles.</p>';
   else if (M.win === null) h = pill('info', 'Tap the tile that won') + '<p class="tm-sub">The tool needs it to tell the wait and which set the winning tile completed.</p>';
   else {
-    var r = ME.score(mcrInput(M.win)), list = r.fans.map(function (f) { return tesc(f.name) + (f.count > 1 ? ' \u00d7' + f.count : '') + ' +' + f.pts; }).join(', ');
+    var r = meScore(mcrInput(M.win)), list = r.fans.map(function (f) { return tesc(f.name) + (f.count > 1 ? ' \u00d7' + f.count : '') + ' +' + f.pts; }).join(', ');
     if (r.meetsMinimum) { ok = true; h = pill('ok', 'Suggested: ' + plural(r.pattern + r.flowers, 'point')) + '<p class="tm-sub">' + list + (r.flowers ? ', ' + plural(r.flowers, 'flower') + ' +' + r.flowers : '') + '</p><p class="tm-sub">Next you check this in the pattern picker, and change anything that is wrong.</p>'; }
     else { invalid = true; h = pill('bad', 'Invalid win') + '<p class="tm-sub warn">The patterns add up to ' + plural(r.pattern, 'point') + ', below the minimum of ' + plural(min, 'point') + ' to win in this game. Flowers do not count toward the minimum, so this would be an invalid win.</p>' + (M.onInvalid ? '<p class="tm-sub"><button type="button" class="btn" id="tmInvalid">Record as Invalid win</button></p>' : ''); }
   }
@@ -4988,7 +5005,7 @@ $t('tileModal').addEventListener('click', function (e) { if (e.target === $t('ti
 $t('tmUseBtn').addEventListener('click', function () {
   if (!M) return;
   if (M.ctx.mcr) {
-    var an = mcrAnal(); if (an.status !== 'valid' || M.win === null) return; var rm = ME.score(mcrInput(M.win)); if (!rm.valid || !rm.meetsMinimum) return;
+    var an = mcrAnal(); if (an.status !== 'valid' || M.win === null) return; var rm = meScore(mcrInput(M.win)); if (!rm.valid || !rm.meetsMinimum) return;
     var sel = ME.selection(rm); if (M.flowers.length) sel.FlowerTiles = Math.min(8, M.flowers.length);
     var dataM = toData(), keepM = M, useM = tmUse, cancelM = tmCancel, minM = M.ctx.min || 0; tmClose();
     window.openMcrPatternModal(function (picked) { if (useM) useM({ patterns: picked, tiles: dataM }); }, { mcr: 1, sel: sel },
