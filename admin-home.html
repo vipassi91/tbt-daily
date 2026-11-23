@@ -217,7 +217,7 @@ function headlineHtml(h){
 
 function checkLogin(){
   if(!password)return Promise.resolve(false);
-  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){return r.ok;}).catch(function(){return false;});
+  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){window.__loginStatus=r.status;return r.ok;}).catch(function(){return false;});
 }
 function loadText(){
   return fetch('/api/admin/home',{headers:H()}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
@@ -227,7 +227,7 @@ function loadText(){
 function doLogin(){
   password=document.getElementById('pw').value;
   checkLogin().then(function(ok){
-    if(!ok){loginError='Wrong password.';render();return;}
+    if(!ok){loginError=window.__loginStatus===429?'Too many wrong passwords. Try again in 15 minutes.':'Wrong password.';render();return;}
     sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';
     return loadText().then(render);
   });

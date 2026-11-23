@@ -238,7 +238,7 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 
 function checkLogin(){
   if(!password)return Promise.resolve(false);
-  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){return r.ok;}).catch(function(){return false;});
+  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){window.__loginStatus=r.status;return r.ok;}).catch(function(){return false;});
 }
 function loadDays(){return fetch('/api/days',{headers:H()}).then(function(r){return r.ok?r.json():[];}).then(function(d){days=d;});}
 // names already used in earlier sessions, offered as suggestions so spelling stays consistent
@@ -298,7 +298,7 @@ function render(){
 function doLogin(){
   password=document.getElementById('pw').value;
   checkLogin().then(function(ok){
-    if(!ok){loginError='Wrong password.';render();return;}
+    if(!ok){loginError=window.__loginStatus===429?'Too many wrong passwords. Try again in 15 minutes.':'Wrong password.';render();return;}
     sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';
     return Promise.all([loadDays(),loadNames()]).then(render);
   });

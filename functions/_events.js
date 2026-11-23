@@ -22,6 +22,9 @@ export const CANCEL_HOURS = 24;
 export const MAX_PLAYERS = 8;
 
 export const EVENTS_SQL = [
+  // the waiting list of a full session: people who want a seat if one opens (nothing is paid or held)
+  'CREATE TABLE IF NOT EXISTS event_waitlist (id TEXT PRIMARY KEY, event_id TEXT NOT NULL, session_id TEXT NOT NULL, name TEXT NOT NULL, wa TEXT NOT NULL, level TEXT, seats INTEGER NOT NULL DEFAULT 1, note TEXT, status TEXT NOT NULL, booking_id TEXT, ip_hash TEXT, created_at TEXT NOT NULL, offered_at TEXT, done_at TEXT)',
+  'CREATE INDEX IF NOT EXISTS idx_event_waitlist_event ON event_waitlist(event_id, status)',
   "CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, type TEXT NOT NULL, title TEXT NOT NULL, place TEXT, about TEXT, contact_wa TEXT, banks TEXT, venue_pay INTEGER NOT NULL DEFAULT 0, fours INTEGER NOT NULL DEFAULT 0, show_going INTEGER NOT NULL DEFAULT 1, close_hours REAL NOT NULL DEFAULT 2, status TEXT NOT NULL DEFAULT 'draft', created_at TEXT NOT NULL, updated_at TEXT NOT NULL)",
   'CREATE TABLE IF NOT EXISTS event_sessions (id TEXT PRIMARY KEY, event_id TEXT NOT NULL, position INTEGER NOT NULL, start TEXT NOT NULL, hours REAL NOT NULL, seats INTEGER NOT NULL, price INTEGER NOT NULL, levels TEXT, mode TEXT)',
   'CREATE INDEX IF NOT EXISTS idx_event_sessions_event ON event_sessions(event_id)',
@@ -242,4 +245,18 @@ export function publicEvent(e, now) {
       return { id: s.id, start: s.start, hours: s.hours, seats: s.seats, left: Math.max(0, s.seats - s.taken), price: s.price, levels: s.levels, mode: s.mode, open: bookingOpen(e, s, now) };
     })
   };
+}
+
+// ---- waiting list ----
+export const WAIT_ACTIVE = ['waiting', 'offered'];
+// how many people wait for each session of an event (no names: this is shown on the public page)
+export async function waitingBySession(env, eventId) {
+  const out = {};
+  const r = await env.DB.prepare("SELECT session_id, COUNT(*) AS n FROM event_waitlist WHERE event_id = ? AND status IN ('waiting','offered') GROUP BY session_id").bind(eventId).all();
+  r.results.forEach(function (x) { out[x.session_id] = x.n; });
+  return out;
+}
+export async function waitlistOf(env, eventId) {
+  const r = await env.DB.prepare('SELECT * FROM event_waitlist WHERE event_id = ? ORDER BY created_at').bind(eventId).all();
+  return r.results.map(function (w) { return { id: w.id, sessionId: w.session_id, name: w.name, wa: w.wa, level: w.level || '', seats: w.seats, note: w.note || '', status: w.status, bookingId: w.booking_id || '', createdAt: w.created_at, offeredAt: w.offered_at || '', doneAt: w.done_at || '' }; });
 }

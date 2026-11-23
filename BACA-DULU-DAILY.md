@@ -1633,3 +1633,33 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 
 **Database:** tidak ada perubahan.
 **Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, dan catatan ini.
+
+## Update terbaru (v80): waiting list, link event, saran nama, dan keamanan admin
+
+**Waiting list untuk sesi penuh**
+- Di halaman event, sesi yang penuh menampilkan **Join waiting list** (dan berapa orang yang menunggu). Isi: nama, WhatsApp, level, jumlah kursi (1 sampai 4), catatan. Peserta melihat nomor antriannya. Tidak ada yang ditahan atau dibayar. Nomor WA yang sama di sesi yang sama tidak dobel.
+- Admin dan host: kartu **Waiting list** di Bookings, per sesi, urut waktu daftar, dengan tanda "N seats free now" kalau ada kursi kosong. Tombol **WhatsApp** (pesan siap kirim, otomatis ditandai "messaged"), **Add booking** (form booking manual terisi otomatis; setelah disimpan orangnya keluar dari daftar), **Not answered**, **Remove**. Daftar Events menampilkan jumlah yang menunggu.
+
+**Link event di WhatsApp dan Google**
+- Halaman event (`/events/<id>/<nama>`) sekarang membawa judul, keterangan (jenis, tanggal, tempat, harga), dan alamat sendiri, jadi link yang dibagikan di WhatsApp menampilkan eventnya.
+- Data Event untuk Google (schema.org) per sesi: tanggal, tempat, harga, kursi tersedia atau habis.
+- `sitemap.xml` otomatis memuat semua event yang dipublikasikan (yang selesai lebih dari 60 hari lalu tidak).
+
+**Nama pemain di scoreboard**
+- Saran nama sekarang dibuat oleh halaman sendiri (saran bawaan browser tidak muncul di semua HP). Isinya semua pemain terdaftar; bisa dicari lewat nickname, **nama asli**, atau nama lain yang sudah tercatat (mengetik "Yu" menawarkan "Mymories" dengan "Yuli" di bawahnya).
+- Kursi yang tertaut ke pemain terdaftar diberi centang kecil. Nama yang mirip pemain atau sama dengan nama asli pemain mendapat satu saran kecil, misalnya "→ Kev?".
+- Kolom nama sekarang sampai 30 huruf (sama dengan batas nickname); koreksi otomatis keyboard dimatikan.
+- Nama asli hanya dikirim ke yang memegang kode edit meja (`/api/names/<kode>`), tanpa WA atau Instagram.
+
+**Find your name (pencarian di header)**
+- Juga mencari lewat nama asli (minimal 3 huruf), dengan keterangan "Found by real name". Nama asli tidak pernah dikirim ke halaman publik; server hanya menjawab pemain mana yang cocok. Pemain yang menyembunyikan halamannya tetap tidak muncul.
+
+**Keamanan admin**
+- 10 kali salah password admin dalam 15 menit memblok perangkat itu selama 15 menit (pesan "Too many wrong passwords. Try again in 15 minutes.").
+
+**Leaderboard sesi:** angka guest dan non-guest sekarang rata kanan di satu garis.
+
+**Database:** tabel baru `event_waitlist`, dibuat otomatis. Tidak perlu Console D1.
+**Berkas baru:** `functions/api/_middleware.js`, `functions/api/waitlist.js`, `functions/api/admin/waitlist/[id].js`, `functions/api/host/waitlist/[id].js`, `functions/api/names/[code].js`, `functions/events/[[path]].js`, `functions/sitemap.xml.js`.
+**Berkas yang berubah:** `events.html`, `admin-events.html`, `admin-daily.html`, `admin-home.html`, `scoreboard.html`, `leaderboard.html`, `index.html`, `player.html`, `players.html`, `quiz.html`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/api/events/[id].js`, `functions/api/names.js`, dan catatan ini.
+**Setelah upload:** kirim ulang sitemap di Google Search Console (kalau sudah didaftarkan): `https://tilesbytiles.id/sitemap.xml`.

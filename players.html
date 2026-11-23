@@ -733,6 +733,13 @@ var TBTNAV = (function () {
     ST.status = 'loading';
     try { fetch('/api/names').then(function (r) { if (!r.ok) throw new Error('x'); return r.json(); }).then(function (d) { ST.idx = d.players || []; ST.status = 'ready'; flush(); }).catch(function () { ST.status = 'failed'; flush(); }); } catch (e) { ST.status = 'failed'; flush(); }
   }
+  // real names: after a short pause in typing, ask the server who has this real name (3 letters or more); kept per search
+  var rnT = null;
+  function rnLook(q) {
+    var k = fold(q); clearTimeout(rnT); ST.rn = ST.rn || {};
+    if (k.length < 3 || ST.rn[k]) return;
+    rnT = setTimeout(function () { try { fetch('/api/names?q=' + encodeURIComponent(k)).then(function (r) { return r.ok ? r.json() : { ids: [] }; }).then(function (d) { ST.rn[k] = d.ids || []; if (fold(ST.q) === k) refresh(); }).catch(function () { }); } catch (e) { } }, 250);
+  }
   function flush() { var c = ST.cbs; ST.cbs = []; c.forEach(function (f) { try { f(); } catch (e) { } }); }
   function lev(a, b) { var d = [], i, j; for (i = 0; i <= a.length; i++) d[i] = [i]; for (j = 1; j <= b.length; j++) d[0][j] = j; for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; }
   function modesText(ms) {
@@ -743,10 +750,11 @@ var TBTNAV = (function () {
   function find(q) {
     var k = fold(q); if (!k || !ST.idx) return { hits: [], best: null };
     var hits = ST.idx.filter(function (p) { return fold(p.name).indexOf(k) >= 0; }).sort(function (a, b) { return (fold(a.name).indexOf(k) === 0 ? 0 : 1) - (fold(b.name).indexOf(k) === 0 ? 0 : 1); });
+    var rn = ST.rn && ST.rn[k]; if (rn) rn.forEach(function (id) { if (hits.some(function (p) { return p.id === id; })) return; var p = ST.idx.filter(function (x) { return x.id === id; })[0]; if (p) hits.push(Object.assign({}, p, { rn: true })); });   // found by their real name (the server only says who)
     var best = null; if (!hits.length) { var bd = 99; ST.idx.forEach(function (p) { var d = lev(k, fold(p.name)); if (d < bd) { bd = d; best = p; } }); if (!best || bd > (k.length <= 4 ? 1 : 2)) best = null; }
     return { hits: hits, best: best };
   }
-  function itemHtml(p, tagText) { return '<a class="tn-item" href="' + esc(href(p)) + '"><span><b>' + esc(p.name) + '</b><small>' + esc(meta(p)) + '</small></span>' + (tagText ? '<span class="tn-tag">' + esc(tagText) + '</span>' : '') + IC.go + '</a>'; }
+  function itemHtml(p, tagText) { return '<a class="tn-item" href="' + esc(href(p)) + '"><span><b>' + esc(p.name) + '</b><small>' + esc((p.rn ? 'Found by real name \u00b7 ' : '') + meta(p)) + '</small></span>' + (tagText ? '<span class="tn-tag">' + esc(tagText) + '</span>' : '') + IC.go + '</a>'; }
   function noneHtml(q, best) {
     return '<div class="tn-none"><b>No one named \u201c' + esc(q.trim()) + '\u201d.</b><p>' + (best ? 'Did you mean <b style="display:inline">' + esc(best.name) + '</b>?' : 'Check the spelling, or try just the first letters.') + ' You can be on the list and still not see yourself in the current view, so this searches everyone.</p>' + (best ? '<a class="tn-sug" href="' + esc(href(best)) + '">Open ' + esc(best.name) + '</a>' : '') + '</div><div class="tn-note">Players appear here after their first game. Not signed up yet? Ask your host for the sign-up link.</div>';
   }
@@ -786,7 +794,7 @@ var TBTNAV = (function () {
     // Sign up is in the menu only while the admin has opened sign-up to everyone (one small answer, kept 60 seconds)
     if (!ST.suAsked) { ST.suAsked = true; try { fetch('/api/signup?status=1').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { if (j && j.open) { ST.su = true; var pn = document.getElementById('tnPanel'); if (pn && LAST) pn.innerHTML = panel(LAST.active, LAST.o); } }).catch(function () { }); } catch (e) { } }
     document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
-    document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
+    document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); rnLook(t.value); } });
     document.addEventListener('click', function (e) {
       var t = e.target, b = t.closest ? t.closest('[data-tn]') : null;
       if (!b) {

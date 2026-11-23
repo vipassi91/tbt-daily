@@ -117,7 +117,7 @@ a{color:inherit}
 .row.r2{--mc:var(--c2);--mt:var(--t2)}
 .row.r3{--mc:var(--c3);--mt:var(--t3)}
 .row.r4{--mc:var(--c4);--mt:var(--t4)}
-.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rname .mbadge.gst{margin-left:0;flex:none;font-size:11px;padding:1px 7px}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -258,6 +258,7 @@ a{color:inherit}
 .tn-saved{font-size:12px;line-height:1.4;color:var(--muted);margin:6px 0 0}
 /* the leaderboard rows that open a page show an arrow */
 .row.lk .rv{margin-right:24px}
+.haslk .row:not(.lk) .rv{margin-right:24px}   /* a row without a player page (a guest) keeps the numbers in line with the rows that have the arrow */
 .row.lk .rlink::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.7}
 /* phones: the name stays, a search icon opens the search over the header */
 @media (max-width:719px){
@@ -382,6 +383,10 @@ a{color:inherit}
 @media(min-width:720px){.e-sheet{border-radius:20px}}
 .e-sheet h3{font-size:20px;font-weight:900;margin:0 0 6px}
 .e-toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:80;max-width:calc(100% - 40px)}
+
+/* waiting list of a full session */
+.e-wl{margin-top:6px;font:inherit;font-size:13px;font-weight:700;color:var(--accent);background:none;border:1px solid var(--accent);border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap}
+.e-wl:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 </style>
 <script>
 /* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
@@ -496,20 +501,21 @@ function fmtNet(n){var r=Math.round(n*10)/10;return (r>0?'+':r<0?'\u2212':'')+Ma
 function fmtLg(n){return (Math.round(n*10)/10).toFixed(1);}
 function dayOf(id){for(var i=0;i<DATA.days.length;i++)if(DATA.days[i].id===id)return DATA.days[i];return null;}
 // one entry per person across the given tables; names match ignoring case and extra spaces
-function aggregate(tables){
+// withGuests: a session's board ranks everyone who played it, guests included; the main board ranks registered players only
+function aggregate(tables,withGuests){
   var map={};
   tables.forEach(function(t){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
-      if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
-      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:''});
+      if(p.placeholder||(p.guest&&!withGuests))return;   // an unnamed seat never counts; a guest (not in the player registry) only on a session's board
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:'',guest:!!p.guest});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
       if(p.reg)m.pid=p.key;   // a registered player whose page is open: the key is the id that opens it
       if(p.windFirsts===undefined||t.winds===undefined)m.nofx=true;else{m.hands+=t.hands;m.wf+=p.windFirsts;m.winds+=t.winds;}   // a table whose statistics are not renewed yet has no wind-round facts
     });
   });
-  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid};});
+  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid,guest:m.guest};});
 }
 // On the main board: the wind rounds a player has played and how many of them they finished first.
 // (A table whose statistics are not renewed yet has no wind-round facts: it shows the old games line until its turn comes.)
@@ -638,6 +644,13 @@ var TBTNAV = (function () {
     ST.status = 'loading';
     try { fetch('/api/names').then(function (r) { if (!r.ok) throw new Error('x'); return r.json(); }).then(function (d) { ST.idx = d.players || []; ST.status = 'ready'; flush(); }).catch(function () { ST.status = 'failed'; flush(); }); } catch (e) { ST.status = 'failed'; flush(); }
   }
+  // real names: after a short pause in typing, ask the server who has this real name (3 letters or more); kept per search
+  var rnT = null;
+  function rnLook(q) {
+    var k = fold(q); clearTimeout(rnT); ST.rn = ST.rn || {};
+    if (k.length < 3 || ST.rn[k]) return;
+    rnT = setTimeout(function () { try { fetch('/api/names?q=' + encodeURIComponent(k)).then(function (r) { return r.ok ? r.json() : { ids: [] }; }).then(function (d) { ST.rn[k] = d.ids || []; if (fold(ST.q) === k) refresh(); }).catch(function () { }); } catch (e) { } }, 250);
+  }
   function flush() { var c = ST.cbs; ST.cbs = []; c.forEach(function (f) { try { f(); } catch (e) { } }); }
   function lev(a, b) { var d = [], i, j; for (i = 0; i <= a.length; i++) d[i] = [i]; for (j = 1; j <= b.length; j++) d[0][j] = j; for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; }
   function modesText(ms) {
@@ -648,10 +661,11 @@ var TBTNAV = (function () {
   function find(q) {
     var k = fold(q); if (!k || !ST.idx) return { hits: [], best: null };
     var hits = ST.idx.filter(function (p) { return fold(p.name).indexOf(k) >= 0; }).sort(function (a, b) { return (fold(a.name).indexOf(k) === 0 ? 0 : 1) - (fold(b.name).indexOf(k) === 0 ? 0 : 1); });
+    var rn = ST.rn && ST.rn[k]; if (rn) rn.forEach(function (id) { if (hits.some(function (p) { return p.id === id; })) return; var p = ST.idx.filter(function (x) { return x.id === id; })[0]; if (p) hits.push(Object.assign({}, p, { rn: true })); });   // found by their real name (the server only says who)
     var best = null; if (!hits.length) { var bd = 99; ST.idx.forEach(function (p) { var d = lev(k, fold(p.name)); if (d < bd) { bd = d; best = p; } }); if (!best || bd > (k.length <= 4 ? 1 : 2)) best = null; }
     return { hits: hits, best: best };
   }
-  function itemHtml(p, tagText) { return '<a class="tn-item" href="' + esc(href(p)) + '"><span><b>' + esc(p.name) + '</b><small>' + esc(meta(p)) + '</small></span>' + (tagText ? '<span class="tn-tag">' + esc(tagText) + '</span>' : '') + IC.go + '</a>'; }
+  function itemHtml(p, tagText) { return '<a class="tn-item" href="' + esc(href(p)) + '"><span><b>' + esc(p.name) + '</b><small>' + esc((p.rn ? 'Found by real name \u00b7 ' : '') + meta(p)) + '</small></span>' + (tagText ? '<span class="tn-tag">' + esc(tagText) + '</span>' : '') + IC.go + '</a>'; }
   function noneHtml(q, best) {
     return '<div class="tn-none"><b>No one named \u201c' + esc(q.trim()) + '\u201d.</b><p>' + (best ? 'Did you mean <b style="display:inline">' + esc(best.name) + '</b>?' : 'Check the spelling, or try just the first letters.') + ' You can be on the list and still not see yourself in the current view, so this searches everyone.</p>' + (best ? '<a class="tn-sug" href="' + esc(href(best)) + '">Open ' + esc(best.name) + '</a>' : '') + '</div><div class="tn-note">Players appear here after their first game. Not signed up yet? Ask your host for the sign-up link.</div>';
   }
@@ -691,7 +705,7 @@ var TBTNAV = (function () {
     // Sign up is in the menu only while the admin has opened sign-up to everyone (one small answer, kept 60 seconds)
     if (!ST.suAsked) { ST.suAsked = true; try { fetch('/api/signup?status=1').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { if (j && j.open) { ST.su = true; var pn = document.getElementById('tnPanel'); if (pn && LAST) pn.innerHTML = panel(LAST.active, LAST.o); } }).catch(function () { }); } catch (e) { } }
     document.addEventListener('focusin', function (e) { if (e.target && e.target.id === 'tnQ') { ST.hide = false; load(refresh); refresh(); } });
-    document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); } });
+    document.addEventListener('input', function (e) { var t = e.target; if (t && t.id === 'tnQ') { ST.q = t.value; ST.hide = false; load(refresh); refresh(); rnLook(t.value); } });
     document.addEventListener('click', function (e) {
       var t = e.target, b = t.closest ? t.closest('[data-tn]') : null;
       if (!b) {
@@ -823,7 +837,7 @@ function vEvent(){
   var sess=e.sessions.map(function(s){
     var note=!s.open?'Booking closed':(s.left===0?'Full':s.left+' of '+s.seats+' left');
     return '<div class="e-sess"><div style="flex:1;min-width:0"><div class="t">'+longDate(s.start)+'</div><div class="e-small e-muted">'+win(s)+' · '+lvls(s.levels)+'</div><div style="margin-top:4px"><span class="e-tag grey">'+modeTag(s.mode)+'</span></div></div>'
-      +'<div style="text-align:right"><div class="e-price">'+rp(s.price)+'</div><div class="e-small" style="'+(s.left===0||!s.open?'color:var(--red);font-weight:700':'color:var(--muted)')+'">'+note+'</div></div></div>';
+      +'<div style="text-align:right"><div class="e-price">'+rp(s.price)+'</div><div class="e-small" style="'+(s.left===0||!s.open?'color:var(--red);font-weight:700':'color:var(--muted)')+'">'+note+'</div>'+(s.left===0&&s.open?'<button type="button" class="e-wl" data-x="wait" data-v="'+s.id+'">Join waiting list</button>'+(s.waiting?'<div class="e-small e-muted">'+s.waiting+' waiting</div>':''):'')+'</div></div>';
   }).join('');
   var g=e.going;
   return '<main class="e-wrap"><a class="e-back" href="/events">'+EI.back+'Events</a><div class="e-two"><div>'
@@ -841,7 +855,36 @@ function vEvent(){
     +(g&&(g.names.length||g.guests)?'<div class="e-card"><h3>Who is coming</h3>'+(g.names.length?'<div class="e-going">'+g.names.map(function(n){return '<span>'+esc(n)+'</span>';}).join('')+'</div>':'')+(g.guests?'<p class="e-small e-muted" style="margin:8px 0 0">'+(g.names.length?'and ':'')+g.guests+' guest'+(g.guests===1?'':'s')+'. Only registered TBT players are named.</p>':'')+'</div>':'')
     +'</div><div class="e-sticky"><div class="e-card"><h3>'+(e.sessions.length>1?e.sessions.length+' sessions':'Session')+'</h3>'+sess
     +'<button type="button" class="e-btn pri full" style="margin-top:14px" data-x="book"'+(anyOpen?'':' disabled')+'>'+(anyOpen?'Book seats':(allClosed?'Booking closed':'Fully booked'))+'</button>'
-    +'<p class="e-small e-muted" style="margin:8px 0 0;text-align:center">No account needed. Book for up to 8 people.</p></div></div></div></main>';
+    +'<p class="e-small e-muted" style="margin:8px 0 0;text-align:center">'+(!anyOpen&&!allClosed?'Full? Join the waiting list of a session above: we message you on WhatsApp if a seat opens.':'No account needed. Book for up to 8 people.')+'</p></div></div></div></main>';
+}
+// ---------- waiting list of a full session ----------
+function waitSheet(){
+  var w=V.wait,s=byId(w.sid);if(!s)return;
+  sheet('<h3>Join the waiting list</h3><p class="e-small e-muted" style="margin:0 0 12px">'+esc(V.ev.title)+' · '+longDate(s.start)+', '+s.start.slice(11,16)+(V.ev.sessions.length>1?' · '+modeTag(s.mode):'')+'. If a seat opens, we message you on WhatsApp. Nothing to pay now.</p>'
+    +'<div class="e-f"><label class="l" for="wn">Name *</label><input class="e-in" id="wn" data-w="name" value="'+esc(w.name)+'" maxlength="40" autocomplete="name">'
+    +'<label class="l" for="ww">WhatsApp *</label><input class="e-in" id="ww" data-w="wa" type="tel" inputmode="tel" value="'+esc(w.wa)+'" placeholder="0812...">'
+    +'<label class="l">Level</label><div class="e-chips">'+LEVELS.map(function(l){return '<button type="button" class="e-chip" data-x="wlvl" data-v="'+l[0]+'" aria-pressed="'+(w.level===l[0])+'">'+l[1]+'</button>';}).join('')+'</div>'
+    +'<label class="l">How many seats</label><div class="e-chips">'+[1,2,3,4].map(function(n){return '<button type="button" class="e-chip" data-x="wseats" data-v="'+n+'" aria-pressed="'+(w.seats===n)+'">'+n+'</button>';}).join('')+'</div>'
+    +'<label class="l" for="wo">Note (optional)</label><input class="e-in" id="wo" data-w="note" value="'+esc(w.note)+'" maxlength="200" placeholder="e.g. we can also come later">'
+    +'<input type="text" id="whp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">'
+    +'<label class="e-ck" style="margin-top:12px"><input type="checkbox" id="wc"'+(w.consent?' checked':'')+'><span>I agree that TBT keeps these details to run this event and may message this WhatsApp number about it.</span></label>'
+    +'</div><div class="e-err" id="wErr">'+esc(w.err||'')+'</div>'
+    +'<div class="e-acts"><button type="button" class="e-btn pri" data-x="wsend"'+(w.busy?' disabled':'')+'>'+(w.busy?'Joining…':'Join waiting list')+'</button><button type="button" class="e-btn" data-x="close">Cancel</button></div>');
+}
+function waitSend(){
+  var w=V.wait,c=document.getElementById('wc');w.consent=!!(c&&c.checked);w.err='';
+  if(!w.name.trim()){w.err='Your name is required.';waitSheet();return;}
+  if(!w.wa.trim()){w.err='A WhatsApp number is required.';waitSheet();return;}
+  if(!w.consent){w.err='Please tick the consent box first.';waitSheet();return;}
+  w.busy=true;waitSheet();var hp=(document.getElementById('whp')||{}).value||'';
+  fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:V.ev.id,session:w.sid,name:w.name,wa:w.wa,level:w.level,seats:w.seats,note:w.note,consent:true,website:hp})})
+  .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});}).then(function(x){
+    w.busy=false;
+    if(!x.ok){w.err=x.d.error||'Could not join. Please try again.';waitSheet();if(x.d.seatsLeft)loadEvent(V.ev.id);return;}
+    var s=byId(w.sid);
+    sheet('<h3>'+(x.d.already?'You are already on the list':'You are on the waiting list')+'</h3><p style="margin:0 0 8px">You are <b>number '+x.d.position+'</b> in line for '+longDate(s.start)+', '+s.start.slice(11,16)+(V.ev.sessions.length>1?' ('+modeTag(s.mode)+')':'')+'.</p><p class="e-small e-muted" style="margin:0 0 12px">If a seat opens, we message '+esc(w.wa)+' on WhatsApp. Nothing is held or paid until then.</p><div class="e-acts"><button type="button" class="e-btn pri" data-x="close" data-c="1">OK</button></div>');
+    loadEvent(V.ev.id);
+  }).catch(function(){w.busy=false;w.err='Could not join. Check your connection and try again.';waitSheet();});
 }
 function loadEvent(id){
   V.ev=null;V.err='';render();
@@ -990,15 +1033,20 @@ function go(){
   else{if(V.route.name==='book'&&!V.draft)newDraft();render();}
 }
 window.addEventListener('hashchange',function(){var y=0;go();window.scrollTo(0,y);});
-document.addEventListener('input',function(ev){var t=ev.target;if(t.dataset&&t.dataset.f&&V.draft){V.draft.players[+t.dataset.i][t.dataset.f]=t.value;}});
+document.addEventListener('input',function(ev){var t=ev.target;if(t.dataset&&t.dataset.w&&V.wait){V.wait[t.dataset.w]=t.value;return;}if(t.dataset&&t.dataset.f&&V.draft){V.draft.players[+t.dataset.i][t.dataset.f]=t.value;}});
 document.addEventListener('change',function(ev){var t=ev.target,a=t.dataset&&t.dataset.x;
+  if(t.id==='wc'&&V.wait){V.wait.consent=t.checked;return;}
   if(a==='psess'){var p=V.draft.players[+t.dataset.i],v=t.dataset.v,k=p.sessions.indexOf(v);if(t.checked&&k<0)p.sessions.push(v);if(!t.checked&&k>=0)p.sessions.splice(k,1);render();}
   else if(a==='consent'){V.draft.consent=t.checked;if(t.checked&&/consent/.test(V.draft.err)){V.draft.err='';var er=document.getElementById('eErr');if(er)er.textContent='';}}
 });
 document.addEventListener('click',function(ev){
   var b=ev.target.closest?ev.target.closest('[data-x]'):null;if(!b)return;var a=b.dataset.x;
   if(b.tagName==='INPUT')return;
-  if(a==='close'){if(ev.target===b)closeSheet();return;}
+  if(a==='close'){if(ev.target===b||b.dataset.c)closeSheet();return;}
+  if(a==='wait'){var keep=V.wait||{};V.wait={sid:b.dataset.v,name:keep.name||'',wa:keep.wa||'',level:keep.level||'',seats:1,note:'',consent:!!keep.consent,err:'',busy:false};waitSheet();return;}
+  if(a==='wlvl'){V.wait.level=V.wait.level===b.dataset.v?'':b.dataset.v;waitSheet();return;}
+  if(a==='wseats'){V.wait.seats=+b.dataset.v;waitSheet();return;}
+  if(a==='wsend'){waitSend();return;}
   if(a==='filter'){V.filter=b.dataset.v;render();}
   else if(a==='scope'){if(V.scope!==b.dataset.v){V.scope=b.dataset.v;loadList();}}
   else if(a==='book'){location.hash='book';window.scrollTo(0,0);}

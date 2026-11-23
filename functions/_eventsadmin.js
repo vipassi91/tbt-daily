@@ -1,6 +1,6 @@
 import { cleanText, normWhatsapp, normInstagram, nameKey, ensureRegistryTables } from './_players.js';
 import { createTableRow } from './_tables.js';
-import { ensureEventTables, expireNow, loadEvents, takenBySession, cleanBanks, validStart, randomId, randomToken, newRef, nowIso, pickCode, registryByWa, eventBookings, goingOf, bookingView,
+import { ensureEventTables, expireNow, loadEvents, takenBySession, cleanBanks, validStart, randomId, randomToken, newRef, nowIso, pickCode, registryByWa, eventBookings, goingOf, bookingView, waitlistOf,
   TYPES, MODES, LEVELS, ACTIVE, HOLD_MINUTES, MAX_PLAYERS } from './_events.js';
 
 // Managing events, for the admin (every event) and for hosts (only the events the admin made them host of).
@@ -22,7 +22,9 @@ export async function listEvents(env, actor) {
   counts.results.forEach(function (r) { (by[r.event_id] = by[r.event_id] || {})[r.status] = r.n; });
   const refunds = await env.DB.prepare('SELECT event_id, COUNT(*) AS n FROM bookings WHERE refund > 0 GROUP BY event_id').all();
   const rf = {}; refunds.results.forEach(function (r) { rf[r.event_id] = r.n; });
-  list.forEach(function (e) { e.bookings = by[e.id] || {}; e.refunds = rf[e.id] || 0; });
+  let wl = {};
+  try { const w = await env.DB.prepare("SELECT event_id, COUNT(*) AS n FROM event_waitlist WHERE status IN ('waiting','offered') GROUP BY event_id").all(); w.results.forEach(function (r) { wl[r.event_id] = r.n; }); } catch (e) { }
+  list.forEach(function (e) { e.bookings = by[e.id] || {}; e.refunds = rf[e.id] || 0; e.waiting = wl[e.id] || 0; });
   list.sort(function (a, b) { return b.sessions.length && a.sessions.length ? b.sessions[0].start.localeCompare(a.sessions[0].start) : 0; });
   const out = { events: list, role: actor.admin ? 'admin' : 'host', me: actor.host ? actor.host.nickname : '' };
   if (actor.admin) {
@@ -50,6 +52,7 @@ export async function getEvent(env, actor, id) {
   if (!mayManage(actor, ev)) return NOT_YOURS;
   ev.bookingList = await eventBookings(env, ev);
   ev.going = await goingOf(env, ev.id);
+  ev.waitlist = await waitlistOf(env, ev.id);
   // the player list, for adding a booking by hand: names only (the number and Instagram are filled in by the server)
   try {
     const r = await env.DB.prepare('SELECT id, nickname, full_name FROM registry').all();
@@ -273,6 +276,8 @@ export async function addBooking(env, actor, eventId, b) {
     await env.DB.batch([env.DB.prepare('DELETE FROM booking_seats WHERE booking_id = ?').bind(id), env.DB.prepare('DELETE FROM booking_players WHERE booking_id = ?').bind(id), env.DB.prepare('DELETE FROM bookings WHERE id = ?').bind(id)]);
     return { error: 'Someone just took the last seat. Check the sessions, or allow over the seat limit.', status: 409 };
   }
+  // a booking made from the waiting list closes that entry
+  if (b.waitId) { try { await env.DB.prepare("UPDATE event_waitlist SET status = 'booked', booking_id = ?, done_at = ? WHERE id = ? AND event_id = ?").bind(id, nowIso(), String(b.waitId), ev.id).run(); } catch (e) { } }
   const fresh = await env.DB.prepare('SELECT * FROM bookings WHERE id = ?').bind(id).first();
   return bookingView(env, fresh, true);
 }
@@ -399,4 +404,19 @@ export async function makeEventDay(env, actor, eventId, b) {
     }
   }
   return { ok: true, day: await dayTables(env, day.id) };
+}
+
+// ---- the waiting list: offered (messaged on WhatsApp), back to waiting, removed ----
+export async function waitAction(env, actor, waitId, body) {
+  await ensureEventTables(env);
+  const w = await env.DB.prepare('SELECT * FROM event_waitlist WHERE id = ?').bind(String(waitId)).first();
+  if (!w) return { error: 'This entry was not found.', status: 404 };
+  const ev = (await loadEvents(env, 'id = ?', [w.event_id]))[0];
+  if (!mayManage(actor, ev)) return NOT_YOURS;
+  const a = body && body.action, at = nowIso();
+  if (a === 'offered') await env.DB.prepare("UPDATE event_waitlist SET status = 'offered', offered_at = ? WHERE id = ?").bind(at, w.id).run();
+  else if (a === 'waiting') await env.DB.prepare("UPDATE event_waitlist SET status = 'waiting', offered_at = NULL WHERE id = ?").bind(w.id).run();
+  else if (a === 'remove') await env.DB.prepare("UPDATE event_waitlist SET status = 'removed', done_at = ? WHERE id = ?").bind(at, w.id).run();
+  else return { error: 'Unknown action', status: 400 };
+  return { ok: true, waitlist: await waitlistOf(env, ev.id) };
 }
