@@ -16,6 +16,12 @@ function huAmt(pts, winner, disc, dealer) {
 const MCR_BASE = { mcr4: 4, mcr8: 8 };
 export const MCR_CUSTOM_DEFAULT = 3;
 export function isMcr(mode) { return mode === 'mcr4' || mode === 'mcr8' || mode === 'mcrc'; }
+// Hong Kong Classic: the fan of the hand are typed or picked like MCR points, then turned into points by the Hong Kong table
+export function isHk(mode) { return mode === 'hkc' || mode === 'hkf'; }
+export function isTyped(mode) { return isMcr(mode) || isHk(mode); }
+const HK_TABLE = [1, 2, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384], HK_LIMIT = 13;
+// HK Classic pays by the Half Spicy table; HK Full Spicy doubles with every fan (2 to the power of the fan, 8192 at the limit)
+export function hkPoints(fan, full) { const f = Math.max(0, Math.min(HK_LIMIT, Math.round(num(fan)) || 0)); return full ? Math.pow(2, f) : HK_TABLE[f]; }
 // MCR-Custom: the host types the base point (0 to 99). It is typed into a box, so it can arrive as text or half-typed:
 // anything that is not a number falls back to the default, and a number is rounded and kept inside the range.
 export function mcrBaseOf(game) {
@@ -28,7 +34,8 @@ export function modeConfig(game) {
   const mcr = isMcr(game.mode);
   const seat = (game.mode === 'tournament' || game.mode === 'custom' || mcr) && !!game.seatRotation;
   let cfg;
-  if (mcr) cfg = { mcr: true, basePoint: mcrBaseOf(game), minPoint: mcrBaseOf(game), maxStreak: 1, deadwall: false, seatRotation: seat };
+  if (isHk(game.mode)) cfg = { mcr: true, hk: true, hkFull: game.mode === 'hkf', basePoint: 3, minPoint: 3, maxStreak: Infinity, deadwall: false, seatRotation: false };
+  else if (mcr) cfg = { mcr: true, basePoint: mcrBaseOf(game), minPoint: mcrBaseOf(game), maxStreak: 1, deadwall: false, seatRotation: seat };
   else if (game.mode === 'default') cfg = { minPoint: 2, maxStreak: 4, deadwall: false, seatRotation: false };
   else if (game.mode === 'tournament') cfg = { minPoint: 2, maxStreak: 1, deadwall: false, seatRotation: seat };
   else if (game.mode === 'custom') {
@@ -39,8 +46,8 @@ export function modeConfig(game) {
       deadwall: !!c.deadwall, seatRotation: seat,
     };
   } else cfg = { minPoint: 1, maxStreak: 4, deadwall: false, seatRotation: false }; // casual
-  cfg.bankrupt = !mcr && !!(game.useStart && game.bankrupt);
-  cfg.startBase = (!mcr && game.useStart) ? (num(game.start) || 0) : 0;   // MCR modes have no starting score
+  cfg.bankrupt = !cfg.mcr && !!(game.useStart && game.bankrupt);
+  cfg.startBase = (!cfg.mcr && game.useStart) ? (num(game.start) || 0) : 0;   // MCR modes have no starting score
   return cfg;
 }
 
@@ -54,6 +61,23 @@ export function scoreEvent(ev, dealer, cfg) {
   const d = [0,0,0,0];
   let dealerWon = false, winners = [];
   const mult = cfg.minPoint * (cfg.deadwall ? 2 : 1);
+  if (cfg.hk) {   // only the discarder pays on a Hu, double; the dealer has no bonus and stays on after a dealer win, a draw or a penalty
+    if (ev.kind === 'hu') {
+      const w = ev.winner, v = hkPoints(ev.pts && ev.pts[w], cfg.hkFull) * 2;
+      d[w] += v; d[ev.disc] -= v;
+      return { d, dealerWon: w === dealer, winners: [w], disc: ev.disc };
+    }
+    if (ev.kind === 'zimo') {
+      const w = ev.winner, v = hkPoints(ev.pts && ev.pts[w], cfg.hkFull);
+      for (let i = 0; i < 4; i++) if (i !== w) { d[i] -= v; d[w] += v; }
+      return { d, dealerWon: w === dealer, winners: [w], disc: ev.disc };
+    }
+    if (ev.kind === 'invalid' || ev.kind === 'false') {
+      const pen = hkPoints(HK_LIMIT, cfg.hkFull);
+      for (let i = 0; i < 4; i++) if (i !== ev.who) { d[i] += pen; d[ev.who] -= pen; }
+    }
+    return { d, dealerWon: true, winners: [], disc: ev.disc };   // a draw scores nothing; the dealer stays on
+  }
   if (cfg.mcr) {   // base + typed hand points; no dealer bonus, one winner at most, no tenpai payout
     const BP = cfg.basePoint;
     if (ev.kind === 'hu') {

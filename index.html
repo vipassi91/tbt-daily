@@ -117,7 +117,7 @@ a{color:inherit}
 .row.r2{--mc:var(--c2);--mt:var(--t2)}
 .row.r3{--mc:var(--c3);--mt:var(--t3)}
 .row.r4{--mc:var(--c4);--mt:var(--t4)}
-.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rname .mbadge.gst{margin-left:0;flex:none;font-size:11px;padding:1px 7px}
 #t10Modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 #t10Modal[hidden]{display:none}
 .t10box{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:18px;width:100%;max-width:460px;padding:16px}
@@ -258,6 +258,7 @@ a{color:inherit}
 .tn-saved{font-size:12px;line-height:1.4;color:var(--muted);margin:6px 0 0}
 /* the leaderboard rows that open a page show an arrow */
 .row.lk .rv{margin-right:24px}
+.haslk .row:not(.lk) .rv{margin-right:24px}   /* a row without a player page (a guest) keeps the numbers in line with the rows that have the arrow */
 .row.lk .rlink::after{content:"";position:absolute;right:12px;top:50%;width:8px;height:8px;margin-top:-4px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);opacity:.7}
 /* phones: the name stays, a search icon opens the search over the header */
 @media (max-width:719px){
@@ -279,6 +280,22 @@ a{color:inherit}
 .n-dd:active,.n-share:active,.btn:active,.t10acts button:active,.chips button:active,.seg button:active,.tn-sbtn:active,.tn-mbtn:active{transform:scale(.98)}
 .n-dd:hover,.n-share:hover,.dcard:hover,.tn-sbtn:hover,.tn-mbtn:hover{border-color:var(--muted)}
 .n-o:hover{background:var(--field)}
+
+/* colour palette (v81): pine green leads, dark red, lapis, gold and plum each have a job; cream page, deep green text.
+   --po is gold for text (darker so it reads), --poc is gold as a fill. --tc is the colour of one event type. */
+:root{--pg:#2D6A4F;--pr:#B72323;--pl:#2F5D9E;--po:#7A5C14;--poc:#B8912E;--pp:#7A4B8C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#8FD0AE;--pr:#EA8888;--pl:#9DB9EC;--po:#E0C171;--poc:#E0C171;--pp:#CDA8E0}}
+[data-t]{--tc:var(--pg)}[data-t="cls"]{--tc:var(--pl)}[data-t="tour"]{--tc:var(--po)}[data-t="other"]{--tc:var(--pp)}
+/* the top rows fade in their gem colour */
+.row.m.r1{background:linear-gradient(90deg,color-mix(in srgb,var(--pl) 12%,transparent),transparent 75%)}
+.row.m.r2{background:linear-gradient(90deg,color-mix(in srgb,var(--pr) 10%,transparent),transparent 75%)}
+.row.m.r3{background:linear-gradient(90deg,color-mix(in srgb,var(--pg) 12%,transparent),transparent 75%)}
+/* number boxes: a light tint each, the number in the full colour */
+.n-strip>div:nth-child(1){background:color-mix(in srgb,var(--pg) 11%,var(--surface))}.n-strip>div:nth-child(1) b{color:var(--pg)}
+.n-strip>div:nth-child(2){background:color-mix(in srgb,var(--pl) 10%,var(--surface))}.n-strip>div:nth-child(2) b{color:var(--pl)}
+.n-strip>div:nth-child(3){background:color-mix(in srgb,var(--poc) 15%,var(--surface))}.n-strip>div:nth-child(3) b{color:var(--po)}
+.n-strip>div:nth-child(4){background:color-mix(in srgb,var(--pp) 10%,var(--surface))}.n-strip>div:nth-child(4) b{color:var(--pp)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .n-strip>div:nth-child(3){background:color-mix(in srgb,var(--poc) 9%,var(--surface))}}
 /* ---- the home page ---- */
 .h-hero{background:radial-gradient(1200px 420px at 85% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
 .h-hero-in{display:grid;gap:28px;padding-top:28px;padding-bottom:28px}
@@ -374,6 +391,39 @@ img.h-rot.out{opacity:0;transform:translateY(4px) scale(.96)}
 .h-dots i.on{background:var(--onaccent);border-color:var(--onaccent)}
 .h-etag{display:inline-flex;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
 .h-etag.gold{background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--gold)}
+
+/* v81 colour: light mode keeps the cream page with a faint 牌 behind the headline; dark mode turns the top into a deep green header */
+.h-hero{position:relative;overflow:hidden}
+.h-hero-in{position:relative;z-index:1}
+.h-hero::after{content:'\724C';position:absolute;right:-40px;top:10px;font:400 300px/1 var(--kai);color:var(--pg);opacity:.06;pointer-events:none}
+.h-facts span:nth-child(1) b{color:var(--pg)}.h-facts span:nth-child(2) b{color:var(--pl)}.h-facts span:nth-child(3) b{color:var(--po)}
+.h-card .h-cal{background:#245840}
+.h-hero .h-intro,.h-hero .h-facts span{color:#4D6658}   /* the grey a step darker, so it reads on the green glow at the top */
+/* one tile of each kind (dots, bamboo, characters, winds, dragons, flowers, seasons), changing one by one like the characters */
+.h-intro{margin-bottom:0}.h-hero .h-acts{margin-top:0}
+.h-tiles{display:flex;gap:6px;margin:20px 0}.h-tiles img{width:30px;height:38px;display:block;transition:opacity .45s ease,transform .45s ease}.h-tiles img.out{opacity:0;transform:translateY(4px) scale(.96)}
+@media (prefers-reduced-motion:reduce){.h-tiles img{transition:none}}
+/* event list: a colour line and the date in the colour of the event type, the month stays red */
+a.h-it[data-t]{box-shadow:inset 3px 0 0 var(--tc);padding-left:12px}
+a.h-it[data-t] .h-d b{color:var(--tc)}a.h-it[data-t] .h-d span{color:var(--pr)}
+.h-etag[data-t]{background:color-mix(in srgb,var(--tc) 14%,transparent);color:var(--tc)}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) .h-hero{background:linear-gradient(155deg,#1E4D3A 0%,#123326 60%,#0B2018 100%)}
+:root:not([data-theme="light"]) .h-hero::after{color:#fff;opacity:.07}
+:root:not([data-theme="light"]) .h-hero .h-kick{color:#E9D9A6}
+:root:not([data-theme="light"]) .h-hero h1{color:#fff}:root:not([data-theme="light"]) .h-hero h1 em{color:#F4A3A3}
+:root:not([data-theme="light"]) .h-hero .h-h1s,:root:not([data-theme="light"]) .h-hero .h-intro{color:rgba(255,255,255,.86)}
+:root:not([data-theme="light"]) .h-hero .h-btn.pri{background:#FAF7F2;color:#1F5B42;border-color:#FAF7F2}
+:root:not([data-theme="light"]) .h-hero .h-link{color:#fff}
+:root:not([data-theme="light"]) .h-hero .h-facts,:root:not([data-theme="light"]) .h-hero .h-facts span{color:rgba(255,255,255,.8)}
+:root:not([data-theme="light"]) .h-hero .h-facts span:nth-child(1) b{color:#B9E4CC}:root:not([data-theme="light"]) .h-hero .h-facts span:nth-child(2) b{color:#BBD0F5}:root:not([data-theme="light"]) .h-hero .h-facts span:nth-child(3) b{color:#E9D9A6}
+:root:not([data-theme="light"]) .h-hero .h-card{background:#FAF7F2;color:#1B3A2C;box-shadow:0 20px 40px -18px rgba(0,0,0,.6)}
+:root:not([data-theme="light"]) .h-hero .h-card .h-card-k{color:#B72323}:root:not([data-theme="light"]) .h-hero .h-card .s{color:#5B6B62}
+:root:not([data-theme="light"]) .h-hero .h-card .h-cal{background:#E3EEE8;border:1px solid #BFD6C9}
+:root:not([data-theme="light"]) .h-hero .h-card .h-cal b{color:#2D6A4F}:root:not([data-theme="light"]) .h-hero .h-card .h-cal span:first-child{color:#5B6B62}:root:not([data-theme="light"]) .h-hero .h-card .h-cal span:last-child{color:#B72323}
+:root:not([data-theme="light"]) .h-hero .h-card .h-dots i{background:#DCE8E1;border-color:#2D6A4F}:root:not([data-theme="light"]) .h-hero .h-card .h-dots i.on{background:#2D6A4F}
+:root:not([data-theme="light"]) .h-hero .h-card .h-btn{background:#2D6A4F;color:#fff;border-color:#2D6A4F}
+}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Tiles by Tiles","url":"https://tilesbytiles.id/","logo":"https://tilesbytiles.id/assets/i/cfad30e8e7.png","slogan":"Play. Learn. Connect.","description":"Komunitas mahjong di Surabaya: kelas pemula, main bareng dan turnamen.","areaServed":{"@type":"City","name":"Surabaya"},"sameAs":["https://www.instagram.com/tiles.by.tiles/"]}</script>
 <script>
@@ -398,13 +448,15 @@ var DEFAULT_MODE='default';   // the board opens on the Default mode and on the 
 var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:'all',day:null,loaded:false,failed:false,updated:null,menu:null,from:'',to:'',cust:{open:false,err:''},autoDone:false};
 // The rating (formerly League Score) is hidden until its formula is settled. Set SHOW_RATING to true to bring the toggle back.
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
-var MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8','mcrc'];
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
+var MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'];
 function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
+function isHkMode(k){return k==='hkc'||k==='hkf';}
+function famOf(k){return isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt';}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
 // Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
 // them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
-function modeMatch(t,m){var k=modeOf(t);return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
-function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
+function modeMatch(t,m){var k=modeOf(t);return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
+function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':m==='hk'?'HK Classic':(MODE_LABEL[m]||m);}
 function modeOf(t){return t.mode||'casual';}
 // one short line describing how a table was played
 function rulesLine(t){
@@ -459,7 +511,7 @@ function setPeriodParam(v){
 }
 // ---- modes ----
 function modesInData(){var seen={};DATA.tables.forEach(function(t){if(t.events>0)seen[modeOf(t)]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
-function effMode(){var ms=modesInData();if(ms.length<2)return ms.length&&isMcrMode(ms[0])?'mcr':'all';return S.mode;}   // with a single mode played there is nothing to filter
+function effMode(){var ms=modesInData();if(ms.length<2)return ms.length&&famOf(ms[0])!=='tbt'?famOf(ms[0]):'all';return S.mode;}   // with a single mode played there is nothing to filter
 function modeOk(t){return modeMatch(t,effMode());}
 function modeLabel(){return filterLabel(effMode());}
 // the Default mode may have no games yet in the period: open on all modes rather than on an empty board
@@ -468,7 +520,7 @@ function autoMode(){
   var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
   if(inP.some(function(t){return modeOf(t)==='default';}))return;
   // nothing in Default: all modes, unless only MCR tables were played in the period, which is then what opens
-  S.mode=(!inP.some(function(t){return !isMcrMode(modeOf(t));})&&inP.some(function(t){return isMcrMode(modeOf(t));}))?'mcr':'all';
+  var fams=inP.map(function(t){return famOf(modeOf(t));});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':'hk'):'all';
 }
 // ---- the address keeps the filters, so a shared link opens the same view ----
 function readUrl(){
@@ -478,7 +530,7 @@ function readUrl(){
     if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');S.dmode='all';}
     else if(q.get('tab')==='sessions')S.tab='sessions';
     S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);
-    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||m==='hk'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
   }catch(e){S.period=currentSeason();}
 }
 readUrl();
@@ -489,20 +541,21 @@ function fmtNet(n){var r=Math.round(n*10)/10;return (r>0?'+':r<0?'\u2212':'')+Ma
 function fmtLg(n){return (Math.round(n*10)/10).toFixed(1);}
 function dayOf(id){for(var i=0;i<DATA.days.length;i++)if(DATA.days[i].id===id)return DATA.days[i];return null;}
 // one entry per person across the given tables; names match ignoring case and extra spaces
-function aggregate(tables){
+// withGuests: a session's board ranks everyone who played it, guests included; the main board ranks registered players only
+function aggregate(tables,withGuests){
   var map={};
   tables.forEach(function(t){
     var d=dayOf(t.day_id),date=d?d.date:'';
     t.players.forEach(function(p){
-      if(p.placeholder||p.guest)return;   // an unnamed seat and a guest (not in the player registry) are not on the per-person board
-      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:''});
+      if(p.placeholder||(p.guest&&!withGuests))return;   // an unnamed seat never counts; a guest (not in the player registry) only on a session's board
+      var k=p.key||keyOf(p.name),m=map[k]||(map[k]={name:p.name,stamp:date,games:0,net:0,lg:0,firsts:0,wins:0,hands:0,wf:0,winds:0,nofx:false,pid:'',guest:!!p.guest});
       if(date>m.stamp){m.name=p.name;m.stamp=date;}   // show the spelling from the latest session
       m.games++;m.net+=p.netTotal;m.lg+=p.leagueScore;m.wins+=p.wins;if(p.rank===1)m.firsts++;
       if(p.reg)m.pid=p.key;   // a registered player whose page is open: the key is the id that opens it
       if(p.windFirsts===undefined||t.winds===undefined)m.nofx=true;else{m.hands+=t.hands;m.wf+=p.windFirsts;m.winds+=t.winds;}   // a table whose statistics are not renewed yet has no wind-round facts
     });
   });
-  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid};});
+  return Object.keys(map).map(function(k){var m=map[k];return {name:m.name,games:m.games,net:m.net,league:m.lg/m.games,firsts:m.firsts,wins:m.wins,hands:m.hands,windFirsts:m.wf,winds:m.winds,facts:!m.nofx,pid:m.pid,guest:m.guest};});
 }
 // On the main board: the wind rounds a player has played and how many of them they finished first.
 // (A table whose statistics are not renewed yet has no wind-round facts: it shows the old games line until its turn comes.)
@@ -564,7 +617,7 @@ var TBTGEM = (function () {
 
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
-  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom' };
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' };
   var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {
@@ -778,6 +831,17 @@ function artSrc(k){return '/assets/a/'+k+'.svg?v=1';}
 function rotPick(except){var pool=ROT_TILES.filter(function(k){return except.indexOf(k)<0;});return pool[Math.floor(Math.random()*pool.length)];}
 // each place keeps its character across redraws (the page redraws when new results come in)
 function rotImg(slot,cls){var k=ROT.keys[slot];if(!k){var used=Object.keys(ROT.keys).map(function(s){return ROT.keys[s];});k=ROT.keys[slot]=rotPick(used);}return '<img class="h-rot'+(cls?' '+cls:'')+'" data-slot="'+slot+'" src="'+artSrc(k)+'" alt="" width="60" height="66">';}
+// ---- a row of real tiles under the intro, one of each kind; one tile changes every 6 seconds, to another of the same kind
+var TILE_IMG={0:'/assets/i/d5ff4c2ae4.png',1:'/assets/i/c5c451c5e6.png',2:'/assets/i/b6925115c2.png',3:'/assets/i/f4a31adfcc.png',4:'/assets/i/e741b05bc4.png',5:'/assets/i/da8966bdbc.png',6:'/assets/i/146a1c4697.png',7:'/assets/i/7d164f4ffe.png',8:'/assets/i/826c8659c5.png',9:'/assets/i/339108bfa7.png',10:'/assets/i/3e751031aa.png',11:'/assets/i/cd869cdf07.png',12:'/assets/i/c0c974e457.png',13:'/assets/i/4c00c50924.png',14:'/assets/i/6a8a2ad8de.png',15:'/assets/i/2986734118.png',16:'/assets/i/711f7cc98c.png',17:'/assets/i/827c40841c.png',18:'/assets/i/1919dd2bc6.png',19:'/assets/i/f428b7ccb2.png',20:'/assets/i/ac48bf596b.png',21:'/assets/i/1005240f12.png',22:'/assets/i/7eceb03e69.png',23:'/assets/i/3592a37d6e.png',24:'/assets/i/09a8086fff.png',25:'/assets/i/d626cd9407.png',26:'/assets/i/78cefdd76b.png',27:'/assets/i/dc49a937ef.png',28:'/assets/i/80702ff9df.png',29:'/assets/i/ffdc5d928f.png',30:'/assets/i/c873f47570.png',31:'/assets/i/90689ac1d3.png',32:'/assets/i/8a55ed28c4.png',33:'/assets/i/13c698e532.png',34:'/assets/i/eaed1421c7.png',35:'/assets/i/e5adcad0fc.png',36:'/assets/i/d865851a25.png',37:'/assets/i/aeab9d374e.png',38:'/assets/i/4dbaaf11c1.png',39:'/assets/i/034428eee4.png',40:'/assets/i/0f89bc99fb.png',41:'/assets/i/010b4a32c3.png'};
+var TILE_KINDS=[[0,8],[9,17],[18,26],[27,30],[31,33],[34,37],[38,41]],TROW={n:null,i:0};
+function tilePick(k,not){var a=TILE_KINDS[k],n;do{n=a[0]+Math.floor(Math.random()*(a[1]-a[0]+1));}while(n===not);return n;}
+function tilesRow(){if(!TROW.n)TROW.n=TILE_KINDS.map(function(_,k){return tilePick(k);});return '<div class="h-tiles" aria-hidden="true">'+TROW.n.map(function(n,k){return '<img data-k="'+k+'" src="'+TILE_IMG[n]+'" alt="" width="30" height="38">';}).join('')+'</div>';}
+function tilesTurn(){
+  var els=[].slice.call(document.querySelectorAll('.h-tiles img'));if(!els.length)return;
+  var el=els[TROW.i++%els.length],k=+el.dataset.k,n=tilePick(k,TROW.n[k]);
+  el.classList.add('out');
+  setTimeout(function(){TROW.n[k]=n;el.src=TILE_IMG[n];el.classList.remove('out');},450);
+}
 function rotStart(){
   if(ROT.timer)return;
   try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;}catch(e){}
@@ -788,6 +852,7 @@ function rotStart(){
     el.classList.add('out');
     setTimeout(function(){ROT.keys[slot]=k;el.src=artSrc(k);el.classList.remove('out');},450);
   },6000);
+  setTimeout(function(){setInterval(function(){if(!document.hidden)tilesTurn();},6000);},3000);
 }
 
 // ---- what the page shows, from the same data as the leaderboard (/api/overview)
@@ -842,7 +907,7 @@ function featureHtml(){
 function comingHtml(){
   var list=upcomingSessions().slice(1,5);
   var rows=list.length?list.map(function(x){var e=x.e,s=x.s;
-    return '<a class="h-it" href="'+evHref(e)+'"><span class="h-d"><b>'+(+s.start.slice(8,10))+'</b><span>'+MON3[+s.start.slice(5,7)-1]+'</span></span><span class="h-m"><b>'+esc(e.title)+'</b><span>'+sDay(s.start)+' '+s.start.slice(11,16)+' \u00b7 '+lvlsS(s.levels)+'</span></span><span class="h-r"><span class="h-etag'+(e.type==='tour'?' gold':'')+'">'+(EVT[e.type]||'Event')+'</span><br>'+(s.left?s.left+' left':'<span style="color:var(--red);font-weight:700">Full</span>')+'</span></a>';}).join('')
+    return '<a class="h-it" data-t="'+(EVT[e.type]?e.type:'other')+'" href="'+evHref(e)+'"><span class="h-d"><b>'+(+s.start.slice(8,10))+'</b><span>'+MON3[+s.start.slice(5,7)-1]+'</span></span><span class="h-m"><b>'+esc(e.title)+'</b><span>'+sDay(s.start)+' '+s.start.slice(11,16)+' \u00b7 '+lvlsS(s.levels)+'</span></span><span class="h-r"><span class="h-etag'+(e.type==='tour'?' gold':'')+'" data-t="'+(EVT[e.type]?e.type:'other')+'">'+(EVT[e.type]||'Event')+'</span><br>'+(s.left?s.left+' left':'<span style="color:var(--red);font-weight:700">Full</span>')+'</span></a>';}).join('')
     :'<div class="h-empty">More events are on the way. Follow @tiles.by.tiles to hear first.</div>';
   return '<div class="h-sec"><h2>Coming up</h2><a href="/events">All events</a></div><div class="h-list">'+rows+'</div>'
     +'<div class="h-new">'+rotImg('n1')+'<div><b>Never played before?</b><span>Start with a First timer class. We bring the tiles, you bring a friend.</span></div><a class="h-btn" href="/events?type=cls">Find a class</a></div>';
@@ -873,7 +938,7 @@ function tableHtml(){
 function render(){
   document.getElementById('app').innerHTML=TBTNAV.header('hm',{logo:LOGO,name:'Tiles by Tiles',players:'/players'})
     +'<main><section class="h-hero"><div class="wrap h-hero-in" style="padding-bottom:28px"><div class="h-copy"><div class="h-kick">'+esc(HOME.kick)+'</div><h1>'+headlineHtml(HOME)+'</h1><p class="h-intro">'+esc(HOME.intro)+'</p>'
-    +'<div class="h-acts">'+(upcomingSessions().length?'<a class="h-btn pri" href="/events">'+HI.ticket+'See events</a><a class="h-link" href="/leaderboard">Leaderboard '+HI.go+'</a>':'<a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a>')+'</div><div class="h-facts">'+factsHtml()+'</div></div>'
+    +''+tilesRow()+'<div class="h-acts">'+(upcomingSessions().length?'<a class="h-btn pri" href="/events">'+HI.ticket+'See events</a><a class="h-link" href="/leaderboard">Leaderboard '+HI.go+'</a>':'<a class="h-btn pri" href="/leaderboard">'+HI.board+'Leaderboard</a><a class="h-link" href="/players">All players '+HI.go+'</a>')+'</div><div class="h-facts">'+factsHtml()+'</div></div>'
     +featureHtml()+'</div></section>'
     +'<div class="wrap" style="padding-bottom:0"><div class="h-grid"><section>'+sessionsHtml()+'</section><section>'+boardHtml()+'</section></div>'+tableHtml()+'</div></main>';
   rotStart();

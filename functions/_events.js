@@ -13,7 +13,7 @@ export const LEVELS = ['first', 'beg', 'cas', 'int', 'adv'];
 export const LEVEL_NAMES = { first: 'First timer', beg: 'Beginner', cas: 'Casual', int: 'Intermediate', adv: 'Advanced' };
 export const TYPES = ['cls', 'open', 'tour', 'other'];
 // the game a session plays. 'chicken' (Chicken Hand) is for events only: the leaderboard scoreboard has no such mode.
-export const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'chicken'];
+export const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'hkc', 'hkf', 'chicken'];
 // a booking holds its seats while it is in one of these
 export const ACTIVE = ['held', 'review', 'rejected', 'confirmed', 'venue'];
 const ACTIVE_SQL = "('held','review','rejected','confirmed','venue')";

@@ -421,11 +421,13 @@ a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0
 <script>
 (function(){
 var LOGO='/assets/i/cfad30e8e7.png';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'},MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8','mcrc'],DEFAULT_MODE='default';
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'},MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'],DEFAULT_MODE='default';
 function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
+function isHkMode(k){return k==='hkc'||k==='hkf';}
+function famOf(k){return isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt';}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
 // "All modes" leaves the MCR modes out (another scale of scores), "MCR" is both of them, MCR-4 and MCR-8 stand alone: as on the main page
-function modeMatch(g,m){var k=g.mode;return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
-function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
+function modeMatch(g,m){var k=g.mode;return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
+function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':m==='hk'?'HK Classic':(MODE_LABEL[m]||m);}
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var S={period:'',periodSet:false,mode:DEFAULT_MODE,modeSet:false,menu:null,from:'',to:'',cust:{open:false,err:''},status:'loading',data:null,showAll:false,allPatterns:false,tab:'hands',locked:false};
 var SHOWN=20,PAT_SHOWN=10;
@@ -468,7 +470,7 @@ function setPeriodParam(v){
 function games(){return S.data?S.data.games:[];}
 function seasons(){var seen={};seen[currentSeason()]=1;games().forEach(function(g){if(/^\d{4}-\d{2}/.test(g.date))seen[g.date.slice(0,7)]=1;});return Object.keys(seen).sort().reverse();}
 function modesIn(){var seen={};games().forEach(function(g){seen[g.mode]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
-function effMode(){var ms=modesIn();if(ms.length<2)return ms.length&&isMcrMode(ms[0])?'mcr':'all';return S.mode;}
+function effMode(){var ms=modesIn();if(ms.length<2)return ms.length&&famOf(ms[0])!=='tbt'?famOf(ms[0]):'all';return S.mode;}
 function modeOk(g){return modeMatch(g,effMode());}
 function modeLabel(){return filterLabel(effMode());}
 function autoPeriod(){   // nothing played this month: open on all time rather than on an empty page
@@ -479,10 +481,10 @@ function autoMode(){   // the Default mode may have no games in the period: open
   if(S.modeSet||S.mode!==DEFAULT_MODE)return;
   var inP=games().filter(function(g){return periodOk(g.date);});
   if(inP.some(function(g){return g.mode==='default';}))return;
-  S.mode=(!inP.some(function(g){return !isMcrMode(g.mode);})&&inP.some(function(g){return isMcrMode(g.mode);}))?'mcr':'all';
+  var fams=inP.map(function(g){return famOf(g.mode);});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':'hk'):'all';
 }
 function readUrl(){
-  try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
+  try{var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||m==='hk'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}}catch(e){S.period=currentSeason();}
 }
 // the address is /players/<id>/<nickname>: the id comes first, the nickname is only for reading.
 // The older /player/... addresses (also /player/<id>/<nickname> and /player/<nickname>-<id>) still open and are tidied to this one.
@@ -519,14 +521,18 @@ function periodMenu(){
 }
 function modeMenu(){
   var inP=games().filter(function(g){return periodOk(g.date);}),all=games(),n=function(f){return inP.filter(f).length;};
-  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&all.some(function(g){return g.mode===k;});}),mcr=['mcr4','mcr8','mcrc'].filter(function(k){return all.some(function(g){return g.mode===k;});});
+  var std=MODE_ORDER.filter(function(k){return famOf(k)==='tbt'&&all.some(function(g){return g.mode===k;});}),mcr=['mcr4','mcr8','mcrc'].filter(function(k){return all.some(function(g){return g.mode===k;});}),hk=['hkc','hkf'].filter(function(k){return all.some(function(g){return g.mode===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
-  if(std.length)html+='<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',gamesWord(n(function(g){return !isMcrMode(g.mode);})));
+  if(std.length)html+='<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',gamesWord(n(function(g){return famOf(g.mode)==='tbt';})));
   if(mcr.length){
     html+='<div class="n-g">MCR</div>';
     if(mcr.length>1)html+=optBtn('mode|mcr','MCR',S.mode==='mcr',gamesWord(n(function(g){return isMcrMode(g.mode);})));
     mcr.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
+  }  if(hk.length){
+    html+='<div class="n-g">HK Classic</div>';
+    if(hk.length>1)html+=optBtn('mode|hk','HK Classic',S.mode==='hk',gamesWord(n(function(g){return isHkMode(g.mode);})));
+    hk.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,gamesWord(n(function(g){return g.mode===k;})));});
   }
   return html;
 }
@@ -639,7 +645,7 @@ function toggleGame(i){
 }
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
-  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom' };
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' };
   var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {

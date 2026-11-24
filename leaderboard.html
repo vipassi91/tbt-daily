@@ -280,6 +280,22 @@ a{color:inherit}
 .n-dd:active,.n-share:active,.btn:active,.t10acts button:active,.chips button:active,.seg button:active,.tn-sbtn:active,.tn-mbtn:active{transform:scale(.98)}
 .n-dd:hover,.n-share:hover,.dcard:hover,.tn-sbtn:hover,.tn-mbtn:hover{border-color:var(--muted)}
 .n-o:hover{background:var(--field)}
+
+/* colour palette (v81): pine green leads, dark red, lapis, gold and plum each have a job; cream page, deep green text.
+   --po is gold for text (darker so it reads), --poc is gold as a fill. --tc is the colour of one event type. */
+:root{--pg:#2D6A4F;--pr:#B72323;--pl:#2F5D9E;--po:#7A5C14;--poc:#B8912E;--pp:#7A4B8C}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#8FD0AE;--pr:#EA8888;--pl:#9DB9EC;--po:#E0C171;--poc:#E0C171;--pp:#CDA8E0}}
+[data-t]{--tc:var(--pg)}[data-t="cls"]{--tc:var(--pl)}[data-t="tour"]{--tc:var(--po)}[data-t="other"]{--tc:var(--pp)}
+/* the top rows fade in their gem colour */
+.row.m.r1{background:linear-gradient(90deg,color-mix(in srgb,var(--pl) 12%,transparent),transparent 75%)}
+.row.m.r2{background:linear-gradient(90deg,color-mix(in srgb,var(--pr) 10%,transparent),transparent 75%)}
+.row.m.r3{background:linear-gradient(90deg,color-mix(in srgb,var(--pg) 12%,transparent),transparent 75%)}
+/* number boxes: a light tint each, the number in the full colour */
+.n-strip>div:nth-child(1){background:color-mix(in srgb,var(--pg) 11%,var(--surface))}.n-strip>div:nth-child(1) b{color:var(--pg)}
+.n-strip>div:nth-child(2){background:color-mix(in srgb,var(--pl) 10%,var(--surface))}.n-strip>div:nth-child(2) b{color:var(--pl)}
+.n-strip>div:nth-child(3){background:color-mix(in srgb,var(--poc) 15%,var(--surface))}.n-strip>div:nth-child(3) b{color:var(--po)}
+.n-strip>div:nth-child(4){background:color-mix(in srgb,var(--pp) 10%,var(--surface))}.n-strip>div:nth-child(4) b{color:var(--pp)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .n-strip>div:nth-child(3){background:color-mix(in srgb,var(--poc) 9%,var(--surface))}}
 </style>
 <script>
 /* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
@@ -302,13 +318,15 @@ var DEFAULT_MODE='default';   // the board opens on the Default mode and on the 
 var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:'all',day:null,loaded:false,failed:false,updated:null,menu:null,from:'',to:'',cust:{open:false,err:''},autoDone:false};
 // The rating (formerly League Score) is hidden until its formula is settled. Set SHOW_RATING to true to bring the toggle back.
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
-var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
-var MODE_ORDER=['default','casual','tournament','custom','mcr4','mcr8','mcrc'];
+var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
+var MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'];
 function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
+function isHkMode(k){return k==='hkc'||k==='hkf';}
+function famOf(k){return isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt';}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
 // Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
 // them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
-function modeMatch(t,m){var k=modeOf(t);return m==='all'?!isMcrMode(k):m==='mcr'?isMcrMode(k):k===m;}
-function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':(MODE_LABEL[m]||m);}
+function modeMatch(t,m){var k=modeOf(t);return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
+function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':m==='hk'?'HK Classic':(MODE_LABEL[m]||m);}
 function modeOf(t){return t.mode||'casual';}
 // one short line describing how a table was played
 function rulesLine(t){
@@ -363,7 +381,7 @@ function setPeriodParam(v){
 }
 // ---- modes ----
 function modesInData(){var seen={};DATA.tables.forEach(function(t){if(t.events>0)seen[modeOf(t)]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
-function effMode(){var ms=modesInData();if(ms.length<2)return ms.length&&isMcrMode(ms[0])?'mcr':'all';return S.mode;}   // with a single mode played there is nothing to filter
+function effMode(){var ms=modesInData();if(ms.length<2)return ms.length&&famOf(ms[0])!=='tbt'?famOf(ms[0]):'all';return S.mode;}   // with a single mode played there is nothing to filter
 function modeOk(t){return modeMatch(t,effMode());}
 function modeLabel(){return filterLabel(effMode());}
 // the Default mode may have no games yet in the period: open on all modes rather than on an empty board
@@ -372,7 +390,7 @@ function autoMode(){
   var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
   if(inP.some(function(t){return modeOf(t)==='default';}))return;
   // nothing in Default: all modes, unless only MCR tables were played in the period, which is then what opens
-  S.mode=(!inP.some(function(t){return !isMcrMode(modeOf(t));})&&inP.some(function(t){return isMcrMode(modeOf(t));}))?'mcr':'all';
+  var fams=inP.map(function(t){return famOf(modeOf(t));});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':'hk'):'all';
 }
 // ---- the address keeps the filters, so a shared link opens the same view ----
 function readUrl(){
@@ -382,7 +400,7 @@ function readUrl(){
     if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');S.dmode='all';}
     else if(q.get('tab')==='sessions')S.tab='sessions';
     S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);
-    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||m==='hk'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
   }catch(e){S.period=currentSeason();}
 }
 readUrl();
@@ -469,7 +487,7 @@ var TBTGEM = (function () {
 
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
-  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom' };
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' };
   var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {
@@ -708,15 +726,19 @@ function periodMenu(){
 }
 // the mode choices: the usual modes and "All modes" (without MCR), then a group for the MCR modes
 function modeChoices(list,pick,cur,countOf){
-  var std=MODE_ORDER.filter(function(k){return !isMcrMode(k)&&list.some(function(t){return modeOf(t)===k;})});
-  var mcr=['mcr4','mcr8','mcrc'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
+  var std=MODE_ORDER.filter(function(k){return famOf(k)==='tbt'&&list.some(function(t){return modeOf(t)===k;})});
+  var mcr=['mcr4','mcr8','mcrc'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});}),hk=['hkc','hkf'].filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
-  if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return !isMcrMode(modeOf(t));})));
+  if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return famOf(modeOf(t))==='tbt';})));
   if(mcr.length){
     html+='<div class="n-g">MCR</div>';
     if(mcr.length>1)html+=optBtn(pick+'|mcr','MCR',cur==='mcr',tablesWord(countOf(function(t){return isMcrMode(modeOf(t));})));
     mcr.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
+  }  if(hk.length){
+    html+='<div class="n-g">HK Classic</div>';
+    if(hk.length>1)html+=optBtn(pick+'|hk','HK Classic',cur==='hk',tablesWord(countOf(function(t){return isHkMode(modeOf(t));})));
+    hk.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
   }
   return html;
 }

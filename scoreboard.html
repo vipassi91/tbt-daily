@@ -178,6 +178,20 @@ body.connected #gnew{display:none!important}
 #pkBox .pattier .chips .chip .ptv{color:var(--muted);flex:0 0 auto}
 #pkBox .pattier .chips .chip[aria-pressed="true"] .ptv{color:inherit;opacity:.85}
 .patbox .chip[disabled]{opacity:.35;cursor:default}
+.hkbox .pattier{margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;overflow:hidden}
+.hkbox .pattier:last-of-type{border-bottom:0}
+.hkbox .pattier summary{list-style:none;cursor:pointer;padding:12px;font-size:14px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.hkbox .pattier summary::-webkit-details-marker{display:none}
+.hkbox .pattier summary::after{content:'\25be';font-size:12px;text-transform:none;letter-spacing:0;margin-left:8px}
+.hkbox .pattier[open] summary::after{content:'\25b4'}
+.hkbox .pattier .pn{color:var(--accent);font-weight:700;text-transform:none;letter-spacing:0}
+.hkbox .pattier .chips{padding:0 8px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hkbox .pattier .chips .chip>span:first-child{min-width:0;overflow-wrap:anywhere}
+.hkbox .pattier .chips .chip::before{content:none}   /* the fan chips are tall enough on their own */
+.hkbox .pattier .chips .chip{border-radius:12px;text-align:left;padding:8px;font-size:12px;line-height:18px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.hkbox .pattier .chips .chip .ptv{color:var(--muted);flex:0 0 auto}
+.hkbox .pattier .chips .chip[aria-pressed="true"] .ptv{color:inherit;opacity:.85}
+.hkbox .chip[aria-disabled="true"]{opacity:.35}
 .patmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .patmodal-overlay[hidden]{display:none}
 .patmodal-sheet{background:var(--bg);width:100%;max-width:640px;max-height:85vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 24px rgba(0,0,0,.18)}
@@ -269,6 +283,24 @@ body.connected #gnew{display:none!important}
 .lnk:hover{color:var(--accent)}
 .btn:disabled{opacity:.45;cursor:default}
 .seg{display:flex;gap:8px;flex-wrap:wrap}
+.qhelp{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:6px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--field);color:var(--muted);font:600 11px/1 inherit;vertical-align:1px;cursor:pointer}
+.qhelp[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.qtip{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+/* v81 colour: one colour per scoring family (TBT pine, HK Classic dark red, MCR lapis) on the mode chips, the mode tag and the leading
+   player; the round square takes its wind's colour, as on the share cards. In dark mode a light chip gets dark text. */
+:root{--pg:#2D6A4F;--pr:#B72323;--pl:#2F5D9E;--chipink:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#8FD0AE;--pr:#EA8888;--pl:#9DB9EC;--chipink:#14100F}}
+:root[data-theme="dark"]{--pg:#8FD0AE;--pr:#EA8888;--pl:#9DB9EC;--chipink:#14100F}
+[data-fam],#gmode [data-f]{--fc:var(--pg)}[data-fam="hk"],#gmode [data-f="hk"]{--fc:var(--pr)}[data-fam="mcr"],#gmode [data-f="mcr"]{--fc:var(--pl)}
+#gmode .fam[aria-pressed="true"]{background:var(--fc);border-color:var(--fc);box-shadow:0 0 0 1px var(--fc);color:var(--chipink)}
+#gmode .sub .btn[aria-pressed="true"]{border-color:var(--fc);box-shadow:0 0 0 1px var(--fc);color:var(--fc)}
+#gsTag[data-fam],.rhead .pill[data-fam]{background:var(--fc);color:var(--chipink)}
+#gstatus[data-fam] .tcell.lead{border-color:var(--fc);box-shadow:0 0 0 1px var(--fc)}
+.wtile[data-w]{color:#FAF7F2!important}
+.wtile[data-w="0"]{background:#1B2A4A}.wtile[data-w="1"]{background:#8B1A1A}.wtile[data-w="2"]{background:#2D6A4F}.wtile[data-w="3"]{background:#1A1A1A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wtile[data-w]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}}
+:root[data-theme="dark"] .wtile[data-w]{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+#gmode{flex-direction:column;gap:10px}#gmode .famrow{display:flex;gap:6px;flex-wrap:wrap}#gmode .fam{border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}#gmode .soon{opacity:.45}#gmode .soon small{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}#gmode .sub[hidden]{display:none}
 .seg .btn[aria-pressed="true"],.tkgrp-ctrl .btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .themes{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .theme{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:var(--muted);font-size:13px;padding:0}
@@ -409,8 +441,8 @@ button,.chip,.btn,[data-tm],.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld{touch-action:ma
 <div class="names" id="gnames"></div>
     <div class="field" style="margin-top:12px"><label for="gtitle">Title</label><input id="gtitle" maxlength="30" autocomplete="off"></div>
     <div class="field"><label for="gdate">Date / time</label><input id="gdate" maxlength="40" autocomplete="off"></div>
-    <div class="field"><label>Scoring mode</label><div class="seg" id="gmode"></div></div>
-    <p class="hint" id="gmodeHint"></p>
+    <div class="field"><label>Scoring mode <button type="button" class="qhelp" id="gmodeQ" aria-label="How this mode scores" aria-expanded="false" aria-controls="gmodeHint">?</button></label><div class="seg" id="gmode"></div></div>
+    <p class="hint qtip" id="gmodeHint" hidden></p>
     <div id="gmcr" hidden style="margin:10px 0 12px"><div class="field" style="max-width:200px;margin:0"><label for="gmcrBase">Base point</label><input id="gmcrBase" type="number" min="0" max="99" step="1" inputmode="numeric"></div></div>
     <label class="chk" id="gseatWrap" hidden style="margin:0 0 12px"><input type="checkbox" id="gseat"> Seat rotation (MCR)</label>
     <div id="gcustom" hidden style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 12px">
@@ -1565,7 +1597,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
         var g=Object.assign(defaultGame(),s);
         g.names=[0,1,2,3].map(function(i){return String(g.names[i]||'');});
         g.useStart=!!g.useStart;g.start=String(g.start==null?'200':g.start);
-        if(['casual','default','tournament','custom','mcr4','mcr8','mcrc'].indexOf(g.mode)<0)g.mode='casual';
+        if(['casual','default','tournament','custom','mcr4','mcr8','mcrc','hkc','hkf'].indexOf(g.mode)<0)g.mode='casual';
         g.seatRotation=g.seatRotation!==false;
         g.bankrupt=!!g.bankrupt&&g.useStart;
         var mb=parseFloat(g.mcrBase);g.mcrBase=isNaN(mb)?3:Math.min(99,Math.max(0,Math.round(mb)));
@@ -1747,7 +1779,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   /* ---------- rules of this game, always readable (host, player, saved or not) ---------- */
   function renderRules(){
     var cfg=modeConfig();
-    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'}[game.mode||'casual']||'Casual';
+    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'}[game.mode||'casual']||'Casual';
     var onoff=function(b){return b?'On':'Off';};
     var rows=[
       ['Minimum to win',cfg.minPoint+(cfg.minPoint===1?' point':' points')],
@@ -1757,19 +1789,21 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       ['Starting score',game.useStart?String(game.start):'Not used'],
       ['Bankrupt',onoff(cfg.bankrupt)]
     ];
-    if(cfg.mcr)rows=[['Base point',String(cfg.basePoint)],['Minimum hand points',String(cfg.basePoint)],['Dealer','never repeats'],['Seat rotation',onoff(cfg.seatRotation)],['Invalid win','\u221224, others +8 each'],['False win','\u221248, others +16 each']];
+    if(cfg.hk)rows=[['Minimum to win','3 fan'],['Payout',cfg.hkFull?'Full Spicy, doubles every fan':'Half Spicy'],['Limit','13 fan, pays '+HR.points(13,cfg.hkFull)],['Dealer','stays on a dealer win, a draw or a penalty'],['Hu','the discarder pays double'],['Invalid win','−'+HR.points(13,cfg.hkFull)+' to each player'],['False win','−'+HR.points(13,cfg.hkFull)+' to each player']];
+    else if(cfg.mcr)rows=[['Base point',String(cfg.basePoint)],['Minimum hand points',String(cfg.basePoint)],['Dealer','never repeats'],['Seat rotation',onoff(cfg.seatRotation)],['Invalid win','\u221224, others +8 each'],['False win','\u221248, others +16 each']];
     var h='<div class="rhead"><b>Game rules</b><span class="pill">'+esc(label)+'</span></div><div class="rules">';
     rows.forEach(function(x){h+='<div><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>';});
     h+='</div>';
     ['rulesCard','rankRules'].forEach(function(id){var el=$(id);if(el)el.innerHTML=h;});
+    var fam=modeFamily(game.mode||'casual');document.querySelectorAll('.rhead .pill').forEach(function(p){p.dataset.fam=fam;});var gst=$('gstatus');if(gst)gst.dataset.fam=fam;
     var gsTag=$('gsTag'),gsSub=$('gsSub');
     if(gsTag&&gsSub){
-      var facts=cfg.mcr?['Base '+cfg.basePoint,'Min '+cfg.basePoint]:['Min '+cfg.minPoint,'Streak '+cfg.maxStreak],flags=[];
+      var facts=cfg.hk?['Min 3 fan','Limit '+HR.points(13,cfg.hkFull)]:cfg.mcr?['Base '+cfg.basePoint,'Min '+cfg.basePoint]:['Min '+cfg.minPoint,'Streak '+cfg.maxStreak],flags=[];
       if(cfg.seatRotation)flags.push('Rotation');
       if(!cfg.mcr&&cfg.deadwall)flags.push('Deadwall');
       if(!cfg.mcr&&game.useStart)flags.push('Start '+game.start);
       if(!cfg.mcr&&cfg.bankrupt)flags.push('Bankrupt');
-      gsTag.textContent=label;
+      gsTag.textContent=label;gsTag.dataset.fam=modeFamily(game.mode||'casual');
       gsSub.innerHTML='<span>'+esc(facts.join(' \u00b7 '))+'</span>'+flags.map(function(x){return '<span class="gf">'+esc(x)+'</span>';}).join('');
     }
   }
@@ -1783,7 +1817,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     ['gseat','gcMin','gcStreak','gcWall','guse','gbk','gmcrBase'].forEach(function(id){var el=$(id);if(el)el.disabled=frozen;});
     var gs=$('gstart');if(gs)gs.disabled=frozen||!game.useStart;
     document.querySelectorAll('#gnames input').forEach(function(el){el.disabled=frozen;});
-    document.querySelectorAll('#gmode .btn').forEach(function(el){el.disabled=frozen;});
+    document.querySelectorAll('#gmode .btn:not(.soon)').forEach(function(el){el.disabled=frozen;});
     var note=$('setupNote');
     if(note)note.textContent=frozen
       ?'Players and rules are fixed because the first hand has been recorded. Title and date can still be edited.'
@@ -1988,13 +2022,15 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed, not picked
   var MCR_BASE={mcr4:4,mcr8:8};
   function isMcr(m){return m==='mcr4'||m==='mcr8'||m==='mcrc';}
+  function isHkMode(m){return m==='hkc'||m==='hkf';}
   // MCR-Custom: the host types the base point (0 to 99); anything that is not a number counts as the default, 3
   function mcrBaseNow(){if(game.mode!=='mcrc')return MCR_BASE[game.mode];var n=parseFloat(game.mcrBase);return isNaN(n)?3:Math.min(99,Math.max(0,Math.round(n)));}
   function modeConfig(){
     var mcr=isMcr(game.mode);
     var seat=(game.mode==='tournament'||game.mode==='custom'||mcr)&&!!game.seatRotation;
     var cfg;
-    if(mcr)cfg={mcr:true,basePoint:mcrBaseNow(),minPoint:mcrBaseNow(),maxStreak:1,deadwall:false,seatRotation:seat};
+    if(isHkMode(game.mode))cfg={mcr:true,hk:true,hkFull:game.mode==='hkf',basePoint:3,minPoint:3,maxStreak:Infinity,deadwall:false,seatRotation:false};
+    else if(mcr)cfg={mcr:true,basePoint:mcrBaseNow(),minPoint:mcrBaseNow(),maxStreak:1,deadwall:false,seatRotation:seat};
     else if(game.mode==='default')cfg={minPoint:2,maxStreak:4,deadwall:false,seatRotation:false};
     else if(game.mode==='tournament')cfg={minPoint:2,maxStreak:1,deadwall:false,seatRotation:seat};
     else if(game.mode==='custom'){
@@ -2003,8 +2039,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     }
     else cfg={minPoint:1,maxStreak:4,deadwall:false,seatRotation:false};   // casual
     // bankrupt-ends-the-round only makes sense once there's a starting score to run out of
-    cfg.bankrupt=!mcr&&!!(game.useStart&&game.bankrupt);
-    cfg.startBase=(!mcr&&game.useStart)?(num(game.start)||0):0;   // MCR modes have no starting score
+    cfg.bankrupt=!cfg.mcr&&!!(game.useStart&&game.bankrupt);
+    cfg.startBase=(!cfg.mcr&&game.useStart)?(num(game.start)||0):0;   // MCR modes have no starting score
     return cfg;
   }
 
@@ -2013,6 +2049,20 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   function scoreEvent(ev,dealer,cfg){
     var d=[0,0,0,0],dealerWon=false,desc='',i,w,p,mult=cfg.minPoint*(cfg.deadwall?2:1);
+    if(cfg.hk){   // Hong Kong Classic: fan turned into points by the table (13 fan is the limit, 384); the dealer has no bonus and stays on
+      var stay=false;
+      if(ev.kind==='hu'){
+        w=ev.winner;var hv=HR.points(num(ev.pts[w]),cfg.hkFull)*2;d[w]+=hv;d[ev.disc]-=hv;stay=(w===dealer);
+        desc=gname(w)+' wins '+num(ev.pts[w])+' fan off '+gname(ev.disc);
+      }else if(ev.kind==='zimo'){
+        w=ev.winner;var zv=HR.points(num(ev.pts[w]),cfg.hkFull);for(i=0;i<4;i++){if(i===w)continue;d[i]-=zv;d[w]+=zv;}stay=(w===dealer);
+        desc=gname(w)+' Zi Mo, '+num(ev.pts[w])+' fan';
+      }else if(ev.kind==='invalid'||ev.kind==='false'){
+        var hpen=HR.points(HR.LIMIT,cfg.hkFull);for(i=0;i<4;i++){if(i===ev.who)continue;d[i]+=hpen;d[ev.who]-=hpen;}stay=true;
+        desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
+      }else if(ev.kind==='draw'){desc='Draw, no score';stay=true;}
+      return {d:d,dealerWon:stay,desc:desc};
+    }
     if(cfg.mcr){   // base + typed hand points; no dealer bonus, no multiple winners, no tenpai payout
       var BP=cfg.basePoint;
       if(ev.kind==='hu'){
@@ -2247,16 +2297,30 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   var typedDealer=0;
   function ptsWarnHtml(base){
+    if(modeConfig().hk)return 'This hand has fewer than '+base+' fan, so it can’t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
     return 'Hand points are below the minimum of '+base+', so this hand can\u2019t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
   }
   function ptsTypedField(p,selected){
     var base=modeConfig().basePoint,low=(selected!=null&&selected<base);
+    if(modeConfig().hk)return '<input type="number" inputmode="numeric" min="0" max="99" step="1" aria-label="Fan" placeholder="Fan (at least '+base+', 13 or more is the limit)" data-a="ptsinput" data-p="'+p+'" value="'+(selected!=null?selected:'')+'">'
+      +'<div id="hkPays">'+hkPaysHint(selected)+'</div><div class="warn" id="ptsWarn" role="alert"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
     return '<input type=\"number\" inputmode=\"numeric\" min=\"0\" max=\"999\" step=\"1\" aria-label=\"Hand points\" placeholder=\"Hand points (at least '+base+', on top of the base '+base+')\" data-a=\"ptsinput\" data-p=\"'+p+'\" value=\"'+(selected!=null?selected:'')+'\">'
       +'<div class=\"warn\" id=\"ptsWarn\" role=\"alert\"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
   }
+  function hkPaysHint(fan){if(fan==null||fan<3)return '';var v=HR.points(fan,modeConfig().hkFull);return '<p class="hint" style="margin-top:6px">'+(fan>=HR.LIMIT?'Limit hand: ':'')+fan+' fan = <b>'+v+'</b> points'+(f.kind==='hu'?', the discarder pays double ('+(2*v)+')':', from each of the other three')+'</p>';}
   function ptsTyped(p,selected,label){return '<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'+ptsTypedField(p,selected);}
   // MCR: type the hand's points, or pick the fans, or pick the tiles and let the tool find the fans
   function ptsGridMcr(p,selected,label){
+    if(modeConfig().hk){
+      var hpk=f.patterns&&f.patterns[p],hm=hpk?'pattern':'points',hlow=(selected!=null&&selected<3);
+      var hh='<div class="lbl">'+esc(String(label||'Fan').replace('Hand points','Fan').replace('Points for','Fan for'))+'</div><div class="chips" style="margin-bottom:10px">'
+        +'<button type="button" class="chip" aria-pressed="'+(hm==='points')+'" data-a="ptsmode" data-p="'+p+'">Fan</button>'
+        +'<button type="button" class="chip" aria-pressed="'+(hm==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button></div>';
+      if(hm==='points')return hh+ptsTypedField(p,selected);
+      if(hpk.counted&&hpk.counted.length)hh+='<p class="hint" style="margin-top:6px">Fan: '+hpk.counted.map(function(it){return esc(it.label)+(it.count>1?' ×'+it.count:'')+' +'+it.p;}).join(', ')+'</p>';
+      hh+='<p class="hint" style="margin-top:6px"><b>'+(selected!=null?selected:0)+'</b> fan</p>'+hkPaysHint(selected);
+      return hh+'<div class="warn" id="ptsWarn" role="alert"'+(hlow?'':' hidden')+'>'+ptsWarnHtml(3)+'</div>';
+    }
     var base=modeConfig().basePoint,pk=f.patterns&&f.patterns[p],pkMode=(f.tiles&&f.tiles[p])?'tiles':pk?'pattern':'points';
     var h='<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'
       +'<div class=\"chips\" style=\"margin-bottom:10px\">'
@@ -2305,7 +2369,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var w=ROUNDS[rp.wind];
     var top=rp.done
       ?'<div class="stop"><span class="wtile han">\u7D42</span><div><b>Game finished</b><div class="sub">All four wind rounds are done. Undo or edit a hand if something is off.</div></div></div>'
-      :'<div class="stop"><span class="wtile han">'+w.h+'</span><div><b>'+w.en+' round</b><div class="sub">Dealer: '+esc(gname(rp.dealer))+', streak '+rp.streak+' of '+cfg.maxStreak+'. Scores reset each wind round.</div></div></div>';
+      :'<div class="stop"><span class="wtile han" data-w="'+rp.wind+'">'+w.h+'</span><div><b>'+w.en+' round</b><div class="sub">Dealer: '+esc(gname(rp.dealer))+', '+(cfg.maxStreak===Infinity?'hand '+rp.streak+' as dealer (no limit)':'streak '+rp.streak+' of '+cfg.maxStreak)+'. Scores reset each wind round.</div></div></div>';
     var mx=Math.max.apply(null,tot),ov=gOverall(rp,rp.wind);
     var g='<div class="tots">';
     for(var kk=0;kk<4;kk++){
@@ -2348,7 +2412,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       }else if(k==='invalid'||k==='false'){
         h+='<div class="lbl">'+(k==='invalid'?'Who declared an invalid win?':'Who declared a false win?')+'</div>'+playerChips('who',f.who);
       }else if(k==='draw'){
-        if(cfg.mcr)h+='<p class="hint">A draw scores nothing in this mode. Save it to move the dealer on.</p>';
+        if(cfg.hk)h+='<p class="hint">A draw scores nothing and the dealer stays on.</p>';
+        else if(cfg.mcr)h+='<p class="hint">A draw scores nothing in this mode. Save it to move the dealer on.</p>';
         else h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
       }
       var ev=eventFromForm();
@@ -2421,6 +2486,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       var prev=f.patterns[pp]?f.patterns[pp].state:null;
       delete f.pts[pp];
       renderGame();
+      if(modeConfig().hk){
+        if(window.openHkPatternModal)window.openHkPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:3,full:!!modeConfig().hkFull,by:(f.kind==='zimo'?'zimo':'hu')});
+        return;
+      }
       if(modeConfig().mcr){
         if(window.openMcrPatternModal)window.openMcrPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:modeConfig().basePoint});
         return;
@@ -2467,6 +2536,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(v==='')delete f.pts[p];else f.pts[p]=Math.min(999,Math.max(0,Math.round(num(v))));
     var base=modeConfig().basePoint,low=(v!==''&&f.pts[p]<base),wr=$('ptsWarn');
     if(wr){wr.hidden=!low;if(low)wr.innerHTML=ptsWarnHtml(base);}
+    var hkp=$('hkPays');if(hkp)hkp.innerHTML=hkPaysHint(f.pts[p]);
     var ev=eventFromForm(),sp=$('scorePrev');if(sp)sp.innerHTML=scorePrevHtml(ev,typedDealer);
     var sv=$('gentry').querySelector('[data-a="save"]');if(sv)sv.disabled=!ev;
   });
@@ -2526,6 +2596,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   function modeHint(){
     var cfg=modeConfig();
+    if(cfg.hk){
+      var tb=[3,4,5,6,7,8,9,10,11,12,13].map(function(n){return n+' = '+HR.points(n,cfg.hkFull);}).join(', ');
+      return 'HK Classic, '+(cfg.hkFull?'Full Spicy':'Half Spicy')+': type the hand’s fan, or use Pick Patterns to add them up from the Hong Kong sheet. A hand needs at least 3 fan, and unlike TBT and MCR the flower fan count toward those 3, and 13 fan or more is the limit. Fan turn into points'+(cfg.hkFull?', doubling with every fan':'')+': '+tb+'. On a Hu only the discarder pays, double. On a Zi Mo each of the other three pays. An invalid or false win costs the offender '+HR.points(13,cfg.hkFull)+' to each player. A draw scores nothing. The dealer stays on after a dealer win, a draw or a penalty, with no limit. Only the player nearest after the discarder can win off one discard.';
+    }
     if(cfg.mcr){
       var b=cfg.basePoint;
       return (game.mode==='mcrc'?'MCR-Custom':'MCR-'+b)+': type the hand\u2019s points, or use Pick Patterns or Pick Tiles to work them out from the green book (at least '+b+' points of patterns; flowers come on top and do not count toward that). Every hand pays a base of '+b+' on top of the hand points. On a Hu, everyone pays the base and the discarder pays the base plus the hand\u2019s points on top, so the winner ends up with base \u00d73 plus the hand\u2019s points. Zi Mo pays (base + points) from each of the other three. An invalid win costs the offender 24 and a false win 48, split evenly between the other three. A draw scores nothing. The dealer never repeats.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.');
@@ -2536,10 +2610,12 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     return 'A hand needs at least '+cfg.minPoint+' point'+(cfg.minPoint===1?'':'s')+' to win. Dealer streak up to '+cfg.maxStreak+'.'+(cfg.deadwall?' Non-replenishing deadwall is on, doubling the draw payout again.':'')+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':'')+' A draw pays tenpai '+drawWord(cfg)+'.';
   }
   function syncGameMode(){
-    $('gmode').querySelectorAll('.btn').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===game.mode?'true':'false');});
+    $('gmode').querySelectorAll('.btn[data-k]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===game.mode?'true':'false');});
     $('gmodeHint').textContent=modeHint();
-    var isCustom=game.mode==='custom',mcr=isMcr(game.mode);
-    var seatable=game.mode==='tournament'||isCustom||mcr;
+    var isCustom=game.mode==='custom',mcr=isMcr(game.mode)||isHkMode(game.mode);
+    var seatable=game.mode==='tournament'||isCustom||isMcr(game.mode);
+    var fam=modeFamily(game.mode);$('gmode').querySelectorAll('.fam').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.f===fam?'true':'false');});
+    $('gmode').querySelectorAll('.sub').forEach(function(g){g.hidden=g.dataset.f!==fam;});
     // MCR modes have no starting score: the controls go away and the options are cleared
     if(mcr&&(game.useStart||game.bankrupt)){game.useStart=false;game.bankrupt=false;$('guse').checked=false;$('gstart').disabled=true;}
     var st=$('guse').closest('.start');if(st)st.style.display=mcr?'none':'';
@@ -2557,24 +2633,51 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     }
   }
   var MODE_START={casual:'200','default':'200',tournament:'240'};
+  var MODE_FAMS=[
+    {f:'tbt',name:'TBT',modes:[['casual','Casual'],['default','Default'],['tournament','Tournament'],['custom','Custom']]},
+    {f:'hk',name:'HK Classic',modes:[['hkc','Half Spicy'],['hkf','Full Spicy'],['hkx','Custom',1]]},
+    {f:'mcr',name:'MCR',modes:[['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom']]},
+    {f:'riichi',name:'Riichi',soon:1},{f:'chicken',name:'Chicken Hand',soon:1}];
+  function modeFamily(m){return isHkMode(m)?'hk':isMcr(m)?'mcr':'tbt';}
   function buildGameMode(){
+    var q=$('gmodeQ'),tip=$('gmodeHint'),pinned=false;
+    function showTip(on){tip.hidden=!on;q.setAttribute('aria-expanded',on?'true':'false');}
+    q.addEventListener('click',function(e){e.preventDefault();pinned=!pinned;showTip(pinned);});
+    q.addEventListener('mouseenter',function(){if(window.matchMedia('(hover:hover)').matches)showTip(true);});
+    q.addEventListener('mouseleave',function(){if(!pinned)showTip(false);});
     var box=$('gmode');box.textContent='';
-    [['casual','Casual'],['default','Default'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom']].forEach(function(o){
-      var b=document.createElement('button');
-      b.type='button';b.className='btn';b.dataset.k=o[0];b.textContent=o[1];
-      b.addEventListener('click',function(){
-        var wasMcr=isMcr(game.mode);
+    // first the family (TBT, Hong Kong, MCR, more later), then the mode inside it
+    var famRow=document.createElement('div');famRow.className='famrow';box.appendChild(famRow);
+    MODE_FAMS.forEach(function(F){
+      var fb=document.createElement('button');fb.type='button';fb.className='btn fam';fb.dataset.f=F.f;
+      if(F.soon){fb.disabled=true;fb.classList.add('soon');fb.innerHTML=esc(F.name)+' <small>later</small>';}
+      else{fb.textContent=F.name;fb.addEventListener('click',function(){if(modeFamily(game.mode)===F.f)return;pickMode(F.modes[0][0]);});}
+      famRow.appendChild(fb);
+    });
+    MODE_FAMS.forEach(function(F){
+      if(F.soon)return;
+      var g=document.createElement('div');g.className='seg sub';g.dataset.f=F.f;box.appendChild(g);
+      F.modes.forEach(function(o){
+        var b=document.createElement('button');b.type='button';b.className='btn';
+        if(o[2]){b.disabled=true;b.classList.add('soon');b.innerHTML=esc(o[1])+' <small>later</small>';g.appendChild(b);return;}
+        b.dataset.k=o[0];b.textContent=o[1];b.addEventListener('click',function(){pickMode(o[0]);});g.appendChild(b);
+      });
+    });
+    function pickMode(k){
+      (function(){
+        var o=[k];
+        var wasMcr=isMcr(game.mode)||isHkMode(game.mode);
         game.mode=o[0];
-        // MCR modes start with seat rotation off and no starting score; going back to Tournament or Custom restores their own default
-        if(isMcr(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;if(o[0]==='mcrc'&&isNaN(parseFloat(game.mcrBase)))game.mcrBase=3;}
+        // MCR and HK modes start with seat rotation off and no starting score; going back to Tournament or Custom restores their own default
+        if(isHkMode(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;}
+        else if(isMcr(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;if(o[0]==='mcrc'&&isNaN(parseFloat(game.mcrBase)))game.mcrBase=3;}
         else if(wasMcr){game.seatRotation=true;}
         // each preset brings its own starting score (still editable); Custom leaves yours alone
         if(MODE_START[o[0]]!=null){game.start=MODE_START[o[0]];$('gstart').value=game.start;}
         syncGameMode();
         saveGame();renderGame();
-      });
-      box.appendChild(b);
-    });
+      })();
+    }
     syncGameMode();
     $('gcMin').addEventListener('input',function(){game.custom.minPoint=this.value;syncGameMode();saveGame();renderGame();});
     $('gcStreak').addEventListener('input',function(){game.custom.maxStreak=this.value;syncGameMode();saveGame();renderGame();});
@@ -4646,6 +4749,58 @@ function total(sel, minPoint) {
 
 return {FANS:FANS,BY:BY,EX:EX,NAME:NAME,analyze:analyze,toggle:toggle,sanitize:sanitize,total:total,terminalPungCap:terminalPungCap,chowSmallCap:chowSmallCap};
 })();
+var HR=(function(){
+// Hong Kong Classic: the fan of the Hong Kong scoring sheet (Version 1.3), picked by hand. A fan that sits under another replaces it
+// (Full Flush replaces Mixed Flush), some can count more than once (Dragon, wind, seat flower, a full set of flowers), and a few depend on
+// how the hand was won (Self-Pick only with Zi Mo, Robbing the Kong only with Hu). Flowers are fan like any other and count toward the minimum.
+const GROUPS = ['Win actions', 'Single set type hands', 'Special tile hands', 'Flowers and seasons', 'Special hands'];
+const FANS = [
+  ['SelfPick', 'Self-Pick', 1, 0, [], 1], ['KongReplacement', 'Win by Kong Replacement', 2, 0, ['SelfPick'], 1], ['DoubleKongReplacement', 'Double Kong Replacement', 9, 0, ['KongReplacement', 'SelfPick'], 1],
+  ['ConcealedHand', 'Concealed Hand', 1, 0, [], 1], ['RobbingTheKong', 'Robbing the Kong', 1, 0, [], 1], ['LastTile', 'Last Tile', 1, 0, [], 1],
+  ['AllSequences', 'All Sequences', 1, 1, [], 1], ['AllTriplets', 'All Triplets', 3, 1, [], 1], ['AllConcealedTriplets', 'All Concealed Triplets', 8, 1, ['AllTriplets', 'ConcealedHand'], 1], ['AllQuadruplets', 'All Quadruplets', 13, 1, ['AllTriplets'], 1],
+  ['Dragon', 'Dragon', 1, 2, [], 2], ['SmallThreeDragons', 'Small Three Dragons', 5, 2, ['Dragon'], 1], ['BigThreeDragons', 'Big Three Dragons', 8, 2, ['Dragon', 'SmallThreeDragons'], 1],
+  ['RoundWind', 'Round Wind', 1, 2, [], 1], ['SeatWind', 'Seat Wind', 1, 2, [], 1], ['SmallFourWinds', 'Small Four Winds', 6, 2, ['RoundWind', 'SeatWind'], 1], ['BigFourWinds', 'Big Four Winds', 13, 2, ['RoundWind', 'SeatWind', 'SmallFourWinds'], 1],
+  ['MixedFlush', 'Mixed Flush', 3, 2, [], 1], ['FullFlush', 'Full Flush', 7, 2, ['MixedFlush'], 1],
+  ['MixedTerminals', 'Mixed Terminals', 4, 2, ['AllTriplets'], 1], ['AllTerminals', 'All Terminals', 13, 2, ['MixedTerminals', 'AllTriplets'], 1], ['AllHonours', 'All Honours', 10, 2, ['MixedTerminals', 'AllTriplets'], 1],
+  ['NoFlowers', 'No Flowers or Seasons', 1, 3, [], 1], ['SeatFlower', 'Seat Flower or Season', 1, 3, [], 2], ['AllFlowers', 'All Flowers or All Seasons', 2, 3, [], 2],
+  ['SevenFlowers', 'Seven Flowers', 3, 3, [], 1], ['EightFlowers', 'Eight Flowers', 8, 3, ['SevenFlowers'], 1],
+  ['BlessingOfHeaven', 'Blessing of Heaven', 13, 4, [], 1], ['BlessingOfEarth', 'Blessing of Earth', 13, 4, [], 1], ['BlessingOfMan', 'Blessing of Man', 13, 4, [], 1], ['NineGates', 'Nine Gates', 13, 4, [], 1], ['ThirteenOrphans', 'Thirteen Orphans', 13, 4, [], 1]
+].map(a => ({ id: a[0], name: a[1], pts: a[2], grp: a[3], repl: a[4], max: a[5] }));
+const BY = Object.fromEntries(FANS.map(f => [f.id, f]));
+const ZIMO_ONLY = ['SelfPick', 'KongReplacement', 'DoubleKongReplacement', 'BlessingOfHeaven', 'BlessingOfMan'], HU_ONLY = ['RobbingTheKong', 'BlessingOfEarth'];
+const NOFL = ['SeatFlower', 'AllFlowers', 'SevenFlowers', 'EightFlowers'];
+const TABLE = [1, 2, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384], LIMIT = 13;
+// Half Spicy (HK Classic) follows the table; Full Spicy doubles with every fan: 2 to the power of the fan, 8192 at the limit
+function points(fan, full) { var f = Math.max(0, Math.min(LIMIT, Math.round(fan) || 0)); return full ? Math.pow(2, f) : TABLE[f]; }
+function analyze(sel, by) {
+  const count = id => sel[id] || 0, locked = {}, max = {};
+  const lock = (id, why) => { if (!locked[id] && count(id) === 0) locked[id] = why; };
+  FANS.forEach(f => { if (count(f.id)) f.repl.forEach(r => lock(r, 'Included in ' + f.name)); });
+  if (by === 'hu') ZIMO_ONLY.forEach(id => lock(id, 'Only with Zi Mo (self-pick)'));
+  if (by === 'zimo') HU_ONLY.forEach(id => lock(id, 'Only when winning from a discard (Hu)'));
+  if (count('NoFlowers')) NOFL.forEach(id => lock(id, 'Not with No Flowers or Seasons'));
+  if (NOFL.some(id => count(id))) lock('NoFlowers', 'Flowers or seasons are picked');
+  FANS.forEach(f => { max[f.id] = locked[f.id] ? 0 : f.max; });
+  return { locked, max };
+}
+function toggle(sel, id, by) {
+  const f = BY[id]; if (!f) return { sel };
+  const an = analyze(sel, by), n = sel[id] || 0;
+  if (n === 0 && an.locked[id]) return { sel, why: an.locked[id] };
+  const out = Object.assign({}, sel);
+  if (n >= f.max) delete out[id]; else out[id] = n + 1;
+  if (out[id]) { f.repl.forEach(r => delete out[r]); if (id === 'NoFlowers') NOFL.forEach(r => delete out[r]); if (NOFL.indexOf(id) >= 0) delete out.NoFlowers; }
+  return { sel: out };
+}
+function sanitize(sel, by) { let out = {}; Object.keys(sel || {}).forEach(id => { if (BY[id]) { const r = toggle(out, id, by); if (!r.why) { out = r.sel; const n = Math.min(BY[id].max, sel[id] || 0); if (out[id]) out[id] = n; } } }); return out; }
+function total(sel, min, full) {
+  const counted = []; let fan = 0;
+  FANS.forEach(f => { const n = sel[f.id] || 0; if (!n) return; const p = f.pts * n; fan += p; counted.push({ id: f.id, label: f.name, count: n, p: p }); });
+  return { counted, fan, patternPoints: fan, flowers: 0, valid: fan >= (min || 0), pays: points(fan, full), limit: fan >= LIMIT };
+}
+return { FANS, BY, GROUPS, TABLE, LIMIT, points, analyze, toggle, sanitize, total };
+})();
+window.HR=HR;   // the scoreboard's own script uses it to turn fan into points
 var ME=(function(R){
 // MCR tile engine (green book). Given the tiles of a winning hand it finds every way to read the hand, lists the fans each reading
 // can claim, and picks the combination that scores most under the green book's principles:
@@ -5115,13 +5270,14 @@ function mpEnsure() {
   $t('mpBody').addEventListener('toggle', function (e) { var d = e.target; if (MP && d && d.dataset && d.dataset.tier) MP.open[d.dataset.tier] = d.open; }, true);
   $t('mpBody').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('[data-mp]') : null; if (!b || !MP) return; var a = b.dataset.mp;
-    if (a === 'fan') { var r = MR.toggle(MP.sel, b.dataset.id); if (r.why) { mpToast(r.why); return; } MP.sel = r.sel; mpDraw(); }
+    if (a === 'fan') { var r = MP.R.toggle(MP.sel, b.dataset.id, MP.by); if (r.why) { mpToast(r.why); return; } MP.sel = r.sel; mpDraw(); }
     else if (a === 'rm') { var c = Object.assign({}, MP.sel); delete c[b.dataset.id]; MP.sel = c; mpDraw(); }
     else if (a === 'fl') { var n = Math.max(0, Math.min(8, (MP.sel.FlowerTiles || 0) + (+b.dataset.d))), c2 = Object.assign({}, MP.sel); if (n) c2.FlowerTiles = n; else delete c2.FlowerTiles; MP.sel = c2; mpDraw(); }
     else if (a === 'reset') { MP.sel = {}; mpDraw(); }
   });
   $t('mpUse').addEventListener('click', function () {
-    if (!MP) return; var t = MR.total(MP.sel, MP.min), counted = t.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p }; });
+    if (!MP) return; var t = MP.R.total(MP.sel, MP.min), counted = t.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p }; });
+    if (MP.hk) { var useH = MP.onUse, outH = { total: t.fan, counted: counted, state: { hk: 1, sel: Object.assign({}, MP.sel) }, patternPoints: t.fan, flowers: 0, valid: t.valid }; mpHide(); MP = null; if (useH) useH(outH); return; }
     if (t.valid && t.flowers) counted.push({ label: 'Flower Tiles', count: t.flowers, p: t.flowers });   // one label, so the pattern statistics do not split into "1 flower", "2 flowers" ...
     var use = MP.onUse, out = { total: t.valid ? t.patternPoints + t.flowers : t.patternPoints, counted: counted, state: { mcr: 1, sel: Object.assign({}, MP.sel) }, patternPoints: t.patternPoints, flowers: t.flowers, valid: t.valid };
     mpHide(); MP = null; if (use) use(out);
@@ -5136,6 +5292,7 @@ function mpChip(f, an) {
   return '<button type="button" class="chip mp-chip" data-mp="fan" data-id="' + f.id + '" aria-pressed="' + (n > 0) + '" aria-disabled="' + (off ? 'true' : 'false') + '"' + (off && why ? ' title="' + tesc(why) + '"' : '') + '><span>' + tesc(f.name) + (n > 1 ? ' (\u00d7' + n + ')' : '') + '</span><span class="pv">' + f.pts + '</span></button>';
 }
 function mpDrawSum() {
+  if (MP.hk) return hkDrawSum();
   var t = MR.total(MP.sel, MP.min), nothing = !t.patternPoints && !t.flowers;
   var verdict = nothing ? '<span class="mp-pill" style="background:var(--field);color:var(--muted)">Pick the fans of the winning hand. The minimum is ' + MP.min + ' points of patterns.</span>'
     : t.valid ? '<span class="mp-pill ok">Valid win: ' + t.patternPoints + ' of ' + MP.min + ' needed' + (t.flowers ? ', +' + t.flowers + ' flower' + (t.flowers > 1 ? 's' : '') : '') + '</span>'
@@ -5145,6 +5302,7 @@ function mpDrawSum() {
   $t('mpUse').disabled = nothing;
 }
 function mpDrawTiers() {
+  if (MP.hk) return hkDrawTiers();
   var an = MR.analyze(MP.sel), q = MP.q.trim().toLowerCase(), fans = MR.FANS.filter(function (f) { return f.id !== 'FlowerTiles' && (!q || f.name.toLowerCase().indexOf(q) >= 0); });
   var h = MP_TIERS.map(function (p) {
     var list = fans.filter(function (f) { return f.pts === p; }); if (!list.length) return '';
@@ -5153,13 +5311,51 @@ function mpDrawTiers() {
   }).join('') || '<p class="tm-sub" style="text-align:center">No fan matches \u201c' + tesc(MP.q) + '\u201d.</p>';
   $t('mpTiers').innerHTML = h;
 }
-function mpDrawFl() { var n = MP.sel.FlowerTiles || 0; $t('mpFl').innerHTML = '<div class="mp-fl"><div><b>Flower tiles</b><div class="tm-sub" style="margin:2px 0 0">1 point each, up to 8. They do not count toward the minimum.</div></div><div class="st"><button type="button" data-mp="fl" data-d="-1" aria-label="One flower less">\u2212</button><output>' + n + '</output><button type="button" data-mp="fl" data-d="1" aria-label="One flower more">+</button></div></div>'; }
+function mpDrawFl() { if (MP.hk) return hkDrawTotal(); var n = MP.sel.FlowerTiles || 0; $t('mpFl').innerHTML = '<div class="mp-fl"><div><b>Flower tiles</b><div class="tm-sub" style="margin:2px 0 0">1 point each, up to 8. They do not count toward the minimum.</div></div><div class="st"><button type="button" data-mp="fl" data-d="-1" aria-label="One flower less">\u2212</button><output>' + n + '</output><button type="button" data-mp="fl" data-d="1" aria-label="One flower more">+</button></div></div>'; }
 function mpDraw() { var sc = $t('mpBody').scrollTop; mpDrawSum(); mpDrawTiers(); mpDrawFl(); $t('mpBody').scrollTop = sc; }
 // onUse(result) gets { total, counted, state, patternPoints, flowers, valid }; restoreState is { mcr: 1, sel }; opts: { min, note, onCancel }
 window.openMcrPatternModal = function (onUse, restoreState, opts) {
   mpEnsure(); opts = opts || {};
-  MP = { sel: MR.sanitize(restoreState && restoreState.sel ? restoreState.sel : {}), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
+  MP = { R: MR, sel: MR.sanitize(restoreState && restoreState.sel ? restoreState.sel : {}), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
+  $t('mpTitle').textContent = 'Pick patterns'; $t('mpSearch').placeholder = 'Search fans'; $t('mpSum').hidden = false; $t('mpSearch').hidden = false;
   var nt = $t('mpNote'); nt.textContent = opts.note || ''; nt.hidden = !opts.note; $t('mpSearch').value = '';
+  mpDraw(); $t('mcrPatModal').hidden = false; $t('mpBody').scrollTop = 0;
+};
+
+// ---- Hong Kong Classic in the same window: the fan of the Hong Kong sheet, in its five groups ----
+function hkDrawSum() {
+  // the HK picker keeps the TBT layout: no number header and no search, the total sits under the sections
+  $t('mpSum').innerHTML = ''; $t('mpSum').hidden = true; $t('mpSearch').hidden = true;
+  $t('mpUse').disabled = !HR.total(MP.sel, MP.min).fan;
+}
+function hkDrawTiers() {
+  var an = HR.analyze(MP.sel, MP.by);
+  var h = HR.GROUPS.map(function (g, gi) {
+    var list = HR.FANS.filter(function (f) { return f.grp === gi; });
+    var picked = list.filter(function (f) { return MP.sel[f.id] > 0; }).length, open = MP.open['g' + gi] !== undefined ? MP.open['g' + gi] : picked > 0;
+    return '<details class="pattier" data-tier="g' + gi + '"' + (open ? ' open' : '') + '><summary><span>' + g + '</span>' + (picked ? '<span class="pn">' + picked + ' picked</span>' : '') + '</summary><div class="chips">'
+      + list.map(function (f) {
+        var n = MP.sel[f.id] || 0, off = n === 0 && (an.locked[f.id] || an.max[f.id] === 0), why = an.locked[f.id] || '';
+        return '<button type="button" class="chip" data-mp="fan" data-id="' + f.id + '" aria-pressed="' + (n > 0) + '"' + (off ? ' aria-disabled="true"' : '') + (off && why ? ' title="' + tesc(why) + '"' : '') + '><span>' + tesc(f.name) + (n > 1 ? ' (\u00d7' + n + ')' : '') + '</span><span class="ptv">' + f.pts + '</span></button>';
+      }).join('') + '</div></details>';
+  }).join('');
+  $t('mpTiers').innerHTML = '<div class="patbox hkbox">' + h + '</div>';
+}
+function hkDrawTotal() {
+  var t = HR.total(MP.sel, MP.min, MP.full), h = 'Faan total <b>' + t.fan + '</b> faan';
+  h += '<div class="pkrow"><b class="cnt">Counted:</b> ' + (t.counted.length ? t.counted.map(function (c) { return tesc(c.label) + ' +' + c.p + (c.count > 1 ? ' (\u00d7' + c.count + ')' : ''); }).join(', ') : 'nothing picked yet') + '</div>';
+  if (t.fan) h += t.valid
+    ? '<div class="pkrow"><b class="cnt">Pays:</b> ' + (t.limit ? 'limit, ' : '') + Math.min(t.fan, HR.LIMIT) + ' faan = ' + t.pays + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays double (' + (2 * t.pays) + ')') + '</div>'
+    : '<div class="pkrow excl"><b class="cnt">Not a win yet:</b> ' + MP.min + ' faan needed.</div>';
+  $t('mpFl').innerHTML = '<div class="patTotal" style="margin-top:14px">' + h + '</div><button type="button" class="btn" data-mp="reset" style="margin-top:10px">Clear selection</button>';
+}
+// onUse(result) gets { total (the fan), counted, state }; restoreState is { hk: 1, sel }; opts: { min, by: 'hu' | 'zimo', onCancel }
+window.openHkPatternModal = function (onUse, restoreState, opts) {
+  mpEnsure(); opts = opts || {};
+  var by = opts.by === 'zimo' ? 'zimo' : 'hu', start = restoreState && restoreState.hk && restoreState.sel ? restoreState.sel : (by === 'zimo' ? { SelfPick: 1 } : {});
+  MP = { R: HR, hk: true, full: !!opts.full, by: by, sel: HR.sanitize(start, by), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
+  $t('mpTitle').textContent = 'Pick patterns';
+  var nt = $t('mpNote'); nt.textContent = by === 'zimo' ? 'Zi Mo: Self-Pick is already in.' : ''; nt.hidden = by !== 'zimo'; $t('mpSearch').value = '';
   mpDraw(); $t('mcrPatModal').hidden = false; $t('mpBody').scrollTop = 0;
 };
 

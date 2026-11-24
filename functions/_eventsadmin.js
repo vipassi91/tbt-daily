@@ -180,7 +180,7 @@ export async function bookingAction(env, actor, bookingId, body) {
     const added = to.filter(function (id) { return p.sessions.indexOf(id) < 0; }), gone = p.sessions.filter(function (id) { return to.indexOf(id) < 0; });
     if (!added.length && !gone.length) return { error: 'Nothing changed.', status: 400 };
     if (!body.over) {
-      for (const id of added) { const s = byId[id]; if (s.taken + 1 > s.seats) return { error: 'The session at ' + s.start.slice(11, 16) + ' (' + ({ casual: 'Casual', 'default': 'Default', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', chicken: 'Chicken Hand' }[s.mode] || s.mode) + ') is full. Tick "Allow over the seat limit" to move them anyway.', status: 409 }; }
+      for (const id of added) { const s = byId[id]; if (s.taken + 1 > s.seats) return { error: 'The session at ' + s.start.slice(11, 16) + ' (' + ({ casual: 'Casual', 'default': 'Default', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy', chicken: 'Chicken Hand' }[s.mode] || s.mode) + ') is full. Tick "Allow over the seat limit" to move them anyway.', status: 409 }; }
     }
     const cost = function (ids) { return ids.reduce(function (t, id) { return t + (byId[id] ? byId[id].price : 0); }, 0); };
     const diff = cost(to) - cost(p.sessions);
@@ -310,7 +310,7 @@ export async function deleteEvent(env, actor, id) {
 // Players are sent by their booking player id; the server writes the name (a registered player's nickname, otherwise the booked name)
 // and ties each registered player to their seat, so the leaderboard counts them for the right person.
 // Event day tables do not count toward a host's 24 tables a day.
-export const DAY_MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
+export const DAY_MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'hkc', 'hkf'];
 const SEATED = "('held','review','rejected','confirmed','venue')";
 
 async function sessionPlayers(env, sessionId) {

@@ -1,11 +1,11 @@
 import { genCode } from './_auth.js';
-import { scoreGame, modeConfig, isMcr, mcrBaseOf } from './_scoring.js';
+import { scoreGame, modeConfig, isMcr, isTyped, mcrBaseOf } from './_scoring.js';
 
 // Pattern names that were renamed: the old name in a saved hand counts under the new one in the statistics.
 const PATTERN_ALIAS = { 'Robbing the Kong': 'Robbing a Kong' };
 
 const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
-const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
+const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'hkc', 'hkf'];
 const MCR_KINDS = ['hu', 'zimo', 'invalid', 'false', 'draw'];   // MCR modes: one winner at most, no double or triple
 const seatOk = function (v) { return Number.isInteger(v) && v >= 0 && v <= 3; };
 // A hand recorded under an MCR mode: seats are 0 to 3, and the typed hand points are a whole number from 0 to 999.
@@ -92,7 +92,7 @@ export function validGame(g) {
     // values, so only a wrong shape is refused here, never a number that is merely out of range.
     if (typeof g.custom !== 'object' || g.custom === null || Array.isArray(g.custom)) return false;
   }
-  if (isMcr(g.mode)) return g.events.every(validMcrEvent);
+  if (isTyped(g.mode)) return g.events.every(validMcrEvent);
   return g.events.every(function (ev) { return ev && KINDS.indexOf(ev.kind) >= 0; });
 }
 
@@ -244,9 +244,9 @@ export function setupOf(g) {
     // MCR modes offer seat rotation too, but start with it off; they have no starting score
     seatRotation: (mode === 'tournament' || mode === 'custom') ? (g.seatRotation === undefined ? true : !!g.seatRotation) : isMcr(mode) ? !!g.seatRotation : null,
     mcrBase: mode === 'mcrc' ? mcrBaseOf(g) : null,   // the base point of MCR-Custom locks with the rest once a hand is recorded
-    useStart: isMcr(mode) ? false : useStart,
-    start: (useStart && !isMcr(mode)) ? String(g.start == null ? '200' : g.start).trim() : null,
-    bankrupt: (useStart && !isMcr(mode)) ? !!g.bankrupt : null,
+    useStart: isTyped(mode) ? false : useStart,
+    start: (useStart && !isTyped(mode)) ? String(g.start == null ? '200' : g.start).trim() : null,
+    bankrupt: (useStart && !isTyped(mode)) ? !!g.bankrupt : null,
   };
 }
 export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.stringify(setupOf(b)); }
@@ -264,7 +264,7 @@ export async function createTableRow(env, day, label, rawPlayers, createdBy, mod
   try { dateText = new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dateText = ''; }
   const game = {
     names: players, title: String(label).slice(0, 30), date: dateText,
-    useStart: false, start: '200', mode: m, seatRotation: !isMcr(m), bankrupt: false,
+    useStart: false, start: '200', mode: m, seatRotation: !isTyped(m), bankrupt: false,
     custom: { minPoint: 2, maxStreak: 4, deadwall: false }, events: [],
   };
   const stats = buildStats(game, players);

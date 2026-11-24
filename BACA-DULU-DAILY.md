@@ -1663,3 +1663,29 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 **Berkas baru:** `functions/api/_middleware.js`, `functions/api/waitlist.js`, `functions/api/admin/waitlist/[id].js`, `functions/api/host/waitlist/[id].js`, `functions/api/names/[code].js`, `functions/events/[[path]].js`, `functions/sitemap.xml.js`.
 **Berkas yang berubah:** `events.html`, `admin-events.html`, `admin-daily.html`, `admin-home.html`, `scoreboard.html`, `leaderboard.html`, `index.html`, `player.html`, `players.html`, `quiz.html`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/api/events/[id].js`, `functions/api/names.js`, dan catatan ini.
 **Setelah upload:** kirim ulang sitemap di Google Search Console (kalau sudah didaftarkan): `https://tilesbytiles.id/sitemap.xml`.
+
+## Update terbaru (v81): HK Classic, warna baru, dan alamat lama dialihkan
+
+**Mode HK Classic (Half Spicy dan Full Spicy)**
+- Pilihan mode di scoreboard sekarang per keluarga: **TBT** (Casual, Default, Tournament, Custom), **HK Classic** (Half Spicy, Full Spicy, Custom menyusul), **MCR** (MCR-4, MCR-8, MCR-Custom). Riichi dan Chicken Hand tampil sebagai "later".
+- Penjelasan tiap mode sekarang di balik tombol **?** kecil di samping "Scoring mode" (hover di komputer, tap di HP).
+- Aturan HK Classic: minimal 3 fan (fan bunga ikut dihitung, beda dengan TBT dan MCR), limit 13 fan. Hu: hanya yang membuang yang bayar, 2x. Zi Mo: ketiga pemain lain bayar. Invalid win dan false win: pelanggar bayar nilai limit ke tiap pemain. Draw: 0. Dealer tetap jadi dealer setelah dealer menang, draw, atau penalti, tanpa batas. Tidak ada Double/Triple Hu.
+- **Half Spicy**: 3 = 8, 4 = 16, 5 = 24, 6 = 32, 7 = 48, 8 = 64, 9 = 96, 10 = 128, 11 = 192, 12 = 256, 13 = 384.
+- **Full Spicy**: nilainya 2x lipat setiap tambahan 1 fan, 3 = 8 sampai 13 = 8192. Penalti = 8192 ke tiap pemain.
+- Isi skor: ketik **Fan**, atau **Pick Patterns** (tampilan sama dengan TBT) dengan fan dari cheat sheet HK. Dragon maksimal 2x (3 berarti Big Three Dragons). Round Wind dan Seat Wind terpisah; Small/Big Four Winds tidak menghitung keduanya lagi. Fan yang tergantikan otomatis terkunci.
+- Leaderboard, halaman pemain dan daftar pemain: HK Classic punya grup sendiri di pilihan mode (seperti MCR) dan tidak ikut "All modes", karena skalanya berbeda.
+- Mode HK juga bisa dipilih untuk sesi dan meja event.
+
+**Warna baru (palet campuran)**
+- Pine green tetap warna utama. Dark red untuk HK, lapis untuk MCR dan Class, gold untuk turnamen, plum untuk event lain.
+- Homepage: huruf 牌 samar di belakang judul, deretan 7 tile asli (dot, bambu, karakter, angin, naga, bunga, musim) yang berganti satu per satu tiap 6 detik, angka players / tables / sessions berwarna, garis dan tanggal berwarna per jenis event. Mode gelap: bagian atas jadi header hijau tua dan kartu Next up jadi krem.
+- Leaderboard: kotak angka diberi warna lembut, 3 teratas diberi gradasi warna gem.
+- Events: garis kiri, kotak tanggal, tag dan bar kursi mengikuti warna jenis event; bulan tetap merah.
+- Scoreboard: chip mode, label mode dan pemain teratas mengikuti warna keluarga mode. Kotak ronde mengikuti warna angin (East navy, South merah tua, West hijau, North hitam), sama dengan share card.
+- Semua teks berwarna sudah dicek kontrasnya (WCAG AA) di mode terang dan gelap.
+
+**Alamat lama dialihkan:** `tilesbytilesleaderboard.pages.dev` sekarang mengarahkan setiap halaman ke halaman yang sama di `tilesbytiles.id` (redirect 301). API dan alamat preview tidak ikut dialihkan.
+
+**Database:** tidak ada perubahan. Tidak perlu Console D1.
+**Berkas baru:** `functions/_middleware.js`.
+**Berkas yang berubah:** `scoreboard.html`, `index.html`, `leaderboard.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-events.html`, `admin-daily.html`, `functions/_scoring.js`, `functions/_tables.js`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/api/names.js`, dan catatan ini.

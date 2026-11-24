@@ -5,7 +5,7 @@ import { loadRegistry, nameKey } from '../_players.js';
 // For every registered player with a public page: id, nickname, number of games, the date of the last game and the modes played.
 // It is built from the same facts as /api/players (which Cloudflare keeps for 30 seconds), so the two always agree, and it
 // leaves out exactly who that one leaves out: guests, players who have hidden their page, and everything private.
-const MODE_ORDER = ['default', 'casual', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc'];
+const MODE_ORDER = ['default', 'casual', 'tournament', 'custom', 'hkc', 'hkf', 'mcr4', 'mcr8', 'mcrc'];
 export async function onRequestGet(context) {
   // ?q=...: the players whose real name (or another name already linked to them) matches, so "Yuli" finds "Mymories".
   // Only ids come back, never the real names: the page shows the nickname it already has for that id.

@@ -260,7 +260,7 @@ function progText(t){
   if(t.progress.done)return t.events+(t.events===1?' hand':' hands')+', finished';
   return t.events+(t.events===1?' hand':' hands')+', '+['East','South','West','North'][t.progress.wind]+' round';
 }
-var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom'};
+var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
 function rulesLine(t){
   var r=t.rules;if(!r)return '';
   if(r.base!=null){var q=[modeLabel(t.mode),'base '+r.base,'min '+r.minPoint+' points','no dealer repeat'];if(r.seatRotation)q.push('seat rotation');return q.join(' \u00b7 ');}   // meja MCR
