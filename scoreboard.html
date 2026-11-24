@@ -254,6 +254,11 @@ body.connected #gnew{display:none!important}
   #shareModal .patmodal-footer .status{flex-basis:100%;text-align:center;margin:0!important}
 }
 .patTotal{font-size:14px;color:var(--muted)}
+body.pp2 #patModal #pkCard2>.row-actions{display:none}
+body.pp2 #patModal #pkCard2{position:sticky;top:0;z-index:3;padding:0;margin:0}
+.pps .pps-tag b{font-family:var(--sans)!important;font-size:12px!important;font-weight:700!important}
+.pps .pps-n{color:var(--text)}
+
 .patTotal b{color:var(--text);font-size:22px;font-family:var(--display)}
 .patTotal .pkrow{margin-top:8px;line-height:1.5}
 .patTotal .pkrow b.cnt{color:var(--text);font-size:14px;font-family:inherit}
@@ -633,6 +638,69 @@ button,.chip,.btn,[data-tm],.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld{touch-action:ma
   <div>For recreational use only &middot; No gambling</div>
 </footer>
 
+<script>
+// HK Classic rules, loaded before the scoreboard so a saved HK game can be shown as soon as the page opens
+var HR=(function(){
+// Hong Kong Classic: the fan of the Hong Kong scoring sheet (Version 1.3), picked by hand. A fan that sits under another replaces it
+// (Full Flush replaces Mixed Flush), some can count more than once (Dragon, wind, seat flower, a full set of flowers), and a few depend on
+// how the hand was won (Self-Pick only with Zi Mo, Robbing the Kong only with Hu). Flowers are fan like any other and count toward the minimum.
+const GROUPS = ['Win actions', 'Single set type hands', 'Special tile hands', 'Flowers and seasons', 'Special hands'];
+const FANS = [
+  ['SelfPick', 'Self-Pick', 1, 0, [], 1], ['KongReplacement', 'Win by Kong Replacement', 2, 0, ['SelfPick'], 1], ['DoubleKongReplacement', 'Double Kong Replacement', 9, 0, ['KongReplacement', 'SelfPick'], 1],
+  ['ConcealedHand', 'Concealed Hand', 1, 0, [], 1], ['RobbingTheKong', 'Robbing the Kong', 1, 0, [], 1], ['LastTile', 'Last Tile', 1, 0, [], 1],
+  ['AllSequences', 'All Sequences', 1, 1, [], 1], ['AllTriplets', 'All Triplets', 3, 1, [], 1], ['AllConcealedTriplets', 'All Concealed Triplets', 8, 1, ['AllTriplets', 'ConcealedHand'], 1], ['AllQuadruplets', 'All Quadruplets', 13, 1, ['AllTriplets'], 1], ['SevenPairs', 'Seven Pairs', 4, 1, ['ConcealedHand'], 1],
+  ['Dragon', 'Dragon', 1, 2, [], 2], ['SmallThreeDragons', 'Small Three Dragons', 5, 2, ['Dragon'], 1], ['BigThreeDragons', 'Big Three Dragons', 8, 2, ['Dragon', 'SmallThreeDragons'], 1],
+  ['RoundWind', 'Round Wind', 1, 2, [], 1], ['SeatWind', 'Seat Wind', 1, 2, [], 1], ['SmallFourWinds', 'Small Four Winds', 6, 2, ['RoundWind', 'SeatWind'], 1], ['BigFourWinds', 'Big Four Winds', 13, 2, ['RoundWind', 'SeatWind', 'SmallFourWinds'], 1],
+  ['MixedFlush', 'Mixed Flush', 3, 2, [], 1], ['FullFlush', 'Full Flush', 7, 2, ['MixedFlush'], 1],
+  ['MixedTerminals', 'Mixed Terminals', 4, 2, ['AllTriplets'], 1], ['AllTerminals', 'All Terminals', 13, 2, ['MixedTerminals', 'AllTriplets'], 1], ['AllHonours', 'All Honours', 10, 2, ['MixedTerminals', 'AllTriplets'], 1],
+  ['NoFlowers', 'No Flowers or Seasons', 1, 3, [], 1], ['SeatFlower', 'Seat Flower or Season', 1, 3, [], 2], ['AllFlowers', 'All Flowers or All Seasons', 2, 3, [], 1],
+  ['SevenFlowers', 'Seven Flowers', 3, 3, [], 1], ['EightFlowers', 'Eight Flowers', 8, 3, ['SevenFlowers'], 1],
+  ['BlessingOfHeaven', 'Blessing of Heaven', 13, 4, [], 1], ['BlessingOfEarth', 'Blessing of Earth', 13, 4, [], 1], ['BlessingOfMan', 'Blessing of Man', 13, 4, [], 1], ['NineGates', 'Nine Gates', 13, 4, [], 1], ['ThirteenOrphans', 'Thirteen Orphans', 13, 4, [], 1]
+].map(a => ({ id: a[0], name: a[1], pts: a[2], grp: a[3], repl: a[4], max: a[5] }));
+const BY = Object.fromEntries(FANS.map(f => [f.id, f]));
+const ZIMO_ONLY = ['SelfPick', 'KongReplacement', 'DoubleKongReplacement', 'BlessingOfHeaven', 'BlessingOfMan', 'SevenFlowers', 'EightFlowers'], HU_ONLY = ['RobbingTheKong', 'BlessingOfEarth'];
+const NOFL = ['SeatFlower', 'AllFlowers', 'SevenFlowers', 'EightFlowers'];
+const TABLE = [1, 2, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384], LIMIT = 13;
+// Half Spicy (HK Classic) follows the table; Full Spicy doubles with every fan: 2 to the power of the fan, 8192 at the limit
+function points(fan, full) { var f = Math.max(0, Math.min(LIMIT, Math.round(fan) || 0)); return full ? Math.pow(2, f) : TABLE[f]; }
+function analyze(sel, by) {
+  const count = id => sel[id] || 0, locked = {}, max = {};
+  const lock = (id, why) => { if (!locked[id] && count(id) === 0) locked[id] = why; };
+  FANS.forEach(f => { if (count(f.id)) f.repl.forEach(r => lock(r, 'Included in ' + f.name)); });
+  if (by === 'hu') ZIMO_ONLY.forEach(id => lock(id, 'Only with Zi Mo (self-pick)'));
+  if (by === 'zimo') HU_ONLY.forEach(id => lock(id, 'Only when winning from a discard (Hu)'));
+  const SETS = ['AllSequences', 'AllTriplets', 'AllConcealedTriplets', 'AllQuadruplets', 'Dragon', 'SmallThreeDragons', 'BigThreeDragons', 'RoundWind', 'SeatWind', 'SmallFourWinds', 'BigFourWinds', 'KongReplacement', 'DoubleKongReplacement', 'NineGates', 'ThirteenOrphans'];
+  if (count('SevenPairs')) SETS.forEach(id => lock(id, 'Seven Pairs has no sets'));
+  if (SETS.some(id => count(id))) lock('SevenPairs', 'Seven Pairs has no sets');
+  if (count('SevenFlowers') || count('EightFlowers')) FANS.forEach(f => { if (f.id !== 'SevenFlowers' && f.id !== 'EightFlowers') lock(f.id, 'A win on seven or eight flowers counts only the flowers'); });
+  else if (FANS.some(f => f.id !== 'SevenFlowers' && f.id !== 'EightFlowers' && count(f.id))) { lock('SevenFlowers', 'Counts on its own: clear the other fan first'); lock('EightFlowers', 'Counts on its own: clear the other fan first'); }
+  if (count('NoFlowers')) NOFL.forEach(id => lock(id, 'Not with No Flowers or Seasons'));
+  if (NOFL.some(id => count(id))) lock('NoFlowers', 'Flowers or seasons are picked');
+  if (count('SevenPairs')) ['AllSequences'].forEach(id => lock(id, 'Seven Pairs has no sets'));
+  FANS.forEach(f => { max[f.id] = locked[f.id] ? 0 : f.max; });
+  return { locked, max };
+}
+function toggle(sel, id, by) {
+  const f = BY[id]; if (!f) return { sel };
+  const an = analyze(sel, by), n = sel[id] || 0;
+  if (n === 0 && an.locked[id]) return { sel, why: an.locked[id] };
+  const out = Object.assign({}, sel);
+  const mx = id === 'SeatFlower' && sel.AllFlowers ? 1 : f.max;   // a full set takes the place of that set's seat flower: one seat flower at most beside it
+  if (n >= mx) delete out[id]; else out[id] = n + 1;
+  if (id === 'AllFlowers' && out.AllFlowers && out.SeatFlower > 1) out.SeatFlower = 1;
+  if (out[id]) { f.repl.forEach(r => delete out[r]); if (id === 'NoFlowers') NOFL.forEach(r => delete out[r]); if (NOFL.indexOf(id) >= 0) delete out.NoFlowers; }
+  return { sel: out };
+}
+function sanitize(sel, by) { let out = {}; Object.keys(sel || {}).forEach(id => { if (BY[id]) { const r = toggle(out, id, by); if (!r.why) { out = r.sel; const n = Math.min(id === 'SeatFlower' && out.AllFlowers ? 1 : BY[id].max, sel[id] || 0); if (out[id]) out[id] = n; } } }); return out; }
+function total(sel, min, full) {
+  const counted = []; let fan = 0;
+  FANS.forEach(f => { const n = sel[f.id] || 0; if (!n) return; const p = f.pts * n; fan += p; counted.push({ id: f.id, label: f.name, count: n, p: p }); });
+  return { counted, fan, patternPoints: fan, flowers: 0, valid: fan >= (min || 0), pays: points(fan, full), limit: fan >= LIMIT };
+}
+return { FANS, BY, GROUPS, TABLE, LIMIT, points, analyze, toggle, sanitize, total };
+})();
+window.HR=HR;   // the scoreboard's own script uses it to turn fan into points
+</script>
 <script>
 // Hands saved earlier carry the old pattern name "Robbing the Kong": it is shown with the new name, Robbing a Kong.
 var PAT_ALIAS = { 'Robbing the Kong': 'Robbing a Kong' };
@@ -2193,7 +2261,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(src.tiles){f.tiles[to]=src.tiles;f.carry={to:to,from:src.from};}
     else{if(src.patterns)f.patterns[to]=src.patterns;if(src.pts!==undefined)f.pts[to]=src.pts;}
   }
-  function carryNote(p){return (f.carry&&f.carry.to===p&&f.tiles[p])?'<p class="hint" style="margin:0 0 10px">Tiles kept'+(f.carry.from>=0&&f.carry.from!==p?' from '+esc(gname(f.carry.from)):'')+'. Open Pick Tiles to check the patterns for this winner.</p>':'';}
+  function carryNote(p){return (f.carry&&f.carry.to===p&&f.tiles[p])?'<p class="hint" style="margin:0 0 10px">Tiles kept'+(f.carry.from>=0&&f.carry.from!==p?' from '+esc(gname(f.carry.from))+'. Open Pick Tiles to check the patterns for this winner.':'. Open Pick Tiles and tap Check patterns: the patterns are counted again for this kind of win.')+'</p>':'';}
   // what is kept with a winner's points: the patterns counted, and the tiles they came from (numbers only)
   // Double and Triple Hu: the winners hold tiles from the same set. What the other winners already hold is not available to this one,
   // flowers and seasons exist once, and the winning tile is one shared tile that counts once.
@@ -2312,12 +2380,15 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // MCR: type the hand's points, or pick the fans, or pick the tiles and let the tool find the fans
   function ptsGridMcr(p,selected,label){
     if(modeConfig().hk){
-      var hpk=f.patterns&&f.patterns[p],hm=hpk?'pattern':'points',hlow=(selected!=null&&selected<3);
+      var hpk=f.patterns&&f.patterns[p],hm=(f.tiles&&f.tiles[p])?'tiles':hpk?'pattern':'points',hlow=(selected!=null&&selected<3);
       var hh='<div class="lbl">'+esc(String(label||'Fan').replace('Hand points','Fan').replace('Points for','Fan for'))+'</div><div class="chips" style="margin-bottom:10px">'
         +'<button type="button" class="chip" aria-pressed="'+(hm==='points')+'" data-a="ptsmode" data-p="'+p+'">Fan</button>'
-        +'<button type="button" class="chip" aria-pressed="'+(hm==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button></div>';
+        +'<button type="button" class="chip" aria-pressed="'+(hm==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button>'
+        +'<button type="button" class="chip" aria-pressed="'+(hm==='tiles')+'" data-a="tilepick" data-p="'+p+'">Pick Tiles</button></div>';
+      hh+=carryNote(p);
       if(hm==='points')return hh+ptsTypedField(p,selected);
-      if(hpk.counted&&hpk.counted.length)hh+='<p class="hint" style="margin-top:6px">Fan: '+hpk.counted.map(function(it){return esc(it.label)+(it.count>1?' ×'+it.count:'')+' +'+it.p;}).join(', ')+'</p>';
+      if(!hpk)return hh;
+      if(hpk&&hpk.counted&&hpk.counted.length)hh+='<p class="hint" style="margin-top:6px">Fan: '+hpk.counted.map(function(it){return esc(it.label)+(it.count>1?' ×'+it.count:'')+' +'+it.p;}).join(', ')+'</p>';
       hh+='<p class="hint" style="margin-top:6px"><b>'+(selected!=null?selected:0)+'</b> fan</p>'+hkPaysHint(selected);
       return hh+'<div class="warn" id="ptsWarn" role="alert"'+(hlow?'':' hidden')+'>'+ptsWarnHtml(3)+'</div>';
     }
@@ -2468,7 +2539,22 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;
     var a=b.dataset.a,v=b.dataset.v;
     if(a==='ptsinput')return;   // a typed field, not a button: clicking it just focuses it
-    if(a==='kind'){var ei=editIdx,ii=insIdx;resetForm();editIdx=ei;insIdx=ii;f.kind=v;}
+    if(a==='kind'){
+      // changing what happened keeps who and what was already picked: the winner (or the one declaring a penalty), the discarder,
+      // and the picks. Picked tiles stay as they are and are recounted when Pick Tiles is opened (Hu or Zi Mo changes some patterns).
+      var ei=editIdx,ii=insIdx,old=f,ws=old.kind==='double'||old.kind==='triple'?old.winners.slice():(old.winner>=0?[old.winner]:old.who>=0?[old.who]:[]);
+      resetForm();editIdx=ei;insIdx=ii;f.kind=v;
+      if(old.kind&&old.kind!==v){
+        if(v==='hu'||v==='zimo'){if(ws.length===1)f.winner=ws[0];if(v==='hu'&&old.disc>=0&&old.disc!==f.winner)f.disc=old.disc;}
+        else if(v==='double'||v==='triple'){if(old.disc>=0)f.disc=old.disc;else if(old.kind==='hu')f.disc=-1;if(v==='double')f.winners=ws.filter(function(w){return w!==f.disc;}).slice(0,2);}
+        else if(v==='invalid'||v==='false'){if(ws.length===1)f.who=ws[0];}
+        var keep=v==='hu'||v==='zimo'?(f.winner>=0?[f.winner]:[]):v==='double'?f.winners:v==='triple'&&f.disc>=0?othersOf(f.disc):[];
+        keep.forEach(function(w){
+          if(old.tiles[w]){f.tiles[w]=old.tiles[w];f.carry={to:w,from:w};}
+          else{if(old.patterns[w])f.patterns[w]=old.patterns[w];if(old.pts[w]!==undefined)f.pts[w]=old.pts[w];}
+        });
+      }
+    }
     else if(a==='win'){var ow=f.winner;f.winner=+v;if(f.disc===f.winner)f.disc=-1;carryPicks(ow,f.winner);}
     else if(a==='disc'){f.disc=+v;if(f.winner===f.disc)f.winner=-1;f.winners=f.winners.filter(function(x){return x!==f.disc;});}
     else if(a==='winm'){
@@ -2498,7 +2584,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
         f.pts[pp]=r.total;
         f.patterns[pp]=r;
         renderGame();
-      },prev);
+      },prev,{min:modeConfig().minPoint});
       return;
     }
     else if(a==='tilepick'){
@@ -2508,7 +2594,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       var saved=f.tiles[tp]||null,sh=sharedTiles(tp);
       delete f.pts[tp];
       renderGame();
-      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,mcr:!!modeConfig().mcr,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
+      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,mcr:!!modeConfig().mcr&&!modeConfig().hk,hk:!!modeConfig().hk,full:!!modeConfig().hkFull,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
         onInvalid:function(){var ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=tp;renderGame();}},function(r){
         f.pts[tp]=r.patterns.total;
         f.patterns[tp]=r.patterns;
@@ -2847,6 +2933,41 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 })();
 </script>
 <script>
+// The summary at the top of every Pick Patterns window (TBT, HK Classic, MCR): it stays in view while the patterns are picked.
+// o: {n, unit, pill:{cls:'ok'|'bad'|'', text}, pay, tags:[{label, count, p, rm}], rmAttr, note}
+window.PP2 = !/[?&]pp=old/.test(location.search);   // ?pp=old shows the earlier windows (for comparing)
+if (window.PP2) document.documentElement.classList.add('pp2');
+window.ppSumHtml = function (o) {
+  function e(x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var tags = (o.tags || []).map(function (t) { return '<span class="pps-tag">' + e(t.label) + (t.count > 1 ? ' ×' + t.count : '') + ' <b>' + t.p + '</b>' + (t.rm != null ? '<button type="button" ' + o.rmAttr + '="' + e(t.rm) + '" aria-label="Remove ' + e(t.label) + '">×</button>' : '') + '</span>'; }).join('');
+  return '<div class="pps-top"><span class="pps-n">' + o.n + '</span><span class="pps-u">' + e(o.unit) + '</span>' + (o.pill ? '<span class="pps-pill ' + (o.pill.cls || '') + '">' + e(o.pill.text) + '</span>' : '') + (o.clear ? '<button type="button" class="pps-clr" ' + o.clear + '>Clear</button>' : '') + '</div>'
+    + (o.pay ? '<div class="pps-pay">' + o.pay + '</div>' : '')
+    + (tags ? '<div class="pps-tags">' + tags + '</div>' : '<div class="pps-empty">Tap the patterns of the winning hand.</div>')
+    + (o.note ? '<div class="pps-note">' + o.note + '</div>' : '');
+};
+</script>
+<style>
+.pp2 #patModalSlot,.pp2 #mpBody{padding-top:0}
+.pps{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line);margin:0 -24px 10px;padding:12px 24px 10px}
+@media (max-width:600px){.pps{margin:0 -16px 10px;padding:10px 16px}}
+.pps-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pps-n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;font-variant-numeric:lining-nums}
+.pps-u{font-size:14px;color:var(--muted)}
+.pps-pill{align-self:center;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--field);color:var(--muted)}
+.pps-pill.ok{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.pps-pill.bad{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+.pps-clr{margin-left:auto;align-self:center;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:999px;padding:4px 12px;font:500 13px var(--sans);cursor:pointer}
+.pps-pay{font-size:13px;color:var(--muted);margin-top:4px}
+.pps-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:96px;overflow:auto}
+.pps-tag{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 2px 0 10px;border-radius:999px;background:var(--field);border:1px solid var(--line);font-size:12px}
+.pps-tag b{font-weight:700;font-family:var(--sans)}
+.pps-tag button{width:26px;height:26px;border:0;background:transparent;color:var(--muted);font-size:16px;line-height:1;border-radius:50%;cursor:pointer}
+.pps-tag:not(:has(button)){padding-right:10px}
+.pps-empty{font-size:13px;color:var(--muted);margin-top:6px}
+.pps-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+.pps-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:60;width:calc(100% - 48px);max-width:420px;background:var(--text);color:var(--surface);font-size:13px;line-height:1.4;padding:8px 12px;border-radius:12px;text-align:center}
+</style>
+<script>
 (function(){
   function $(id){return document.getElementById(id);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -3134,6 +3255,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // the user collapsing it by hand should close it.
   var openSections={};
   function sectionOpen(key,hasSelection){
+    if(window.PP2&&openSections[key]===undefined)return true;   // few patterns: every group open, no extra tap
     if(openSections[key]===undefined){
       if(hasSelection)openSections[key]=true;
       return hasSelection;
@@ -3204,7 +3326,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 
   function fmtItems(items){return items.map(function(it){return it.label+' +'+it.p+((it.count&&it.count>1)?' (\u00d7'+it.count+')':'');}).join(', ');}
 
+  var PP_MIN=0;
+  function ppItemKey(label){var i=patIdxByName(label);if(i>=0)return 's'+i;i=floIdxByName(label);if(i>=0)return 'f'+i;for(var k=0;k<WINB.length;k++)if(WINB[k].n===label)return 'w'+k;return null;}
   function renderTotal(){
+    if(window.PP2)return renderTotalPP();
     var r=computeTotal();
     var h='Faan total <b>'+r.total+'</b> '+(r.total===1?'faan':'faan');
     h+='<div class="pkrow"><b class="cnt">Counted:</b> '+(r.counted.length?fmtItems(r.counted):'nothing picked yet')+'</div>';
@@ -3241,6 +3366,48 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(pat.win[WIN_REPL]&&pat.win[WIN_DOUBLE])delete pat.win[WIN_REPL];   // the two do not add up: the double replacement stays
   }
 
+  function renderTotalPP(){
+    var r=computeTotal(),pts=r.counted.filter(function(c){return patIdxByName(c.label)>=0;}).reduce(function(a,c){return a+c.p;},0),any=r.counted.length>0;
+    var notes=[];
+    if(r.mode==='garden')notes.push('A garden win counts on its own.');
+    else if(r.mode==='ml')notes.push('Master and Legendary hands count on their own.');
+    else{
+      if(r.excluded.length)notes.push('Not counted, the 10-point cutoff: '+r.excluded.map(function(x){return esc(x.label);}).join(', ')+'.');
+      if(r.bonusTrimmed&&r.bonusTrimmed.length)notes.push('Bonus not counted, the total already reached 10: '+r.bonusTrimmed.map(function(t){return esc(t.label);}).join(', ')+'.');
+      if(r.bonusLocked)notes.push('Pattern points are above 10, so no bonus is added.');
+      if(r.capNotes&&r.capNotes.length)notes.push('A triplet pattern is counted at a reduced value because it overlaps with another.');
+    }
+    if(r.capped)notes.push('Capped at 13.');
+    // like MCR: the minimum is met by pattern points only; flower and win-condition bonuses come on top once the hand is valid (a garden win has no minimum)
+    var garden=r.mode==='garden',low=!garden&&PP_MIN>0&&pts<PP_MIN,bonus=garden?0:r.total-Math.min(13,pts),isPat=function(c){return patIdxByName(c.label)>=0;};
+    var pill=!any?null:low?{cls:'bad',text:PP_MIN+' needed'}:{cls:'ok',text:'Valid win'};
+    var pay=!any||garden?'':pts+' from patterns'+(PP_MIN?' (at least '+PP_MIN+')':'')+(bonus>0?' + '+bonus+' bonus'+(low?', not counted until the hand is valid':''):'');
+    $('pkTotal').innerHTML='<div class="pps">'+window.ppSumHtml({n:low?pts:r.total,unit:(low?pts:r.total)===1?'point':'points',pill:pill,pay:pay,clear:any?'data-pp="clear"':'',
+      tags:r.counted.map(function(c){return {label:c.label,count:c.count,p:(low&&!isPat(c))?'('+c.p+')':c.p,rm:ppItemKey(c.label)};}),rmAttr:'data-pp-rm',note:notes.join(' ')})+'</div><div class="pps-toast" id="ppToast" hidden></div>';
+  }
+  // why a greyed-out pattern cannot be picked: the first pick that locks it
+  function ppWhy(a,v){
+    var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
+    var selSet={};selIdx.forEach(function(i){selSet[i]=true;});
+    var gard=GARDEN_WIN_IDX.filter(function(i){return pat.flo[i];})[0];
+    if(gard!==undefined)return FLOWERS_B[gard].n+' counts on its own.';
+    var ml=selIdx.filter(isML)[0];
+    if(a!=='sel'){
+      if(a==='flo'&&GARDEN_WIN_IDX.indexOf(v)>=0)return FLOWERS_B[v].n+' can only be picked on its own.';
+      if(ml!==undefined)return PATTERNS[ml].n+' stands alone: no bonus is added.';
+      if(bonusLocked(selIdx))return 'Pattern points are already above 10, so no bonus is added.';
+      if(a==='flo')return 'Only one flower or season bonus applies.';
+      return 'Replacement Tile and Double Replacement Tile do not go together.';
+    }
+    if(ml!==undefined&&v!==ml)return PATTERNS[ml].n+' stands alone.';
+    if(isML(v)&&selIdx.length)return PATTERNS[v].n+' stands alone: clear the other patterns first.';
+    for(var k in IMPLIES_MAP)if(selSet[k]&&IMPLIES_MAP[k].indexOf(v)>=0)return 'Included in '+PATTERNS[k].n+'.';
+    var ex=(EXCLUDE_MAP[v]||[]).filter(function(j){return selSet[j];})[0];if(ex!==undefined)return 'Does not go with '+PATTERNS[ex].n+'.';
+    for(var w in WHITELIST_LOCKS)if(selSet[w]&&+w!==v&&WHITELIST_LOCKS[w].indexOf(v)<0)return PATTERNS[w].n+' only goes with a few patterns.';
+    return 'Locked by the patterns picked.';
+  }
+  var ppT=0;
+  function ppToast(msg){var t=$('ppToast');if(!t)return;t.textContent=msg;t.hidden=false;clearTimeout(ppT);ppT=setTimeout(function(){t.hidden=true;},3200);}
   function sync(){normalizeSel();renderBox();renderTotal();}
 
   // Patterns that can be claimed more than once in a hand: tapping cycles off, once, twice, off.
@@ -3248,6 +3415,11 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   SEL_MAX[IDX.KONG]=2;
   SEL_MAX[IDX.PONGDRAGON]=2;
 
+  $('pkBox').addEventListener('pointerup',function(e){
+    if(!window.PP2)return;
+    var hit=document.elementsFromPoint(e.clientX,e.clientY).filter(function(x){return x.matches&&x.matches('button[data-a][disabled]');})[0];
+    if(hit)ppToast(ppWhy(hit.dataset.a,+hit.dataset.v));
+  });
   $('pkBox').addEventListener('click',function(e){
     var b=e.target.closest('button[data-a]');if(!b)return;
     var a=b.dataset.a,v=+b.dataset.v;
@@ -3261,6 +3433,11 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     sync();
   });
   $('pkClear').addEventListener('click',function(){pat={sel:{},flo:{},win:{}};sync();});
+  $('pkTotal').addEventListener('click',function(e){
+    var b=e.target.closest?e.target.closest('[data-pp],[data-pp-rm]'):null;if(!b)return;
+    if(b.dataset.pp==='clear'){pat={sel:{},flo:{},win:{}};sync();return;}
+    var k=b.dataset.ppRm,i=+k.slice(1);if(k[0]==='s')delete pat.sel[i];else if(k[0]==='f')delete pat.flo[i];else delete pat.win[i];sync();
+  });
 
   // Lets other parts of the app (the Play tab's points entry) pop this same picker up as a
   // modal instead of navigating to the Patterns tab. Moves the picker's own cards into the
@@ -3269,7 +3446,9 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function patCards(){return [$('pkCard1'),$('pkCard2')];}
   function movePatCardsToModal(){
     var cards=patCards(),slot=$('patModalSlot');
+    if(window.PP2)cards=[cards[1],cards[0]];   // the summary first, so it can stay at the top
     cards.forEach(function(c){slot.appendChild(c);});
+    document.body.classList.toggle('pp2',!!window.PP2);
   }
   function movePatCardsBack(){
     var cards=patCards(),tab=document.getElementById('tab-patterns');
@@ -3283,7 +3462,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(used!==true&&cb)cb();
   }
   window.openPatternPickerModal=function(onUse,restoreState,opts){
-    patModalOnUse=onUse;patModalOnCancel=(opts&&opts.onCancel)||null;
+    patModalOnUse=onUse;patModalOnCancel=(opts&&opts.onCancel)||null;PP_MIN=(opts&&opts.min)||0;
     var nt=$('patModalNote');if(nt){nt.textContent=(opts&&opts.note)||'';nt.hidden=!(opts&&opts.note);}
     pat=restoreState?{sel:Object.assign({},restoreState.sel),flo:Object.assign({},restoreState.flo),win:Object.assign({},restoreState.win)}:{sel:{},flo:{},win:{}};
     movePatCardsToModal();
@@ -4749,58 +4928,119 @@ function total(sel, minPoint) {
 
 return {FANS:FANS,BY:BY,EX:EX,NAME:NAME,analyze:analyze,toggle:toggle,sanitize:sanitize,total:total,terminalPungCap:terminalPungCap,chowSmallCap:chowSmallCap};
 })();
-var HR=(function(){
-// Hong Kong Classic: the fan of the Hong Kong scoring sheet (Version 1.3), picked by hand. A fan that sits under another replaces it
-// (Full Flush replaces Mixed Flush), some can count more than once (Dragon, wind, seat flower, a full set of flowers), and a few depend on
-// how the hand was won (Self-Pick only with Zi Mo, Robbing the Kong only with Hu). Flowers are fan like any other and count toward the minimum.
-const GROUPS = ['Win actions', 'Single set type hands', 'Special tile hands', 'Flowers and seasons', 'Special hands'];
-const FANS = [
-  ['SelfPick', 'Self-Pick', 1, 0, [], 1], ['KongReplacement', 'Win by Kong Replacement', 2, 0, ['SelfPick'], 1], ['DoubleKongReplacement', 'Double Kong Replacement', 9, 0, ['KongReplacement', 'SelfPick'], 1],
-  ['ConcealedHand', 'Concealed Hand', 1, 0, [], 1], ['RobbingTheKong', 'Robbing the Kong', 1, 0, [], 1], ['LastTile', 'Last Tile', 1, 0, [], 1],
-  ['AllSequences', 'All Sequences', 1, 1, [], 1], ['AllTriplets', 'All Triplets', 3, 1, [], 1], ['AllConcealedTriplets', 'All Concealed Triplets', 8, 1, ['AllTriplets', 'ConcealedHand'], 1], ['AllQuadruplets', 'All Quadruplets', 13, 1, ['AllTriplets'], 1],
-  ['Dragon', 'Dragon', 1, 2, [], 2], ['SmallThreeDragons', 'Small Three Dragons', 5, 2, ['Dragon'], 1], ['BigThreeDragons', 'Big Three Dragons', 8, 2, ['Dragon', 'SmallThreeDragons'], 1],
-  ['RoundWind', 'Round Wind', 1, 2, [], 1], ['SeatWind', 'Seat Wind', 1, 2, [], 1], ['SmallFourWinds', 'Small Four Winds', 6, 2, ['RoundWind', 'SeatWind'], 1], ['BigFourWinds', 'Big Four Winds', 13, 2, ['RoundWind', 'SeatWind', 'SmallFourWinds'], 1],
-  ['MixedFlush', 'Mixed Flush', 3, 2, [], 1], ['FullFlush', 'Full Flush', 7, 2, ['MixedFlush'], 1],
-  ['MixedTerminals', 'Mixed Terminals', 4, 2, ['AllTriplets'], 1], ['AllTerminals', 'All Terminals', 13, 2, ['MixedTerminals', 'AllTriplets'], 1], ['AllHonours', 'All Honours', 10, 2, ['MixedTerminals', 'AllTriplets'], 1],
-  ['NoFlowers', 'No Flowers or Seasons', 1, 3, [], 1], ['SeatFlower', 'Seat Flower or Season', 1, 3, [], 2], ['AllFlowers', 'All Flowers or All Seasons', 2, 3, [], 2],
-  ['SevenFlowers', 'Seven Flowers', 3, 3, [], 1], ['EightFlowers', 'Eight Flowers', 8, 3, ['SevenFlowers'], 1],
-  ['BlessingOfHeaven', 'Blessing of Heaven', 13, 4, [], 1], ['BlessingOfEarth', 'Blessing of Earth', 13, 4, [], 1], ['BlessingOfMan', 'Blessing of Man', 13, 4, [], 1], ['NineGates', 'Nine Gates', 13, 4, [], 1], ['ThirteenOrphans', 'Thirteen Orphans', 13, 4, [], 1]
-].map(a => ({ id: a[0], name: a[1], pts: a[2], grp: a[3], repl: a[4], max: a[5] }));
-const BY = Object.fromEntries(FANS.map(f => [f.id, f]));
-const ZIMO_ONLY = ['SelfPick', 'KongReplacement', 'DoubleKongReplacement', 'BlessingOfHeaven', 'BlessingOfMan'], HU_ONLY = ['RobbingTheKong', 'BlessingOfEarth'];
-const NOFL = ['SeatFlower', 'AllFlowers', 'SevenFlowers', 'EightFlowers'];
-const TABLE = [1, 2, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384], LIMIT = 13;
-// Half Spicy (HK Classic) follows the table; Full Spicy doubles with every fan: 2 to the power of the fan, 8192 at the limit
-function points(fan, full) { var f = Math.max(0, Math.min(LIMIT, Math.round(fan) || 0)); return full ? Math.pow(2, f) : TABLE[f]; }
-function analyze(sel, by) {
-  const count = id => sel[id] || 0, locked = {}, max = {};
-  const lock = (id, why) => { if (!locked[id] && count(id) === 0) locked[id] = why; };
-  FANS.forEach(f => { if (count(f.id)) f.repl.forEach(r => lock(r, 'Included in ' + f.name)); });
-  if (by === 'hu') ZIMO_ONLY.forEach(id => lock(id, 'Only with Zi Mo (self-pick)'));
-  if (by === 'zimo') HU_ONLY.forEach(id => lock(id, 'Only when winning from a discard (Hu)'));
-  if (count('NoFlowers')) NOFL.forEach(id => lock(id, 'Not with No Flowers or Seasons'));
-  if (NOFL.some(id => count(id))) lock('NoFlowers', 'Flowers or seasons are picked');
-  FANS.forEach(f => { max[f.id] = locked[f.id] ? 0 : f.max; });
-  return { locked, max };
+
+var HKT=(function(){
+// Tiles: 0-8 dots, 9-17 bamboo, 18-26 characters, 27-30 East South West North, 31-33 red, green, white dragons; flowers 0-7 (Plum 1 .. Bamboo 4, Spring 1 .. Winter 4).
+// Melds: {type:'chi'|'pong'|'kong', tile, concealed}. A kong counts as a triplet ("triplets and quadruplets are interchangeable").
+function isHonor(t){return t>=27;}
+function isTerm(t){return t<27&&(t%9===0||t%9===8);}
+function suit(t){return t<27?Math.floor(t/9):-1;}
+function counts(tiles){var c=new Array(34).fill(0);tiles.forEach(function(t){c[t]++;});return c;}
+// every way to split the concealed tiles into sets and one pair
+function splits(c,need){
+  var out=[];
+  function rec(c,sets,pair){
+    var i=0;while(i<34&&!c[i])i++;
+    if(i===34){if(pair!==null&&sets.length===need)out.push({sets:sets.slice(),pair:pair});return;}
+    if(pair===null&&c[i]>=2){c[i]-=2;rec(c,sets,i);c[i]+=2;}
+    if(c[i]>=3){c[i]-=3;sets.push({t:'p',tile:i});rec(c,sets,pair);sets.pop();c[i]+=3;}
+    if(i<27&&i%9<=6&&c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;sets.push({t:'c',tile:i});rec(c,sets,pair);sets.pop();c[i]++;c[i+1]++;c[i+2]++;}
+  }
+  rec(c.slice(),[],null);return out;
 }
-function toggle(sel, id, by) {
-  const f = BY[id]; if (!f) return { sel };
-  const an = analyze(sel, by), n = sel[id] || 0;
-  if (n === 0 && an.locked[id]) return { sel, why: an.locked[id] };
-  const out = Object.assign({}, sel);
-  if (n >= f.max) delete out[id]; else out[id] = n + 1;
-  if (out[id]) { f.repl.forEach(r => delete out[r]); if (id === 'NoFlowers') NOFL.forEach(r => delete out[r]); if (NOFL.indexOf(id) >= 0) delete out.NoFlowers; }
-  return { sel: out };
+function shape(hand,melds){
+  var need=14-3*melds.length;
+  if(hand.length<need)return {status:'short',missing:need-hand.length};
+  if(hand.length>need)return {status:'long',extra:hand.length-need};
+  var c=counts(hand),r=[];
+  splits(c,4-melds.length).forEach(function(x){r.push({kind:'std',sets:x.sets,pair:x.pair});});
+  if(!melds.length){
+    if(c.every(function(n){return n%2===0;}))r.push({kind:'pairs'});   // HK: the pairs need not be different, four of a tile are two pairs
+    var OR=[0,8,9,17,18,26,27,28,29,30,31,32,33];if(OR.every(function(t){return c[t]>=1;})&&OR.reduce(function(a,t){return a+c[t];},0)===14)r.push({kind:'orphans'});
+    var s0=suit(hand[0]);if(s0>=0&&hand.every(function(t){return suit(t)===s0;})){var b=s0*9,base=[3,1,1,1,1,1,1,1,3],ok=true;for(var k=0;k<9;k++)if(c[b+k]<base[k])ok=false;if(ok)r.push({kind:'gates'});}
+  }
+  return r.length?{status:'valid',readings:r}:{status:'invalid'};
 }
-function sanitize(sel, by) { let out = {}; Object.keys(sel || {}).forEach(id => { if (BY[id]) { const r = toggle(out, id, by); if (!r.why) { out = r.sel; const n = Math.min(BY[id].max, sel[id] || 0); if (out[id]) out[id] = n; } } }); return out; }
-function total(sel, min, full) {
-  const counted = []; let fan = 0;
-  FANS.forEach(f => { const n = sel[f.id] || 0; if (!n) return; const p = f.pts * n; fan += p; counted.push({ id: f.id, label: f.name, count: n, p: p }); });
-  return { counted, fan, patternPoints: fan, flowers: 0, valid: fan >= (min || 0), pays: points(fan, full), limit: fan >= LIMIT };
+// ctx: {win, by 'hu'|'zimo', seat 0-3, prev 0-3, flowers [ids], cond {last, replacement, double, robbing, heaven, earth, man}}
+function fanOf(rd,hand,melds,ctx,winInPair){
+  var sel={},add=function(id,n){sel[id]=(sel[id]||0)+(n||1);},all=hand.slice(),exposed=melds.some(function(m){return !m.concealed;});
+  melds.forEach(function(m){var t=m.tile;if(m.type==='chi')all.push(t,t+1,t+2);else all.push(t,t,t);});
+  var zimo=ctx.by==='zimo',cd=ctx.cond||{};
+  // win actions
+  if(zimo){if(cd.double)add('DoubleKongReplacement');else if(cd.replacement)add('KongReplacement');else add('SelfPick');}
+  else if(cd.robbing)add('RobbingTheKong');
+  if(!exposed)add('ConcealedHand');
+  if(cd.last)add('LastTile');
+  // special hands that stand at the limit
+  if(zimo&&cd.heaven)add('BlessingOfHeaven');if(!zimo&&cd.earth)add('BlessingOfEarth');if(zimo&&cd.man)add('BlessingOfMan');
+  if(rd.kind==='orphans')add('ThirteenOrphans');
+  if(rd.kind==='gates')add('NineGates');
+  // the sets
+  if(rd.kind==='std'||rd.kind==='gates'){
+    var sets=rd.kind==='std'?rd.sets.map(function(x){return {t:x.t,tile:x.tile};}).concat(melds.map(function(m){return {t:m.type==='chi'?'c':'p',tile:m.tile,kong:m.type==='kong'};})):[];
+    if(rd.kind==='std'){
+      var trip=sets.filter(function(x){return x.t==='p';}),pair=rd.pair;
+      if(trip.length===0)add('AllSequences');
+      if(trip.length===4){
+        if(sets.filter(function(x){return x.kong;}).length===4)add('AllQuadruplets');
+        else if(!exposed&&winInPair)add('AllConcealedTriplets');
+        else add('AllTriplets');
+      }
+      var dr=trip.filter(function(x){return x.tile>=31;}).length,wd=trip.filter(function(x){return x.tile>=27&&x.tile<=30;}).length;
+      if(dr===3)add('BigThreeDragons');else if(dr===2&&pair>=31)add('SmallThreeDragons');else if(dr)add('Dragon',dr);
+      if(wd===4)add('BigFourWinds');else if(wd===3&&pair>=27&&pair<=30)add('SmallFourWinds');
+      else{if(trip.some(function(x){return x.tile===27+ctx.prev;}))add('RoundWind');if(trip.some(function(x){return x.tile===27+ctx.seat;}))add('SeatWind');}
+    }
+  }
+  if(rd.kind==='pairs')add('SevenPairs');
+  // the tiles of the whole hand
+  if(rd.kind!=='orphans'&&rd.kind!=='gates'){
+    var honors=all.some(isHonor),suits={};all.forEach(function(t){if(!isHonor(t))suits[suit(t)]=1;});var ns=Object.keys(suits).length;
+    var termsOnly=all.every(function(t){return isHonor(t)||isTerm(t);});
+    if(!ns)add('AllHonours');
+    else if(termsOnly&&!honors)add('AllTerminals');
+    else if(termsOnly)add('MixedTerminals');
+    if(ns===1)add(honors?'MixedFlush':'FullFlush');
+    if(sel.AllHonours||sel.AllTerminals||sel.MixedTerminals){delete sel.AllTriplets;}
+    if(sel.AllHonours&&sel.MixedFlush)delete sel.MixedFlush;
+  }
+  if(sel.BigFourWinds||sel.SmallFourWinds){delete sel.RoundWind;delete sel.SeatWind;}
+  flowerFan(sel,ctx);
+  return HR.sanitize(sel,ctx.by);   // the sheet's own rule: an indented fan replaces its parent (All Concealed Triplets replaces Concealed Hand, ...)
 }
-return { FANS, BY, GROUPS, TABLE, LIMIT, points, analyze, toggle, sanitize, total };
+function flowerFan(sel,ctx){
+  var fl=ctx.flowers||[];
+  if(!fl.length){sel.NoFlowers=1;return;}
+  var full=[0,4].filter(function(b){return [0,1,2,3].every(function(k){return fl.indexOf(b+k)>=0;});});
+  if(full.length)sel.AllFlowers=1;   // one set counts (two sets are eight flowers); the set takes the place of its own seat flower
+  var seat=fl.filter(function(id){return id%4===ctx.seat&&full.indexOf(id-id%4)<0;}).length;if(seat)sel.SeatFlower=Math.min(seat,full.length?1:2);
+}
+function fanTotal(sel){return HR.total(sel,0).fan;}
+// the best reading: the highest fan (a hand that could be read two ways counts the way that is worth more)
+function score(hand,melds,ctx){
+  var res={fl:null,hand:null};
+  var nf=(ctx.flowers||[]).length;
+  if(nf>=7)res.fl={sel:nf===8?{EightFlowers:1}:{SevenFlowers:1}};
+  var sh=shape(hand,melds);res.shape=sh;
+  if(sh.status==='valid'&&ctx.win!=null&&hand.indexOf(ctx.win)>=0){
+    var best=null;
+    sh.readings.forEach(function(rd){
+      var inPair=[false];if(rd.kind==='std'&&rd.pair===ctx.win)inPair.push(true);
+      inPair.forEach(function(ip){
+        // the winning tile has to sit where this reading puts it: in the pair, or in a concealed set that holds it
+        if(rd.kind==='std'&&!ip&&!rd.sets.some(function(x){return x.t==='p'?x.tile===ctx.win:(ctx.win>=x.tile&&ctx.win<=x.tile+2);}))return;
+        var sel=fanOf(rd,hand,melds,ctx,ip),t=fanTotal(sel);
+        if(!best||t>best.fan)best={sel:sel,fan:t,kind:rd.kind};
+      });
+    });
+    res.hand=best;
+  }
+  if(res.fl)res.fl.fan=fanTotal(res.fl.sel);
+  return res;
+}
+return {shape:shape,score:score,flowerFan:flowerFan};
 })();
-window.HR=HR;   // the scoreboard's own script uses it to turn fan into points
+window.HKT=HKT;
 var ME=(function(R){
 // MCR tile engine (green book). Given the tiles of a winning hand it finds every way to read the hand, lists the fans each reading
 // can claim, and picks the combination that scores most under the green book's principles:
@@ -5051,8 +5291,11 @@ var HINT = {
 var SEATN = ['East', 'South', 'West', 'North'];
 var FLN = ['Plum 1', 'Orchid 2', 'Chrysanthemum 3', 'Bamboo 4', 'Spring 1', 'Summer 2', 'Autumn 3', 'Winter 4'];
 var COND = [['last', 'Last tile'], ['replacement', 'Replacement tile'], ['double', 'Double replacement'], ['robbing', 'Robbing a kong']];
+var COND_HK = [['last', 'Last tile'], ['replacement', 'Kong replacement'], ['double', 'Double kong replacement'], ['robbing', 'Robbing the kong'], ['heaven', 'Blessing of Heaven'], ['earth', 'Blessing of Earth'], ['man', 'Blessing of Man']];
 var COND_MCR = [['lastTile', 'Last of its kind'], ['lastTileDraw', 'Last tile of the wall'], ['lastTileClaim', 'Last discard of the game'], ['outWithReplacement', 'Replacement tile after a kong'], ['robbingKong', 'Robbing a Kong']];
-function condList() { if (!M || !M.ctx || !M.ctx.mcr) return COND; var zimo = M.ctx.by === 'zimo'; return COND_MCR.filter(function (c) { return zimo ? c[0] === 'lastTile' || c[0] === 'lastTileDraw' || c[0] === 'outWithReplacement' : c[0] === 'lastTile' || c[0] === 'lastTileClaim' || c[0] === 'robbingKong'; }); }
+function condList() {
+  if (M && M.ctx && M.ctx.hk) { var z = M.ctx.by === 'zimo', dealer = M.ctx.seat === 0; return COND_HK.filter(function (c) { var k = c[0]; return k === 'last' || (z ? (k === 'replacement' || k === 'double' || (k === 'heaven' && dealer) || (k === 'man' && !dealer)) : (k === 'robbing' || (k === 'earth' && !dealer))); }); }
+  if (!M || !M.ctx || !M.ctx.mcr) return COND; var zimo = M.ctx.by === 'zimo'; return COND_MCR.filter(function (c) { return zimo ? c[0] === 'lastTile' || c[0] === 'lastTileDraw' || c[0] === 'outWithReplacement' : c[0] === 'lastTile' || c[0] === 'lastTileClaim' || c[0] === 'robbingKong'; }); }
 var M = null, tmUse = null, tmCancel = null, tmButtons = [];
 function $t(id) { return document.getElementById(id); }
 function tesc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -5104,7 +5347,39 @@ function mcrAnal() {
 // one tap draws the hand, the winning tile and the result, and each asks for the same score: keep the last results (slow phones felt every repeat)
 var meMemo = {};
 function meScore(inp) { var k = JSON.stringify(inp); if (meMemo.hasOwnProperty(k)) return meMemo[k]; if (Object.keys(meMemo).length > 60) meMemo = {}; return (meMemo[k] = ME.score(inp)); }
-function anal() { return M.ctx.mcr ? mcrAnal() : E.analyze({ hand: M.hand, melds: M.melds }); }
+function fanN(n) { return n + ' fan'; }   // fan has no plural
+function hkCtx() { var cd = {}; condList().forEach(function (c) { if (M.cond[c[0]]) cd[c[0]] = true; }); return { win: M.win, by: M.ctx.by, seat: M.ctx.seat, prev: M.ctx.prev, flowers: M.flowers.slice(), cond: cd }; }
+function hkList(sel) { return HR.total(sel, 0).counted.map(function (c) { return tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' +' + c.p; }).join(', '); }
+function hkPays(fan) { var v = HR.points(fan, !!M.ctx.full); return (fan >= HR.LIMIT ? 'Limit hand: ' : '') + fanN(Math.min(fan, HR.LIMIT)) + ' = ' + v + ' points' + (M.ctx.by === 'zimo' ? ' from each of the other three.' : ', the discarder pays double (' + 2 * v + ').'); }
+// HK Classic: what the tiles say. Seven or eight flowers win on their own (a self-pick), even when the hand is not complete.
+function hkVerdict() {
+  var r = HKT.score(M.hand, M.melds, hkCtx()), sh = r.shape, min = M.ctx.min || 3, h = '', ok = false, invalid = false;
+  var over = []; (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] > 4) over.push(E.tileName(q)); })();
+  if (over.length) return { html: pill('bad', 'More than four of a tile') + '<p class="tm-sub warn">Only four of each tile exist: ' + over.join(', ') + '.</p>', ok: false };
+  var flWin = r.fl, handBest = r.hand;
+  if (flWin && (!handBest || flWin.fan >= handBest.fan)) {
+    ok = true; M.hkPick = flWin;
+    h = pill('ok', 'Suggested: ' + (flWin.sel.EightFlowers ? 'Eight Flowers' : 'Seven Flowers') + ', ' + fanN(flWin.fan)) + '<p class="tm-sub">You hold ' + M.flowers.length + ' flowers and seasons. Winning on the ' + (M.flowers.length === 8 ? 'eighth' : 'seventh') + ' one counts on its own: only these ' + fanN(flWin.fan) + ', even when the hand is not complete. ' + hkPays(flWin.fan) + '</p>'
+      + (handBest ? '<p class="tm-sub">The hand itself would count ' + fanN(handBest.fan) + '.</p>' : '')
+      + (M.ctx.by === 'hu' ? '<p class="tm-sub"><b>Note:</b> the last flower is drawn from the wall, so this is a self-pick. Record it as Zi Mo.</p>' : '') + '<p class="tm-sub">Next you check this in Pick Patterns.</p>';
+    return { html: h, ok: ok };
+  }
+  if (sh.status === 'long') h = pill('info', 'Remove ' + sh.extra + ' tile' + (sh.extra > 1 ? 's' : '')) + '<p class="tm-sub">With ' + plural(M.melds.length, 'meld') + ' the hand holds ' + mNeed() + ' tiles.</p>';
+  else if (sh.status === 'short') h = M.hand.length === 0 && M.melds.length === 0 ? pill('info', 'Pick the winning hand') + '<p class="tm-sub">Tap the tiles of the hand that won, melds included. Seven or eight flowers and seasons also win: pick them below.</p>' : pill('info', 'Add ' + sh.missing + ' more tile' + (sh.missing > 1 ? 's' : '')) + '<p class="tm-sub">A winning hand has ' + mNeed() + ' tiles with ' + plural(M.melds.length, 'meld') + '.</p>';
+  else if (sh.status === 'invalid') h = pill('bad', 'Not a winning hand') + '<p class="tm-sub">These tiles do not make four sets and a pair, Seven Pairs, Thirteen Orphans or Nine Gates. Check them against the real tiles.</p>';
+  else if (M.win === null) h = pill('info', 'Tap the tile that won') + '<p class="tm-sub">The tool needs it to tell which set the winning tile completed.</p>';
+  else if (handBest && handBest.fan >= min) {
+    ok = true; M.hkPick = handBest;
+    h = pill('ok', 'Suggested: ' + fanN(handBest.fan)) + '<p class="tm-sub">' + hkList(handBest.sel) + '</p><p class="tm-sub">' + hkPays(handBest.fan) + '</p>'
+      + ((M.cond.replacement || M.cond.double) && M.ctx.by === 'hu' ? '' : '') + '<p class="tm-sub">Next you check this in Pick Patterns, and change anything that is wrong.</p>';
+  } else if (handBest) {
+    invalid = true;
+    h = pill('bad', 'Invalid win') + '<p class="tm-sub">' + hkList(handBest.sel) + '</p><p class="tm-sub warn">' + fanN(handBest.fan) + ', below the minimum of ' + min + ' fan to win. Flowers count toward the minimum in HK Classic.</p>'
+      + (M.onInvalid ? '<p class="tm-sub"><button type="button" class="btn" id="tmInvalid">Record as Invalid win</button></p>' : '');
+  }
+  return { html: h, ok: ok, invalid: invalid };
+}
+function anal() { return M.ctx.hk ? HKT.shape(M.hand, M.melds) : M.ctx.mcr ? mcrAnal() : E.analyze({ hand: M.hand, melds: M.melds }); }
 function mcrVerdict() {
   var h = '', ok = false, invalid = false, an = mcrAnal(), min = M.ctx.min || 0, over = [];
   (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] + M.taken[q] > 4) over.push(E.tileName(q)); })();
@@ -5121,6 +5396,7 @@ function mcrVerdict() {
   return { html: h, ok: ok, invalid: invalid };
 }
 function verdict() {
+  if (M.ctx.hk) return hkVerdict();
   if (M.ctx.mcr) return mcrVerdict();
   var an = E.analyze({ hand: M.hand, melds: M.melds }), h = '', ok = false, invalid = false, r = DET.score({ hand: M.hand, melds: M.melds }, scoreCtx()), min = M.ctx.min || 1;
   var over = []; (function () { var u = mUsed(); for (var q = 0; q < 34; q++) if (u[q] + M.taken[q] > 4) over.push(E.tileName(q) + ' (' + (4 - M.taken[q]) + ' left for this hand, ' + u[q] + ' picked)'); })();
@@ -5199,7 +5475,7 @@ window.openTilePickerModal = function (opts, onUse, onCancel) {
   M = { hand: st.hand, melds: st.melds, win: st.win, flowers: st.flowers, cond: st.cond, mode: 'hand', ctx: opts, focus: null, onInvalid: opts.onInvalid || null, taken: opts.taken || new Array(34).fill(0), takenF: opts.takenFlowers || [], shared: opts.sharedWin != null ? opts.sharedWin : null };
   M.flowers = M.flowers.filter(function (id) { return M.takenF.indexOf(id) < 0; });
   tmUse = onUse; tmCancel = onCancel || null;
-  $t('tmInfo').innerHTML = '<b>' + tesc(opts.name) + '</b> wins by <b>' + (opts.by === 'zimo' ? 'Zi Mo (self draw)' : 'Hu (discard)') + '</b>. Seat wind <b>' + SEATN[opts.seat] + '</b>, prevailing wind <b>' + SEATN[opts.prev] + '</b>. Minimum to win: <b>' + (opts.min || 1) + ' point' + ((opts.min || 1) === 1 ? '' : 's') + '</b>. All of this comes from the game.' + (M.shared !== null || M.takenF.length || M.taken.some(function (x) { return x > 0; }) ? ' Several players won this hand, so the tiles are shared out: what another winner holds is not available here.' : '');
+  $t('tmInfo').innerHTML = '<b>' + tesc(opts.name) + '</b> wins by <b>' + (opts.by === 'zimo' ? 'Zi Mo (self draw)' : 'Hu (discard)') + '</b>. Seat wind <b>' + SEATN[opts.seat] + '</b>, prevailing wind <b>' + SEATN[opts.prev] + '</b>. Minimum to win: <b>' + (opts.hk ? (opts.min || 3) + ' fan' : (opts.min || 1) + ' point' + ((opts.min || 1) === 1 ? '' : 's')) + '</b>. All of this comes from the game.' + (M.shared !== null || M.takenF.length || M.taken.some(function (x) { return x > 0; }) ? ' Several players won this hand, so the tiles are shared out: what another winner holds is not available here.' : '');
   buildPalette(); tmUpdate(); tmShow(); $t('tmBody').scrollTop = 0;
 };
 $t('tmBody').addEventListener('click', function (e) {
@@ -5219,6 +5495,15 @@ $t('tileModal').addEventListener('click', function (e) { if (e.target === $t('ti
 // "Check patterns": the tiles (or the flowers) become a suggestion in the normal pattern picker; the host confirms or changes it there
 $t('tmUseBtn').addEventListener('click', function () {
   if (!M) return;
+  if (M.ctx.hk) {
+    var vh = hkVerdict(); if (!vh.ok || !M.hkPick) return;
+    var pick = M.hkPick, flOnly = !!(pick.sel.SevenFlowers || pick.sel.EightFlowers), dataH = flOnly ? null : toData(), keepH = M, useH = tmUse, cancelH = tmCancel;
+    tmClose();
+    window.openHkPatternModal(function (picked) { if (useH) useH({ patterns: picked, tiles: dataH }); }, { hk: 1, sel: pick.sel },
+      { min: keepH.ctx.min || 3, full: !!keepH.ctx.full, by: flOnly ? 'zimo' : keepH.ctx.by, note: 'Suggested from the ' + (flOnly ? 'flowers' : 'tiles') + ': ' + pick.fan + ' fan' + '. Check it, change anything that is wrong, then tap Use total.',
+        onCancel: function () { M = keepH; tmUse = useH; tmCancel = cancelH; tmUpdate(); tmShow(); } });
+    return;
+  }
   if (M.ctx.mcr) {
     var an = mcrAnal(); if (an.status !== 'valid' || M.win === null) return; var rm = meScore(mcrInput(M.win)); if (!rm.valid || !rm.meetsMinimum) return;
     var sel = ME.selection(rm); if (M.flowers.length) sel.FlowerTiles = Math.min(8, M.flowers.length);
@@ -5293,6 +5578,15 @@ function mpChip(f, an) {
 }
 function mpDrawSum() {
   if (MP.hk) return hkDrawSum();
+  if (window.PP2) {
+    var u = MR.total(MP.sel, MP.min), none = !u.patternPoints && !u.flowers, tot = u.valid ? u.patternPoints + u.flowers : u.patternPoints;
+    $t('mpSum').className = 'pps';
+    $t('mpSum').innerHTML = window.ppSumHtml({ n: tot, unit: tot === 1 ? 'point' : 'points',
+      pill: none ? null : u.valid ? { cls: 'ok', text: 'Valid win' } : { cls: 'bad', text: MP.min + ' needed' },
+      pay: none ? '' : u.patternPoints + ' from patterns (at least ' + MP.min + ')' + (u.flowers ? ' + ' + u.flowers + ' flower' + (u.flowers > 1 ? 's' : '') + (u.valid ? '' : ', not counted until the hand is valid') : ''),
+      clear: none ? '' : 'data-mp="reset"', tags: u.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p, rm: c.id }; }).concat(u.flowers ? [{ label: 'Flower tiles', count: 0, p: u.valid ? u.flowers : '(' + u.flowers + ')', rm: 'FlowerTiles' }] : []), rmAttr: 'data-mp="rm" data-id' });
+    $t('mpUse').disabled = none; return;
+  }
   var t = MR.total(MP.sel, MP.min), nothing = !t.patternPoints && !t.flowers;
   var verdict = nothing ? '<span class="mp-pill" style="background:var(--field);color:var(--muted)">Pick the fans of the winning hand. The minimum is ' + MP.min + ' points of patterns.</span>'
     : t.valid ? '<span class="mp-pill ok">Valid win: ' + t.patternPoints + ' of ' + MP.min + ' needed' + (t.flowers ? ', +' + t.flowers + ' flower' + (t.flowers > 1 ? 's' : '') : '') + '</span>'
@@ -5317,7 +5611,7 @@ function mpDraw() { var sc = $t('mpBody').scrollTop; mpDrawSum(); mpDrawTiers();
 window.openMcrPatternModal = function (onUse, restoreState, opts) {
   mpEnsure(); opts = opts || {};
   MP = { R: MR, sel: MR.sanitize(restoreState && restoreState.sel ? restoreState.sel : {}), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
-  $t('mpTitle').textContent = 'Pick patterns'; $t('mpSearch').placeholder = 'Search fans'; $t('mpSum').hidden = false; $t('mpSearch').hidden = false;
+  $t('mpTitle').textContent = 'Pick patterns'; $t('mpSearch').placeholder = 'Search fans'; $t('mpSum').hidden = false; $t('mpSearch').hidden = false; $t('mpSum').className = window.PP2 ? 'pps' : 'mp-sum';
   var nt = $t('mpNote'); nt.textContent = opts.note || ''; nt.hidden = !opts.note; $t('mpSearch').value = '';
   mpDraw(); $t('mcrPatModal').hidden = false; $t('mpBody').scrollTop = 0;
 };
@@ -5325,14 +5619,23 @@ window.openMcrPatternModal = function (onUse, restoreState, opts) {
 // ---- Hong Kong Classic in the same window: the fan of the Hong Kong sheet, in its five groups ----
 function hkDrawSum() {
   // the HK picker keeps the TBT layout: no number header and no search, the total sits under the sections
-  $t('mpSum').innerHTML = ''; $t('mpSum').hidden = true; $t('mpSearch').hidden = true;
+  $t('mpSearch').hidden = true;
+  if (window.PP2) {
+    var t = HR.total(MP.sel, MP.min, MP.full), any = t.fan > 0;
+    var pay = any && t.valid ? (t.limit ? 'Limit, ' : '') + Math.min(t.fan, HR.LIMIT) + ' fan = ' + t.pays + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays double (' + 2 * t.pays + ')') : '';
+    $t('mpSum').className = 'pps'; $t('mpSum').hidden = false;
+    $t('mpSum').innerHTML = window.ppSumHtml({ n: t.fan, unit: 'fan', pill: !any ? null : t.valid ? { cls: 'ok', text: 'Valid win' } : { cls: 'bad', text: MP.min + ' fan needed' }, pay: pay, clear: any ? 'data-mp="reset"' : '',
+      tags: t.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p, rm: c.id }; }), rmAttr: 'data-mp="rm" data-id' });
+    $t('mpUse').disabled = !any; return;
+  }
+  $t('mpSum').innerHTML = ''; $t('mpSum').hidden = true;
   $t('mpUse').disabled = !HR.total(MP.sel, MP.min).fan;
 }
 function hkDrawTiers() {
   var an = HR.analyze(MP.sel, MP.by);
   var h = HR.GROUPS.map(function (g, gi) {
     var list = HR.FANS.filter(function (f) { return f.grp === gi; });
-    var picked = list.filter(function (f) { return MP.sel[f.id] > 0; }).length, open = MP.open['g' + gi] !== undefined ? MP.open['g' + gi] : picked > 0;
+    var picked = list.filter(function (f) { return MP.sel[f.id] > 0; }).length, open = MP.open['g' + gi] !== undefined ? MP.open['g' + gi] : (window.PP2 || picked > 0);
     return '<details class="pattier" data-tier="g' + gi + '"' + (open ? ' open' : '') + '><summary><span>' + g + '</span>' + (picked ? '<span class="pn">' + picked + ' picked</span>' : '') + '</summary><div class="chips">'
       + list.map(function (f) {
         var n = MP.sel[f.id] || 0, off = n === 0 && (an.locked[f.id] || an.max[f.id] === 0), why = an.locked[f.id] || '';
@@ -5342,6 +5645,7 @@ function hkDrawTiers() {
   $t('mpTiers').innerHTML = '<div class="patbox hkbox">' + h + '</div>';
 }
 function hkDrawTotal() {
+  if (window.PP2) { $t('mpFl').innerHTML = ''; return; }
   var t = HR.total(MP.sel, MP.min, MP.full), h = 'Faan total <b>' + t.fan + '</b> faan';
   h += '<div class="pkrow"><b class="cnt">Counted:</b> ' + (t.counted.length ? t.counted.map(function (c) { return tesc(c.label) + ' +' + c.p + (c.count > 1 ? ' (\u00d7' + c.count + ')' : ''); }).join(', ') : 'nothing picked yet') + '</div>';
   if (t.fan) h += t.valid
@@ -5355,7 +5659,7 @@ window.openHkPatternModal = function (onUse, restoreState, opts) {
   var by = opts.by === 'zimo' ? 'zimo' : 'hu', start = restoreState && restoreState.hk && restoreState.sel ? restoreState.sel : (by === 'zimo' ? { SelfPick: 1 } : {});
   MP = { R: HR, hk: true, full: !!opts.full, by: by, sel: HR.sanitize(start, by), q: '', open: {}, min: opts.min || 0, onUse: onUse, onCancel: opts.onCancel || null, tt: 0 };
   $t('mpTitle').textContent = 'Pick patterns';
-  var nt = $t('mpNote'); nt.textContent = by === 'zimo' ? 'Zi Mo: Self-Pick is already in.' : ''; nt.hidden = by !== 'zimo'; $t('mpSearch').value = '';
+  var nt = $t('mpNote'); nt.textContent = opts.note || (by === 'zimo' && !(restoreState && restoreState.sel) ? 'Zi Mo: Self-Pick is already in.' : ''); nt.hidden = !nt.textContent; $t('mpSearch').value = '';
   mpDraw(); $t('mcrPatModal').hidden = false; $t('mpBody').scrollTop = 0;
 };
 

@@ -1689,3 +1689,32 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 **Database:** tidak ada perubahan. Tidak perlu Console D1.
 **Berkas baru:** `functions/_middleware.js`.
 **Berkas yang berubah:** `scoreboard.html`, `index.html`, `leaderboard.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-events.html`, `admin-daily.html`, `functions/_scoring.js`, `functions/_tables.js`, `functions/_events.js`, `functions/_eventsadmin.js`, `functions/api/names.js`, dan catatan ini.
+
+## Update terbaru (v82): Pick Tiles HK, jendela Pick Patterns baru, dan perbaikan
+
+**Perbaikan bug (penting)**
+- Scoreboard error saat dibuka ulang atau di-refresh kalau ada game HK Classic yang tersimpan. Sudah diperbaiki: aturan HK sekarang dimuat sebelum scoreboard berjalan.
+- Leaderboard: juara 1 sampai 3 sempat mendapat lapisan warna dobel (tepi kiri terlihat seperti kotak). Sekarang kembali satu lapisan.
+
+**Pick Tiles untuk HK Classic (Half Spicy dan Full Spicy)**
+- Pilih tile tangan, meld, tile kemenangan, bunga dan kondisi menang. Alat ini menyarankan fan tertinggi dan nilai bayarnya, lalu membuka Pick Patterns untuk dicek.
+- Kondisi menang menyesuaikan: Hu (Last tile, Robbing the kong, Blessing of Earth) dan Zi Mo (Last tile, Kong replacement, Double kong replacement, Blessing of Heaven untuk dealer, Blessing of Man untuk non-dealer).
+- Di bawah 3 fan muncul "Invalid win" dengan tombol untuk mencatatnya sebagai Invalid win.
+
+**Aturan HK Classic yang ditambahkan atau diubah**
+- Seven Pairs sah, 4 fan. Pasangannya boleh sama (empat tile sama = dua pasang). Seven Pairs sudah concealed, jadi Concealed Hand tidak ditambahkan.
+- Satu set lengkap bunga atau musim (2 fan) menggantikan seat flower di set itu. Fan bunga paling banyak 3 di luar Seven/Eight Flowers.
+- Seven Flowers (3) dan Eight Flowers (8): menang dengan bunga ke-7/ke-8 hanya menghitung fan itu, walaupun tangannya belum lengkap, dan dicatat sebagai Zi Mo.
+- All Concealed Triplets: tile kemenangan harus melengkapi pasangan.
+
+**Ganti jenis kejadian tanpa mengulang (semua mode)**
+- Mengganti Hu, Zi Mo, Double/Triple Hu, Invalid atau False win tidak lagi menghapus pilihan: pemenang, pembuang dan pilihan tetap tersimpan. Tile dari Pick Tiles tetap tersimpan; buka Pick Tiles dan tap Check patterns untuk menghitung ulang.
+
+**Jendela Pick Patterns baru (semua mode)**
+- Ringkasan menempel di atas: total, status (Valid win atau "x needed"), nilai bayar, pattern yang dipilih sebagai tag dengan × untuk menghapus, dan tombol Clear.
+- TBT dan HK: semua grup langsung terbuka. TBT: chip yang terkunci memberi alasan saat di-tap.
+- TBT dan MCR: minimum hanya dari pattern. Bunga dan win condition ditampilkan sebagai bonus, dalam kurung selama tangan belum sah. Di HK, bunga ikut minimum.
+- MCR: pencarian dan grup yang bisa dibuka-tutup tetap ada; bunga muncul sebagai tag.
+
+**Database:** tidak ada perubahan. Tidak perlu Console D1.
+**Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `index.html`, `events.html`, dan catatan ini.

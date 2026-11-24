@@ -286,10 +286,6 @@ a{color:inherit}
 :root{--pg:#2D6A4F;--pr:#B72323;--pl:#2F5D9E;--po:#7A5C14;--poc:#B8912E;--pp:#7A4B8C}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#8FD0AE;--pr:#EA8888;--pl:#9DB9EC;--po:#E0C171;--poc:#E0C171;--pp:#CDA8E0}}
 [data-t]{--tc:var(--pg)}[data-t="cls"]{--tc:var(--pl)}[data-t="tour"]{--tc:var(--po)}[data-t="other"]{--tc:var(--pp)}
-/* the top rows fade in their gem colour */
-.row.m.r1{background:linear-gradient(90deg,color-mix(in srgb,var(--pl) 12%,transparent),transparent 75%)}
-.row.m.r2{background:linear-gradient(90deg,color-mix(in srgb,var(--pr) 10%,transparent),transparent 75%)}
-.row.m.r3{background:linear-gradient(90deg,color-mix(in srgb,var(--pg) 12%,transparent),transparent 75%)}
 /* number boxes: a light tint each, the number in the full colour */
 .n-strip>div:nth-child(1){background:color-mix(in srgb,var(--pg) 11%,var(--surface))}.n-strip>div:nth-child(1) b{color:var(--pg)}
 .n-strip>div:nth-child(2){background:color-mix(in srgb,var(--pl) 10%,var(--surface))}.n-strip>div:nth-child(2) b{color:var(--pl)}
