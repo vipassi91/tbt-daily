@@ -9,6 +9,7 @@
 <meta name="referrer" content="no-referrer">
 <title>TBT Admin &middot; Ruleset</title>
 <script src="/assets/js/rules.js"></script>
+<script src="/assets/js/patterns.js"></script>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -227,6 +228,29 @@ main.rs .wrap,.rs-wrap{max-width:1120px}
   .rs-fam{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rs-fam .rs-fh{width:100%;margin:8px 0 0}
   .rs-sm,.rs-add{width:auto;margin:0;padding:6px 12px;border-radius:999px;font-size:13px}
 }
+/* Patterns tab */
+.rs-pt{width:100%;border-collapse:collapse;font-size:13px}
+.rs-pt th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px;border-bottom:1px solid var(--line)}
+.rs-pt td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.rs-pt input[type=number]{font:inherit;font-size:14px;width:62px;padding:5px 6px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:8px}
+.rs-pt .gh td{background:var(--field);font-weight:700;font-size:12px;letter-spacing:.04em}
+.rs-pt tr.off td:not(:first-child){opacity:.45}
+.rs-pt .rs-sw{transform:scale(.8)}
+.rs-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--field);border:1px solid var(--line);margin:1px 2px 1px 0;white-space:nowrap}
+.rs-chip button{border:0;background:transparent;padding:0 0 0 2px;font-size:13px;line-height:1;color:var(--muted)}
+.rs-det{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}.rs-det.auto{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}.rs-det.man{background:color-mix(in srgb,#B8912E 18%,transparent);color:#7A5C14}
+.rs-ptbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:12px 0 10px}
+.rs-ptbar input{font:inherit;font-size:14px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;flex:1 1 180px;max-width:260px}
+.rs-ib{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;padding:4px 6px;text-decoration:underline}
+.rs-ovl{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.rs-sheet{background:var(--surface);width:100%;max-width:640px;max-height:88vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column}
+@media (min-width:700px){.rs-ovl{align-items:center}.rs-sheet{border-radius:20px}}
+.rs-sheet .sh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}.rs-sheet .sh h3{flex:1;margin:0}
+.rs-sheet .sb{padding:6px 18px 14px;overflow:auto}.rs-sheet .sf{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.rs-lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+.rs-lib label{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}.rs-lib label span{margin-left:auto;color:var(--muted)}.rs-lib label.has{opacity:.5}
+.rs-lib h4{grid-column:1/-1;margin:8px 0 0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:620px){.rs-pt .c-rep,.rs-pt .c-max,.rs-pt .c-det{display:none}.rs-pt input[type=number]{width:52px}.rs-pt td,.rs-pt th{padding:6px 4px}.rs-pt select{max-width:96px}}
 @media (max-width:620px){.rs-row{grid-template-columns:minmax(0,1fr);gap:6px}.rs-calc b{font-size:18px}}
 </style>
 </head>
@@ -270,14 +294,14 @@ function load(keep){
 }
 function isBuiltin(id){return (D.builtin||[]).some(function(b){return b.id===id;});}
 function cur(id){var l=D.versions[id];return l?l[l.length-1]:null;}
-function select(id){var r=cur(id);if(!r)return;S.sel=id;S.isNew=false;S.draft=strip(copy(r));S.base=copy(S.draft);S.note='';}
+function select(id){var r=cur(id);if(!r)return;S.cus=null;S.lib=null;S.pq='';S.sel=id;S.isNew=false;S.draft=strip(copy(r));S.base=copy(S.draft);S.note='';}
 function strip(r){delete r.v;delete r.id;return r;}
 function famName(f){var x=(D.families||[]).filter(function(F){return F.id===f;})[0];return x?x.name:f;}
 function usageOf(id){var u=(D.usage||{})[id]||{open:0,v:{}};return u;}
 function tablesOn(id,v){var u=usageOf(id);return u.v[v]||0;}
 
 /* ---- the editor ---- */
-var TABS=[['general','General'],['pay','Payouts'],['dealer','Dealer'],['pen','Penalties and draw'],['ver','Versions']];
+var TABS=[['general','General'],['pay','Payouts'],['pat','Patterns'],['dealer','Dealer'],['pen','Penalties and draw'],['ver','Versions']];
 function sw(path,label){var v=get(path);return '<span class="rs-lab"><button type="button" class="rs-sw" role="switch" data-sw="'+path+'" aria-checked="'+!!v+'" aria-label="'+esc(label||path)+'"></button>'+(label?esc(label):'')+'</span>';}
 function seg(path,items){var v=get(path);return '<div class="rs-seg">'+items.map(function(it){return '<button type="button" data-seg="'+path+'" data-v="'+esc(JSON.stringify(it[0]))+'" aria-pressed="'+same(v,it[0])+'">'+esc(it[1])+'</button>';}).join('')+'</div>';}
 function numIn(path,opt){opt=opt||{};return '<input type="number" data-num="'+path+'" value="'+esc(get(path))+'"'+(opt.step?' step="'+opt.step+'"':'')+(opt.min!=null?' min="'+opt.min+'"':'')+' aria-label="'+esc(opt.label||path)+'">';}
@@ -333,6 +357,85 @@ function verTab(){
     return '<div><b>v'+r.v+'</b><span>'+esc(at)+(n&&n.note?' · '+esc(n.note):'')+'</span><span class="m">'+(i===0?'current · ':'')+tablesOn(id,r.v)+' table'+(tablesOn(id,r.v)===1?'':'s')+'</span>'+(i>0?'<button type="button" class="btn sm" data-restore="'+r.v+'">Use these settings</button>':'')+'</div>';}).join('')+'</div>'
    +'<p class="rs-note">A table keeps the version of its first hand, so its scores never change afterwards. “Use these settings” copies an old version into the editor; saving makes it the next version.'+(usageOf(id).open?' '+usageOf(id).open+' table'+(usageOf(id).open===1?' has':'s have')+' no hand yet and will use the version that is current when its first hand is recorded.':'')+'</p>';
 }
+/* ---- Patterns: points, how often, on or off, Hu or Zi Mo only (HK), and custom patterns. Only changes from the built-in list are stored. ---- */
+var CAT=window.TBT_PATTERNS||{tbt:{list:[]},hk:{list:[]},mcr:{list:[]}};
+var TBT_GRP={b:'Beginner',a:'Apprentice',e:'Expert',m:'Master',l:'Legendary (limit)',flo:'Flower / season bonus',win:'Win bonus'};
+var FAM_LIB={tbt:'TBT',hk:'HK Classic',mcr:'MCR'};
+function catList(pk){return (CAT[pk||S.draft.picker]||{list:[]}).list;}
+function grpName(pk,g){if(pk==='tbt')return TBT_GRP[g]||g;if(pk==='hk')return (CAT.hk.groups||[])[g]||'Special hands';return g+' point'+(g===1?'':'s');}
+function grpChoices(){var pk=S.draft.picker;if(pk==='tbt')return ['b','a','e','m','l'].map(function(k){return [k,TBT_GRP[k]];});if(pk==='hk')return (CAT.hk.groups||[]).map(function(n,i){return [String(i),n];}).filter(function(x){return x[1]!=='Flowers and seasons';});return [];}
+function P(){return S.draft.patterns||{set:{},custom:[]};}
+function putP(p){var empty=!Object.keys(p.set||{}).length&&!(p.custom||[]).length;S.draft.patterns=empty?null:p;}
+function ov(id){return (P().set||{})[id]||{};}
+function setOv(id,k,v){
+  var p=copy(P());p.set=p.set||{};p.custom=p.custom||[];var b=catList().filter(function(x){return x.id===id;})[0]||{},o=p.set[id]||{};
+  var dflt=k==='pts'?b.pts:k==='max'?b.max:k==='win'?(b.win||'both'):false;
+  if(v===dflt||v==null||v==='')delete o[k];else o[k]=v;
+  if(Object.keys(o).length)p.set[id]=o;else delete p.set[id];putP(p);
+}
+function nameOf(id){var x=catList().filter(function(f){return f.id===id;})[0]||(P().custom||[]).filter(function(c){return c.id===id;})[0];return x?x.name:String(id).replace(/^p:/,'');}
+function winWord(w){return w==='zimo'?'Zi Mo only':w==='hu'?'Hu only':'Both';}
+function patTab(){
+  var d=S.draft,pk=d.picker,hk=pk==='hk',L=catList(),q=(S.pq||'').toLowerCase(),u=d.unit==='fan'?'Fan':'Points',cus=P().custom||[],groups=[],by={};
+  L.forEach(function(f){var k=String(f.grp);if(!by[k]){by[k]=[];groups.push(k);}by[k].push(f);});
+  var cols=hk?7:6,head='<tr><th>On</th><th>Pattern</th><th>'+u+'</th><th class="c-max">Max</th><th class="c-rep">Replaces</th>'+(hk?'<th>Win</th>':'')+'<th class="c-det">Pick Tiles</th></tr>';
+  var offN=0,chN=0;Object.keys(P().set||{}).forEach(function(id){var o=P().set[id];if(o.off)offN++;else chN++;});
+  var rows=groups.map(function(g){
+    var fs=by[g].filter(function(f){return !q||f.name.toLowerCase().indexOf(q)>=0;});if(!fs.length)return '';
+    return '<tr class="gh"><td colspan="'+cols+'">'+esc(grpName(pk,pk==='hk'?+g:pk==='mcr'?+g:g))+'</td></tr>'+fs.map(function(f){
+      var o=ov(f.id),on=!o.off,pts=o.pts!=null?o.pts:f.pts,mx=o.max!=null?o.max:f.max,w=o.win||f.win||'both',ch=o.pts!=null||o.max!=null||o.win!=null;
+      return '<tr'+(on?'':' class="off"')+'><td><button type="button" class="rs-sw" role="switch" data-poff="'+esc(f.id)+'" aria-checked="'+on+'" aria-label="'+esc(f.name)+' on"></button></td>'
+       +'<td><b style="font-weight:'+(ch?700:500)+'">'+esc(f.name)+'</b>'+(ch?' <button type="button" class="rs-ib" data-preset="'+esc(f.id)+'" title="Back to '+f.pts+'">reset</button>':'')+'</td>'
+       +'<td><input type="number" min="0" data-pnum="'+esc(f.id)+'|pts" value="'+pts+'" aria-label="'+esc(f.name)+' '+u+'"></td>'
+       +'<td class="c-max">'+(f.fixed?'<span class="meta">1</span>':'<input type="number" min="1" max="20" data-pnum="'+esc(f.id)+'|max" value="'+mx+'" style="width:48px" aria-label="'+esc(f.name)+' max">')+'</td>'
+       +'<td class="c-rep">'+((f.repl||[]).length?f.repl.slice(0,4).map(function(r){return '<span class="rs-chip">'+esc(nameOf(r))+'</span>';}).join('')+(f.repl.length>4?'<span class="rs-chip" title="'+esc(f.repl.slice(4).map(nameOf).join(', '))+'">+'+(f.repl.length-4)+' more</span>':''):'<span class="meta">–</span>')+'</td>'
+       +(hk?'<td><select data-pwin="'+esc(f.id)+'" style="font:inherit;font-size:12px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:4px">'+[['both','Both'],['zimo','Zi Mo only'],['hu','Hu only']].map(function(x){return '<option value="'+x[0]+'"'+(w===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></td>':'')
+       +'<td class="c-det"><span class="rs-det auto">Auto</span></td></tr>';}).join('');}).join('');
+  var crow=cus.filter(function(c){return !q||c.name.toLowerCase().indexOf(q)>=0;}).map(function(c){var i=cus.indexOf(c);
+    return '<tr><td></td><td><b style="font-weight:500">'+esc(c.name)+'</b>'+(pk!=='mcr'&&c.grp!==''?'<div class="meta" style="font-size:11px">'+esc(grpName(pk,pk==='hk'?+c.grp:c.grp))+(c.from?' · from '+esc(FAM_LIB[c.from.split(':')[0]]||''):'')+'</div>':c.from?'<div class="meta" style="font-size:11px">from '+esc(FAM_LIB[c.from.split(':')[0]]||'')+'</div>':'')+'<div><button type="button" class="rs-ib" style="padding-left:0" data-cedit="'+i+'">Edit</button><button type="button" class="rs-ib" data-cdel="'+i+'">Remove</button></div></td><td>'+c.pts+'</td><td class="c-max">'+c.max+'</td>'
+     +'<td class="c-rep">'+(c.repl.length||c.excl.length?c.repl.map(function(r){return '<span class="rs-chip">'+esc(nameOf(r))+'</span>';}).join('')+c.excl.map(function(r){return '<span class="rs-chip" title="Does not go with">≠ '+esc(nameOf(r))+'</span>';}).join(''):'<span class="meta">–</span>')+'</td>'
+     +(hk?'<td style="font-size:12px;color:var(--muted)">'+winWord(c.win)+'</td>':'')
+     +'<td class="c-det"><span class="rs-det man">By hand</span></td></tr>';}).join('');
+  return '<p class="rs-note" style="margin:10px 0 0">'+u+' of each pattern in this sub-mode. A pattern switched off is not offered in Pick Patterns and Pick Tiles leaves it out. <b>Auto</b> = Pick Tiles finds it from the tiles.'+(offN||chN||cus.length?' Now: '+[chN?chN+' changed':'',offN?offN+' off':'',cus.length?cus.length+' custom':''].filter(Boolean).join(', ')+'.':'')+'</p>'
+   +'<div class="rs-ptbar"><input type="search" id="pq" placeholder="Search patterns" value="'+esc(S.pq||'')+'"><span style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-x="lib">+ From library</button><button type="button" class="btn sm" data-x="cus">+ Custom pattern</button></span></div>'
+   +'<div style="overflow-x:auto"><table class="rs-pt"><thead>'+head+'</thead><tbody>'+rows+(crow?'<tr class="gh"><td colspan="'+cols+'">Custom</td></tr>'+crow:'')+'</tbody></table></div>';
+}
+/* the custom pattern sheet */
+function newCus(){var pk=S.draft.picker;return {id:'c:'+Date.now().toString(36),name:'',pts:pk==='hk'?3:pk==='mcr'?8:2,max:1,grp:pk==='tbt'?'a':pk==='hk'?String((CAT.hk.groups||[]).length-1):'',repl:[],excl:[],win:'both',from:''};}
+function refOptions(skip){
+  var pk=S.draft.picker,l=catList().filter(function(f){return pk!=='tbt'||/^p:/.test(f.id);}).map(function(f){return [f.id,f.name];});
+  if(pk!=='tbt')(P().custom||[]).forEach(function(c){if(c.id!==S.cus.c.id)l.push([c.id,c.name]);});
+  return l.filter(function(x){return skip.indexOf(x[0])<0;});
+}
+function chipsEdit(k){var c=S.cus.c,opts=refOptions(c.repl.concat(c.excl));
+  return c[k].map(function(id){return '<span class="rs-chip">'+esc(nameOf(id))+'<button type="button" data-crm="'+k+'|'+esc(id)+'" aria-label="Remove">×</button></span>';}).join('')
+   +'<select data-cadd="'+k+'" style="font:inherit;font-size:13px;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;max-width:220px"><option value="">+ Add</option>'+opts.map(function(x){return '<option value="'+esc(x[0])+'">'+esc(x[1])+'</option>';}).join('')+'</select>';}
+function cusSheet(){
+  var c=S.cus.c,pk=S.draft.picker,u=S.draft.unit==='fan'?'Fan':'Points',gc=grpChoices(),dup=c.name.trim()&&(P().custom||[]).some(function(x,i){return i!==S.cus.i&&x.name.toLowerCase()===c.name.trim().toLowerCase();})||catList().some(function(f){return f.name.toLowerCase()===c.name.trim().toLowerCase();});
+  var ok=c.name.trim()&&!dup;
+  return '<div class="rs-ovl" data-ovl="1"><div class="rs-sheet" role="dialog" aria-label="Custom pattern"><div class="sh"><h3>'+(S.cus.i<0?'Custom pattern':'Edit custom pattern')+'</h3><button type="button" class="btn sm" data-x="closeSheet">Close</button></div><div class="sb">'
+   +row('Name','As players will see it','<input type="text" data-cf="name" maxlength="40" value="'+esc(c.name)+'">'+(dup?'<span class="err" style="width:100%">A pattern with this name already exists.</span>':''))
+   +row(u,'','<input type="number" min="0" data-cf="pts" value="'+c.pts+'"> counts up to <input type="number" min="1" max="20" data-cf="max" value="'+c.max+'" style="width:60px"> time'+(c.max==1?'':'s')+' in one hand')
+   +(gc.length?row('Group','Where it shows in Pick Patterns','<select data-cf="grp" style="font:inherit;font-size:15px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px">'+gc.map(function(x){return '<option value="'+x[0]+'"'+(String(c.grp)===x[0]?' selected':'')+'>'+esc(x[1])+'</option>';}).join('')+'</select>'):row('Group','In Pick Patterns it shows with the other patterns of the same points','<b style="font-weight:500">'+c.pts+' point'+(c.pts==1?'':'s')+'</b>'))
+   +row('Replaces','Picking this removes these, and they cannot be added beside it',chipsEdit('repl'))
+   +row('Does not go with','These cannot be picked together with it',chipsEdit('excl'))
+   +(pk==='hk'?row('Win','',[['both','Hu or Zi Mo'],['zimo','Zi Mo only'],['hu','Hu only']].map(function(x){return '<button type="button" class="btn sm" data-cwin="'+x[0]+'" aria-pressed="'+(c.win===x[0])+'" style="'+(c.win===x[0]?'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)':'')+'">'+x[1]+'</button>';}).join('')):'')
+   +'<div class="rs-banner" style="margin:12px 0 0">Pick Tiles cannot recognise a custom pattern from the tiles. Players pick it by hand in Pick Patterns, also after Pick Tiles.</div>'
+   +'</div><div class="sf"><button type="button" class="btn" data-x="closeSheet">Cancel</button><button type="button" class="btn primary" data-x="cusOk"'+(ok?'':' disabled')+'>'+(S.cus.i<0?'Add pattern':'Done')+'</button></div></div></div>';
+}
+/* the library sheet: patterns of the other families, added as custom patterns */
+function libSheet(){
+  var pk=S.draft.picker,src=S.lib.src,q=(S.lib.q||'').toLowerCase(),have={};catList().concat(P().custom||[]).forEach(function(x){have[x.name.toLowerCase()]=1;});
+  var L=catList(src).filter(function(f){return !q||f.name.toLowerCase().indexOf(q)>=0;}),groups=[],by={};
+  L.forEach(function(f){var k=String(f.grp);if(!by[k]){by[k]=[];groups.push(k);}by[k].push(f);});
+  var n=Object.keys(S.lib.pick).length;
+  return '<div class="rs-ovl" data-ovl="1"><div class="rs-sheet" role="dialog" aria-label="Library"><div class="sh"><h3>Add patterns from the library</h3><button type="button" class="btn sm" data-x="closeSheet">Close</button></div><div class="sb">'
+   +'<div class="rs-ptbar" style="margin-top:8px"><div class="rs-seg">'+['tbt','hk','mcr'].filter(function(f){return f!==pk;}).map(function(f){return '<button type="button" data-libsrc="'+f+'" aria-pressed="'+(src===f)+'">'+FAM_LIB[f]+'</button>';}).join('')+'</div><input type="search" id="lq" placeholder="Search" value="'+esc(S.lib.q||'')+'"></div>'
+   +'<div class="rs-lib">'+groups.map(function(g){return '<h4>'+esc(grpName(src,src==='tbt'?g:+g))+'</h4>'+by[g].map(function(f){var h=have[f.name.toLowerCase()];return '<label'+(h?' class="has" title="Already in this sub-mode"':'')+'><input type="checkbox" data-lib="'+esc(f.id)+'"'+(S.lib.pick[src+':'+f.id]?' checked':'')+(h?' disabled':'')+'>'+esc(f.name)+'<span>'+f.pts+'</span></label>';}).join('');}).join('')+'</div>'
+   +'<p class="rs-note">Each one is added as a custom pattern with the '+(src==='hk'?'fan':'points')+' of its family: check the '+(S.draft.unit==='fan'?'fan':'points')+' after adding. Pick Tiles of this family does not recognise them, so players pick them by hand.</p>'
+   +'</div><div class="sf"><button type="button" class="btn" data-x="closeSheet">Cancel</button><button type="button" class="btn primary" data-x="libOk"'+(n?'':' disabled')+'>Add '+n+' pattern'+(n===1?'':'s')+'</button></div></div></div>';
+}
+function sheetHtml(){return S.cus?cusSheet():S.lib?libSheet():'';}
 /* try a hand with the settings on screen, before they are saved */
 function calcHtml(){
   var c=S.calc,cl=TBTRules.clean(S.draft),rs=cl.rules;rs.id=S.sel||'new';
@@ -372,7 +475,7 @@ function render(){
   if(!D){app.innerHTML=top+'<main><div class="wrap rs-wrap"><div class="empty">'+(loadError||'Loading…')+'</div></div></main>';return;}
   var d=S.draft,dirty=S.isNew||!same(d,S.base),r=S.isNew?null:cur(S.sel),body;
   S.draft.hidden_inv=!d.hidden;
-  body=S.tab==='general'?generalTab():S.tab==='pay'?payTab():S.tab==='dealer'?dealerTab():S.tab==='pen'?penTab():verTab();
+  body=S.tab==='general'?generalTab():S.tab==='pay'?payTab():S.tab==='pat'?patTab():S.tab==='dealer'?dealerTab():S.tab==='pen'?penTab():verTab();
   delete S.draft.hidden_inv;
   var nextV=S.isNew?1:r.v+1,cl=TBTRules.clean(d),changes=S.isNew?'':Object.keys(d).filter(function(k){return !same(d[k],S.base[k]);});
   app.innerHTML=top+'<main><div class="wrap rs-wrap"><h2>Ruleset</h2><p class="meta" style="margin:6px 0 18px;max-width:72ch">Every scoring mode the scoreboard offers, and how it pays. Saving makes a new version: tables that already have a hand keep the version they started with, new tables use the new one. The scoreboard picks up a saved version within a minute.</p>'
@@ -386,12 +489,13 @@ function render(){
    +(S.tab!=='ver'?'<div class="rs-foot"><span class="meta">'+(cl.errors.length?'<span class="err">'+esc(cl.errors.join('. '))+'</span>':dirty?(S.isNew?'New sub-mode':'Changed: '+changes.map(labelOf).join(', ')):'No changes')+'</span>'
      +'<input type="text" data-note="1" maxlength="200" placeholder="Note for this version (optional)" value="'+esc(S.note)+'" style="font:inherit;font-size:14px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;flex:1 1 220px;max-width:320px"'+(dirty?'':' hidden')+'>'
      +'<button type="button" class="btn" data-x="discard"'+(dirty&&!busy?'':' disabled')+'>Discard</button><button type="button" class="btn primary" data-x="save"'+(dirty&&!busy&&!cl.errors.length?'':' disabled')+'>'+(busy?'Saving…':S.isNew?'Create sub-mode':'Save as version '+nextV)+'</button></div>':'')
-   +'</div>'+(S.tab!=='ver'?calcHtml():'')+'</div></div></div></main>';
+   +'</div>'+(S.tab!=='ver'&&S.tab!=='pat'?calcHtml():'')+'</div></div></div></main>'+sheetHtml();
+  document.body.style.overflow=S.cus||S.lib?'hidden':'';
 }
-var LABELS={name:'Name',short:'Short label',hidden:'Shown in',events:'Event sessions',order:'Order',help:'Explanation',unit:'Counted in',pay:'Payout table',table:'Payout table',limit:'Limit',min:'Minimum',flowersMin:'Flowers count',base:'Base point',baseHost:'Base per table',hu:'Hu',zimo:'Zi Mo',multi:'More than one winner',dealerMult:'Dealer pays',streak:'Dealer streak',stayDraw:'Dealer stays',stayPen:'Dealer stays',seat:'Seat rotation',seatDefault:'Seat rotation',start:'Starting score',startDefault:'Starting score',hostSets:'Host sets the rules',deadwall:'Deadwall',pen:'Penalties',draw:'Draw'};
+var LABELS={name:'Name',short:'Short label',hidden:'Shown in',events:'Event sessions',order:'Order',help:'Explanation',unit:'Counted in',pay:'Payout table',table:'Payout table',limit:'Limit',min:'Minimum',flowersMin:'Flowers count',base:'Base point',baseHost:'Base per table',hu:'Hu',zimo:'Zi Mo',multi:'More than one winner',dealerMult:'Dealer pays',streak:'Dealer streak',stayDraw:'Dealer stays',stayPen:'Dealer stays',seat:'Seat rotation',seatDefault:'Seat rotation',start:'Starting score',startDefault:'Starting score',hostSets:'Host sets the rules',deadwall:'Deadwall',pen:'Penalties',draw:'Draw',patterns:'Patterns'};
 function labelOf(k){return LABELS[k]||k;}
 /* ---- typing and tapping ---- */
-function redrawKeep(sel){var a=document.activeElement,k=a&&(a.dataset.num||a.dataset.txt||a.dataset.tbl||(a.id==='cN'?'cN':'')),pos=a&&a.selectionStart;render();if(!k)return;var n=document.querySelector(a.dataset.num?'[data-num="'+k+'"]':a.dataset.txt?'[data-txt="'+k+'"]':a.dataset.tbl?'[data-tbl="'+k+'"]':'#cN');if(n){n.focus();try{if(pos!=null&&n.type!=='number')n.setSelectionRange(pos,pos);}catch(e){}}}
+function redrawKeep(sel){var a=document.activeElement,attr=a&&['num','txt','tbl','pnum','cf'].filter(function(x){return a.dataset[x]!=null;})[0],k=attr?a.dataset[attr]:a&&(a.id==='cN'||a.id==='pq'||a.id==='lq')?a.id:'',pos=a&&a.selectionStart;render();if(!k)return;var n=attr?document.querySelector('[data-'+attr+'="'+k.replace(/"/g,'\\"')+'"]'):document.getElementById(k);if(n){n.focus();try{if(pos!=null&&n.type!=='number')n.setSelectionRange(pos,pos);}catch(e){}}}
 document.addEventListener('input',function(e){
   var t=e.target;if(!S.draft)return;
   if(t.dataset.num){var v=t.value===''?'':parseFloat(t.value);set(t.dataset.num,v===''||isNaN(v)?0:v);redrawKeep();}
@@ -399,9 +503,38 @@ document.addEventListener('input',function(e){
   else if(t.dataset.tbl){var tb=(S.draft.table||[]).slice();tb[+t.dataset.tbl]=t.value===''?0:parseFloat(t.value)||0;S.draft.table=tb;redrawKeep();}
   else if(t.id==='cN'){S.calc.n=parseFloat(t.value)||0;redrawKeep();}
   else if(t.dataset.note){S.note=t.value;}
+  else if(t.dataset.pnum){var a=t.dataset.pnum.split('|'),v2=t.value===''?null:parseFloat(t.value);if(v2!=null&&!isNaN(v2))setOv(a[0],a[1],a[1]==='max'?Math.max(1,Math.round(v2)):v2);redrawKeep();}
+  else if(t.dataset.cf&&t.tagName!=='SELECT'){var c=S.cus.c;c[t.dataset.cf]=t.dataset.cf==='name'?t.value:(parseFloat(t.value)||0);redrawKeep();}
+  else if(t.id==='pq'){S.pq=t.value;redrawKeep();}
+  else if(t.id==='lq'){S.lib.q=t.value;redrawKeep();}
 });
+document.addEventListener('change',function(e){
+  var t=e.target;if(!S.draft)return;
+  if(t.dataset.pwin){setOv(t.dataset.pwin,'win',t.value);render();}
+  else if(t.dataset.cf&&t.tagName==='SELECT'){S.cus.c[t.dataset.cf]=t.value;render();}
+  else if(t.dataset.cadd&&t.value){var c=S.cus.c,k=t.dataset.cadd;c[k]=c[k].concat([t.value]);render();}
+  else if(t.dataset.lib){var key=S.lib.src+':'+t.dataset.lib;if(t.checked)S.lib.pick[key]=1;else delete S.lib.pick[key];render();}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&(S.cus||S.lib)){S.cus=null;S.lib=null;render();}});
 document.addEventListener('click',function(e){
+  if(e.target.dataset&&e.target.dataset.ovl){S.cus=null;S.lib=null;render();return;}
   var b=e.target.closest&&e.target.closest('button');if(!b||!D)return;var ds=b.dataset;
+  if(ds.poff){setOv(ds.poff,'off',!ov(ds.poff).off);render();return;}
+  if(ds.preset){var p0=copy(P());p0.set=p0.set||{};var keep=p0.set[ds.preset]&&p0.set[ds.preset].off;delete p0.set[ds.preset];if(keep)p0.set[ds.preset]={off:true};putP(p0);render();return;}
+  if(ds.x==='cus'){S.cus={i:-1,c:newCus()};render();var n0=document.querySelector('[data-cf="name"]');if(n0)n0.focus();return;}
+  if(ds.cedit){S.cus={i:+ds.cedit,c:copy(P().custom[+ds.cedit])};render();return;}
+  if(ds.cdel){var c0=P().custom[+ds.cdel];if(!confirm('Remove '+c0.name+'?'))return;var p1=copy(P());p1.custom.splice(+ds.cdel,1);p1.custom.forEach(function(c){c.repl=c.repl.filter(function(x){return x!==c0.id;});c.excl=c.excl.filter(function(x){return x!==c0.id;});});putP(p1);render();return;}
+  if(ds.crm){var a=ds.crm.split('|'),k=a.shift(),id=a.join('|');S.cus.c[k]=S.cus.c[k].filter(function(x){return x!==id;});render();return;}
+  if(ds.cwin){S.cus.c.win=ds.cwin;render();return;}
+  if(ds.x==='cusOk'){var c1=S.cus.c,p2=copy(P());p2.set=p2.set||{};p2.custom=p2.custom||[];c1.name=c1.name.trim();c1.pts=Math.max(0,+c1.pts||0);c1.max=Math.min(20,Math.max(1,Math.round(+c1.max||1)));if(S.cus.i<0)p2.custom.push(c1);else p2.custom[S.cus.i]=c1;putP(p2);S.cus=null;render();toast(c1.name+' is in the list. Save to use it.');return;}
+  if(ds.x==='lib'){var others=['tbt','hk','mcr'].filter(function(f){return f!==S.draft.picker;});S.lib={src:others[0],q:'',pick:{}};render();return;}
+  if(ds.libsrc){S.lib.src=ds.libsrc;render();return;}
+  if(ds.x==='libOk'){var p3=copy(P());p3.set=p3.set||{};p3.custom=p3.custom||[];var nc=newCus(),added=0;
+    Object.keys(S.lib.pick).forEach(function(key,j){var src=key.split(':')[0],fid=key.slice(src.length+1),f=catList(src).filter(function(x){return x.id===fid;})[0];if(!f)return;
+      if(p3.custom.some(function(c){return c.name.toLowerCase()===f.name.toLowerCase();}))return;
+      p3.custom.push({id:nc.id+j,name:f.name,pts:f.pts,max:f.max||1,grp:nc.grp,repl:[],excl:[],win:src==='hk'&&S.draft.picker==='hk'?(f.win||'both'):'both',from:src+':'+fid});added++;});
+    putP(p3);S.lib=null;render();toast(added+' pattern'+(added===1?'':'s')+' added. Check the '+(S.draft.unit==='fan'?'fan':'points')+' and save.');return;}
+  if(ds.x==='closeSheet'){S.cus=null;S.lib=null;render();return;}
   if(ds.sel){if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;select(ds.sel);render();return;}
   if(ds.tab){S.tab=ds.tab;render();return;}
   if(ds.sw){if(ds.sw==='hidden_inv')S.draft.hidden=!S.draft.hidden;else set(ds.sw,!get(ds.sw));render();return;}

@@ -5,7 +5,7 @@
 
 // Scoring: the rules engine (assets/js/rules.js) is shared with the scoreboard, so a table's data means exactly what the
 // app the host is typing into says it means. The engine reads the table's ruleset (its mode, in the version it started with).
-import '../assets/js/rules.js';
+import './_rules.js';   // a copy of assets/js/rules.js (the scoreboard loads that one); sync_rules.py keeps the two the same
 export const T = globalThis.TBTRules;
 export const MCR_CUSTOM_DEFAULT = 3;
 function rs(mode) { return T.current(mode) || T.current('casual'); }

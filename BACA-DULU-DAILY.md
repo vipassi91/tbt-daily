@@ -1737,5 +1737,21 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 - Kartu "Game rules" dan penjelasan mode di scoreboard sekarang ditulis otomatis dari pengaturan (termasuk aturan invalid dan false win).
 
 **Database:** tabel baru `rulesets`, dibuat otomatis. Tidak perlu Console D1.
-**Berkas baru:** `admin-ruleset.html`, `assets/js/rules.js`, `functions/_rulesets.js`, `functions/modes.js.js`, `functions/api/rulesets.js`, `functions/api/admin/rulesets.js`.
+**Berkas baru:** `admin-ruleset.html`, `assets/js/rules.js` (folder baru `assets/js`), `functions/_rules.js` (salinan untuk server), `functions/_rulesets.js`, `functions/modes.js.js`, `functions/api/rulesets.js`, `functions/api/admin/rulesets.js`.
 **Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `index.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-daily.html`, `admin-events.html`, `functions/_scoring.js`, `functions/_tables.js`, `functions/_eventsadmin.js`, `functions/api/_middleware.js`, `functions/api/tables/[code].js`, `functions/api/lock/[code].js`, dan catatan ini.
+
+## Update terbaru (v84): halaman Ruleset (tahap 2, pola)
+
+**Tab baru Patterns di `/admin-ruleset`, per sub-mode**
+- Setiap pola bisa dinyalakan atau dimatikan. Pola yang mati tidak muncul di Pick Patterns dan tidak dihitung Pick Tiles.
+- Fan / poin dan berapa kali pola dihitung (Max) bisa diubah. Pola yang diubah ditandai tebal dengan tombol "reset".
+- HK: setiap pola bisa diatur Both, Zi Mo only, atau Hu only.
+- **+ Custom pattern**: nama, fan / poin, maks, grup, Replaces, Does not go with, dan Win (HK). Pola custom dipilih manual (By hand): Pick Tiles tidak bisa mengenalinya dari tile.
+- **+ From library**: mengambil pola dari keluarga lain (TBT, HK, MCR). Masuk sebagai pola custom dengan nilai dari keluarganya; cek lagi fan / poinnya setelah ditambah.
+- Seperti pengaturan lain: disimpan sebagai versi baru, meja lama tetap memakai versinya.
+
+**Belum ada:** saklar "ikut dihitung untuk minimum" per pola. Aturannya masih per keluarga (HK: bunga ikut minimum, TBT dan MCR: tidak).
+
+**Database:** tidak ada perubahan.
+**Berkas baru:** `assets/js/patterns.js` (daftar pola bawaan untuk halaman admin).
+**Berkas yang berubah:** `scoreboard.html`, `admin-ruleset.html`, `assets/js/rules.js`, `functions/_rules.js`, dan catatan ini.
