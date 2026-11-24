@@ -1,4 +1,4 @@
-/* TBT scoring rules: one engine for the scoreboard (browser) and the server (functions/_scoring.js imports this file).
+/* TBT scoring rules: one engine for the scoreboard (browser) and the server (functions/_rules.js is a copy for the server, made by sync_rules.py).
    A ruleset describes one sub-mode (Casual, HK Half Spicy, MCR-8 ...) as settings; the engine turns a hand into score changes.
    The built-in rulesets below are version 1 of every mode. The admin's Ruleset page saves later versions in the database;
    a table keeps the version that was current when its first hand was recorded, so its scores never change afterwards.
@@ -38,7 +38,9 @@
     seat: 'off',             // seat rotation: 'off' | 'host' (the host chooses)
     seatDefault: false,
     start: true,             // a starting score (and Bankrupt) is offered
-    startDefault: '200'
+    startDefault: '200',
+    // pattern settings of this sub-mode: null = the built-in list. { set: {<id>: {pts, max, off, win}}, custom: [{id, name, pts, max, grp, repl, excl, win}] }
+    patterns: null
   };
   function R(o) { var r = clone(DEFAULTS); Object.keys(o).forEach(function (k) { r[k] = clone(o[k]); }); if (!r.short) r.short = r.name; return r; }
   var MCR = { fam: 'mcr', unit: 'points', entry: 'typed', picker: 'mcr', pay: 'same', limit: 0, minIsBase: true, hu: { disc: 1, others: 0 }, zimo: 1, dealerMult: 1, multi: false, streak: 1,
@@ -199,6 +201,33 @@
   function kinds(rs) { return rs.multi ? ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'] : ['hu', 'zimo', 'invalid', 'false', 'draw']; }
 
   // ---- a saved ruleset, checked: wrong shapes are refused, numbers kept in range ----
+  function cleanPatterns(P, e) {
+    if (!P || typeof P !== 'object') return null;
+    function num(v, lo, hi) { var x = parseFloat(v); return isNaN(x) ? null : Math.min(hi, Math.max(lo, x)); }
+    function win(w) { return ['zimo', 'hu', 'both'].indexOf(w) >= 0 ? w : null; }
+    function ids(a) { return (Array.isArray(a) ? a : []).slice(0, 40).map(function (x) { return String(x).slice(0, 80); }); }
+    var set = {}, custom = [], names = {};
+    Object.keys(P.set || {}).slice(0, 400).forEach(function (id) {
+      var o = P.set[id] || {}, r = {}, v;
+      if ((v = num(o.pts, 0, 1000000)) !== null) r.pts = v;
+      if ((v = num(o.max, 1, 20)) !== null) r.max = Math.round(v);
+      if (o.off) r.off = true;
+      if (win(o.win)) r.win = o.win;
+      if (Object.keys(r).length) set[String(id).slice(0, 80)] = r;
+    });
+    (Array.isArray(P.custom) ? P.custom : []).slice(0, 60).forEach(function (c, i) {
+      var name = String(c && c.name || '').trim().slice(0, 40);
+      if (!name) { e.push('A custom pattern has no name'); return; }
+      if (names[name.toLowerCase()]) { e.push('Two custom patterns are both called ' + name); return; }
+      names[name.toLowerCase()] = 1;
+      custom.push({ id: /^c:/.test(c.id) ? String(c.id).slice(0, 40) : 'c:' + (i + 1) + ':' + name.replace(/[^A-Za-z0-9]+/g, ''),
+        name: name, pts: num(c.pts, 0, 1000000) || 0, max: Math.round(num(c.max, 1, 20) || 1), grp: c.grp == null ? '' : String(c.grp).slice(0, 20),
+        repl: ids(c.repl), excl: ids(c.excl), win: win(c.win) || 'both', from: c.from ? String(c.from).slice(0, 80) : '' });
+    });
+    if (!Object.keys(set).length && !custom.length) return null;
+    return { set: set, custom: custom };
+  }
+
   function clean(data) {
     var r = R(data || {}), e = [];
     function n(v, lo, hi, d) { var x = parseFloat(v); if (isNaN(x)) return d; return Math.min(hi, Math.max(lo, x)); }
@@ -221,6 +250,7 @@
     var dr = r.draw || {}; r.draw = { kind: dr.kind === 'tenpai' ? 'tenpai' : 'zero', t: [0, 1, 2].map(function (i) { return n(dr.t && dr.t[i], 0, 1000, [3, 2, 1][i]); }), byMin: dr.byMin !== false };
     ['hidden', 'events', 'flowersMin', 'baseHost', 'minIsBase', 'multi', 'stayDraw', 'stayPen', 'deadwall', 'hostSets', 'seatDefault', 'start'].forEach(function (k) { r[k] = !!r[k]; });
     r.seat = r.seat === 'host' ? 'host' : 'off'; r.startDefault = String(r.startDefault || '200').slice(0, 6);
+    r.patterns = cleanPatterns(r.patterns, e);
     delete r.v;
     return { rules: r, errors: e };
   }
