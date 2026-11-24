@@ -8,6 +8,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>TBT Admin &middot; Events</title>
+<script src="/modes.js"></script>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -237,6 +238,7 @@ var A={hostOptions:[],add:null,events:null,defaults:{banks:[],contactWa:'',place
 var LEVELS=[['first','First timer'],['beg','Beginner'],['cas','Casual'],['int','Intermediate'],['adv','Advanced']];
 var TYPES=[['cls','Class'],['open','Open Play'],['tour','Tournament'],['other','Event']];
 var MODES=[['default','Default'],['casual','Casual'],['tournament','Tournament'],['custom','Custom'],['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom'],['hkc','HK Half Spicy'],['hkf','HK Full Spicy'],['chicken','Chicken Hand']];
+if(window.TBT_MODES&&TBT_MODES.modes&&TBT_MODES.modes.length){var MX=TBT_MODES.modes.filter(function(m){return !m.hidden&&m.events!==false;});var tb=MX.filter(function(m){return m.fam==='tbt';}).sort(function(a,b){return a.id==='default'?-1:b.id==='default'?1:0;});MODES=tb.concat(MX.filter(function(m){return m.fam!=='tbt';})).map(function(m){return [m.id,m.short||m.name];}).concat([['chicken','Chicken Hand']]);}
 var STATUS={held:['Not transferred yet','grey'],review:['Transferred: check bank','gold'],rejected:['Transfer not found','red'],confirmed:['Confirmed','ok'],venue:['Pays at the venue','gold'],expired:['Expired','red'],cancelled:['Cancelled','red']};
 var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DAY3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];

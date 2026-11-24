@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, validGame, nextStamp, sameSetup } from '../../_tables.js';
+import { buildStats, validGame, nextStamp, sameSetup, pinRules } from '../../_tables.js';
 import { guessBlocked, guessMiss, tooManyGuesses } from '../../_hostauth.js';
 
 // POST /api/lock/:code (host code): save the final game and lock the table.
@@ -28,6 +28,7 @@ export async function onRequestPost({ request, env, params }) {
       return json({ error: 'setup_locked', updatedAt: t.updated_at, game: current }, 422);
     }
     if (!Array.isArray(game.events) || game.events.length === 0) return json({ error: 'Nothing to save yet' }, 400);
+    if (game !== current) pinRules(current, game);
 
     const now = nextStamp(t.updated_at);
     game.lockedAt = now;

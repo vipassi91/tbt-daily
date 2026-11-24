@@ -1,5 +1,6 @@
 import { ensureHostTables, ipKey, addEvent, countEvents } from '../_hostauth.js';
 import { json } from '../_auth.js';
+import { loadRules } from '../_rulesets.js';
 
 // Every /api request that carries the admin password (Authorization: Bearer ...) passes here first.
 // A wrong password is counted per address; after 10 wrong tries in 15 minutes that address gets "too many tries"
@@ -7,6 +8,8 @@ import { json } from '../_auth.js';
 const WINDOW = 15 * 60 * 1000, MAX_WRONG = 10;
 const blocked = new Map();   // address -> blocked until (ms): a blocked address costs no database query on this instance
 export async function onRequest({ request, env, next }) {
+  // the saved rulesets, before anything is scored (kept 20 seconds per instance; see _rulesets.js)
+  try { await loadRules(env); } catch (e) { /* the built-in rules still work */ }
   const auth = request.headers.get('Authorization') || '';
   const given = auth.replace(/^Bearer\s+/i, '');
   if (!/^Bearer\s+/i.test(auth) || !given) return next();

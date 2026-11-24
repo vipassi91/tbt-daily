@@ -1,5 +1,5 @@
 import { isAdmin, json, unauthorized } from '../../_auth.js';
-import { buildStats, validGame, nextStamp, sameSetup, cleanTiles } from '../../_tables.js';
+import { buildStats, validGame, nextStamp, sameSetup, cleanTiles, pinRules } from '../../_tables.js';
 import { safeDisplay } from '../../_players.js';
 import { guessBlocked, guessMiss, tooManyGuesses } from '../../_hostauth.js';
 
@@ -49,6 +49,7 @@ export async function onRequestPatch({ request, env, params }) {
     }
 
     delete game.lockedAt; // the lock belongs to the server, never to the client
+    pinRules(current, game);
 
     let stats;
     try { stats = buildStats(game, JSON.parse(t.players)); } catch (e) { return json({ error: 'Invalid game data' }, 400); }

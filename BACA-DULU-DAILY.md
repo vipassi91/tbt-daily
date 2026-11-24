@@ -1718,3 +1718,24 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 
 **Database:** tidak ada perubahan. Tidak perlu Console D1.
 **Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `index.html`, `events.html`, dan catatan ini.
+
+## Update terbaru (v83): halaman Ruleset (tahap 1)
+
+**Halaman admin baru: `/admin-ruleset`**
+- Hanya bisa dibuka lewat alamat itu dengan password admin; tidak ada di menu mana pun.
+- Semua mode (TBT, HK Classic, MCR) bisa diatur tanpa upload versi baru: nama dan label pendek, tampil di scoreboard / sesi event, urutan, penjelasan tombol ?, tabel bayar (isi sendiri, x2 tiap fan, atau sesuai angka), limit, minimum, bunga ikut minimum, base point, pengali Hu dan Zi Mo, Double/Triple Hu, pengali dealer, streak, dealer tetap setelah draw/penalti, seat rotation, starting score, aturan per meja (seperti Custom), invalid/false win, draw dan tenpai.
+- **+ Sub-mode / Duplicate**: membuat sub-mode baru dari salinan mode yang ada.
+- **Try a hand**: menghitung contoh hand dari pengaturan sebelum disimpan.
+- **Versions**: setiap simpan = versi baru, dengan catatan dan jumlah meja per versi.
+
+**Versi dan meja**
+- Meja memakai versi yang berlaku saat hand pertamanya dicatat; skornya tidak pernah berubah setelah itu. Semua meja yang sudah ada otomatis tercatat versi 1 (aturan bawaan).
+- Perubahan dipakai scoreboard, pilihan mode sesi event, dan filter leaderboard dalam 1 menit.
+
+**Di balik layar**
+- Satu mesin skor (`assets/js/rules.js`) dipakai bersama oleh scoreboard dan server. Hasilnya sudah dicek sama persis dengan mesin lama (4.000 game acak dan semua meja lama).
+- Kartu "Game rules" dan penjelasan mode di scoreboard sekarang ditulis otomatis dari pengaturan (termasuk aturan invalid dan false win).
+
+**Database:** tabel baru `rulesets`, dibuat otomatis. Tidak perlu Console D1.
+**Berkas baru:** `admin-ruleset.html`, `assets/js/rules.js`, `functions/_rulesets.js`, `functions/modes.js.js`, `functions/api/rulesets.js`, `functions/api/admin/rulesets.js`.
+**Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `index.html`, `events.html`, `player.html`, `players.html`, `quiz.html`, `admin-daily.html`, `admin-events.html`, `functions/_scoring.js`, `functions/_tables.js`, `functions/_eventsadmin.js`, `functions/api/_middleware.js`, `functions/api/tables/[code].js`, `functions/api/lock/[code].js`, dan catatan ini.

@@ -20,6 +20,7 @@
 <meta name="twitter:description" content="Mahjong events in Surabaya by Tiles by Tiles: beginner classes, open play and tournaments. Book your seat online, no account needed.">
 <meta name="twitter:image" content="https://tilesbytiles.id/og-image.jpg">
 <title>Events | Tiles by Tiles</title>
+<script src="/modes.js"></script>
 <link rel="canonical" href="https://tilesbytiles.id/events">
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
@@ -433,9 +434,11 @@ var S={tab:'total',period:'',metric:'net',mode:DEFAULT_MODE,modeSet:false,dmode:
 var SHOW_RATING=false,RATING_LABEL='TBT Rating';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
 var MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'];
-function isMcrMode(k){return k==='mcr4'||k==='mcr8'||k==='mcrc';}
-function isHkMode(k){return k==='hkc'||k==='hkf';}
-function famOf(k){return isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt';}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
+// the modes as the admin set them on the Ruleset page (/modes.js): names, families and order; built-in names if it did not load
+var MODE_FAM={};(function(){var M=window.TBT_MODES;if(!M||!M.modes||!M.modes.length)return;var tbt=[],rest=[];M.modes.forEach(function(m){MODE_LABEL[m.id]=m.short||m.name;MODE_FAM[m.id]=m.fam;(m.fam==='tbt'?tbt:rest).push(m.id);});tbt.sort(function(a,b){return a==='default'?-1:b==='default'?1:0;});MODE_ORDER=tbt.concat(rest);})();
+function isMcrMode(k){return (MODE_FAM[k]||(k==='mcr4'||k==='mcr8'||k==='mcrc'?'mcr':''))==='mcr';}
+function isHkMode(k){return (MODE_FAM[k]||(k==='hkc'||k==='hkf'?'hk':''))==='hk';}
+function famOf(k){return MODE_FAM[k]||(isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt');}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
 // Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
 // them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
 function modeMatch(t,m){var k=modeOf(t);return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
@@ -600,7 +603,7 @@ var TBTGEM = (function () {
 
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
-  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' };
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' }; if(window.TBT_MODES&&TBT_MODES.modes)TBT_MODES.modes.forEach(function(m){MODES[m.id]=m.short||m.name;});
   var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {
@@ -783,6 +786,7 @@ var EI={
 var LEVELS=[['first','First timer'],['beg','Beginner'],['cas','Casual'],['int','Intermediate'],['adv','Advanced']];
 var TYPES={cls:'Class',open:'Open Play',tour:'Tournament',other:'Event'};
 var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy',chicken:'Chicken Hand'};
+if(window.TBT_MODES&&TBT_MODES.modes)TBT_MODES.modes.forEach(function(m){MODE_NAMES[m.id]=m.short||m.name;});
 function scoresText(ss){var ch=(ss||[]).filter(function(x){return x.mode==='chicken';}).length;if(!ch)return 'On the TBT leaderboard';if(ch===ss.length)return 'Chicken Hand, not on the leaderboard';return 'On the TBT leaderboard, except Chicken Hand sessions';}
 function modeTag(m){return m==='chicken'?'Chicken Hand':(MODE_NAMES[m]||m)+' mode';}
 var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DAY3=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];

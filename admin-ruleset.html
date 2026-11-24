@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F2A20" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>TBT Admin &middot; Ruleset</title>
+<script src="/assets/js/rules.js"></script>
+<link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/9e38e04780.woff2">
+<style>
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/8a53e5ecdb.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9401d0214a.woff2) format("woff2");}
+@font-face{font-family:"Playfair Display";font-style:normal;font-weight:900;font-display:swap;src:url(/assets/f/0ba66220fb.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:400;font-display:swap;src:url(/assets/f/2c20035257.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:500;font-display:swap;src:url(/assets/f/5ab688ca8c.woff2) format("woff2");}
+@font-face{font-family:"Inter Tight";font-style:normal;font-weight:700;font-display:swap;src:url(/assets/f/9e38e04780.woff2) format("woff2");}
+</style>
+<style>
+:root{
+  --bg:#FAF7F2; --surface:#FFFFFF; --text:#1B4332; --muted:#587263; --line:#E4DDCD;
+  --field:#FBF9F4; --accent:#2D6A4F; --onaccent:#FAF7F2; --focus:#2D6A4F; --red:#B72323;
+  --sans:"Inter Tight","Helvetica Neue",Arial,sans-serif;
+  --display:"Playfair Display",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F2A20; --surface:#16382B; --text:#FAF7F2; --muted:#9DB8A9; --line:#26493B;
+    --field:#12302A; --accent:#8FD0AE; --onaccent:#0F2A20; --focus:#8FD0AE; --red:#EA8888;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;color:var(--text);font-weight:700}
+h2{font-size:28px;line-height:1.15;overflow-wrap:anywhere}
+h3{font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.topbar{border-bottom:1px solid var(--line);padding:12px 0}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tb{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.tb img{width:26px;height:auto}
+.lnk{background:none;border:0;color:var(--muted);font-size:13px;padding:4px 6px}
+.lnk:hover{color:var(--red)}
+main{padding:24px 0 72px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px}
+.field input{font:inherit;font-size:16px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+.field input:focus-visible,button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.frow{display:flex;gap:12px;flex-wrap:wrap}
+.frow .field{flex:1;min-width:130px}
+.btn{display:inline-block;border-radius:16px;padding:8px 16px;line-height:20px;border:1px solid var(--line);background:transparent;font-weight:500;text-decoration:none;color:var(--text);font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:500}
+.btn.sm{padding:6px 12px;font-size:13px}
+.dayrow{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;gap:10px}
+.dayrow:hover strong{color:var(--accent)}
+.meta{font-size:13px;color:var(--muted);margin-top:2px}
+.tcard{border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;background:var(--field)}
+.th{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}
+.cr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
+.cl{width:64px;font-size:13px;color:var(--muted)}
+.code{font-family:var(--display);font-weight:900;font-size:20px;letter-spacing:.06em;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 12px}
+.login{max-width:300px;margin:88px auto;text-align:center}
+.login img{width:48px;margin-bottom:12px}
+.login input{font:inherit;font-size:16px;width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--text);margin:16px 0;text-align:center}
+.err{color:var(--red);font-size:13px;margin:6px 0}
+.mb{display:inline-block;font-size:12px;line-height:18px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:0 8px;margin-left:8px;vertical-align:middle}
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--accent);color:var(--onaccent);padding:8px 16px;line-height:24px;border-radius:999px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+/* navigation: the same bar on every admin page, with the current page marked */
+.tbrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tbrow .lnk{padding:10px 6px;min-height:40px}
+.anav{display:flex;gap:8px;margin-top:12px}
+@media (max-width:360px){.anav{gap:6px}.anav a{font-size:13px;padding:0 4px}}
+.anav a{flex:1;display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--text);font-size:14px;font-weight:500;white-space:nowrap}
+.anav a[aria-current="page"]{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:500}
+.btn.sm{padding:8px 12px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+.back{display:inline-flex;align-items:center;min-height:38px}
+.topbar .wrap{display:block}
+main .lnk,main .back{display:inline-flex;align-items:center;min-height:38px;padding:8px}
+main .meta .lnk{padding:8px 6px!important}
+main .meta a{display:inline-flex;align-items:center;min-height:38px}
+
+/* Fix players */
+.fxo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}.fxo[hidden]{display:none}
+.fxs{background:var(--surface);color:var(--text);width:100%;max-width:520px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;border:1px solid var(--line)}
+@media (min-width:700px){.fxo{align-items:center}.fxs{border-radius:18px}}
+.fxh{display:flex;justify-content:space-between;align-items:center;padding:12px 8px 12px 20px;border-bottom:1px solid var(--line)}.fxh h2{margin:0;font-family:var(--display);font-size:19px}
+.fxx{border:0;background:none;font-size:26px;line-height:1;color:var(--muted);min-width:44px;min-height:44px;cursor:pointer}
+.fxb{padding:16px 20px;overflow:auto}.fxb p{margin:0 0 12px;font-size:14px;line-height:20px;color:var(--muted)}.fxb p b{color:var(--text)}
+.fxr{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fxn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--field);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.fxc{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.fxin{width:100%;min-width:0;font:inherit;font-size:16px;font-weight:700;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:44px}.fxin:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.fxtags{display:flex;flex-wrap:wrap;gap:4px 8px}.fxtag{font-size:12px;font-weight:500;color:var(--accent);white-space:nowrap}.fxtag.chg{color:var(--muted)}
+.fxm{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:18px;cursor:pointer}.fxm[disabled]{opacity:.3;cursor:default}
+.fxres{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:12px 16px;background:var(--field)}
+.fxp{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px}.fxp b{font-variant-numeric:tabular-nums;white-space:nowrap}.fxp.chg b{color:var(--accent)}
+.fxt{margin:12px 0 0;font-size:13px;line-height:20px;color:var(--muted)}.fxt.warn{color:var(--red)}
+.fxerr{margin-top:12px;color:var(--red);font-size:13px}
+.fxf{display:flex;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}.fxf .btn{flex:1;text-align:center;min-height:44px;cursor:pointer}
+.btn[disabled]{opacity:.4;cursor:default}
+</style>
+<style>
+.tq-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.tq-sheet{background:var(--surface,#fff);color:var(--text,#111);width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:20px 18px 22px;max-height:94vh;overflow:auto;text-align:center;font-family:var(--sans,sans-serif)}
+@media(min-width:600px){.tq-ov{align-items:center}.tq-sheet{border-radius:20px}}
+.tq-sheet h3{font-family:var(--display,serif);font-size:20px;margin:0 0 4px}
+.tq-note{font-size:13.5px;color:var(--muted,#666);margin:0 0 12px;line-height:1.45}
+.tq-chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px;margin-bottom:8px;border:1px solid}
+.tq-ok{color:var(--accent,#2d6a4f);border-color:color-mix(in srgb,var(--accent,#2d6a4f) 40%,transparent);background:color-mix(in srgb,var(--accent,#2d6a4f) 12%,transparent)}
+.tq-warn{color:var(--red,#b00);border-color:color-mix(in srgb,var(--red,#b00) 40%,transparent);background:color-mix(in srgb,var(--red,#b00) 11%,transparent)}
+.tq-box{display:inline-block;background:#fff;padding:8px;border-radius:14px;border:1px solid var(--line,#ddd);line-height:0}
+.tq-box svg{width:min(210px,60vw);height:auto;display:block}
+.tq-cd{font:700 26px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.18em;margin:12px 0 2px;padding-left:.18em}
+.tq-url{font-size:11.5px;color:var(--muted,#666);margin:4px 0 10px;line-height:1.4}.tq-url span{display:block;overflow-wrap:anywhere}
+.tq-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.tq-b{font:inherit;font-size:13px;min-height:38px;padding:8px 14px;border-radius:999px;border:1px solid var(--line,#ddd);background:transparent;color:var(--text,#111);cursor:pointer}
+.tq-b.tq-p{background:var(--accent,#2d6a4f);color:var(--onaccent,#fff);border-color:var(--accent,#2d6a4f);font-weight:700}
+.tq-b:focus-visible{outline:2px solid var(--focus,#2d6a4f);outline-offset:2px}
+.tq-printroot{display:none}
+.tq-card{width:105mm;max-width:100%;min-height:148mm;margin:0 auto;background:#fff;color:#1B4332;padding:9mm 8mm;text-align:center;font-family:var(--sans,sans-serif);display:flex;flex-direction:column;align-items:center;justify-content:space-between;box-sizing:border-box}
+.tq-card .tq-br{font:700 12px var(--sans,sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.tq-card .tq-tn{font:900 34px/1.1 var(--display,serif);margin:6px 0 2px}
+.tq-card .tq-scan{font-size:14px;color:#587263;margin:0 0 10px}
+.tq-card .tq-box{border-color:#E4DDCD;padding:6px}.tq-card .tq-box svg{width:62mm}
+.tq-card .tq-cd{color:#1B4332;font-size:30px}
+.tq-card .tq-how{font-size:12px;color:#587263;line-height:1.4;margin:0}.tq-card .tq-site{font-size:11px;color:#587263;margin-top:8px}
+@media print{body.tq-printing>*:not(.tq-printroot){display:none!important}body.tq-printing .tq-printroot{display:block}@page{margin:8mm}}
+
+</style>
+<script>
+/* If the page's own script does not start (a broken or half-uploaded file, a very old browser), the page would stay empty or dead. After 4 seconds it says so, with the first error, and offers a reload.
+   It stays quiet when the script did run and is only waiting for the server (the navigation script sets window.__tbtNav), unless an error was seen and nothing is drawn. */
+(function(){var errs=[];function note(m){if(m)errs.push(String(m).slice(0,160));}
+window.addEventListener('error',function(e){note((e&&e.message)||(e&&e.error)||'error');});
+window.addEventListener('unhandledrejection',function(e){note('promise: '+((e&&e.reason&&e.reason.message)||(e&&e.reason)||'rejected'));});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+setTimeout(function(){var a=document.getElementById('app');if(!a)return;if(window.__tbtNav&&(a.children.length||!errs.length))return;
+a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0 20px;font:16px/24px \'Inter Tight\',system-ui,sans-serif;color:var(--text,#1B4332)"><h1 style="font:900 28px/1.15 \'Playfair Display\',Georgia,serif;margin:0 0 12px">Can\u2019t load this page</h1><p style="margin:0 0 16px;color:var(--muted,#587263)">Something stopped the page from starting. Reload it, or go back to the leaderboard.</p><p style="display:flex;gap:8px;margin:0 0 16px"><button type="button" onclick="location.reload()" style="min-height:44px;padding:0 16px;border-radius:16px;border:0;background:var(--accent,#2D6A4F);color:var(--onaccent,#fff);font:500 14px \'Inter Tight\',system-ui,sans-serif;cursor:pointer">Reload</button><a href="/leaderboard" style="display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:16px;border:1px solid var(--line,#E4DDCD);color:var(--text,#1B4332);font:500 14px \'Inter Tight\',system-ui,sans-serif;text-decoration:none">Leaderboard</a></p><p style="margin:0;font-size:12px;line-height:16px;color:var(--muted,#587263)">Code: '+esc(errs[0]||'the page script did not run')+'</p></div>';},4000);})();
+</script>
+<style>
+.field textarea{font:inherit;font-size:16px;line-height:1.45;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;resize:vertical}
+.field textarea:focus-visible,.field input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.field label{display:flex;justify-content:space-between;gap:8px;color:var(--text);font-weight:700;margin-bottom:4px}
+.hp-help{font-size:12px;line-height:16px;color:var(--muted);margin:0 0 8px}
+.hp-cnt{font-weight:500;font-size:12px;color:var(--muted)}.hp-cnt.over{color:var(--red);font-weight:700}
+.hp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hp-chip{border-radius:999px;padding:6px 12px;min-height:36px;border:1px solid var(--line);background:var(--field);font-size:14px;font-weight:500}
+.hp-chip:hover{border-color:var(--muted)}
+.hp-pv{border:1.5px dashed var(--line);border-radius:18px;padding:18px;margin:0 0 12px;background:radial-gradient(600px 200px at 90% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%)}
+.hp-pvk{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.hp-kick{font-size:12px;letter-spacing:.14em;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+.hp-h1{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.06;overflow-wrap:anywhere}
+.hp-h1 em{font-style:italic;color:var(--red)}
+.hp-h1s{display:block;font-family:var(--sans);font-weight:500;font-size:19px;line-height:1.3;color:var(--muted);margin-top:10px}
+.hp-h1s em{font-family:var(--display);font-weight:900}
+.hp-intro{font-size:15px;line-height:1.5;color:var(--muted);margin:12px 0 0}
+.serp{margin-top:8px;padding:14px;border-radius:12px;background:#fff;border:1px solid #E4DDCD;font-family:Arial,sans-serif}
+.serp-u{font-size:12px;color:#4d5156}
+.serp-t{font-size:19px;color:#1a0dab;margin:3px 0;line-height:1.3}
+.serp-d{font-size:14px;color:#4d5156;line-height:1.5}
+.hp-acts{display:flex;flex-wrap:wrap;gap:8px}
+.hp-acts .btn{min-height:42px;display:inline-flex;align-items:center}
+.anav{overflow-x:auto;scrollbar-width:none}.anav::-webkit-scrollbar{display:none}.anav a{flex:1 0 auto;padding:0 12px}
+</style>
+<style>main.wrap{padding-top:24px;padding-bottom:72px}</style>
+<style>
+/* Ruleset page: wider than the other admin pages, a list of modes beside the editor */
+main.rs .wrap,.rs-wrap{max-width:1120px}
+.rs-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.rs-side{position:sticky;top:12px}
+.rs-fh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.rs-fam:first-child .rs-fh{margin-top:0}.rs-fam+.rs-fam{margin-top:18px}
+.rs-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.rs-sm{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px;margin:0 0 6px;font-size:14px;font-weight:500}
+.rs-sm[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rs-sm small{color:var(--muted);font-size:12px;font-weight:400}
+.rs-tag{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--field);color:var(--muted);white-space:nowrap}
+.rs-tag.new{background:color-mix(in srgb,#B8912E 18%,transparent);color:#7A5C14}
+.rs-tag.hid{background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red)}
+.rs-add{width:100%;border:1px dashed var(--muted);background:transparent;border-radius:12px;padding:7px;font-size:13px;font-weight:500}
+.rs-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.rs-head .g{flex:1;min-width:200px}
+.rs-ver{font-size:12px;color:var(--muted)}
+.rs-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:12px 0 4px;overflow-x:auto;scrollbar-width:none}
+.rs-tabs button{border:0;background:transparent;padding:10px 12px;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.rs-tabs button[aria-selected="true"]{color:var(--text);border-color:var(--accent)}
+.rs-row{display:grid;grid-template-columns:210px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.rs-row:first-of-type{border-top:0}
+.rs-k b{display:block;font-size:14px;font-weight:700}.rs-k span{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+.rs-in{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.rs-in input[type=text],.rs-in input[type=number],.rs-in textarea,.rs-in select{font:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0}
+.rs-in input[type=number]{width:86px}.rs-in input[type=text]{width:100%;max-width:340px}.rs-in textarea{width:100%;min-height:80px;line-height:1.45}
+.rs-seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.rs-seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:500}
+.rs-seg button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)}
+.rs-sw{position:relative;width:40px;height:24px;border-radius:999px;background:var(--line);border:0;flex:none;padding:0}
+.rs-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+.rs-sw[aria-checked="true"]{background:var(--accent)}.rs-sw[aria-checked="true"]::after{left:19px}
+.rs-lab{display:inline-flex;align-items:center;gap:8px;margin-right:14px}
+.rs-tbl{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;width:100%}
+.rs-tbl label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted)}.rs-tbl input{width:100%!important}
+.rs-note{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.45}
+.rs-calc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.rs-calc div{background:var(--field);border-radius:12px;padding:10px 6px;text-align:center}
+.rs-calc b{display:block;font-family:var(--display);font-weight:900;font-size:22px;font-variant-numeric:lining-nums}
+.rs-calc span{font-size:12px;color:var(--muted)}
+.rs-pos{color:var(--accent)}.rs-neg{color:var(--red)}
+.rs-foot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--line);margin-top:8px}
+.rs-foot .meta{margin:0 auto 0 0}
+.rs-banner{background:color-mix(in srgb,#B8912E 14%,var(--surface));border:1px solid color-mix(in srgb,#B8912E 35%,transparent);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;line-height:1.45}
+.rs-vl>div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line);font-size:13px}.rs-vl>div:first-child{border-top:0}
+.rs-vl b{min-width:30px}.rs-vl .m{color:var(--muted);margin-left:auto}
+@media (max-width:860px){
+  .rs-grid{grid-template-columns:minmax(0,1fr);gap:12px}.rs-grid>*{min-width:0}
+  .rs-side{position:static;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .rs-fam{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rs-fam .rs-fh{width:100%;margin:8px 0 0}
+  .rs-sm,.rs-add{width:auto;margin:0;padding:6px 12px;border-radius:999px;font-size:13px}
+}
+@media (max-width:620px){.rs-row{grid-template-columns:minmax(0,1fr);gap:6px}.rs-calc b{font-size:18px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>window.__tbtNav=true;   /* tells the safety message in the head that this script did run */
+/* The Ruleset page: every scoring mode and how it pays. A save is a new version of that mode. A table keeps the version it
+   started with (the version current when its first hand was recorded), so saving never changes a table that has hands.
+   Only reachable at /admin-ruleset: it is not in any menu. */
+var LOGO='/assets/i/cfad30e8e7.png';
+var password=sessionStorage.getItem('tbt-admin-pw')||'';
+var authed=false,loginError='',loadError='',busy=false;
+var D=null,S={sel:null,tab:'general',draft:null,base:null,isNew:false,note:'',calc:{n:6,by:'hu',dealer:'none'}};
+var FAMCOL={tbt:'#2D6A4F',hk:'#B72323',mcr:'#2F5D9E'};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function H(){return {'Authorization':'Bearer '+password,'Content-Type':'application/json'};}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('show');},2600);}
+function copy(o){return JSON.parse(JSON.stringify(o));}
+function same(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+function checkLogin(){
+  if(!password)return Promise.resolve(false);
+  return fetch('/api/admin/login',{method:'POST',headers:H()}).then(function(r){window.__loginStatus=r.status;return r.ok;}).catch(function(){return false;});
+}
+function doLogin(){
+  password=document.getElementById('pw').value;
+  checkLogin().then(function(ok){
+    if(!ok){loginError=window.__loginStatus===429?'Too many wrong passwords. Try again in 15 minutes.':'Wrong password.';render();return;}
+    sessionStorage.setItem('tbt-admin-pw',password);authed=true;loginError='';
+    return load().then(render);
+  });
+}
+function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=false;render();}
+function load(keep){
+  return fetch('/api/admin/rulesets',{headers:H(),cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
+    D=d;loadError='';
+    var saved=[];Object.keys(d.versions).forEach(function(id){d.versions[id].forEach(function(r){if(!isBuiltin(id)||r.v>1)saved.push({id:id,v:r.v,data:r});});});
+    TBTRules.setSaved(saved);
+    var id=keep||S.sel||(d.modes[0]&&d.modes[0].id);select(id);
+  }).catch(function(){loadError='Can’t load the rulesets. Check your connection and reload.';});
+}
+function isBuiltin(id){return (D.builtin||[]).some(function(b){return b.id===id;});}
+function cur(id){var l=D.versions[id];return l?l[l.length-1]:null;}
+function select(id){var r=cur(id);if(!r)return;S.sel=id;S.isNew=false;S.draft=strip(copy(r));S.base=copy(S.draft);S.note='';}
+function strip(r){delete r.v;delete r.id;return r;}
+function famName(f){var x=(D.families||[]).filter(function(F){return F.id===f;})[0];return x?x.name:f;}
+function usageOf(id){var u=(D.usage||{})[id]||{open:0,v:{}};return u;}
+function tablesOn(id,v){var u=usageOf(id);return u.v[v]||0;}
+
+/* ---- the editor ---- */
+var TABS=[['general','General'],['pay','Payouts'],['dealer','Dealer'],['pen','Penalties and draw'],['ver','Versions']];
+function sw(path,label){var v=get(path);return '<span class="rs-lab"><button type="button" class="rs-sw" role="switch" data-sw="'+path+'" aria-checked="'+!!v+'" aria-label="'+esc(label||path)+'"></button>'+(label?esc(label):'')+'</span>';}
+function seg(path,items){var v=get(path);return '<div class="rs-seg">'+items.map(function(it){return '<button type="button" data-seg="'+path+'" data-v="'+esc(JSON.stringify(it[0]))+'" aria-pressed="'+same(v,it[0])+'">'+esc(it[1])+'</button>';}).join('')+'</div>';}
+function numIn(path,opt){opt=opt||{};return '<input type="number" data-num="'+path+'" value="'+esc(get(path))+'"'+(opt.step?' step="'+opt.step+'"':'')+(opt.min!=null?' min="'+opt.min+'"':'')+' aria-label="'+esc(opt.label||path)+'">';}
+function get(path){return path.split('.').reduce(function(o,k){return o==null?o:o[k];},S.draft);}
+function set(path,v){var ks=path.split('.'),o=S.draft;for(var i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]={};o=o[ks[i]];}o[ks[ks.length-1]]=v;}
+function row(k,help,body){return '<div class="rs-row"><div class="rs-k"><b>'+k+'</b>'+(help?'<span>'+help+'</span>':'')+'</div><div class="rs-in">'+body+'</div></div>';}
+function unitName(){return S.draft.unit==='fan'?'fan':'points';}
+function generalTab(){
+  var d=S.draft;
+  return row('Name','In the mode picker of the scoreboard','<input type="text" data-txt="name" maxlength="30" value="'+esc(d.name)+'">')
+   +row('Short label','On event cards, leaderboard filters and the mode tag','<input type="text" data-txt="short" maxlength="30" value="'+esc(d.short)+'">')
+   +row('Family','Modes of one family are ranked together on the leaderboard','<b style="font-weight:500">'+esc(famName(d.fam))+'</b>')
+   +row('Shown in','Hidden modes stay valid for tables that use them',sw('hidden_inv','Scoreboard')+sw('events','Event sessions'))
+   +row('Order','Place in its family (1 comes first)',numIn('order',{min:0,label:'Order'}))
+   +row('Explanation','Behind the ? next to Scoring mode. Leave empty to have it written from the settings','<textarea data-txt="help" maxlength="1500" placeholder="Written from the settings">'+esc(d.help)+'</textarea>');
+}
+function payTab(){
+  var d=S.draft,u=unitName(),t='';
+  if(d.pay==='table'){
+    var L=d.limit||13,tb=d.table||[];
+    var cells=[];for(var i=0;i<=L;i++)cells.push('<label>'+i+' '+u+'<input type="number" data-tbl="'+i+'" value="'+esc(tb[i]!=null?tb[i]:'')+'"></label>');
+    t='<div class="rs-tbl">'+cells.join('')+'</div><p class="rs-note">'+L+' '+u+' or more pays '+esc(tb[L]!=null?tb[L]:'?')+'.</p>';
+  }else if(d.pay==='double')t='<p class="rs-note">Doubles with every '+(u==='fan'?'fan':'point')+': '+[3,4,5].map(function(n){return n+' = '+Math.pow(2,n);}).join(', ')+' … '+(d.limit?d.limit+' = '+Math.pow(2,d.limit):'')+'.</p>';
+  else t='<p class="rs-note">The hand’s '+u+' are paid as they are'+(d.base?', plus the base below':'')+'.</p>';
+  return row('Counted in','',seg('unit',[['fan','Fan'],['points','Points']]))
+   +row('Payout table','From the hand’s '+u+' to what is paid','<div style="width:100%">'+seg('pay',[['table','Table'],['double','Doubles each '+(u==='fan'?'fan':'point')],['same','Paid as counted']])+'<div style="margin-top:10px">'+t+'</div></div>')
+   +row('Limit','0 = no limit',numIn('limit',{min:0,label:'Limit'})+' '+u)
+   +row('Minimum to win',d.minIsBase?'Follows the base point':'',(d.minIsBase?'<b style="font-weight:500">= base</b>':numIn('min',{min:0,label:'Minimum'})+' '+u)+(d.picker!=='tbt'?sw('flowersMin','Flowers count toward it'):''))
+   +(d.picker==='mcr'?row('Base point','Every loser pays it on every win',numIn('base',{min:0,label:'Base'})+sw('baseHost','The host types it per table')):'')
+   +row('Hu (from a discard)','What the discarder and the other two pay','Discarder × '+numIn('hu.disc',{step:0.5,min:0,label:'Discarder pays'})+' Other two × '+numIn('hu.others',{step:0.5,min:0,label:'Others pay'}))
+   +row('Zi Mo (self draw)','','Each of the other three × '+numIn('zimo',{step:0.5,min:0,label:'Zi Mo'}))
+   +row('More than one winner','Double and Triple Hu',seg('multi',[[false,'Only the nearest after the discarder'],[true,'All winners are paid']]));
+}
+function dealerTab(){
+  var d=S.draft;
+  return row('Dealer pays and receives','1 = no difference',' × '+numIn('dealerMult',{step:0.5,min:0.5,label:'Dealer multiplier'}))
+   +row('Dealer streak','Hands in a row the dealer may keep. 0 = no limit, 1 = never repeats',numIn('streak',{min:0,label:'Streak'}))
+   +row('Dealer stays after','',sw('stayDraw','A draw')+sw('stayPen','An invalid or false win'))
+   +row('Seat rotation','MCR seating order each wind round',seg('seat',[['off','Not offered'],['host','Host chooses']])+(d.seat==='host'?sw('seatDefault','On at the start'):''))
+   +row('Starting score','',sw('start','Offered (with Bankrupt)')+(d.start?'Default '+'<input type="text" data-txt="startDefault" maxlength="6" value="'+esc(d.startDefault)+'" style="width:80px">':''))
+   +(d.picker==='tbt'?row('Host sets the rules','Minimum, streak and deadwall typed per table (like Custom)',sw('hostSets','On')):'')
+   +(d.picker==='tbt'&&!d.hostSets?row('Non-replenishing deadwall','Doubles the tenpai payout',sw('deadwall','On')):'');
+}
+function penTab(){
+  var d=S.draft;
+  function pen(k,label){var p=d.pen[k];return row(label,'',seg('pen.'+k+'.kind',[['split','Amount, shared'],['each','Amount to each'],['limit','Limit value to each']])+(p.kind!=='limit'?'<span style="width:100%"></span>Offender pays '+numIn('pen.'+k+'.amount',{min:0,label:label})+(p.kind==='split'?' shared by the other three':' to each of the other three'):''));}
+  return pen('invalid','Invalid win')+pen('false','False win')
+   +row('Draw','',seg('draw.kind',[['zero','Nobody pays'],['tenpai','Tenpai payout']])+(d.draw.kind==='tenpai'?'<span style="width:100%"></span>Each player in tenpai gets: 1 in tenpai '+numIn('draw.t.0',{min:0})+' 2 '+numIn('draw.t.1',{min:0})+' 3 '+numIn('draw.t.2',{min:0})+sw('draw.byMin','× the minimum to win'):''));
+}
+function verTab(){
+  var id=S.sel,l=(D.versions[id]||[]).slice().reverse(),notes={};(D.notes||[]).forEach(function(n){if(n.id===id)notes[n.v]=n;});
+  return '<div class="rs-vl">'+l.map(function(r,i){var n=notes[r.v],at=n&&n.at?new Date(n.at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'built in';
+    return '<div><b>v'+r.v+'</b><span>'+esc(at)+(n&&n.note?' · '+esc(n.note):'')+'</span><span class="m">'+(i===0?'current · ':'')+tablesOn(id,r.v)+' table'+(tablesOn(id,r.v)===1?'':'s')+'</span>'+(i>0?'<button type="button" class="btn sm" data-restore="'+r.v+'">Use these settings</button>':'')+'</div>';}).join('')+'</div>'
+   +'<p class="rs-note">A table keeps the version of its first hand, so its scores never change afterwards. “Use these settings” copies an old version into the editor; saving makes it the next version.'+(usageOf(id).open?' '+usageOf(id).open+' table'+(usageOf(id).open===1?' has':'s have')+' no hand yet and will use the version that is current when its first hand is recorded.':'')+'</p>';
+}
+/* try a hand with the settings on screen, before they are saved */
+function calcHtml(){
+  var c=S.calc,cl=TBTRules.clean(S.draft),rs=cl.rules;rs.id=S.sel||'new';
+  var g={mode:rs.id,mcrBase:rs.base,custom:{minPoint:rs.min,maxStreak:rs.streak||4,deadwall:false}},cfg=TBTRules.config(g,rs);
+  var dealer=c.dealer==='win'?1:c.dealer==='disc'?2:c.dealer==='other'?3:0,ev,names=['East','Winner','Discarder','North'];
+  if(c.by==='hu')ev={kind:'hu',winner:1,disc:2,pts:{1:c.n}};
+  else if(c.by==='zimo'){ev={kind:'zimo',winner:1,pts:{1:c.n}};names[2]='West';}
+  else if(c.by==='invalid'){ev={kind:'invalid',who:1};names=['East','Offender','West','North'];}
+  else{ev={kind:'draw',tenpai:[1]};names=['East','In tenpai','West','North'];}
+  names=names.map(function(n,i){return n+(i===dealer?' (dealer)':'');});
+  var low=(c.by==='hu'||c.by==='zimo')&&c.n<cfg.minPoint,r=TBTRules.scoreEvent(ev,dealer,cfg);
+  return '<div class="card"><h3>Try a hand</h3><p class="rs-note" style="margin:2px 0 10px">With the settings above, before they are saved.</p>'
+   +'<div class="rs-in"><div class="rs-seg">'+[['hu','Hu'],['zimo','Zi Mo'],['invalid','Invalid win'],['draw','Draw, 1 in tenpai']].map(function(x){return '<button type="button" data-calc="by" data-v="'+x[0]+'" aria-pressed="'+(c.by===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>'
+   +((c.by==='hu'||c.by==='zimo')?'<label class="rs-in">'+(rs.unit==='fan'?'Fan':'Points')+' <input type="number" id="cN" min="0" value="'+c.n+'"></label>':'')
+   +'<div class="rs-seg">'+[['none','Dealer: East'],['win','Dealer wins']].concat(c.by==='hu'?[['disc','Dealer discards']]:[]).map(function(x){return '<button type="button" data-calc="dealer" data-v="'+x[0]+'" aria-pressed="'+(c.dealer===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>'
+   +(low?'<div class="rs-banner" style="margin:12px 0 0">Below the minimum of '+cfg.minPoint+': this would be recorded as an invalid win.</div>'
+     :'<div class="rs-calc">'+r.d.map(function(x,i){x=Math.round(x*100)/100;return '<div><b class="'+(x>0?'rs-pos':x<0?'rs-neg':'')+'">'+(x>0?'+':'')+x+'</b><span>'+esc(names[i])+'</span></div>';}).join('')+'</div>')
+   +(cl.errors.length?'<p class="err">'+esc(cl.errors.join('. '))+'</p>':'')+'</div>';
+}
+function sideHtml(){
+  return (D.families||[]).map(function(F){
+    var ms=Object.keys(D.versions).map(cur).filter(function(r){return r.fam===F.id;}).sort(function(a,b){return a.order-b.order||a.name.localeCompare(b.name);});
+    return '<div class="rs-fam"><div class="rs-fh"><span class="rs-dot" style="background:'+(FAMCOL[F.id]||'#7A5C14')+'"></span>'+esc(F.name)+'</div>'
+      +ms.map(function(r){return '<button type="button" class="rs-sm" data-sel="'+r.id+'" aria-current="'+(!S.isNew&&S.sel===r.id)+'"><span>'+esc(r.name)+'</span>'+(r.hidden?'<span class="rs-tag hid">Hidden</span>':'<small>v'+r.v+'</small>')+'</button>';}).join('')
+      +(S.isNew&&S.draft.fam===F.id?'<button type="button" class="rs-sm" aria-current="true"><span>'+esc(S.draft.name||'New')+'</span><span class="rs-tag new">Not saved</span></button>':'')
+      +'<button type="button" class="rs-add" data-copy="'+F.id+'">+ Sub-mode</button></div>';
+  }).join('');
+}
+function render(){
+  var app=document.getElementById('app');
+  if(!authed){
+    app.innerHTML='<div class="login"><img src="'+LOGO+'" alt=""><h2>Admin</h2><input id="pw" type="password" placeholder="Password">'+(loginError?'<div class="err">'+loginError+'</div>':'')+'<button class="btn primary" style="width:100%" onclick="doLogin()">Sign in</button></div>';
+    var pw=document.getElementById('pw');pw.onkeydown=function(e){if(e.key==='Enter')doLogin();};
+    return;
+  }
+  var top='<div class="topbar"><div class="wrap rs-wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN <span class="meta" style="margin:0;font-weight:500;letter-spacing:0">\u00b7 Ruleset</span></div><button class="lnk" onclick="logout()">Sign out</button></div></div></div>';
+  if(!D){app.innerHTML=top+'<main><div class="wrap rs-wrap"><div class="empty">'+(loadError||'Loading…')+'</div></div></main>';return;}
+  var d=S.draft,dirty=S.isNew||!same(d,S.base),r=S.isNew?null:cur(S.sel),body;
+  S.draft.hidden_inv=!d.hidden;
+  body=S.tab==='general'?generalTab():S.tab==='pay'?payTab():S.tab==='dealer'?dealerTab():S.tab==='pen'?penTab():verTab();
+  delete S.draft.hidden_inv;
+  var nextV=S.isNew?1:r.v+1,cl=TBTRules.clean(d),changes=S.isNew?'':Object.keys(d).filter(function(k){return !same(d[k],S.base[k]);});
+  app.innerHTML=top+'<main><div class="wrap rs-wrap"><h2>Ruleset</h2><p class="meta" style="margin:6px 0 18px;max-width:72ch">Every scoring mode the scoreboard offers, and how it pays. Saving makes a new version: tables that already have a hand keep the version they started with, new tables use the new one. The scoreboard picks up a saved version within a minute.</p>'
+   +'<div class="rs-grid"><aside class="rs-side">'+sideHtml()+'</aside><div>'
+   +(S.isNew?'<div class="rs-banner">A new sub-mode, copied from '+esc(S.copyOf)+'. Give it a name and save. It shows in the scoreboard right after saving; switch off “Scoreboard” under General to keep it hidden until it is ready.</div>':'')
+   +'<div class="card"><div class="rs-head"><div class="g"><div class="rs-ver"><span class="rs-dot" style="background:'+(FAMCOL[d.fam]||'#7A5C14')+'"></span> '+esc(famName(d.fam))+'</div><h3 style="font-size:24px;margin-top:2px">'+esc(d.name||'New sub-mode')+'</h3>'
+   +'<div class="rs-ver">'+(S.isNew?'Not saved yet':'Version '+r.v+' · '+tablesOn(S.sel,r.v)+' table'+(tablesOn(S.sel,r.v)===1?'':'s')+' with hands on it'+(usageOf(S.sel).open?' · '+usageOf(S.sel).open+' waiting for a first hand':''))+'</div></div>'
+   +(S.isNew?'':'<button type="button" class="btn sm" data-copy="'+d.fam+'" data-from="'+S.sel+'">Duplicate</button>')+'</div>'
+   +'<div class="rs-tabs" role="tablist">'+TABS.filter(function(t){return !(S.isNew&&t[0]==='ver');}).map(function(t){return '<button type="button" role="tab" data-tab="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+'</button>';}).join('')+'</div>'
+   +body
+   +(S.tab!=='ver'?'<div class="rs-foot"><span class="meta">'+(cl.errors.length?'<span class="err">'+esc(cl.errors.join('. '))+'</span>':dirty?(S.isNew?'New sub-mode':'Changed: '+changes.map(labelOf).join(', ')):'No changes')+'</span>'
+     +'<input type="text" data-note="1" maxlength="200" placeholder="Note for this version (optional)" value="'+esc(S.note)+'" style="font:inherit;font-size:14px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;flex:1 1 220px;max-width:320px"'+(dirty?'':' hidden')+'>'
+     +'<button type="button" class="btn" data-x="discard"'+(dirty&&!busy?'':' disabled')+'>Discard</button><button type="button" class="btn primary" data-x="save"'+(dirty&&!busy&&!cl.errors.length?'':' disabled')+'>'+(busy?'Saving…':S.isNew?'Create sub-mode':'Save as version '+nextV)+'</button></div>':'')
+   +'</div>'+(S.tab!=='ver'?calcHtml():'')+'</div></div></div></main>';
+}
+var LABELS={name:'Name',short:'Short label',hidden:'Shown in',events:'Event sessions',order:'Order',help:'Explanation',unit:'Counted in',pay:'Payout table',table:'Payout table',limit:'Limit',min:'Minimum',flowersMin:'Flowers count',base:'Base point',baseHost:'Base per table',hu:'Hu',zimo:'Zi Mo',multi:'More than one winner',dealerMult:'Dealer pays',streak:'Dealer streak',stayDraw:'Dealer stays',stayPen:'Dealer stays',seat:'Seat rotation',seatDefault:'Seat rotation',start:'Starting score',startDefault:'Starting score',hostSets:'Host sets the rules',deadwall:'Deadwall',pen:'Penalties',draw:'Draw'};
+function labelOf(k){return LABELS[k]||k;}
+/* ---- typing and tapping ---- */
+function redrawKeep(sel){var a=document.activeElement,k=a&&(a.dataset.num||a.dataset.txt||a.dataset.tbl||(a.id==='cN'?'cN':'')),pos=a&&a.selectionStart;render();if(!k)return;var n=document.querySelector(a.dataset.num?'[data-num="'+k+'"]':a.dataset.txt?'[data-txt="'+k+'"]':a.dataset.tbl?'[data-tbl="'+k+'"]':'#cN');if(n){n.focus();try{if(pos!=null&&n.type!=='number')n.setSelectionRange(pos,pos);}catch(e){}}}
+document.addEventListener('input',function(e){
+  var t=e.target;if(!S.draft)return;
+  if(t.dataset.num){var v=t.value===''?'':parseFloat(t.value);set(t.dataset.num,v===''||isNaN(v)?0:v);redrawKeep();}
+  else if(t.dataset.txt){set(t.dataset.txt,t.value);redrawKeep();}
+  else if(t.dataset.tbl){var tb=(S.draft.table||[]).slice();tb[+t.dataset.tbl]=t.value===''?0:parseFloat(t.value)||0;S.draft.table=tb;redrawKeep();}
+  else if(t.id==='cN'){S.calc.n=parseFloat(t.value)||0;redrawKeep();}
+  else if(t.dataset.note){S.note=t.value;}
+});
+document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('button');if(!b||!D)return;var ds=b.dataset;
+  if(ds.sel){if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;select(ds.sel);render();return;}
+  if(ds.tab){S.tab=ds.tab;render();return;}
+  if(ds.sw){if(ds.sw==='hidden_inv')S.draft.hidden=!S.draft.hidden;else set(ds.sw,!get(ds.sw));render();return;}
+  if(ds.seg){var v=JSON.parse(ds.v);set(ds.seg,v);if(ds.seg==='pay'&&v==='table'&&(!S.draft.table||S.draft.table.length<(S.draft.limit||13)+1)){var L=S.draft.limit||13,tb=(S.draft.table||[]).slice();while(tb.length<=L)tb.push(tb.length?tb[tb.length-1]:0);S.draft.table=tb;}render();return;}
+  if(ds.calc){S.calc[ds.calc]=ds.v;if(ds.calc==='by'&&ds.v!=='hu'&&S.calc.dealer==='disc')S.calc.dealer='none';render();return;}
+  if(ds.copy){
+    if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;
+    var from=ds.from||Object.keys(D.versions).map(cur).filter(function(r){return r.fam===ds.copy;}).sort(function(a,b){return a.order-b.order;})[0].id,src=strip(copy(cur(from)));
+    src.name=('Copy of '+src.name).slice(0,30);src.short=src.name;src.order=(src.order||0)+10;src.hidden=false;src.help='';
+    S.isNew=true;S.copyOf=cur(from).name;S.draft=src;S.base=copy(src);S.tab='general';S.note='';render();
+    var n=document.querySelector('[data-txt="name"]');if(n){n.focus();n.select();}return;
+  }
+  if(ds.restore){var old=(D.versions[S.sel]||[]).filter(function(r){return r.v===+ds.restore;})[0];if(old){S.draft=strip(copy(old));S.tab='general';render();toast('Settings of v'+ds.restore+' loaded. Save to make them current.');}return;}
+  if(ds.x==='discard'){if(S.isNew){select(S.sel);}else S.draft=copy(S.base);render();return;}
+  if(ds.x==='save')save();
+});
+function save(){
+  var cl=TBTRules.clean(S.draft);if(cl.errors.length){toast(cl.errors[0]);return;}
+  if(!S.isNew){var r=cur(S.sel),n=tablesOn(S.sel,r.v)+(usageOf(S.sel).open||0);}
+  busy=true;render();
+  fetch('/api/admin/rulesets',{method:'POST',headers:H(),body:JSON.stringify({id:S.isNew?null:S.sel,data:S.draft,note:S.note})}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,j:j};});}).then(function(x){
+    busy=false;
+    if(!x.ok){toast(x.j.error||'Could not save. Please try again.');render();return;}
+    S.isNew=false;return load(x.j.id).then(function(){render();toast('Saved as version '+x.j.v+'. The scoreboard uses it within a minute.');});
+  }).catch(function(){busy=false;render();toast('No connection. Please try again.');});
+}
+window.addEventListener('beforeunload',function(e){if(S.draft&&(S.isNew||!same(S.draft,S.base))){e.preventDefault();e.returnValue='';}});
+checkLogin().then(function(ok){authed=ok;if(ok)return load();}).then(render);
+render();
+</script>
+</body>
+</html>

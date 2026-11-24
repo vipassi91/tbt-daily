@@ -8,6 +8,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>TBT Admin &middot; Sessions</title>
+<script src="/modes.js"></script>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -261,6 +262,7 @@ function progText(t){
   return t.events+(t.events===1?' hand':' hands')+', '+['East','South','West','North'][t.progress.wind]+' round';
 }
 var MODE_NAMES={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
+if(window.TBT_MODES&&TBT_MODES.modes)TBT_MODES.modes.forEach(function(m){MODE_NAMES[m.id]=m.short||m.name;});
 function rulesLine(t){
   var r=t.rules;if(!r)return '';
   if(r.base!=null){var q=[modeLabel(t.mode),'base '+r.base,'min '+r.minPoint+' points','no dealer repeat'];if(r.seatRotation)q.push('seat rotation');return q.join(' \u00b7 ');}   // meja MCR

@@ -20,6 +20,7 @@
 <meta name="twitter:description" content="Tiles by Tiles mahjong leaderboard. Player rankings and results from every session.">
 <meta name="twitter:image" content="https://tilesbytiles.id/og-image.jpg">
 <title>Tile Personality Quiz: Kamu Tile yang Mana? | Tiles by Tiles</title>
+<script src="/modes.js"></script>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -454,7 +455,7 @@ svg { user-select: none; -webkit-user-select: none; }
 var LOGO='/assets/i/cfad30e8e7.png';
 // shared header (leaderboard, All players, a player's page): the brand name, find your name, the menu with Admin last, My page
 var TBTNAV = (function () {
-  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' };
+  var ME_KEY = 'tbt-me', MODES = { 'default': 'Default', casual: 'Casual', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy' }; if(window.TBT_MODES&&TBT_MODES.modes)TBT_MODES.modes.forEach(function(m){MODES[m.id]=m.short||m.name;});
   var ST = { q: '', hide: false, idx: null, status: 'idle', cbs: [], searching: false }, CFG = { inView: null, onMe: null, rerender: null }, BOUND = false, LAST = { active: 'lb', o: {} };
   var P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
   var IC = {

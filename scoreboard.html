@@ -8,6 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Tiles by Tiles scoreboard</title>
+<script src="/assets/js/rules.js"></script>
+<script src="/modes.js"></script>
 <link rel="icon" type="image/png" id="favicon" href="">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -1654,7 +1656,6 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 
   /* ---------- Casual mode: scoring ---------- */
   var GKEY='mj-casual-v1'+SUFFIX;
-  var BASE=[0,2,4,6,8,10,12,16,20,24,28,32,36,40];   // base score by points, from the payout table
   var KINDS=[['hu','Hu'],['zimo','Zi Mo'],['double','Double Hu'],['triple','Triple Hu'],['invalid','Invalid win'],['false','False win'],['draw','Draw']];
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function defaultGame(){return {names:['','','',''],title:'Mahjong night',date:today(),useStart:false,start:'200',mode:'casual',seatRotation:true,bankrupt:false,custom:{minPoint:2,maxStreak:4,deadwall:false},mcrBase:3,events:[]};}
@@ -1665,7 +1666,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
         var g=Object.assign(defaultGame(),s);
         g.names=[0,1,2,3].map(function(i){return String(g.names[i]||'');});
         g.useStart=!!g.useStart;g.start=String(g.start==null?'200':g.start);
-        if(['casual','default','tournament','custom','mcr4','mcr8','mcrc','hkc','hkf'].indexOf(g.mode)<0)g.mode='casual';
+        if(!TBTRules.exists(g.mode))g.mode='casual';
         g.seatRotation=g.seatRotation!==false;
         g.bankrupt=!!g.bankrupt&&g.useStart;
         var mb=parseFloat(g.mcrBase);g.mcrBase=isNaN(mb)?3:Math.min(99,Math.max(0,Math.round(mb)));
@@ -1680,7 +1681,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     }catch(e){}
     return defaultGame();
   }
-  function saveGame(){if(VIEW_ONLY||(game&&game.lockedAt))return;try{localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}if(TABLE_CODE)scheduleServerSave();}
+  function saveGame(){if(VIEW_ONLY||(game&&game.lockedAt))return;if(game){if(game.events&&game.events.length){if(!game.rv)game.rv=TBTRules.pinVersion(game);}else delete game.rv;}try{localStorage.setItem(GKEY,JSON.stringify(game));}catch(e){}if(TABLE_CODE)scheduleServerSave();}
   var game=loadGame();
   Object.defineProperty(window,'game',{get:function(){return game;},configurable:true});
 
@@ -1845,20 +1846,23 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
 
   /* ---------- rules of this game, always readable (host, player, saved or not) ---------- */
+  function unitWord(cfg,n){return cfg.unit==='fan'?n+' fan':n+(n===1?' point':' points');}
+  function penWord(cfg,k){var p=cfg.rs.pen[k],each=p.kind==='limit'?cfg.value(cfg.limit):p.kind==='each'?p.amount:p.amount/3;
+    return p.kind==='split'?'−'+p.amount+', others +'+(Math.round(each*100)/100)+' each':'pays '+each+' to each player';}
+  function streakWord(cfg){var r=cfg.rs;return cfg.maxStreak===Infinity?'stays on'+(r.stayDraw||r.stayPen?' after a dealer win'+(r.stayDraw?', a draw':'')+(r.stayPen?' or a penalty':''):'')+', no limit':cfg.maxStreak===1?'never repeats':'up to '+cfg.maxStreak;}
   function renderRules(){
-    var cfg=modeConfig();
-    var label={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'}[game.mode||'casual']||'Casual';
+    var cfg=modeConfig(),rs=cfg.rs;
+    var label=rs.short||rs.name;
     var onoff=function(b){return b?'On':'Off';};
-    var rows=[
-      ['Minimum to win',cfg.minPoint+(cfg.minPoint===1?' point':' points')],
-      ['Dealer streak','up to '+cfg.maxStreak],
-      ['Seat rotation',onoff(cfg.seatRotation)],
-      ['Non-replenishing deadwall',onoff(cfg.deadwall)],
-      ['Starting score',game.useStart?String(game.start):'Not used'],
-      ['Bankrupt',onoff(cfg.bankrupt)]
-    ];
-    if(cfg.hk)rows=[['Minimum to win','3 fan'],['Payout',cfg.hkFull?'Full Spicy, doubles every fan':'Half Spicy'],['Limit','13 fan, pays '+HR.points(13,cfg.hkFull)],['Dealer','stays on a dealer win, a draw or a penalty'],['Hu','the discarder pays double'],['Invalid win','−'+HR.points(13,cfg.hkFull)+' to each player'],['False win','−'+HR.points(13,cfg.hkFull)+' to each player']];
-    else if(cfg.mcr)rows=[['Base point',String(cfg.basePoint)],['Minimum hand points',String(cfg.basePoint)],['Dealer','never repeats'],['Seat rotation',onoff(cfg.seatRotation)],['Invalid win','\u221224, others +8 each'],['False win','\u221248, others +16 each']];
+    var rows=[['Minimum to win',unitWord(cfg,cfg.minPoint)]];
+    if(cfg.basePoint)rows.push(['Base point',String(cfg.basePoint)]);
+    if(cfg.limit&&rs.pay!=='same')rows.push(['Limit',unitWord(cfg,cfg.limit)+', pays '+cfg.value(cfg.limit)]);
+    if(rs.pay==='double')rows.push(['Payout','doubles every '+(cfg.unit==='fan'?'fan':'point')]);
+    rows.push(['Dealer',streakWord(cfg)]);
+    if(rs.seat==='host')rows.push(['Seat rotation',onoff(cfg.seatRotation)]);
+    if(rs.hostSets||rs.deadwall)rows.push(['Non-replenishing deadwall',onoff(cfg.deadwall)]);
+    if(rs.start){rows.push(['Starting score',game.useStart?String(game.start):'Not used']);rows.push(['Bankrupt',onoff(cfg.bankrupt)]);}
+    rows.push(['Invalid win',penWord(cfg,'invalid')]);rows.push(['False win',penWord(cfg,'false')]);
     var h='<div class="rhead"><b>Game rules</b><span class="pill">'+esc(label)+'</span></div><div class="rules">';
     rows.forEach(function(x){h+='<div><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>';});
     h+='</div>';
@@ -1866,13 +1870,13 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var fam=modeFamily(game.mode||'casual');document.querySelectorAll('.rhead .pill').forEach(function(p){p.dataset.fam=fam;});var gst=$('gstatus');if(gst)gst.dataset.fam=fam;
     var gsTag=$('gsTag'),gsSub=$('gsSub');
     if(gsTag&&gsSub){
-      var facts=cfg.hk?['Min 3 fan','Limit '+HR.points(13,cfg.hkFull)]:cfg.mcr?['Base '+cfg.basePoint,'Min '+cfg.basePoint]:['Min '+cfg.minPoint,'Streak '+cfg.maxStreak],flags=[];
+      var facts=cfg.basePoint?['Base '+cfg.basePoint,'Min '+cfg.minPoint]:(cfg.limit&&cfg.unit==='fan')?['Min '+cfg.minPoint+' fan','Limit '+cfg.value(cfg.limit)]:['Min '+cfg.minPoint,'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)],flags=[];
       if(cfg.seatRotation)flags.push('Rotation');
-      if(!cfg.mcr&&cfg.deadwall)flags.push('Deadwall');
-      if(!cfg.mcr&&game.useStart)flags.push('Start '+game.start);
-      if(!cfg.mcr&&cfg.bankrupt)flags.push('Bankrupt');
-      gsTag.textContent=label;gsTag.dataset.fam=modeFamily(game.mode||'casual');
-      gsSub.innerHTML='<span>'+esc(facts.join(' \u00b7 '))+'</span>'+flags.map(function(x){return '<span class="gf">'+esc(x)+'</span>';}).join('');
+      if(cfg.deadwall)flags.push('Deadwall');
+      if(rs.start&&game.useStart)flags.push('Start '+game.start);
+      if(cfg.bankrupt)flags.push('Bankrupt');
+      gsTag.textContent=label;gsTag.dataset.fam=fam;
+      gsSub.innerHTML='<span>'+esc(facts.join(' · '))+'</span>'+flags.map(function(x){return '<span class="gf">'+esc(x)+'</span>';}).join('');
     }
   }
 
@@ -2085,99 +2089,25 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function sgn(n){return n>0?'+'+n:n<0?'\u2212'+Math.abs(n):'0';}
   function ptsWord(p){return p+' pt'+(p===1?'':'s');}
 
-  // Hu: base x 2, and x 1.5 when the dealer is the winner or the discarder
-  function huAmt(pts,winner,disc,dealer){var a=BASE[pts]*2;return (winner===dealer||disc===dealer)?a*1.5:a;}
-  // MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed, not picked
-  var MCR_BASE={mcr4:4,mcr8:8};
-  function isMcr(m){return m==='mcr4'||m==='mcr8'||m==='mcrc';}
-  function isHkMode(m){return m==='hkc'||m==='hkf';}
-  // MCR-Custom: the host types the base point (0 to 99); anything that is not a number counts as the default, 3
-  function mcrBaseNow(){if(game.mode!=='mcrc')return MCR_BASE[game.mode];var n=parseFloat(game.mcrBase);return isNaN(n)?3:Math.min(99,Math.max(0,Math.round(n)));}
-  function modeConfig(){
-    var mcr=isMcr(game.mode);
-    var seat=(game.mode==='tournament'||game.mode==='custom'||mcr)&&!!game.seatRotation;
-    var cfg;
-    if(isHkMode(game.mode))cfg={mcr:true,hk:true,hkFull:game.mode==='hkf',basePoint:3,minPoint:3,maxStreak:Infinity,deadwall:false,seatRotation:false};
-    else if(mcr)cfg={mcr:true,basePoint:mcrBaseNow(),minPoint:mcrBaseNow(),maxStreak:1,deadwall:false,seatRotation:seat};
-    else if(game.mode==='default')cfg={minPoint:2,maxStreak:4,deadwall:false,seatRotation:false};
-    else if(game.mode==='tournament')cfg={minPoint:2,maxStreak:1,deadwall:false,seatRotation:seat};
-    else if(game.mode==='custom'){
-      var c=game.custom||{};
-      cfg={minPoint:Math.min(13,Math.max(1,num(c.minPoint)||1)),maxStreak:Math.max(1,Math.round(num(c.maxStreak))||1),deadwall:!!c.deadwall,seatRotation:seat};
-    }
-    else cfg={minPoint:1,maxStreak:4,deadwall:false,seatRotation:false};   // casual
-    // bankrupt-ends-the-round only makes sense once there's a starting score to run out of
-    cfg.bankrupt=!cfg.mcr&&!!(game.useStart&&game.bankrupt);
-    cfg.startBase=(!cfg.mcr&&game.useStart)?(num(game.start)||0):0;   // MCR modes have no starting score
-    return cfg;
-  }
-
-  function kindsFor(){
-    return modeConfig().mcr?[['hu','Hu'],['zimo','Zi Mo'],['invalid','Invalid win'],['false','False win'],['draw','Draw']]:KINDS;
-  }
+  // The rules of the game come from its ruleset (assets/js/rules.js, plus what the admin saved on the Ruleset page): one engine
+  // for this page and the server, so a table means the same everywhere.
+  function rsOf(m){return TBTRules.current(m)||TBTRules.current('casual');}
+  function isMcr(m){return TBTRules.exists(m)&&rsOf(m).picker==='mcr';}
+  function isHkMode(m){return TBTRules.exists(m)&&rsOf(m).picker==='hk';}
+  function modeConfig(){return TBTRules.config(game);}
+  window.sbValue=function(n){return modeConfig().value(n);};          // what n points or fan pay in this game (the HK pickers use it)
+  window.sbLimit=function(){return modeConfig().limit||99;};
+  window.sbHu=function(n){var c=modeConfig(),m=c.rs.hu.disc,v=c.value(n);return (m===2?'double':'\u00d7'+m)+' ('+(m*v)+')';};
+  function kindsFor(){var ok=TBTRules.kinds(modeConfig().rs);return KINDS.filter(function(k){return ok.indexOf(k[0])>=0;});}
   function scoreEvent(ev,dealer,cfg){
-    var d=[0,0,0,0],dealerWon=false,desc='',i,w,p,mult=cfg.minPoint*(cfg.deadwall?2:1);
-    if(cfg.hk){   // Hong Kong Classic: fan turned into points by the table (13 fan is the limit, 384); the dealer has no bonus and stays on
-      var stay=false;
-      if(ev.kind==='hu'){
-        w=ev.winner;var hv=HR.points(num(ev.pts[w]),cfg.hkFull)*2;d[w]+=hv;d[ev.disc]-=hv;stay=(w===dealer);
-        desc=gname(w)+' wins '+num(ev.pts[w])+' fan off '+gname(ev.disc);
-      }else if(ev.kind==='zimo'){
-        w=ev.winner;var zv=HR.points(num(ev.pts[w]),cfg.hkFull);for(i=0;i<4;i++){if(i===w)continue;d[i]-=zv;d[w]+=zv;}stay=(w===dealer);
-        desc=gname(w)+' Zi Mo, '+num(ev.pts[w])+' fan';
-      }else if(ev.kind==='invalid'||ev.kind==='false'){
-        var hpen=HR.points(HR.LIMIT,cfg.hkFull);for(i=0;i<4;i++){if(i===ev.who)continue;d[i]+=hpen;d[ev.who]-=hpen;}stay=true;
-        desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
-      }else if(ev.kind==='draw'){desc='Draw, no score';stay=true;}
-      return {d:d,dealerWon:stay,desc:desc};
-    }
-    if(cfg.mcr){   // base + typed hand points; no dealer bonus, no multiple winners, no tenpai payout
-      var BP=cfg.basePoint;
-      if(ev.kind==='hu'){
-        w=ev.winner;var hp=Math.max(0,num(ev.pts[w]));
-        d[w]+=BP+hp;d[ev.disc]-=BP+hp;
-        for(i=0;i<4;i++){if(i!==w&&i!==ev.disc){d[i]-=BP;d[w]+=BP;}}
-        desc=gname(w)+' wins '+(3*BP+hp)+' off '+gname(ev.disc);
-      }else if(ev.kind==='zimo'){
-        w=ev.winner;var hp2=Math.max(0,num(ev.pts[w])),tot2=BP+hp2;
-        for(i=0;i<4;i++){if(i===w)continue;d[i]-=tot2;d[w]+=tot2;}
-        desc=gname(w)+' Zi Mo, '+(3*tot2);
-      }else if(ev.kind==='invalid'||ev.kind==='false'){
-        var pen=ev.kind==='invalid'?24:48;
-        for(i=0;i<4;i++)d[i]=(i===ev.who)?-pen:pen/3;
-        desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
-      }else if(ev.kind==='draw'){desc='Draw, no score';}
-      return {d:d,dealerWon:false,desc:desc};
-    }
-    if(ev.kind==='hu'){
-      w=ev.winner;p=ev.pts[w];
-      var a=huAmt(p,w,ev.disc,dealer);d[w]+=a;d[ev.disc]-=a;dealerWon=(w===dealer);
-      desc=gname(w)+' wins '+ptsWord(p)+' off '+gname(ev.disc);
-    }else if(ev.kind==='zimo'){
-      w=ev.winner;p=ev.pts[w];
-      for(i=0;i<4;i++){if(i===w)continue;var pay=(w===dealer||i===dealer)?BASE[p]*1.5:BASE[p];d[i]-=pay;d[w]+=pay;}
-      dealerWon=(w===dealer);
-      desc=gname(w)+' Zi Mo, '+ptsWord(p);
-    }else if(ev.kind==='double'||ev.kind==='triple'){
-      var parts=[];
-      ev.winners.forEach(function(w2){
-        var a2=huAmt(ev.pts[w2],w2,ev.disc,dealer);d[w2]+=a2;d[ev.disc]-=a2;
-        if(w2===dealer)dealerWon=true;
-        parts.push(gname(w2)+' '+ptsWord(ev.pts[w2]));
-      });
-      desc='Off '+gname(ev.disc)+': '+parts.join(', ');
-    }else if(ev.kind==='invalid'||ev.kind==='false'){
-      var pen=ev.kind==='invalid'?12:36;
-      for(i=0;i<4;i++)d[i]=(i===ev.who)?-pen:pen/3;
-      desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
-    }else if(ev.kind==='draw'){
-      var k=ev.tenpai.length;
-      if(k>=1&&k<=3){
-        for(i=0;i<4;i++)d[i]=(ev.tenpai.indexOf(i)>=0?[3,2,1][k-1]:-[1,2,3][k-1])*mult;
-      }
-      desc='Draw'+(k?', tenpai: '+ev.tenpai.map(gname).join(', '):', nobody in tenpai');
-    }
-    return {d:d,dealerWon:dealerWon,desc:desc};
+    var r=TBTRules.scoreEvent(ev,dealer,cfg),desc='',fan=cfg.unit==='fan';
+    function amt(w){var n=num(ev.pts&&ev.pts[w]);return fan?n+' fan':cfg.basePoint?String(r.d[w]):ptsWord(ev.pts[w]);}
+    if(ev.kind==='hu')desc=gname(ev.winner)+' wins '+amt(ev.winner)+' off '+gname(ev.disc);
+    else if(ev.kind==='zimo')desc=gname(ev.winner)+' Zi Mo, '+amt(ev.winner);
+    else if(ev.kind==='double'||ev.kind==='triple')desc='Off '+gname(ev.disc)+': '+(ev.winners||[]).map(function(w2){return gname(w2)+' '+(fan?num(ev.pts[w2])+' fan':ptsWord(ev.pts[w2]));}).join(', ');
+    else if(ev.kind==='invalid'||ev.kind==='false')desc=gname(ev.who)+' '+(ev.kind==='invalid'?'invalid win':'false win');
+    else if(ev.kind==='draw'){var k=(ev.tenpai||[]).length;desc=cfg.rs.draw.kind==='tenpai'?'Draw'+(k?', tenpai: '+ev.tenpai.map(gname).join(', '):', nobody in tenpai'):'Draw, no score';}
+    return {d:r.d,dealerWon:r.dealerWon,desc:desc};
   }
 
   // replay every hand in order: works out dealer, streak, wind round and each hand's score changes.
@@ -2189,37 +2119,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // South, West and North. With seat rotation off, every round just reuses row 0.
   var SEAT_ORDER=[[0,1,2,3],[1,0,3,2],[2,3,1,0],[3,2,0,1]];
   function seatAt(wind,turn,seatRotation){return seatRotation?SEAT_ORDER[wind][turn]:turn;}
-  function replay(events,cfg){
-    var wind=0,turn=0,dealer=seatAt(0,0,cfg.seatRotation),streak=1,done=false,hands=[];
-    var roundTotal=[cfg.startBase,cfg.startBase,cfg.startBase,cfg.startBase];   // running score this wind round, only tracked when bankrupt is on
-    events.forEach(function(ev,i){
-      var r=scoreEvent(ev,dealer,cfg);
-      hands.push({i:i,kind:ev.kind,wind:wind,dealer:dealer,streak:streak,deltas:r.d,desc:r.desc,late:done,patterns:ev.patterns});
-      if(done)return;
-      var bankrupt=false;
-      if(cfg.bankrupt){
-        for(var k=0;k<4;k++)roundTotal[k]+=r.d[k];
-        bankrupt=roundTotal.some(function(v){return v<=0;});
-      }
-      if(bankrupt){
-        // someone hit 0 or below: this wind round is over right here, win or no win, streak or no streak
-        streak=1;turn=0;wind++;
-        if(wind>3){done=true;wind=3;}
-        else{dealer=seatAt(wind,0,cfg.seatRotation);roundTotal=[cfg.startBase,cfg.startBase,cfg.startBase,cfg.startBase];}
-      }else if(r.dealerWon&&streak<cfg.maxStreak){streak++;}
-      else{
-        streak=1;turn++;
-        if(turn>=4){
-          turn=0;wind++;
-          if(wind>3){done=true;wind=3;}
-          else{dealer=seatAt(wind,0,cfg.seatRotation);roundTotal=[cfg.startBase,cfg.startBase,cfg.startBase,cfg.startBase];}
-        }else{
-          dealer=seatAt(wind,turn,cfg.seatRotation);
-        }
-      }
-    });
-    return {hands:hands,wind:wind,dealer:dealer,streak:streak,done:done};
-  }
+  function replay(events,cfg){var rp=TBTRules.replay(events,cfg);rp.hands.forEach(function(h){var ev=events[h.i];h.desc=scoreEvent(ev,h.dealer,cfg).desc;});return rp;}
   // exposed for the share-hand feature: the exact same computed row (deltas, desc, patterns)
   // already shown in the hand history, so the share card always matches what's on screen.
   window.getHandRow=function(idx){
@@ -2290,7 +2190,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
         ev={kind:k,winner:f.winner,pts:{}};ev.pts[f.winner]=f.pts[f.winner];attachMeta(ev,f.winner);return ev;
       }
       if(k==='invalid'||k==='false')return f.who<0?null:{kind:k,who:f.who};
-      if(k==='draw')return {kind:'draw',tenpai:[]};
+      if(k==='draw')return {kind:'draw',tenpai:modeConfig().rs.draw.kind==='tenpai'?f.tenpai.slice().sort():[]};
       return null;
     }
     if(k==='hu'){
@@ -2365,22 +2265,22 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   var typedDealer=0;
   function ptsWarnHtml(base){
-    if(modeConfig().hk)return 'This hand has fewer than '+base+' fan, so it can’t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
+    if(modeConfig().unit==='fan')return 'This hand has fewer than '+base+' fan, so it can’t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
     return 'Hand points are below the minimum of '+base+', so this hand can\u2019t count as a win. <button type="button" class="lnk" data-a="suggestinvalid">Record it as an Invalid win instead</button>';
   }
   function ptsTypedField(p,selected){
-    var base=modeConfig().basePoint,low=(selected!=null&&selected<base);
-    if(modeConfig().hk)return '<input type="number" inputmode="numeric" min="0" max="99" step="1" aria-label="Fan" placeholder="Fan (at least '+base+', 13 or more is the limit)" data-a="ptsinput" data-p="'+p+'" value="'+(selected!=null?selected:'')+'">'
+    var c0=modeConfig(),base=c0.minPoint,low=(selected!=null&&selected<base);
+    if(c0.unit==='fan')return '<input type="number" inputmode="numeric" min="0" max="99" step="1" aria-label="Fan" placeholder="Fan (at least '+base+(c0.limit?', '+c0.limit+' or more is the limit':'')+')" data-a="ptsinput" data-p="'+p+'" value="'+(selected!=null?selected:'')+'">'
       +'<div id="hkPays">'+hkPaysHint(selected)+'</div><div class="warn" id="ptsWarn" role="alert"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
-    return '<input type=\"number\" inputmode=\"numeric\" min=\"0\" max=\"999\" step=\"1\" aria-label=\"Hand points\" placeholder=\"Hand points (at least '+base+', on top of the base '+base+')\" data-a=\"ptsinput\" data-p=\"'+p+'\" value=\"'+(selected!=null?selected:'')+'\">'
+    return '<input type=\"number\" inputmode=\"numeric\" min=\"0\" max=\"999\" step=\"1\" aria-label=\"Hand points\" placeholder=\"Hand points (at least '+base+(c0.basePoint?', on top of the base '+c0.basePoint:'')+')\" data-a=\"ptsinput\" data-p=\"'+p+'\" value=\"'+(selected!=null?selected:'')+'\">'
       +'<div class=\"warn\" id=\"ptsWarn\" role=\"alert\"'+(low?'':' hidden')+'>'+ptsWarnHtml(base)+'</div>';
   }
-  function hkPaysHint(fan){if(fan==null||fan<3)return '';var v=HR.points(fan,modeConfig().hkFull);return '<p class="hint" style="margin-top:6px">'+(fan>=HR.LIMIT?'Limit hand: ':'')+fan+' fan = <b>'+v+'</b> points'+(f.kind==='hu'?', the discarder pays double ('+(2*v)+')':', from each of the other three')+'</p>';}
+  function hkPaysHint(fan){var c1=modeConfig();if(fan==null||fan<c1.minPoint)return '';var v=c1.value(fan),hm=c1.rs.hu.disc;return '<p class="hint" style="margin-top:6px">'+(c1.limit&&fan>=c1.limit?'Limit hand: ':'')+fan+' fan = <b>'+v+'</b> points'+(f.kind==='hu'?', the discarder pays '+(hm===2?'double':'\u00d7'+hm)+' ('+(hm*v)+')':', from each of the other three')+'</p>';}
   function ptsTyped(p,selected,label){return '<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'+ptsTypedField(p,selected);}
   // MCR: type the hand's points, or pick the fans, or pick the tiles and let the tool find the fans
   function ptsGridMcr(p,selected,label){
-    if(modeConfig().hk){
-      var hpk=f.patterns&&f.patterns[p],hm=(f.tiles&&f.tiles[p])?'tiles':hpk?'pattern':'points',hlow=(selected!=null&&selected<3);
+    if(modeConfig().picker==='hk'){
+      var hpk=f.patterns&&f.patterns[p],hm=(f.tiles&&f.tiles[p])?'tiles':hpk?'pattern':'points',hlow=(selected!=null&&selected<modeConfig().minPoint);
       var hh='<div class="lbl">'+esc(String(label||'Fan').replace('Hand points','Fan').replace('Points for','Fan for'))+'</div><div class="chips" style="margin-bottom:10px">'
         +'<button type="button" class="chip" aria-pressed="'+(hm==='points')+'" data-a="ptsmode" data-p="'+p+'">Fan</button>'
         +'<button type="button" class="chip" aria-pressed="'+(hm==='pattern')+'" data-a="patpick" data-p="'+p+'">Pick Patterns</button>'
@@ -2390,9 +2290,9 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       if(!hpk)return hh;
       if(hpk&&hpk.counted&&hpk.counted.length)hh+='<p class="hint" style="margin-top:6px">Fan: '+hpk.counted.map(function(it){return esc(it.label)+(it.count>1?' ×'+it.count:'')+' +'+it.p;}).join(', ')+'</p>';
       hh+='<p class="hint" style="margin-top:6px"><b>'+(selected!=null?selected:0)+'</b> fan</p>'+hkPaysHint(selected);
-      return hh+'<div class="warn" id="ptsWarn" role="alert"'+(hlow?'':' hidden')+'>'+ptsWarnHtml(3)+'</div>';
+      return hh+'<div class="warn" id="ptsWarn" role="alert"'+(hlow?'':' hidden')+'>'+ptsWarnHtml(modeConfig().minPoint)+'</div>';
     }
-    var base=modeConfig().basePoint,pk=f.patterns&&f.patterns[p],pkMode=(f.tiles&&f.tiles[p])?'tiles':pk?'pattern':'points';
+    var base=modeConfig().minPoint,pk=f.patterns&&f.patterns[p],pkMode=(f.tiles&&f.tiles[p])?'tiles':pk?'pattern':'points';
     var h='<div class=\"lbl\">'+esc(label||'Hand points')+'</div>'
       +'<div class=\"chips\" style=\"margin-bottom:10px\">'
       +'<button type=\"button\" class=\"chip\" aria-pressed=\"'+(pkMode==='points')+'\" data-a=\"ptsmode\" data-p=\"'+p+'\">Points</button>'
@@ -2423,7 +2323,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       +'</div>';
     h+=carryNote(p);
     h+='<div class="pts">';
-    for(var n=min;n<=13;n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
+    for(var n=min;n<=(modeConfig().limit||13);n++)h+='<button type="button" class="chip pt" data-a="pts" data-p="'+p+'" data-v="'+n+'" aria-pressed="'+(selected===n)+'">'+n+'</button>';
     h+='</div>';
     var pk=f.patterns&&f.patterns[p];
     if(pk&&pk.counted&&pk.counted.length)h+='<p class="hint" style="margin-top:6px">Patterns: '+pk.counted.map(function(it){return esc(patName(it.label))+' +'+it.p;}).join(', ')+'</p>';
@@ -2483,9 +2383,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       }else if(k==='invalid'||k==='false'){
         h+='<div class="lbl">'+(k==='invalid'?'Who declared an invalid win?':'Who declared a false win?')+'</div>'+playerChips('who',f.who);
       }else if(k==='draw'){
-        if(cfg.hk)h+='<p class="hint">A draw scores nothing and the dealer stays on.</p>';
-        else if(cfg.mcr)h+='<p class="hint">A draw scores nothing in this mode. Save it to move the dealer on.</p>';
-        else h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
+        if(cfg.rs.draw.kind!=='tenpai')h+='<p class="hint">A draw scores nothing'+(cfg.rs.stayDraw?' and the dealer stays on.':' in this mode. Save it to move the dealer on.')+'</p>';
+        if(cfg.rs.draw.kind==='tenpai')h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
       }
       var ev=eventFromForm();
       typedDealer=dealer;
@@ -2572,12 +2471,12 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       var prev=f.patterns[pp]?f.patterns[pp].state:null;
       delete f.pts[pp];
       renderGame();
-      if(modeConfig().hk){
-        if(window.openHkPatternModal)window.openHkPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:3,full:!!modeConfig().hkFull,by:(f.kind==='zimo'?'zimo':'hu')});
+      if(modeConfig().picker==='hk'){
+        if(window.openHkPatternModal)window.openHkPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:modeConfig().minPoint,full:!!modeConfig().hkFull,by:(f.kind==='zimo'?'zimo':'hu')});
         return;
       }
-      if(modeConfig().mcr){
-        if(window.openMcrPatternModal)window.openMcrPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:modeConfig().basePoint});
+      if(modeConfig().picker==='mcr'){
+        if(window.openMcrPatternModal)window.openMcrPatternModal(function(r){f.pts[pp]=r.total;f.patterns[pp]=r;renderGame();},prev,{min:modeConfig().minPoint});
         return;
       }
       if(window.openPatternPickerModal)window.openPatternPickerModal(function(r){
@@ -2594,7 +2493,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       var saved=f.tiles[tp]||null,sh=sharedTiles(tp);
       delete f.pts[tp];
       renderGame();
-      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,mcr:!!modeConfig().mcr&&!modeConfig().hk,hk:!!modeConfig().hk,full:!!modeConfig().hkFull,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
+      if(window.openTilePickerModal)window.openTilePickerModal({name:gname(tp),seat:curWind[tp],prev:curRoundWind,by:(f.kind==='zimo'?'zimo':'hu'),min:modeConfig().minPoint,mcr:modeConfig().picker==='mcr',hk:modeConfig().picker==='hk',full:!!modeConfig().hkFull,saved:saved,taken:sh.taken,takenFlowers:sh.flowers,sharedWin:sh.win,
         onInvalid:function(){var ei3=editIdx,ii3=insIdx;resetForm();editIdx=ei3;insIdx=ii3;f.kind='invalid';f.who=tp;renderGame();}},function(r){
         f.pts[tp]=r.patterns.total;
         f.patterns[tp]=r.patterns;
@@ -2620,7 +2519,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var el=e.target;if(!el.matches||!el.matches('[data-a="ptsinput"]'))return;
     var p=+el.dataset.p,v=el.value;
     if(v==='')delete f.pts[p];else f.pts[p]=Math.min(999,Math.max(0,Math.round(num(v))));
-    var base=modeConfig().basePoint,low=(v!==''&&f.pts[p]<base),wr=$('ptsWarn');
+    var base=modeConfig().minPoint,low=(v!==''&&f.pts[p]<base),wr=$('ptsWarn');
     if(wr){wr.hidden=!low;if(low)wr.innerHTML=ptsWarnHtml(base);}
     var hkp=$('hkPays');if(hkp)hkp.innerHTML=hkPaysHint(f.pts[p]);
     var ev=eventFromForm(),sp=$('scorePrev');if(sp)sp.innerHTML=scorePrevHtml(ev,typedDealer);
@@ -2677,36 +2576,41 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // the base tenpai draw payout, before any multiplier: +3/+2/+1 for one/two/three players in
   // tenpai (the others pay it out between them, -1/-2/-3 the same way)
   function drawWord(cfg){
-    var mult=cfg.minPoint*(cfg.deadwall?2:1);
-    return '+'+(3*mult)+'/+'+(2*mult)+'/+'+(1*mult)+' (others -'+(1*mult)+'/-'+(2*mult)+'/-'+(3*mult)+')';
+    var tt=cfg.rs.draw.t,mult=(cfg.rs.draw.byMin?cfg.minPoint:1)*(cfg.deadwall?2:1),g=[0,1,2].map(function(k){return tt[k]*mult;});
+    return '+'+g[0]+'/+'+g[1]+'/+'+g[2]+' (others -'+(g[0]/3)+'/-'+g[1]+'/-'+(g[2]*3)+')';
   }
   function modeHint(){
-    var cfg=modeConfig();
-    if(cfg.hk){
-      var tb=[3,4,5,6,7,8,9,10,11,12,13].map(function(n){return n+' = '+HR.points(n,cfg.hkFull);}).join(', ');
-      return 'HK Classic, '+(cfg.hkFull?'Full Spicy':'Half Spicy')+': type the hand’s fan, or use Pick Patterns to add them up from the Hong Kong sheet. A hand needs at least 3 fan, and unlike TBT and MCR the flower fan count toward those 3, and 13 fan or more is the limit. Fan turn into points'+(cfg.hkFull?', doubling with every fan':'')+': '+tb+'. On a Hu only the discarder pays, double. On a Zi Mo each of the other three pays. An invalid or false win costs the offender '+HR.points(13,cfg.hkFull)+' to each player. A draw scores nothing. The dealer stays on after a dealer win, a draw or a penalty, with no limit. Only the player nearest after the discarder can win off one discard.';
-    }
-    if(cfg.mcr){
-      var b=cfg.basePoint;
-      return (game.mode==='mcrc'?'MCR-Custom':'MCR-'+b)+': type the hand\u2019s points, or use Pick Patterns or Pick Tiles to work them out from the green book (at least '+b+' points of patterns; flowers come on top and do not count toward that). Every hand pays a base of '+b+' on top of the hand points. On a Hu, everyone pays the base and the discarder pays the base plus the hand\u2019s points on top, so the winner ends up with base \u00d73 plus the hand\u2019s points. Zi Mo pays (base + points) from each of the other three. An invalid win costs the offender 24 and a false win 48, split evenly between the other three. A draw scores nothing. The dealer never repeats.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.');
-    }
-    if(game.mode==='casual')return 'Any hand of 1 point or more can win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
-    if(game.mode==='default')return 'A hand needs at least 2 points to win. Dealer streak up to 4. A draw pays tenpai '+drawWord(cfg)+'.';
-    if(game.mode==='tournament')return 'A hand needs at least 2 points to win. The dealer never repeats, so the streak caps at 1.'+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':' Seat rotation is off: every wind round starts with the East seat.')+' A draw pays tenpai '+drawWord(cfg)+'.';
-    return 'A hand needs at least '+cfg.minPoint+' point'+(cfg.minPoint===1?'':'s')+' to win. Dealer streak up to '+cfg.maxStreak+'.'+(cfg.deadwall?' Non-replenishing deadwall is on, doubling the draw payout again.':'')+(cfg.seatRotation?' Seat rotation is on: each wind round starts with a different dealer, MCR-style.':'')+' A draw pays tenpai '+drawWord(cfg)+'.';
+    var cfg=modeConfig(),rs=cfg.rs,u=cfg.unit==='fan'?'fan':'points',t=[];
+    if(rs.help)return rs.help;
+    t.push((rs.short||rs.name)+': '+(rs.entry==='typed'?'type the hand’s '+u+', or use Pick Patterns or Pick Tiles to work them out.':'pick the hand’s points, or use Pick Patterns or Pick Tiles to work them out.'));
+    t.push('A hand needs at least '+unitWord(cfg,cfg.minPoint)+' to win'+(rs.flowersMin?' (flower fan count toward it).':rs.picker==='tbt'?'.':' (flowers come on top and do not count toward it).'));
+    if(cfg.limit&&rs.pay!=='same'){var from=Math.max(cfg.minPoint,rs.pay==='table'&&rs.picker==='tbt'?1:cfg.minPoint),pairs=[];for(var n=from;n<=cfg.limit;n++)pairs.push(n+' = '+cfg.value(n));t.push(cap(u)+' pay'+(rs.pay==='double'?', doubling every '+(u==='fan'?'fan':'point'):'')+': '+pairs.join(', ')+(cfg.limit?' ('+cfg.limit+' or more is the limit)':'')+'.');}
+    if(cfg.basePoint)t.push('Every hand pays a base of '+cfg.basePoint+' on top of the hand’s points.');
+    var hd=rs.hu.disc,ho=rs.hu.others;
+    t.push(ho||cfg.basePoint?'On a Hu the discarder pays '+(cfg.basePoint?'the base plus ':'')+(hd===1?'the hand’s value':'×'+hd)+(ho?' and the other two pay ×'+ho:cfg.basePoint?', the other two pay the base':'')+'.':'On a Hu only the discarder pays'+(hd===1?'.':', ×'+hd+'.'));
+    t.push('On a Zi Mo each of the other three pays'+(cfg.basePoint?' the base plus the hand’s value':rs.zimo!==1?' ×'+rs.zimo:'')+'.');
+    if(rs.dealerMult!==1)t.push('The dealer pays and receives ×'+rs.dealerMult+'.');
+    t.push('An invalid win: '+penWord(cfg,'invalid')+'. A false win: '+penWord(cfg,'false')+'.');
+    t.push(rs.draw.kind==='tenpai'?'A draw pays tenpai '+drawWord(cfg)+'.':'A draw scores nothing.');
+    t.push(cfg.maxStreak===Infinity?'The dealer '+streakWord(cfg)+'.':cfg.maxStreak===1?'The dealer never repeats.':'Dealer streak up to '+cfg.maxStreak+'.');
+    if(!rs.multi)t.push('Only the player nearest after the discarder can win off one discard.');
+    if(cfg.deadwall)t.push('Non-replenishing deadwall is on, doubling the draw payout again.');
+    if(rs.seat==='host')t.push(cfg.seatRotation?'Seat rotation is on: each wind round starts with a different dealer, MCR-style.':'Seat rotation is off: every wind round starts with the East seat.');
+    return t.join(' ');
   }
+  function cap(x){return x.charAt(0).toUpperCase()+x.slice(1);}
   function syncGameMode(){
     $('gmode').querySelectorAll('.btn[data-k]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===game.mode?'true':'false');});
     $('gmodeHint').textContent=modeHint();
-    var isCustom=game.mode==='custom',mcr=isMcr(game.mode)||isHkMode(game.mode);
-    var seatable=game.mode==='tournament'||isCustom||isMcr(game.mode);
+    var rs=rsOf(game.mode),isCustom=!!rs.hostSets,mcr=!rs.start;
+    var seatable=rs.seat==='host';
     var fam=modeFamily(game.mode);$('gmode').querySelectorAll('.fam').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.f===fam?'true':'false');});
     $('gmode').querySelectorAll('.sub').forEach(function(g){g.hidden=g.dataset.f!==fam;});
     // MCR modes have no starting score: the controls go away and the options are cleared
     if(mcr&&(game.useStart||game.bankrupt)){game.useStart=false;game.bankrupt=false;$('guse').checked=false;$('gstart').disabled=true;}
     var st=$('guse').closest('.start');if(st)st.style.display=mcr?'none':'';
-    $('gmcr').hidden=game.mode!=='mcrc';
-    if(game.mode==='mcrc'&&document.activeElement!==$('gmcrBase'))$('gmcrBase').value=game.mcrBase;
+    $('gmcr').hidden=!rs.baseHost;
+    if(rs.baseHost&&document.activeElement!==$('gmcrBase'))$('gmcrBase').value=game.mcrBase;
     if(mcr){$('gbkWrap').hidden=true;$('gbkHint').hidden=true;}
     $('gseatWrap').hidden=!seatable;
     $('seatHint').hidden=!(seatable&&game.seatRotation);
@@ -2718,13 +2622,12 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       $('gcWall').checked=!!game.custom.deadwall;
     }
   }
-  var MODE_START={casual:'200','default':'200',tournament:'240'};
-  var MODE_FAMS=[
-    {f:'tbt',name:'TBT',modes:[['casual','Casual'],['default','Default'],['tournament','Tournament'],['custom','Custom']]},
-    {f:'hk',name:'HK Classic',modes:[['hkc','Half Spicy'],['hkf','Full Spicy'],['hkx','Custom',1]]},
-    {f:'mcr',name:'MCR',modes:[['mcr4','MCR-4'],['mcr8','MCR-8'],['mcrc','MCR-Custom']]},
-    {f:'riichi',name:'Riichi',soon:1},{f:'chicken',name:'Chicken Hand',soon:1}];
-  function modeFamily(m){return isHkMode(m)?'hk':isMcr(m)?'mcr':'tbt';}
+  // families and their modes, in the order set on the Ruleset page (hidden modes are left out, except the one this game uses)
+  function modeFams(){
+    var fams=TBTRules.FAMILIES.map(function(F){return {f:F.id,name:F.name,modes:TBTRules.list(true).filter(function(r){return r.fam===F.id&&(!r.hidden||r.id===game.mode);}).map(function(r){return [r.id,r.name];})};}).filter(function(F){return F.modes.length;});
+    return fams.concat([{f:'riichi',name:'Riichi',soon:1},{f:'chicken',name:'Chicken Hand',soon:1}]);
+  }
+  function modeFamily(m){return rsOf(m).fam;}
   function buildGameMode(){
     var q=$('gmodeQ'),tip=$('gmodeHint'),pinned=false;
     function showTip(on){tip.hidden=!on;q.setAttribute('aria-expanded',on?'true':'false');}
@@ -2734,6 +2637,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var box=$('gmode');box.textContent='';
     // first the family (TBT, Hong Kong, MCR, more later), then the mode inside it
     var famRow=document.createElement('div');famRow.className='famrow';box.appendChild(famRow);
+    var MODE_FAMS=modeFams();
     MODE_FAMS.forEach(function(F){
       var fb=document.createElement('button');fb.type='button';fb.className='btn fam';fb.dataset.f=F.f;
       if(F.soon){fb.disabled=true;fb.classList.add('soon');fb.innerHTML=esc(F.name)+' <small>later</small>';}
@@ -2752,14 +2656,14 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     function pickMode(k){
       (function(){
         var o=[k];
-        var wasMcr=isMcr(game.mode)||isHkMode(game.mode);
+        var r=rsOf(o[0]);
         game.mode=o[0];
-        // MCR and HK modes start with seat rotation off and no starting score; going back to Tournament or Custom restores their own default
-        if(isHkMode(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;}
-        else if(isMcr(o[0])){game.seatRotation=false;game.useStart=false;game.bankrupt=false;if(o[0]==='mcrc'&&isNaN(parseFloat(game.mcrBase)))game.mcrBase=3;}
-        else if(wasMcr){game.seatRotation=true;}
-        // each preset brings its own starting score (still editable); Custom leaves yours alone
-        if(MODE_START[o[0]]!=null){game.start=MODE_START[o[0]];$('gstart').value=game.start;}
+        // each mode brings its own defaults: seat rotation, and no starting score where it has none; the host can change what the mode offers
+        game.seatRotation=r.seat==='host'?!!r.seatDefault:false;
+        if(!r.start){game.useStart=false;game.bankrupt=false;}
+        if(r.baseHost&&isNaN(parseFloat(game.mcrBase)))game.mcrBase=r.base;
+        // each preset brings its own starting score (still editable); a mode whose rules the host sets leaves yours alone
+        if(r.start&&!r.hostSets){game.start=r.startDefault||'200';$('gstart').value=game.start;}
         syncGameMode();
         saveGame();renderGame();
       })();
@@ -2771,7 +2675,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     $('gseat').addEventListener('change',function(){game.seatRotation=this.checked;syncGameMode();saveGame();renderGame();});
     // MCR-Custom's base point: follows every keystroke; when the box is left it shows the value that is really used (0 to 99)
     $('gmcrBase').addEventListener('input',function(){game.mcrBase=this.value;syncGameMode();saveGame();renderGame();});
-    $('gmcrBase').addEventListener('change',function(){game.mcrBase=this.value;game.mcrBase=mcrBaseNow();this.value=game.mcrBase;syncGameMode();saveGame();renderGame();});
+    $('gmcrBase').addEventListener('change',function(){game.mcrBase=this.value;game.mcrBase=modeConfig().basePoint;this.value=game.mcrBase;syncGameMode();saveGame();renderGame();});
   }
   $('gtitle').addEventListener('input',function(){game.title=this.value;saveGame();});
   $('gdate').addEventListener('input',function(){game.date=this.value;saveGame();});
@@ -5350,7 +5254,7 @@ function meScore(inp) { var k = JSON.stringify(inp); if (meMemo.hasOwnProperty(k
 function fanN(n) { return n + ' fan'; }   // fan has no plural
 function hkCtx() { var cd = {}; condList().forEach(function (c) { if (M.cond[c[0]]) cd[c[0]] = true; }); return { win: M.win, by: M.ctx.by, seat: M.ctx.seat, prev: M.ctx.prev, flowers: M.flowers.slice(), cond: cd }; }
 function hkList(sel) { return HR.total(sel, 0).counted.map(function (c) { return tesc(c.label) + (c.count > 1 ? ' \u00d7' + c.count : '') + ' +' + c.p; }).join(', '); }
-function hkPays(fan) { var v = HR.points(fan, !!M.ctx.full); return (fan >= HR.LIMIT ? 'Limit hand: ' : '') + fanN(Math.min(fan, HR.LIMIT)) + ' = ' + v + ' points' + (M.ctx.by === 'zimo' ? ' from each of the other three.' : ', the discarder pays double (' + 2 * v + ').'); }
+function hkPays(fan) { var v = window.sbValue(fan), L = window.sbLimit(); return (fan >= L ? 'Limit hand: ' : '') + fanN(Math.min(fan, L)) + ' = ' + v + ' points' + (M.ctx.by === 'zimo' ? ' from each of the other three.' : ', the discarder pays ' + window.sbHu(fan) + '.'); }
 // HK Classic: what the tiles say. Seven or eight flowers win on their own (a self-pick), even when the hand is not complete.
 function hkVerdict() {
   var r = HKT.score(M.hand, M.melds, hkCtx()), sh = r.shape, min = M.ctx.min || 3, h = '', ok = false, invalid = false;
@@ -5622,7 +5526,7 @@ function hkDrawSum() {
   $t('mpSearch').hidden = true;
   if (window.PP2) {
     var t = HR.total(MP.sel, MP.min, MP.full), any = t.fan > 0;
-    var pay = any && t.valid ? (t.limit ? 'Limit, ' : '') + Math.min(t.fan, HR.LIMIT) + ' fan = ' + t.pays + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays double (' + 2 * t.pays + ')') : '';
+    var pay = any && t.valid ? (t.fan >= window.sbLimit() ? 'Limit, ' : '') + Math.min(t.fan, window.sbLimit()) + ' fan = ' + window.sbValue(t.fan) + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays ' + window.sbHu(t.fan)) : '';
     $t('mpSum').className = 'pps'; $t('mpSum').hidden = false;
     $t('mpSum').innerHTML = window.ppSumHtml({ n: t.fan, unit: 'fan', pill: !any ? null : t.valid ? { cls: 'ok', text: 'Valid win' } : { cls: 'bad', text: MP.min + ' fan needed' }, pay: pay, clear: any ? 'data-mp="reset"' : '',
       tags: t.counted.map(function (c) { return { label: c.label, count: c.count, p: c.p, rm: c.id }; }), rmAttr: 'data-mp="rm" data-id' });
@@ -5649,7 +5553,7 @@ function hkDrawTotal() {
   var t = HR.total(MP.sel, MP.min, MP.full), h = 'Faan total <b>' + t.fan + '</b> faan';
   h += '<div class="pkrow"><b class="cnt">Counted:</b> ' + (t.counted.length ? t.counted.map(function (c) { return tesc(c.label) + ' +' + c.p + (c.count > 1 ? ' (\u00d7' + c.count + ')' : ''); }).join(', ') : 'nothing picked yet') + '</div>';
   if (t.fan) h += t.valid
-    ? '<div class="pkrow"><b class="cnt">Pays:</b> ' + (t.limit ? 'limit, ' : '') + Math.min(t.fan, HR.LIMIT) + ' faan = ' + t.pays + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays double (' + (2 * t.pays) + ')') + '</div>'
+    ? '<div class="pkrow"><b class="cnt">Pays:</b> ' + (t.fan >= window.sbLimit() ? 'limit, ' : '') + Math.min(t.fan, window.sbLimit()) + ' faan = ' + window.sbValue(t.fan) + ' points' + (MP.by === 'zimo' ? ' from each of the other three' : ', the discarder pays ' + window.sbHu(t.fan)) + '</div>'
     : '<div class="pkrow excl"><b class="cnt">Not a win yet:</b> ' + MP.min + ' faan needed.</div>';
   $t('mpFl').innerHTML = '<div class="patTotal" style="margin-top:14px">' + h + '</div><button type="button" class="btn" data-mp="reset" style="margin-top:10px">Clear selection</button>';
 }

@@ -1,3 +1,4 @@
+import { T } from './_scoring.js';
 import { cleanText, normWhatsapp, normInstagram, nameKey, ensureRegistryTables } from './_players.js';
 import { createTableRow } from './_tables.js';
 import { ensureEventTables, expireNow, loadEvents, takenBySession, cleanBanks, validStart, randomId, randomToken, newRef, nowIso, pickCode, registryByWa, eventBookings, goingOf, bookingView, waitlistOf,
@@ -92,7 +93,7 @@ export async function saveEvent(env, actor, b) {
     if (price < 0 || price > 100000000) return { error: n + ': the price is not right.', status: 400 };
     const levels = (Array.isArray(s.levels) ? s.levels : []).filter(function (l) { return LEVELS.indexOf(l) >= 0; });
     if (Array.isArray(s.levels) && !levels.length) return { error: n + ': pick at least one level.', status: 400 };
-    const mode = MODES.indexOf(s.mode) >= 0 ? s.mode : 'default';
+    const mode = (MODES.indexOf(s.mode) >= 0 || T.exists(s.mode)) ? s.mode : 'default';   // 'chicken' is a session-only label for now
     sessions.push({ id: s.id ? String(s.id) : '', start: start, hours: hours, seats: seats, price: price, levels: levels.length === LEVELS.length ? [] : levels, mode: mode });
   }
   if (status === 'published' && sessions.some(function (s) { return s.price > 0; }) && !banks.length && !b.venuePay) return { error: 'Add a bank account so people can transfer.', status: 400 };
@@ -180,7 +181,7 @@ export async function bookingAction(env, actor, bookingId, body) {
     const added = to.filter(function (id) { return p.sessions.indexOf(id) < 0; }), gone = p.sessions.filter(function (id) { return to.indexOf(id) < 0; });
     if (!added.length && !gone.length) return { error: 'Nothing changed.', status: 400 };
     if (!body.over) {
-      for (const id of added) { const s = byId[id]; if (s.taken + 1 > s.seats) return { error: 'The session at ' + s.start.slice(11, 16) + ' (' + ({ casual: 'Casual', 'default': 'Default', tournament: 'Tournament', custom: 'Custom', mcr4: 'MCR-4', mcr8: 'MCR-8', mcrc: 'MCR-Custom', hkc: 'HK Half Spicy', hkf: 'HK Full Spicy', chicken: 'Chicken Hand' }[s.mode] || s.mode) + ') is full. Tick "Allow over the seat limit" to move them anyway.', status: 409 }; }
+      for (const id of added) { const s = byId[id]; if (s.taken + 1 > s.seats) return { error: 'The session at ' + s.start.slice(11, 16) + ' (' + (T.exists(s.mode) ? T.current(s.mode).short : s.mode === 'chicken' ? 'Chicken Hand' : s.mode) + ') is full. Tick "Allow over the seat limit" to move them anyway.', status: 409 }; }
     }
     const cost = function (ids) { return ids.reduce(function (t, id) { return t + (byId[id] ? byId[id].price : 0); }, 0); };
     const diff = cost(to) - cost(p.sessions);
@@ -368,7 +369,7 @@ export async function makeEventDay(env, actor, eventId, b) {
     const ids = (Array.isArray(t.players) ? t.players : []).map(String).filter(function (id) { return byId[id] && !used[id]; }).slice(0, 4);
     if (!ids.length) continue;
     ids.forEach(function (id) { used[id] = 1; });
-    plan.push({ mode: DAY_MODES.indexOf(t.mode) >= 0 ? t.mode : (DAY_MODES.indexOf(s.mode) >= 0 ? s.mode : 'casual'), players: ids.map(function (id) { return byId[id]; }) });
+    plan.push({ mode: T.exists(t.mode) ? t.mode : (T.exists(s.mode) ? s.mode : 'casual'), players: ids.map(function (id) { return byId[id]; }) });
   }
   if (!plan.length) return { error: 'There are no players at these tables.', status: 400 };
   const hostId = actor.host ? actor.host.id : null;

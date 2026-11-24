@@ -1,11 +1,11 @@
 import { genCode } from './_auth.js';
-import { scoreGame, modeConfig, isMcr, isTyped, mcrBaseOf } from './_scoring.js';
+import { scoreGame, modeConfig, isMcr, isTyped, mcrBaseOf, T } from './_scoring.js';
 
 // Pattern names that were renamed: the old name in a saved hand counts under the new one in the statistics.
 const PATTERN_ALIAS = { 'Robbing the Kong': 'Robbing a Kong' };
 
 const KINDS = ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'];
-const MODES = ['casual', 'default', 'tournament', 'custom', 'mcr4', 'mcr8', 'mcrc', 'hkc', 'hkf'];
+const modeOk = function (m) { return T.exists(m); };   // the built-in modes and those added on the Ruleset page
 const MCR_KINDS = ['hu', 'zimo', 'invalid', 'false', 'draw'];   // MCR modes: one winner at most, no double or triple
 const seatOk = function (v) { return Number.isInteger(v) && v >= 0 && v <= 3; };
 // A hand recorded under an MCR mode: seats are 0 to 3, and the typed hand points are a whole number from 0 to 999.
@@ -83,7 +83,8 @@ export function permuteGame(game, order) {
 }
 export function validGame(g) {
   if (!g || typeof g !== 'object' || !Array.isArray(g.events) || g.events.length > 400) return false;
-  if (g.mode !== undefined && MODES.indexOf(g.mode) < 0) return false;
+  if (g.mode !== undefined && !modeOk(g.mode)) return false;
+  if (g.rv !== undefined && !(Number.isInteger(g.rv) && g.rv >= 1)) return false;
   // MCR-Custom's base point is typed into a box: text or a number is fine (the engine keeps it in range), any other shape is not
   if (g.mcrBase !== undefined && g.mcrBase !== null && typeof g.mcrBase !== 'number' && typeof g.mcrBase !== 'string') return false;
   if (g.custom !== undefined) {
@@ -93,7 +94,8 @@ export function validGame(g) {
     if (typeof g.custom !== 'object' || g.custom === null || Array.isArray(g.custom)) return false;
   }
   if (isTyped(g.mode)) return g.events.every(validMcrEvent);
-  return g.events.every(function (ev) { return ev && KINDS.indexOf(ev.kind) >= 0; });
+  const ok = T.kinds(T.current(g.mode || 'casual'));
+  return g.events.every(function (ev) { return ev && ok.indexOf(ev.kind) >= 0; });
 }
 
 // Results are computed once, when the host saves, and stored next to the game.
@@ -234,20 +236,29 @@ export async function statsFor(env, t, budget) {
 export function setupOf(g) {
   g = g || {};
   const mode = g.mode || 'casual';
+  const rs = T.current(mode) || T.current('casual');
   const c = g.custom || {};
   const useStart = !!g.useStart;
   const names = Array.isArray(g.names) ? g.names : [];
   return {
     names: [0, 1, 2, 3].map(function (i) { return String(names[i] == null ? '' : names[i]).trim(); }),
     mode: mode,
-    custom: mode === 'custom' ? { minPoint: String(c.minPoint == null ? 2 : c.minPoint).trim(), maxStreak: String(c.maxStreak == null ? 4 : c.maxStreak).trim(), deadwall: !!c.deadwall } : null,
-    // MCR modes offer seat rotation too, but start with it off; they have no starting score
-    seatRotation: (mode === 'tournament' || mode === 'custom') ? (g.seatRotation === undefined ? true : !!g.seatRotation) : isMcr(mode) ? !!g.seatRotation : null,
-    mcrBase: mode === 'mcrc' ? mcrBaseOf(g) : null,   // the base point of MCR-Custom locks with the rest once a hand is recorded
-    useStart: isTyped(mode) ? false : useStart,
-    start: (useStart && !isTyped(mode)) ? String(g.start == null ? '200' : g.start).trim() : null,
-    bankrupt: (useStart && !isTyped(mode)) ? !!g.bankrupt : null,
+    custom: rs.hostSets ? { minPoint: String(c.minPoint == null ? 2 : c.minPoint).trim(), maxStreak: String(c.maxStreak == null ? 4 : c.maxStreak).trim(), deadwall: !!c.deadwall } : null,
+    // a mode that offers seat rotation lets the host choose; its own default applies until they do
+    seatRotation: rs.seat === 'host' ? (g.seatRotation === undefined ? !!rs.seatDefault : !!g.seatRotation) : null,
+    mcrBase: rs.baseHost ? mcrBaseOf(g) : null,   // a base typed by the host (MCR-Custom) locks with the rest once a hand is recorded
+    useStart: rs.start ? useStart : false,
+    start: (useStart && rs.start) ? String(g.start == null ? '200' : g.start).trim() : null,
+    bankrupt: (useStart && rs.start) ? !!g.bankrupt : null,
   };
+}
+// A table plays under the ruleset version that was current when its first hand was recorded (game.rv). Once it has hands
+// the stored version is kept whatever the browser sends; deleting every hand releases it.
+export function pinRules(current, game) {
+  if (!Array.isArray(game.events) || !game.events.length) { delete game.rv; return; }
+  if (Array.isArray(current.events) && current.events.length) { game.rv = current.rv || 1; return; }
+  const ok = game.rv && T.version(game.mode || 'casual', game.rv) && T.version(game.mode || 'casual', game.rv).v === game.rv;
+  if (!ok) game.rv = T.pinVersion(game);
 }
 export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.stringify(setupOf(b)); }
 
@@ -255,7 +266,7 @@ export function sameSetup(a, b) { return JSON.stringify(setupOf(a)) === JSON.str
 // `createdBy` is the registry id of the host who made it; an admin leaves it out.
 // mode is optional (event day tables start with the game mode the session or table was given); anything unknown falls back to casual
 export async function createTableRow(env, day, label, rawPlayers, createdBy, mode) {
-  const m = MODES.indexOf(mode) >= 0 ? mode : 'casual';
+  const m = modeOk(mode) ? mode : 'casual';
   let players = Array.isArray(rawPlayers) ? rawPlayers.slice(0, 4).map(function (p) { return String(p || '').trim(); }) : [];
   while (players.length < 4) players.push('');
   const code = await uniqueCode(env, undefined, 6);
@@ -264,7 +275,7 @@ export async function createTableRow(env, day, label, rawPlayers, createdBy, mod
   try { dateText = new Date(day.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { dateText = ''; }
   const game = {
     names: players, title: String(label).slice(0, 30), date: dateText,
-    useStart: false, start: '200', mode: m, seatRotation: !isTyped(m), bankrupt: false,
+    useStart: false, start: T.current(m).startDefault || '200', mode: m, seatRotation: T.current(m).seat === 'host' ? !!T.current(m).seatDefault : false, bankrupt: false,
     custom: { minPoint: 2, maxStreak: 4, deadwall: false }, events: [],
   };
   const stats = buildStats(game, players);

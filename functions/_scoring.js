@@ -3,170 +3,20 @@
 // app the host is typing into says it means, including mode-specific
 // rules (Casual/Default/Tournament/Custom), seat rotation, and bankrupt.
 
-const BASE = [0,2,4,6,8,10,12,16,20,24,28,32,36,40];
-function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
-function huAmt(pts, winner, disc, dealer) {
-  const a = BASE[pts] * 2;
-  return (winner === dealer || disc === dealer) ? a * 1.5 : a;
-}
-
-// Same shape modeConfig() produces client-side, from the table's stored
-// mode/custom/seatRotation/bankrupt/useStart/start fields.
-// MCR-4 and MCR-8: the base point is part of the mode's name; hand points are typed in, not picked from a table.
-const MCR_BASE = { mcr4: 4, mcr8: 8 };
+// Scoring: the rules engine (assets/js/rules.js) is shared with the scoreboard, so a table's data means exactly what the
+// app the host is typing into says it means. The engine reads the table's ruleset (its mode, in the version it started with).
+import '../assets/js/rules.js';
+export const T = globalThis.TBTRules;
 export const MCR_CUSTOM_DEFAULT = 3;
-export function isMcr(mode) { return mode === 'mcr4' || mode === 'mcr8' || mode === 'mcrc'; }
-// Hong Kong Classic: the fan of the hand are typed or picked like MCR points, then turned into points by the Hong Kong table
-export function isHk(mode) { return mode === 'hkc' || mode === 'hkf'; }
-export function isTyped(mode) { return isMcr(mode) || isHk(mode); }
-const HK_TABLE = [1, 2, 4, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384], HK_LIMIT = 13;
-// HK Classic pays by the Half Spicy table; HK Full Spicy doubles with every fan (2 to the power of the fan, 8192 at the limit)
-export function hkPoints(fan, full) { const f = Math.max(0, Math.min(HK_LIMIT, Math.round(num(fan)) || 0)); return full ? Math.pow(2, f) : HK_TABLE[f]; }
-// MCR-Custom: the host types the base point (0 to 99). It is typed into a box, so it can arrive as text or half-typed:
-// anything that is not a number falls back to the default, and a number is rounded and kept inside the range.
-export function mcrBaseOf(game) {
-  if (game.mode !== 'mcrc') return MCR_BASE[game.mode];
-  const n = parseFloat(game.mcrBase);
-  return isNaN(n) ? MCR_CUSTOM_DEFAULT : Math.min(99, Math.max(0, Math.round(n)));
-}
-
-export function modeConfig(game) {
-  const mcr = isMcr(game.mode);
-  const seat = (game.mode === 'tournament' || game.mode === 'custom' || mcr) && !!game.seatRotation;
-  let cfg;
-  if (isHk(game.mode)) cfg = { mcr: true, hk: true, hkFull: game.mode === 'hkf', basePoint: 3, minPoint: 3, maxStreak: Infinity, deadwall: false, seatRotation: false };
-  else if (mcr) cfg = { mcr: true, basePoint: mcrBaseOf(game), minPoint: mcrBaseOf(game), maxStreak: 1, deadwall: false, seatRotation: seat };
-  else if (game.mode === 'default') cfg = { minPoint: 2, maxStreak: 4, deadwall: false, seatRotation: false };
-  else if (game.mode === 'tournament') cfg = { minPoint: 2, maxStreak: 1, deadwall: false, seatRotation: seat };
-  else if (game.mode === 'custom') {
-    const c = game.custom || {};
-    cfg = {
-      minPoint: Math.min(13, Math.max(1, num(c.minPoint) || 1)),
-      maxStreak: Math.max(1, Math.round(num(c.maxStreak)) || 1),
-      deadwall: !!c.deadwall, seatRotation: seat,
-    };
-  } else cfg = { minPoint: 1, maxStreak: 4, deadwall: false, seatRotation: false }; // casual
-  cfg.bankrupt = !cfg.mcr && !!(game.useStart && game.bankrupt);
-  cfg.startBase = (!cfg.mcr && game.useStart) ? (num(game.start) || 0) : 0;   // MCR modes have no starting score
-  return cfg;
-}
-
-// Event shapes the scoreboard's Play tab produces:
-// {kind:'hu', winner, disc, pts:{[winner]:n}}
-// {kind:'zimo', winner, pts:{[winner]:n}}
-// {kind:'double'|'triple', disc, winners:[...], pts:{[w]:n}}
-// {kind:'invalid'|'false', who}
-// {kind:'draw', tenpai:[...]}
-export function scoreEvent(ev, dealer, cfg) {
-  const d = [0,0,0,0];
-  let dealerWon = false, winners = [];
-  const mult = cfg.minPoint * (cfg.deadwall ? 2 : 1);
-  if (cfg.hk) {   // only the discarder pays on a Hu, double; the dealer has no bonus and stays on after a dealer win, a draw or a penalty
-    if (ev.kind === 'hu') {
-      const w = ev.winner, v = hkPoints(ev.pts && ev.pts[w], cfg.hkFull) * 2;
-      d[w] += v; d[ev.disc] -= v;
-      return { d, dealerWon: w === dealer, winners: [w], disc: ev.disc };
-    }
-    if (ev.kind === 'zimo') {
-      const w = ev.winner, v = hkPoints(ev.pts && ev.pts[w], cfg.hkFull);
-      for (let i = 0; i < 4; i++) if (i !== w) { d[i] -= v; d[w] += v; }
-      return { d, dealerWon: w === dealer, winners: [w], disc: ev.disc };
-    }
-    if (ev.kind === 'invalid' || ev.kind === 'false') {
-      const pen = hkPoints(HK_LIMIT, cfg.hkFull);
-      for (let i = 0; i < 4; i++) if (i !== ev.who) { d[i] += pen; d[ev.who] -= pen; }
-    }
-    return { d, dealerWon: true, winners: [], disc: ev.disc };   // a draw scores nothing; the dealer stays on
-  }
-  if (cfg.mcr) {   // base + typed hand points; no dealer bonus, one winner at most, no tenpai payout
-    const BP = cfg.basePoint;
-    if (ev.kind === 'hu') {
-      const w = ev.winner, hp = Math.max(0, num(ev.pts && ev.pts[w]));
-      d[w] += BP + hp; d[ev.disc] -= BP + hp;
-      for (let i = 0; i < 4; i++) if (i !== w && i !== ev.disc) { d[i] -= BP; d[w] += BP; }
-      return { d, dealerWon: false, winners: [w], disc: ev.disc };
-    }
-    if (ev.kind === 'zimo') {
-      const w = ev.winner, pay = BP + Math.max(0, num(ev.pts && ev.pts[w]));
-      for (let i = 0; i < 4; i++) if (i !== w) { d[i] -= pay; d[w] += pay; }
-      return { d, dealerWon: false, winners: [w], disc: ev.disc };
-    }
-    if (ev.kind === 'invalid' || ev.kind === 'false') {
-      const pen = ev.kind === 'invalid' ? 24 : 48;
-      for (let i = 0; i < 4; i++) d[i] = (i === ev.who) ? -pen : pen / 3;
-    }
-    return { d, dealerWon: false, winners: [], disc: ev.disc };   // a draw scores nothing
-  }
-  if (ev.kind === 'hu') {
-    const w = ev.winner, p = ev.pts[w];
-    const a = huAmt(p, w, ev.disc, dealer);
-    d[w] += a; d[ev.disc] -= a; dealerWon = (w === dealer); winners = [w];
-  } else if (ev.kind === 'zimo') {
-    const w = ev.winner, p = ev.pts[w];
-    for (let i = 0; i < 4; i++) {
-      if (i === w) continue;
-      const pay = (w === dealer || i === dealer) ? BASE[p] * 1.5 : BASE[p];
-      d[i] -= pay; d[w] += pay;
-    }
-    dealerWon = (w === dealer); winners = [w];
-  } else if (ev.kind === 'double' || ev.kind === 'triple') {
-    ev.winners.forEach(w2 => {
-      const a2 = huAmt(ev.pts[w2], w2, ev.disc, dealer);
-      d[w2] += a2; d[ev.disc] -= a2;
-      if (w2 === dealer) dealerWon = true;
-    });
-    winners = ev.winners.slice();
-  } else if (ev.kind === 'invalid' || ev.kind === 'false') {
-    const pen = ev.kind === 'invalid' ? 12 : 36;
-    for (let i = 0; i < 4; i++) d[i] = (i === ev.who) ? -pen : pen / 3;
-  } else if (ev.kind === 'draw') {
-    const k = ev.tenpai.length;
-    if (k >= 1 && k <= 3) {
-      for (let i = 0; i < 4; i++) d[i] = (ev.tenpai.includes(i) ? [3,2,1][k-1] : -[1,2,3][k-1]) * mult;
-    }
-  }
-  return { d, dealerWon, winners, disc: ev.disc };
-}
-
-// MCR seat rotation table: which seat deals each of the 4 hands in a wind
-// round when seat rotation is on. Row 0 (East) always deals in seat order;
-// rows 1-3 are the fixed MCR permutations for South/West/North. With seat
-// rotation off, every round just reuses row 0 (turn === dealer seat).
-const SEAT_ORDER = [[0,1,2,3],[1,0,3,2],[2,3,1,0],[3,2,0,1]];
-function seatAt(wind, turn, seatRotation) { return seatRotation ? SEAT_ORDER[wind][turn] : turn; }
-
-export function replay(events, cfg) {
-  let wind = 0, turn = 0, dealer = seatAt(0, 0, cfg.seatRotation), streak = 1, done = false;
-  let roundTotal = [cfg.startBase, cfg.startBase, cfg.startBase, cfg.startBase];
-  const hands = [];
-  events.forEach((ev, i) => {
-    const r = scoreEvent(ev, dealer, cfg);
-    hands.push({ i, kind: ev.kind, wind, dealer, streak, deltas: r.d, winners: r.winners, disc: r.disc, late: done });
-    if (done) return;
-    let bankrupt = false;
-    if (cfg.bankrupt) {
-      for (let k = 0; k < 4; k++) roundTotal[k] += r.d[k];
-      bankrupt = roundTotal.some(v => v <= 0);
-    }
-    if (bankrupt) {
-      streak = 1; turn = 0; wind++;
-      if (wind > 3) { done = true; wind = 3; }
-      else { dealer = seatAt(wind, 0, cfg.seatRotation); roundTotal = [cfg.startBase, cfg.startBase, cfg.startBase, cfg.startBase]; }
-    } else if (r.dealerWon && streak < cfg.maxStreak) {
-      streak++;
-    } else {
-      streak = 1; turn++;
-      if (turn >= 4) {
-        turn = 0; wind++;
-        if (wind > 3) { done = true; wind = 3; }
-        else { dealer = seatAt(wind, 0, cfg.seatRotation); roundTotal = [cfg.startBase, cfg.startBase, cfg.startBase, cfg.startBase]; }
-      } else {
-        dealer = seatAt(wind, turn, cfg.seatRotation);
-      }
-    }
-  });
-  return { hands, wind, dealer, streak, done, turn };   // turn: which of the 4 dealer turns of this wind round is being played, 0 to 3
-}
+function rs(mode) { return T.current(mode) || T.current('casual'); }
+export function isMcr(mode) { return rs(mode).picker === 'mcr' && T.exists(mode); }
+export function isHk(mode) { return rs(mode).picker === 'hk' && T.exists(mode); }
+export function isTyped(mode) { return T.exists(mode) && rs(mode).entry === 'typed'; }
+export function modeConfig(game) { return T.config(game || {}); }
+export function mcrBaseOf(game) { return T.config(game || {}).basePoint; }
+export function hkPoints(fan, full) { return T.valueOf(T.current(full ? 'hkf' : 'hkc'), fan); }
+export function scoreEvent(ev, dealer, cfg) { return T.scoreEvent(ev, dealer, cfg); }
+export function replay(events, cfg) { return T.replay(events, cfg); }
 
 export function curveScore(pos) { return { 1: 100, 2: 60, 3: 30, 4: 0 }[pos] ?? 0; }
 export function avg(arr) { return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : 0; }
