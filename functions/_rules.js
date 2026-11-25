@@ -15,8 +15,9 @@
     id: '', fam: 'tbt', name: '', short: '', order: 0, hidden: false, events: true, help: '',
     unit: 'points',          // 'points' | 'fan': what a hand is counted in
     entry: 'grid',           // 'grid': a chip per value from the minimum to the limit | 'typed': the value is typed
-    picker: 'tbt',           // which Pick Patterns and Pick Tiles belong to it: 'tbt' | 'hk' | 'mcr'
-    pay: 'table',            // 'table': table[value] | 'double': 2 to the power of the value | 'same': the value itself
+    picker: 'tbt',           // which Pick Patterns and Pick Tiles belong to it: 'tbt' | 'hk' | 'mcr' | 'none' (no patterns: any complete hand wins)
+    pay: 'table',            // 'table': table[value] | 'double': 2 to the power of the value | 'same': the value itself | 'flat': every win is worth flat
+    flat: 1,                 // what every win is worth when pay is 'flat'
     table: TBT_TABLE.slice(),
     limit: 13,               // the value counts up to this (0 = no limit)
     min: 1,                  // the minimum to win
@@ -39,8 +40,9 @@
     seatDefault: false,
     start: true,             // a starting score (and Bankrupt) is offered
     startDefault: '200',
-    // pattern settings of this sub-mode: null = the built-in list. { set: {<id>: {pts, max, off, win}}, custom: [{id, name, pts, max, grp, repl, excl, win}] }
-    patterns: null
+    // pattern settings of this sub-mode: null = the built-in list. { set: {<id>: {pts, max, off, win, alone}}, custom: [{id, name, pts, max, grp, repl, excl, win, alone}] }
+    patterns: null,
+    stack: 10                // TBT patterns: they stop adding up once the running total reaches this (0 = no cutoff)
   };
   function R(o) { var r = clone(DEFAULTS); Object.keys(o).forEach(function (k) { r[k] = clone(o[k]); }); if (!r.short) r.short = r.name; return r; }
   var MCR = { fam: 'mcr', unit: 'points', entry: 'typed', picker: 'mcr', pay: 'same', limit: 0, minIsBase: true, hu: { disc: 1, others: 0 }, zimo: 1, dealerMult: 1, multi: false, streak: 1,
@@ -48,9 +50,21 @@
   var HK = { fam: 'hk', unit: 'fan', entry: 'typed', picker: 'hk', pay: 'table', table: HK_TABLE.slice(), limit: 13, min: 3, flowersMin: true, hu: { disc: 2, others: 0 }, zimo: 1, dealerMult: 1, multi: false, streak: 0, stayDraw: true, stayPen: true,
     pen: { invalid: { kind: 'limit', amount: 0 }, false: { kind: 'limit', amount: 0 } }, draw: { kind: 'zero', t: [3, 2, 1], byMin: true }, seat: 'off', start: false };
   function ext(a, b) { var o = clone(a); Object.keys(b).forEach(function (k) { o[k] = b[k]; }); return o; }
-  var FAMILIES = [
-    { id: 'tbt', name: 'TBT', col: '#2D6A4F' }, { id: 'hk', name: 'HK Classic', col: '#B72323' }, { id: 'mcr', name: 'MCR', col: '#2F5D9E' }
+  // Families: the three built in, then the ones made on the Ruleset page (saved as rows with id '@' + family id).
+  // rank: the family a new family's tables are ranked with on the leaderboard ('own' = a group of its own).
+  var BUILTIN_FAMILIES = [
+    { id: 'tbt', name: 'TBT', col: '#2D6A4F', rank: 'own', order: 1 }, { id: 'hk', name: 'HK Classic', col: '#B72323', rank: 'own', order: 2 }, { id: 'mcr', name: 'MCR', col: '#2F5D9E', rank: 'own', order: 3 }
   ];
+  var FAMILIES = clone(BUILTIN_FAMILIES);   // the same array is kept (and refilled) so pages holding it see new families
+  var FAM_COLOURS = ['#2D6A4F', '#B72323', '#2F5D9E', '#7A5C14', '#7A4B8C', '#1F6F78', '#B4532A'];
+  function cleanFamily(d) {
+    var f = d || {}, e = [], name = String(f.name || '').trim().slice(0, 24);
+    if (!name) e.push('The family needs a name');
+    var col = /^#[0-9A-Fa-f]{6}$/.test(f.col) ? f.col.toUpperCase() : FAM_COLOURS[3];
+    var rank = ['own', 'tbt', 'hk', 'mcr'].indexOf(f.rank) >= 0 ? f.rank : 'own';
+    var order = Math.round(Math.min(999, Math.max(4, parseFloat(f.order) || 10)));
+    return { family: { name: name, col: col, rank: rank, order: order, hidden: !!f.hidden }, errors: e };
+  }
   var BUILTIN = [
     R({ id: 'casual', name: 'Casual', order: 1, min: 1, streak: 4 }),
     R({ id: 'default', name: 'Default', order: 2, min: 2, streak: 4 }),
@@ -69,15 +83,20 @@
   function registry(saved) {
     var by = {};
     BUILTIN.forEach(function (r) { by[r.id] = [r]; });
+    var fams = {};
     (saved || []).slice().sort(function (a, b) { return a.v - b.v; }).forEach(function (s) {
       if (!s || !s.id || !s.data) return;
+      if (s.id.charAt(0) === '@') { var F = cleanFamily(s.data).family; F.id = s.id.slice(1); F.v = s.v; fams[F.id] = F; return; }
       var r = R(s.data); r.id = s.id; r.v = s.v; (by[s.id] = by[s.id] || []).push(r);
     });
     Object.keys(by).forEach(function (k) { by[k].sort(function (a, b) { return a.v - b.v; }); });
-    return { by: by, families: FAMILIES };
+    var families = clone(BUILTIN_FAMILIES).concat(Object.keys(fams).map(function (k) { return fams[k]; }).filter(function (F) { return BUILTIN_FAMILIES.every(function (B) { return B.id !== F.id; }); })
+      .sort(function (a, b) { return a.order - b.order || a.name.localeCompare(b.name); }));
+    return { by: by, families: families };
   }
   var REG = registry([]);
-  function setSaved(saved) { REG = registry(saved); return REG; }
+  function setSaved(saved) { REG = registry(saved); FAMILIES.length = 0; REG.families.forEach(function (F) { FAMILIES.push(F); }); return REG; }
+  function family(id) { for (var i = 0; i < FAMILIES.length; i++) if (FAMILIES[i].id === id) return FAMILIES[i]; return null; }
   function current(id) { var l = REG.by[id]; return l ? l[l.length - 1] : null; }
   function version(id, v) { var l = REG.by[id]; if (!l) return null; if (v) for (var i = 0; i < l.length; i++) if (l[i].v === v) return l[i]; return l[l.length - 1]; }
   // the modes in picker order: families in their order, sub-modes by their order
@@ -131,6 +150,7 @@
     if (rs.limit > 0) x = Math.min(x, rs.limit);
     if (rs.pay === 'double') return Math.pow(2, x);
     if (rs.pay === 'same') return x;
+    if (rs.pay === 'flat') return num(rs.flat);
     var t = rs.table || [];
     return t.length ? num(t[Math.min(x, t.length - 1)]) : x;
   }
@@ -213,6 +233,7 @@
       if ((v = num(o.max, 1, 20)) !== null) r.max = Math.round(v);
       if (o.off) r.off = true;
       if (win(o.win)) r.win = o.win;
+      if (o.alone === false) r.alone = false;   // a TBT Master or Legendary pattern that stacks like the others
       if (Object.keys(r).length) set[String(id).slice(0, 80)] = r;
     });
     (Array.isArray(P.custom) ? P.custom : []).slice(0, 60).forEach(function (c, i) {
@@ -222,10 +243,18 @@
       names[name.toLowerCase()] = 1;
       custom.push({ id: /^c:/.test(c.id) ? String(c.id).slice(0, 40) : 'c:' + (i + 1) + ':' + name.replace(/[^A-Za-z0-9]+/g, ''),
         name: name, pts: num(c.pts, 0, 1000000) || 0, max: Math.round(num(c.max, 1, 20) || 1), grp: c.grp == null ? '' : String(c.grp).slice(0, 20),
-        repl: ids(c.repl), excl: ids(c.excl), win: win(c.win) || 'both', from: c.from ? String(c.from).slice(0, 80) : '' });
+        repl: ids(c.repl), excl: ids(c.excl), win: win(c.win) || 'both', from: c.from ? String(c.from).slice(0, 80) : '', alone: c.alone !== false });
     });
-    if (!Object.keys(set).length && !custom.length) return null;
-    return { set: set, custom: custom };
+    // TBT: the rules between patterns as changed on the Ruleset page. repl / only: a pattern's full list (only false = no short list); exAdd / exDel: pairs that do or no longer go together
+    var R0 = P.rel || {}, rel = { repl: {}, only: {}, exAdd: [], exDel: [] };
+    Object.keys(R0.repl || {}).slice(0, 200).forEach(function (id) { rel.repl[String(id).slice(0, 80)] = ids(R0.repl[id]); });
+    Object.keys(R0.only || {}).slice(0, 200).forEach(function (id) { rel.only[String(id).slice(0, 80)] = R0.only[id] === false ? false : ids(R0.only[id]); });
+    function pairs(a) { return (Array.isArray(a) ? a : []).slice(0, 400).filter(function (x) { return Array.isArray(x) && x.length === 2 && x[0] !== x[1]; }).map(function (x) { return [String(x[0]).slice(0, 80), String(x[1]).slice(0, 80)]; }); }
+    rel.exAdd = pairs(R0.exAdd); rel.exDel = pairs(R0.exDel);
+    var hasRel = Object.keys(rel.repl).length || Object.keys(rel.only).length || rel.exAdd.length || rel.exDel.length;
+    if (!Object.keys(set).length && !custom.length && !hasRel) return null;
+    var out = { set: set, custom: custom }; if (hasRel) out.rel = rel;
+    return out;
   }
 
   function clean(data) {
@@ -234,11 +263,12 @@
     r.name = String(r.name || '').trim().slice(0, 30); if (!r.name) e.push('Name is empty');
     r.short = String(r.short || r.name).trim().slice(0, 30);
     r.help = String(r.help || '').slice(0, 1500);
-    if (['tbt', 'hk', 'mcr'].indexOf(r.fam) < 0) e.push('Unknown family');
+    if (!family(r.fam)) e.push('Unknown family');
     if (['points', 'fan'].indexOf(r.unit) < 0) r.unit = 'points';
     if (['grid', 'typed'].indexOf(r.entry) < 0) r.entry = 'grid';
-    if (['tbt', 'hk', 'mcr'].indexOf(r.picker) < 0) r.picker = r.fam;
-    if (['table', 'double', 'same'].indexOf(r.pay) < 0) r.pay = 'table';
+    if (['tbt', 'hk', 'mcr', 'none'].indexOf(r.picker) < 0) r.picker = ['tbt', 'hk', 'mcr'].indexOf(r.fam) >= 0 ? r.fam : 'none';
+    if (['table', 'double', 'same', 'flat'].indexOf(r.pay) < 0) r.pay = 'table';
+    r.flat = n(r.flat, 0, 1000000, 1); r.stack = Math.round(n(r.stack, 0, 99, 10));
     r.limit = Math.round(n(r.limit, 0, 99, 13));
     r.table = (Array.isArray(r.table) ? r.table : []).slice(0, 100).map(function (x) { return n(x, 0, 1000000, 0); });
     if (r.pay === 'table' && r.table.length < (r.limit || 13) + 1) e.push('The payout table needs a value up to the limit');
@@ -255,7 +285,7 @@
     return { rules: r, errors: e };
   }
 
-  var api = { DEFAULTS: DEFAULTS, BUILTIN: BUILTIN, FAMILIES: FAMILIES, registry: registry, setSaved: setSaved, current: current, version: version, list: list, exists: exists,
+  var api = { DEFAULTS: DEFAULTS, BUILTIN: BUILTIN, FAMILIES: FAMILIES, BUILTIN_FAMILIES: BUILTIN_FAMILIES, FAM_COLOURS: FAM_COLOURS, family: family, cleanFamily: cleanFamily, registry: registry, setSaved: setSaved, current: current, version: version, list: list, exists: exists,
     rulesOf: rulesOf, pinVersion: pinVersion, config: config, valueOf: valueOf, scoreEvent: scoreEvent, replay: replay, seatAt: seatAt, SEAT_ORDER: SEAT_ORDER, kinds: kinds, clean: clean };
   root.TBTRules = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));

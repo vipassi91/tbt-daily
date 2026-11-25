@@ -318,14 +318,14 @@ var SHOW_RATING=false,RATING_LABEL='TBT Rating';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'};
 var MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'];
 // the modes as the admin set them on the Ruleset page (/modes.js): names, families and order; built-in names if it did not load
-var MODE_FAM={};(function(){var M=window.TBT_MODES;if(!M||!M.modes||!M.modes.length)return;var tbt=[],rest=[];M.modes.forEach(function(m){MODE_LABEL[m.id]=m.short||m.name;MODE_FAM[m.id]=m.fam;(m.fam==='tbt'?tbt:rest).push(m.id);});tbt.sort(function(a,b){return a==='default'?-1:b==='default'?1:0;});MODE_ORDER=tbt.concat(rest);})();
+var MODE_FAM={},FAM_NAME={mcr:'MCR',hk:'HK Classic'},FAM_LIST=['hk'];(function(){var M=window.TBT_MODES;if(!M||!M.modes||!M.modes.length)return;if(M.families&&M.families.length){FAM_LIST=[];M.families.forEach(function(F){if(F.id==='tbt'||(F.rank&&F.rank!=='own'))return;FAM_NAME[F.id]=F.name;if(F.id!=='mcr')FAM_LIST.push(F.id);});}var tbt=[],rest=[];M.modes.forEach(function(m){var g=m.grp||m.fam;MODE_LABEL[m.id]=m.short||m.name;MODE_FAM[m.id]=g;(g==='tbt'?tbt:rest).push(m.id);});tbt.sort(function(a,b){return a==='default'?-1:b==='default'?1:0;});MODE_ORDER=tbt.concat(rest);})();
 function isMcrMode(k){return (MODE_FAM[k]||(k==='mcr4'||k==='mcr8'||k==='mcrc'?'mcr':''))==='mcr';}
 function isHkMode(k){return (MODE_FAM[k]||(k==='hkc'||k==='hkf'?'hk':''))==='hk';}
 function famOf(k){return MODE_FAM[k]||(isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt');}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
 // Which mode filter a table answers to. "All modes" leaves the MCR modes out (their scores are on another scale, so mixing
 // them in would make the ranking meaningless); "MCR" is both MCR modes added together; MCR-4 and MCR-8 stand alone.
-function modeMatch(t,m){var k=modeOf(t);return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
-function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':m==='hk'?'HK Classic':(MODE_LABEL[m]||m);}
+function modeMatch(t,m){var k=modeOf(t);return m==='all'?famOf(k)==='tbt':FAM_NAME[m]?famOf(k)===m:k===m;}
+function filterLabel(m){return m==='all'?'All modes':FAM_NAME[m]?FAM_NAME[m]:(MODE_LABEL[m]||m);}
 function modeOf(t){return t.mode||'casual';}
 // one short line describing how a table was played
 function rulesLine(t){
@@ -389,7 +389,7 @@ function autoMode(){
   var inP=DATA.tables.filter(function(t){var d=dayOf(t.day_id);return t.events>0&&d&&periodOk(d.date);});
   if(inP.some(function(t){return modeOf(t)==='default';}))return;
   // nothing in Default: all modes, unless only MCR tables were played in the period, which is then what opens
-  var fams=inP.map(function(t){return famOf(modeOf(t));});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':'hk'):'all';
+  var fams=inP.map(function(t){return famOf(modeOf(t));});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':fams[0]):'all';
 }
 // ---- the address keeps the filters, so a shared link opens the same view ----
 function readUrl(){
@@ -399,7 +399,7 @@ function readUrl(){
     if(q.get('sesi')){S.tab='sessions';S.day=q.get('sesi');S.dmode='all';}
     else if(q.get('tab')==='sessions')S.tab='sessions';
     S.period=currentSeason();var p=q.get('p');if(p)setPeriodParam(p);
-    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||m==='mcr'||m==='hk'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+    S.mode=DEFAULT_MODE;S.modeSet=false;var m=q.get('m');if(m&&(m==='all'||FAM_NAME[m]||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
   }catch(e){S.period=currentSeason();}
 }
 readUrl();
@@ -726,7 +726,7 @@ function periodMenu(){
 // the mode choices: the usual modes and "All modes" (without MCR), then a group for the MCR modes
 function modeChoices(list,pick,cur,countOf){
   var std=MODE_ORDER.filter(function(k){return famOf(k)==='tbt'&&list.some(function(t){return modeOf(t)===k;})});
-  var mcr=MODE_ORDER.filter(function(k){return famOf(k)==='mcr';}).filter(function(k){return list.some(function(t){return modeOf(t)===k;});}),hk=MODE_ORDER.filter(function(k){return famOf(k)==='hk';}).filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
+  var mcr=MODE_ORDER.filter(function(k){return famOf(k)==='mcr';}).filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
   if(std.length)html+='<div class="n-sep"></div>'+optBtn(pick+'|all','All modes',cur==='all',tablesWord(countOf(function(t){return famOf(modeOf(t))==='tbt';})));
@@ -734,11 +734,13 @@ function modeChoices(list,pick,cur,countOf){
     html+='<div class="n-g">MCR</div>';
     if(mcr.length>1)html+=optBtn(pick+'|mcr','MCR',cur==='mcr',tablesWord(countOf(function(t){return isMcrMode(modeOf(t));})));
     mcr.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
-  }  if(hk.length){
-    html+='<div class="n-g">HK Classic</div>';
-    if(hk.length>1)html+=optBtn(pick+'|hk','HK Classic',cur==='hk',tablesWord(countOf(function(t){return isHkMode(modeOf(t));})));
-    hk.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
   }
+  FAM_LIST.forEach(function(G){var hk=MODE_ORDER.filter(function(k){return famOf(k)===G;}).filter(function(k){return list.some(function(t){return modeOf(t)===k;});});
+  if(hk.length){
+    html+='<div class="n-g">'+esc(FAM_NAME[G])+'</div>';
+    if(hk.length>1)html+=optBtn(pick+'|'+G,esc(FAM_NAME[G]),cur===G,tablesWord(countOf(function(t){return famOf(modeOf(t))===G;})));
+    hk.forEach(function(k){html+=optBtn(pick+'|'+k,esc(MODE_LABEL[k]),cur===k,tablesWord(countOf(function(t){return modeOf(t)===k;})));});
+  }});
   return html;
 }
 function modeMenu(){   // counts follow the period that is selected

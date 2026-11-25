@@ -403,12 +403,12 @@ var LOGO='/assets/i/cfad30e8e7.png';
 var MODE_LABEL={casual:'Casual','default':'Default',tournament:'Tournament',custom:'Custom',mcr4:'MCR-4',mcr8:'MCR-8',mcrc:'MCR-Custom',hkc:'HK Half Spicy',hkf:'HK Full Spicy'},MODE_ORDER=['default','casual','tournament','custom','hkc','hkf','mcr4','mcr8','mcrc'],DEFAULT_MODE='default';
 // "All modes" leaves the MCR modes out (another scale of scores), "MCR" is all of them, each MCR mode also stands alone: as on the main page
 // the modes as the admin set them on the Ruleset page (/modes.js): names, families and order; built-in names if it did not load
-var MODE_FAM={};(function(){var M=window.TBT_MODES;if(!M||!M.modes||!M.modes.length)return;var tbt=[],rest=[];M.modes.forEach(function(m){MODE_LABEL[m.id]=m.short||m.name;MODE_FAM[m.id]=m.fam;(m.fam==='tbt'?tbt:rest).push(m.id);});tbt.sort(function(a,b){return a==='default'?-1:b==='default'?1:0;});MODE_ORDER=tbt.concat(rest);})();
+var MODE_FAM={},FAM_NAME={mcr:'MCR',hk:'HK Classic'},FAM_LIST=['hk'];(function(){var M=window.TBT_MODES;if(!M||!M.modes||!M.modes.length)return;if(M.families&&M.families.length){FAM_LIST=[];M.families.forEach(function(F){if(F.id==='tbt'||(F.rank&&F.rank!=='own'))return;FAM_NAME[F.id]=F.name;if(F.id!=='mcr')FAM_LIST.push(F.id);});}var tbt=[],rest=[];M.modes.forEach(function(m){var g=m.grp||m.fam;MODE_LABEL[m.id]=m.short||m.name;MODE_FAM[m.id]=g;(g==='tbt'?tbt:rest).push(m.id);});tbt.sort(function(a,b){return a==='default'?-1:b==='default'?1:0;});MODE_ORDER=tbt.concat(rest);})();
 function isMcrMode(k){return (MODE_FAM[k]||(k==='mcr4'||k==='mcr8'||k==='mcrc'?'mcr':''))==='mcr';}
 function isHkMode(k){return (MODE_FAM[k]||(k==='hkc'||k==='hkf'?'hk':''))==='hk';}
 function famOf(k){return MODE_FAM[k]||(isMcrMode(k)?'mcr':isHkMode(k)?'hk':'tbt');}   // TBT modes, MCR and HK Classic are scored on different scales, so they never add up together
-function modeMatch(g,m){var k=g.mode;return m==='all'?famOf(k)==='tbt':(m==='mcr'||m==='hk')?famOf(k)===m:k===m;}
-function filterLabel(m){return m==='all'?'All modes':m==='mcr'?'MCR':m==='hk'?'HK Classic':(MODE_LABEL[m]||m);}
+function modeMatch(g,m){var k=g.mode;return m==='all'?famOf(k)==='tbt':FAM_NAME[m]?famOf(k)===m:k===m;}
+function filterLabel(m){return m==='all'?'All modes':FAM_NAME[m]?FAM_NAME[m]:(MODE_LABEL[m]||m);}
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var SORTS=[['net','Net points'],['winRate','Win rate'],['avgWin','Average points per win'],['best','Best hand'],['games','Games'],['hands','Hands played'],['won','Hands won'],['selfDraw','Self draw rate'],['dealIn','Deal-in rate'],['streak','Highest win streak'],['firsts','1st places'],['name','Name (A to Z)']];
 var COLS=[['games','Games'],['won','Hands won'],['winRate','Win rate'],['avgWin','Avg / win'],['best','Best hand'],['selfDraw','Self draw'],['dealIn','Deal-in'],['streak','Streak'],['firsts','1st places']];
@@ -467,7 +467,7 @@ function autoMode(){   // the Default mode may have no games in the period: open
   if(S.modeSet||S.mode!==DEFAULT_MODE)return;
   var inP=games().filter(function(g){return periodOk(g.date);});
   if(inP.some(function(g){return g.mode==='default';}))return;
-  var fams=inP.map(function(g){return famOf(g.mode);});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':'hk'):'all';
+  var fams=inP.map(function(g){return famOf(g.mode);});S.mode=fams.indexOf('tbt')<0&&fams.length?(fams.indexOf('mcr')>=0?'mcr':fams[0]):'all';
 }
 function dirFor(k){return (k==='name'||k==='dealIn')?'asc':'desc';}   // names run A to Z and the fewest deal-ins come first; everything else, the most first
 function sortKnown(k){return SORTS.some(function(s){return s[0]===k;});}
@@ -475,7 +475,7 @@ function readUrl(){
   try{
     var q=new URLSearchParams(location.search);S.period=currentSeason();S.periodSet=false;
     var p=q.get('p');if(p&&setPeriodParam(p))S.periodSet=true;
-    var m=q.get('m');if(m&&(m==='all'||m==='mcr'||m==='hk'||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
+    var m=q.get('m');if(m&&(m==='all'||FAM_NAME[m]||MODE_LABEL[m])){S.mode=m;S.modeSet=true;}
     var s=q.get('s');if(s&&sortKnown(s)){S.sort=s;S.dir=dirFor(s);}
     var o=q.get('o');if(o==='asc'||o==='desc')S.dir=o;
     var g=+q.get('g');if(MINS.indexOf(g)>=0)S.minG=g;
@@ -518,7 +518,7 @@ function periodMenu(){
 }
 function tableCount(f){var seen={};games().forEach(function(g){if(periodOk(g.date)&&f(g))seen[g.view]=1;});return Object.keys(seen).length;}
 function modeMenu(){
-  var all=games(),std=MODE_ORDER.filter(function(k){return famOf(k)==='tbt'&&all.some(function(g){return g.mode===k;});}),mcr=MODE_ORDER.filter(function(k){return famOf(k)==='mcr';}).filter(function(k){return all.some(function(g){return g.mode===k;});}),hk=MODE_ORDER.filter(function(k){return famOf(k)==='hk';}).filter(function(k){return all.some(function(g){return g.mode===k;});});
+  var all=games(),std=MODE_ORDER.filter(function(k){return famOf(k)==='tbt'&&all.some(function(g){return g.mode===k;});}),mcr=MODE_ORDER.filter(function(k){return famOf(k)==='mcr';}).filter(function(k){return all.some(function(g){return g.mode===k;});});
   var html='';
   std.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(tableCount(function(g){return g.mode===k;})));});
   if(std.length)html+='<div class="n-sep"></div>'+optBtn('mode|all','All modes',S.mode==='all',tablesWord(tableCount(function(g){return famOf(g.mode)==='tbt';})));
@@ -526,11 +526,13 @@ function modeMenu(){
     html+='<div class="n-g">MCR</div>';
     if(mcr.length>1)html+=optBtn('mode|mcr','MCR',S.mode==='mcr',tablesWord(tableCount(function(g){return isMcrMode(g.mode);})));
     mcr.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(tableCount(function(g){return g.mode===k;})));});
-  }  if(hk.length){
-    html+='<div class="n-g">HK Classic</div>';
-    if(hk.length>1)html+=optBtn('mode|hk','HK Classic',S.mode==='hk',tablesWord(tableCount(function(g){return isHkMode(g.mode);})));
-    hk.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(tableCount(function(g){return g.mode===k;})));});
   }
+  FAM_LIST.forEach(function(G){var hk=MODE_ORDER.filter(function(k){return famOf(k)===G;}).filter(function(k){return all.some(function(g){return g.mode===k;});});
+  if(hk.length){
+    html+='<div class="n-g">'+esc(FAM_NAME[G])+'</div>';
+    if(hk.length>1)html+=optBtn('mode|'+G,esc(FAM_NAME[G]),S.mode===G,tablesWord(tableCount(function(g){return famOf(g.mode)===G;})));
+    hk.forEach(function(k){html+=optBtn('mode|'+k,esc(MODE_LABEL[k]),S.mode===k,tablesWord(tableCount(function(g){return g.mode===k;})));});
+  }});
   return html;
 }
 function sortMenu(){return SORTS.map(function(s){return optBtn('sort|'+s[0],esc(s[1]),S.sort===s[0]);}).join('');}

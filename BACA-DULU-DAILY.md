@@ -1755,3 +1755,25 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 **Database:** tidak ada perubahan.
 **Berkas baru:** `assets/js/patterns.js` (daftar pola bawaan untuk halaman admin).
 **Berkas yang berubah:** `scoreboard.html`, `admin-ruleset.html`, `assets/js/rules.js`, `functions/_rules.js`, dan catatan ini.
+
+## Update terbaru (v85): halaman Ruleset (tahap 3, keluarga baru) dan aturan pola
+
+**Keluarga baru (`/admin-ruleset`, tombol + New family)**
+- Pilih cara bayar dari template: Points table (seperti TBT), Fan table (seperti HK), Base + points (seperti MCR), atau Flat (setiap menang nilainya sama).
+- Nama, warna (dipakai di chip dan tag mode scoreboard), pola (tanpa pola / salin dari TBT, HK, atau MCR), dan leaderboard (grup sendiri, atau ikut ranking TBT / HK / MCR).
+- Sub-mode pertama dibuat tersembunyi; nyalakan "Scoreboard" di tab General kalau sudah siap. Nama, warna dan leaderboard bisa diubah lewat "Edit" di samping nama keluarga.
+- Tanpa pola: di scoreboard tidak ada isian poin, cukup pilih pemenang ("Any complete hand wins").
+- Pembayaran baru "Same for every win" (Flat) di tab Payouts.
+- Leaderboard, halaman pemain dan daftar pemain: keluarga baru jadi grup sendiri di menu mode (atau ikut keluarga yang dipilih). Tombol "Chicken Hand later" hilang kalau keluarga Chicken Hand sudah dibuat.
+
+**TBT: pengaturan pola baru (tab Patterns)**
+- Stacking cutoff: batas 10 poin sekarang bisa diubah (0 = tanpa batas).
+- Limit di atas 13 (misalnya 17) sekarang juga dipakai Pick Patterns dan Pick Tiles.
+- Kolom Alone: pola Master dan Legendary bisa diatur supaya bisa digabung dengan pola lain.
+- Tombol Rules per pola: Replaces, Does not go with, dan Only goes with bisa diubah atau dikembalikan ke bawaan. Pick Patterns dan Pick Tiles ikut aturan ini. Hanya untuk keluarga TBT (dan keluarga baru yang memakai pola TBT).
+
+**MCR dan HK: pengecekan 4 set di Pick Patterns**
+- Pola yang butuh pong dan pola yang butuh chow tidak bisa lagi dipilih bersama kalau totalnya lebih dari 4 set (misalnya Pure Shifted Pungs dengan Pure Shifted Chows, All Sequences dengan Dragon).
+
+**Database:** tidak ada perubahan (keluarga baru disimpan di tabel `rulesets`).
+**Berkas yang berubah:** `scoreboard.html`, `admin-ruleset.html`, `admin-events.html`, `leaderboard.html`, `index.html`, `events.html`, `player.html`, `players.html`, `assets/js/rules.js`, `assets/js/patterns.js`, `functions/_rules.js`, `functions/_rulesets.js`, `functions/api/admin/rulesets.js`, dan catatan ini.

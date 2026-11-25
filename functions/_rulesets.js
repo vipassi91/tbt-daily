@@ -23,7 +23,15 @@ export async function loadRules(env, force) {
 export function forgetRules() { cached = null; cachedAt = 0; }
 // what the other pages need to show the modes: names, short labels, families and order (no rules)
 export function modeList() {
-  return { families: T.FAMILIES, modes: T.list(true).map(function (r) { return { id: r.id, fam: r.fam, name: r.name, short: r.short, order: r.order, hidden: !!r.hidden, events: r.events !== false, unit: r.unit, v: r.v }; }) };
+  // grp: the family a mode is ranked with on the leaderboard (a new family can be ranked with TBT, HK Classic or MCR, or on its own)
+  return { families: T.FAMILIES.map(function (F) { return { id: F.id, name: F.name, col: F.col, rank: F.rank, order: F.order }; }),
+    modes: T.list(true).map(function (r) { const F = T.family(r.fam) || {}; return { id: r.id, fam: r.fam, grp: F.rank && F.rank !== 'own' ? F.rank : r.fam, name: r.name, short: r.short, order: r.order, hidden: !!r.hidden, events: r.events !== false, unit: r.unit, v: r.v }; }) };
+}
+// a new id for a family: 'f' and the letters of its name, made unique among families and modes
+export function newFamId(name) {
+  let base = String(name || 'family').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 12) || 'family', id = 'f' + base, k = 2;
+  while (T.family(id) || T.exists(id)) { id = 'f' + base + k; k++; }
+  return id;
 }
 // a new id for a copied sub-mode: letters of its name, made unique
 export function newId(name) {

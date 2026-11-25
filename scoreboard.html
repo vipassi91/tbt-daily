@@ -692,6 +692,12 @@ function analyze(sel, by) {
   FANS.forEach(f => { if (count(f.id)) f.repl.forEach(r => lock(r, 'Included in ' + f.name)); });
   if (by === 'hu') ZIMO_ONLY.forEach(id => lock(id, 'Only with Zi Mo (self-pick)'));
   if (by === 'zimo') HU_ONLY.forEach(id => lock(id, 'Only when winning from a discard (Hu)'));
+  // four sets and a pair: what the picked fan need in pungs and in sequences must fit in four sets
+  { const NEED = { AllTriplets: [4, 0], AllConcealedTriplets: [4, 0], AllQuadruplets: [4, 0], Dragon: [1, 0], SmallThreeDragons: [2, 0], BigThreeDragons: [3, 0], RoundWind: [1, 0], SeatWind: [1, 0],
+      SmallFourWinds: [3, 0], BigFourWinds: [4, 0], KongReplacement: [1, 0], DoubleKongReplacement: [2, 0], AllSequences: [0, 4] };
+    const nd = (id, n) => { const x = NEED[id]; return !x ? [0, 0] : id === 'Dragon' ? [Math.max(1, n || 1), 0] : x; };
+    let P = 0, C = 0, pBy = null, cBy = null; FANS.forEach(f => { if (!count(f.id)) return; const n = nd(f.id, count(f.id)); if (n[0] > P) { P = n[0]; pBy = f.id; } if (n[1] > C) { C = n[1]; cBy = f.id; } });
+    if (P || C) FANS.forEach(f => { const n = nd(f.id, 1); if (!n[0] && !n[1]) return; if (Math.max(P, n[0]) + Math.max(C, n[1]) > 4) { const by = n[0] > n[1] ? (cBy || pBy) : (pBy || cBy); lock(f.id, 'Needs more than four sets with ' + (BY[by] ? BY[by].name : by)); } }); }
   const SETS = ['AllSequences', 'AllTriplets', 'AllConcealedTriplets', 'AllQuadruplets', 'Dragon', 'SmallThreeDragons', 'BigThreeDragons', 'RoundWind', 'SeatWind', 'SmallFourWinds', 'BigFourWinds', 'KongReplacement', 'DoubleKongReplacement', 'NineGates', 'ThirteenOrphans'];
   if (count('SevenPairs')) SETS.forEach(id => lock(id, 'Seven Pairs has no sets'));
   if (SETS.some(id => count(id))) lock('SevenPairs', 'Seven Pairs has no sets');
@@ -1875,9 +1881,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var cfg=modeConfig(),rs=cfg.rs;
     var label=rs.short||rs.name;
     var onoff=function(b){return b?'On':'Off';};
-    var rows=[['Minimum to win',unitWord(cfg,cfg.minPoint)]];
+    var rows=[rs.picker==='none'?['To win','Any complete hand']:['Minimum to win',unitWord(cfg,cfg.minPoint)]];
+    if(rs.pay==='flat')rows.push(['Every win','pays '+cfg.value(0)]);
     if(cfg.basePoint)rows.push(['Base point',String(cfg.basePoint)]);
-    if(cfg.limit&&rs.pay!=='same')rows.push(['Limit',unitWord(cfg,cfg.limit)+', pays '+cfg.value(cfg.limit)]);
+    if(cfg.limit&&rs.pay!=='same'&&rs.pay!=='flat')rows.push(['Limit',unitWord(cfg,cfg.limit)+', pays '+cfg.value(cfg.limit)]);
     if(rs.pay==='double')rows.push(['Payout','doubles every '+(cfg.unit==='fan'?'fan':'point')]);
     rows.push(['Dealer',streakWord(cfg)]);
     if(rs.seat==='host')rows.push(['Seat rotation',onoff(cfg.seatRotation)]);
@@ -1891,7 +1898,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var fam=modeFamily(game.mode||'casual');document.querySelectorAll('.rhead .pill').forEach(function(p){p.dataset.fam=fam;});var gst=$('gstatus');if(gst)gst.dataset.fam=fam;
     var gsTag=$('gsTag'),gsSub=$('gsSub');
     if(gsTag&&gsSub){
-      var facts=cfg.basePoint?['Base '+cfg.basePoint,'Min '+cfg.minPoint]:(cfg.limit&&cfg.unit==='fan')?['Min '+cfg.minPoint+' fan','Limit '+cfg.value(cfg.limit)]:['Min '+cfg.minPoint,'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)],flags=[];
+      var facts=rs.pay==='flat'?['Win '+cfg.value(0),'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)]:cfg.basePoint?['Base '+cfg.basePoint,'Min '+cfg.minPoint]:(cfg.limit&&cfg.unit==='fan')?['Min '+cfg.minPoint+' fan','Limit '+cfg.value(cfg.limit)]:['Min '+cfg.minPoint,'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)],flags=[];
       if(cfg.seatRotation)flags.push('Rotation');
       if(cfg.deadwall)flags.push('Deadwall');
       if(rs.start&&game.useStart)flags.push('Start '+game.start);
@@ -2119,12 +2126,13 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // the pattern settings of this game's ruleset go into the pickers (built-in lists for the other families)
   var patKey='';
   function syncPatterns(force){
-    var rs=modeConfig().rs,key=rs.id+':'+rs.v+':'+JSON.stringify(rs.patterns||null);if(key===patKey&&!force)return;patKey=key;
+    var rs=modeConfig().rs,key=rs.id+':'+rs.v+':'+rs.stack+':'+rs.limit+':'+JSON.stringify(rs.patterns||null);if(key===patKey&&!force)return;patKey=key;
     var R=window.TBT_R,MR=window.TBT_MR;
     var P=rs.patterns||null;
-    try{if(window.TBT_PICK_APPLY)window.TBT_PICK_APPLY(rs.picker==='tbt'?P:null);if(typeof R!=='undefined'&&R.applyPatterns)R.applyPatterns(rs.picker==='tbt'?P:null);}catch(e){}
+    var st=rs.picker==='tbt'?rs.stack:10,lm=rs.picker==='tbt'?rs.limit:13;
+    try{if(window.TBT_PICK_APPLY)window.TBT_PICK_APPLY(rs.picker==='tbt'?P:null,st,lm);if(R&&R.applyPatterns)R.applyPatterns(rs.picker==='tbt'?P:null,st,lm);}catch(e){}
     try{if(window.HR&&HR.apply)HR.apply(rs.picker==='hk'?P:null);}catch(e){}
-    try{if(typeof MR!=='undefined'&&MR.apply)MR.apply(rs.picker==='mcr'?P:null);}catch(e){}
+    try{if(MR&&MR.apply)MR.apply(rs.picker==='mcr'?P:null);}catch(e){}
   }
   window.syncPatterns=syncPatterns;
   window.sbValue=function(n){return modeConfig().value(n);};          // what n points or fan pay in this game (the HK pickers use it)
@@ -2212,6 +2220,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function attachMeta(ev,w){if(f.patterns[w]){if(!ev.patterns)ev.patterns={};ev.patterns[w]=f.patterns[w];}if(f.tiles&&f.tiles[w]){if(!ev.tiles)ev.tiles={};ev.tiles[w]=f.tiles[w];}}
   function eventFromForm(){
     var k=f.kind,ev,ws;
+    if(modeConfig().picker==='none')[0,1,2,3].forEach(function(p){f.pts[p]=1;});   // no patterns: every win counts the same
     if(modeConfig().mcr){   // typed points (0 is allowed: it is flagged below the minimum, not refused); a draw carries no tenpai
       if(k==='hu'){
         if(f.winner<0||f.disc<0||f.pts[f.winner]==null)return null;
@@ -2344,7 +2353,9 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     return '<div class="lbl">Score changes</div><div class="dls">'+deltaChips(pv.d)+'</div>';
   }
   function ptsGrid(p,selected,label){
-    if(modeConfig().mcr)return ptsGridMcr(p,selected,label);
+    var c9=modeConfig();
+    if(c9.picker==='none')return '<p class="hint" style="margin-top:6px">'+(label&&label!=='Points'?esc(String(label).replace('Points for ',''))+': ':'')+'Any complete hand wins'+(c9.rs.pay==='flat'?', worth <b>'+c9.value(0)+'</b>.':'.')+'</p>';
+    if(c9.mcr)return ptsGridMcr(p,selected,label);
     var min=modeConfig().minPoint;
     var pkMode=(f.tiles&&f.tiles[p])?'tiles':(f.patterns&&f.patterns[p])?'pattern':'points';
     var h='<div class="lbl">'+esc(label||'Points')+'</div>'
@@ -2615,9 +2626,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function modeHint(){
     var cfg=modeConfig(),rs=cfg.rs,u=cfg.unit==='fan'?'fan':'points',t=[];
     if(rs.help)return rs.help;
-    t.push((rs.short||rs.name)+': '+(rs.entry==='typed'?'type the hand’s '+u+', or use Pick Patterns or Pick Tiles to work them out.':'pick the hand’s points, or use Pick Patterns or Pick Tiles to work them out.'));
-    t.push('A hand needs at least '+unitWord(cfg,cfg.minPoint)+' to win'+(rs.flowersMin?' (flower fan count toward it).':rs.picker==='tbt'?'.':' (flowers come on top and do not count toward it).'));
-    if(cfg.limit&&rs.pay!=='same'){var from=Math.max(cfg.minPoint,rs.pay==='table'&&rs.picker==='tbt'?1:cfg.minPoint),pairs=[];for(var n=from;n<=cfg.limit;n++)pairs.push(n+' = '+cfg.value(n));t.push(cap(u)+' pay'+(rs.pay==='double'?', doubling every '+(u==='fan'?'fan':'point'):'')+': '+pairs.join(', ')+(cfg.limit?' ('+cfg.limit+' or more is the limit)':'')+'.');}
+    if(rs.picker==='none')t.push((rs.short||rs.name)+': any complete hand wins'+(rs.pay==='flat'?', and every win is worth '+cfg.value(0)+'.':'.'));
+    else t.push((rs.short||rs.name)+': '+(rs.entry==='typed'?'type the hand’s '+u+', or use Pick Patterns or Pick Tiles to work them out.':'pick the hand’s points, or use Pick Patterns or Pick Tiles to work them out.'));
+    if(rs.picker!=='none')t.push('A hand needs at least '+unitWord(cfg,cfg.minPoint)+' to win'+(rs.flowersMin?' (flower fan count toward it).':rs.picker==='tbt'?'.':' (flowers come on top and do not count toward it).'));
+    if(cfg.limit&&rs.pay!=='same'&&rs.pay!=='flat'){var from=Math.max(cfg.minPoint,rs.pay==='table'&&rs.picker==='tbt'?1:cfg.minPoint),pairs=[];for(var n=from;n<=cfg.limit;n++)pairs.push(n+' = '+cfg.value(n));t.push(cap(u)+' pay'+(rs.pay==='double'?', doubling every '+(u==='fan'?'fan':'point'):'')+': '+pairs.join(', ')+(cfg.limit?' ('+cfg.limit+' or more is the limit)':'')+'.');}
     if(cfg.basePoint)t.push('Every hand pays a base of '+cfg.basePoint+' on top of the hand’s points.');
     var hd=rs.hu.disc,ho=rs.hu.others;
     t.push(ho||cfg.basePoint?'On a Hu the discarder pays '+(cfg.basePoint?'the base plus ':'')+(hd===1?'the hand’s value':'×'+hd)+(ho?' and the other two pay ×'+ho:cfg.basePoint?', the other two pay the base':'')+'.':'On a Hu only the discarder pays'+(hd===1?'.':', ×'+hd+'.'));
@@ -2657,10 +2669,21 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   // families and their modes, in the order set on the Ruleset page (hidden modes are left out, except the one this game uses)
   function modeFams(){
+    famCss();
     var fams=TBTRules.FAMILIES.map(function(F){return {f:F.id,name:F.name,modes:TBTRules.list(true).filter(function(r){return r.fam===F.id&&(!r.hidden||r.id===game.mode);}).map(function(r){return [r.id,r.name];})};}).filter(function(F){return F.modes.length;});
-    return fams.concat([{f:'riichi',name:'Riichi',soon:1},{f:'chicken',name:'Chicken Hand',soon:1}]);
+    var have=TBTRules.FAMILIES.map(function(F){return F.name.toLowerCase();});
+    return fams.concat([{f:'riichi',name:'Riichi',soon:1},{f:'chicken',name:'Chicken Hand',soon:1}].filter(function(F){return have.indexOf(F.name.toLowerCase())<0;}));
   }
   function modeFamily(m){return rsOf(m).fam;}
+  // a family made on the Ruleset page brings its own colour (lighter in dark mode, like the built-in ones)
+  function famCss(){
+    var css='';TBTRules.FAMILIES.forEach(function(F){if(['tbt','hk','mcr'].indexOf(F.id)>=0||!/^#[0-9A-Fa-f]{6}$/.test(F.col))return;
+      var a='[data-fam="'+F.id+'"]',b='#gmode [data-f="'+F.id+'"]',lt='color-mix(in srgb,'+F.col+' 50%,#fff)';
+      css+=a+','+b+'{--fc:'+F.col+'}'
+        +'@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) '+a+',:root:not([data-theme="light"]) '+b+'{--fc:'+lt+'}}'
+        +':root[data-theme="dark"] '+a+',:root[data-theme="dark"] '+b+'{--fc:'+lt+'}';});
+    var el=document.getElementById('famCss');if(!el){el=document.createElement('style');el.id='famCss';document.head.appendChild(el);}el.textContent=css;
+  }
   function buildGameMode(){
     var q=$('gmodeQ'),tip=$('gmodeHint'),pinned=false;
     function showTip(on){tip.hidden=!on;q.setAttribute('aria-expanded',on?'true':'false');}
@@ -2933,31 +2956,39 @@ window.ppSumHtml = function (o) {
 
   var pat={sel:{},flo:{},win:{}};
   // Ruleset (patterns): points, how often, switched off, and custom patterns of this sub-mode. Reset to the built-in list each time.
-  var PAT_OFF={},FLO_OFF={},WIN_OFF={},PAT_BASE=null;
+  var PAT_OFF={},FLO_OFF={},WIN_OFF={},PAT_BASE=null,STACK=10,LIMIT=13,ML_FREE={};   // STACK: patterns stop adding up at this running total (Infinity: no cutoff)
   function clearObj(o){Object.keys(o).forEach(function(k){delete o[k];});}
-  function applyPatterns(P){
-    if(!PAT_BASE)PAT_BASE={n:PATTERNS.length,p:PATTERNS.map(function(x){return x.p;}),fp:FLOWERS_B.map(function(x){return x.p;}),wp:WINB.map(function(x){return x.p;}),sm:JSON.stringify(SEL_MAX),im:JSON.stringify(IMPLIES_MAP),ex:JSON.stringify(EXCLUDE_MAP)};
+  function applyPatterns(P,stack,limit){
+    STACK=stack===0?Infinity:(stack>0?stack:10);LIMIT=limit===0?Infinity:(limit>0?limit:13);
+    if(!PAT_BASE)PAT_BASE={n:PATTERNS.length,p:PATTERNS.map(function(x){return x.p;}),fp:FLOWERS_B.map(function(x){return x.p;}),wp:WINB.map(function(x){return x.p;}),sm:JSON.stringify(SEL_MAX),im:JSON.stringify(IMPLIES_MAP),ex:JSON.stringify(EXCLUDE_MAP),wl:JSON.stringify(WHITELIST_LOCKS)};
     PATTERNS.length=PAT_BASE.n;PATTERNS.forEach(function(x,i){x.p=PAT_BASE.p[i];});FLOWERS_B.forEach(function(x,i){x.p=PAT_BASE.fp[i];});WINB.forEach(function(x,i){x.p=PAT_BASE.wp[i];});
-    clearObj(SEL_MAX);Object.assign(SEL_MAX,JSON.parse(PAT_BASE.sm));clearObj(IMPLIES_MAP);Object.assign(IMPLIES_MAP,JSON.parse(PAT_BASE.im));clearObj(EXCLUDE_MAP);Object.assign(EXCLUDE_MAP,JSON.parse(PAT_BASE.ex));
-    clearObj(PAT_OFF);clearObj(FLO_OFF);clearObj(WIN_OFF);
+    clearObj(SEL_MAX);Object.assign(SEL_MAX,JSON.parse(PAT_BASE.sm));clearObj(IMPLIES_MAP);Object.assign(IMPLIES_MAP,JSON.parse(PAT_BASE.im));clearObj(EXCLUDE_MAP);Object.assign(EXCLUDE_MAP,JSON.parse(PAT_BASE.ex));clearObj(WHITELIST_LOCKS);Object.assign(WHITELIST_LOCKS,JSON.parse(PAT_BASE.wl));
+    clearObj(PAT_OFF);clearObj(FLO_OFF);clearObj(WIN_OFF);clearObj(ML_FREE);
     if(!P)return;
     var set=P.set||{};
     Object.keys(set).forEach(function(id){
       var o=set[id],k=id.slice(0,2),n=id.slice(2),i;
-      if(k==='p:'){i=patIdxByName(n);if(i<0)return;if(o.pts!=null)PATTERNS[i].p=+o.pts;if(o.max!=null)SEL_MAX[i]=+o.max;if(o.off)PAT_OFF[i]=1;}
+      if(k==='p:'){i=patIdxByName(n);if(i<0)return;if(o.pts!=null)PATTERNS[i].p=+o.pts;if(o.max!=null)SEL_MAX[i]=+o.max;if(o.off)PAT_OFF[i]=1;if(o.alone===false)ML_FREE[i]=1;}
       else if(k==='f:'){i=floIdxByName(n);if(i<0)return;if(o.pts!=null)FLOWERS_B[i].p=+o.pts;if(o.off)FLO_OFF[i]=1;}
       else if(k==='w:'){for(i=0;i<WINB.length;i++)if(WINB[i].n===n)break;if(i>=WINB.length)return;if(o.pts!=null)WINB[i].p=+o.pts;if(o.off)WIN_OFF[i]=1;}
     });
-    (P.custom||[]).forEach(function(c){var i=PATTERNS.length;PATTERNS.push({t:c.grp||'b',n:c.name,p:+c.pts||0,custom:1});if(+c.max>1)SEL_MAX[i]=+c.max;});
-    function idx(x){return patIdxByName(String(x).replace(/^p:/,''));}
+    (P.custom||[]).forEach(function(c){var i=PATTERNS.length;PATTERNS.push({t:c.grp||'b',n:c.name,p:+c.pts||0,custom:1});if(+c.max>1)SEL_MAX[i]=+c.max;if(c.alone===false)ML_FREE[i]=1;});
+    function idx(x){x=String(x);if(/^c:/.test(x)){var cc=(P.custom||[]).filter(function(c){return c.id===x;})[0];return cc?patIdxByName(cc.name):-1;}return patIdxByName(x.replace(/^p:/,''));}
     (P.custom||[]).forEach(function(c){
       var i=patIdxByName(c.name);if(i<0)return;
       (c.repl||[]).forEach(function(r){var j=idx(r);if(j>=0&&j!==i)(IMPLIES_MAP[i]=IMPLIES_MAP[i]||[]).push(j);});
       (c.excl||[]).forEach(function(r){var j=idx(r);if(j<0||j===i)return;(EXCLUDE_MAP[i]=EXCLUDE_MAP[i]||[]).push(j);(EXCLUDE_MAP[j]=EXCLUDE_MAP[j]||[]).push(i);});
     });
+    // the rules between patterns as the Ruleset page changed them: what a pattern replaces, the pairs that do not go together, and the short lists some patterns only go with
+    var REL=P.rel||{};
+    Object.keys(REL.repl||{}).forEach(function(id){var i=idx(id);if(i<0)return;var l=(REL.repl[id]||[]).map(idx).filter(function(j){return j>=0&&j!==i;});if(l.length)IMPLIES_MAP[i]=l;else delete IMPLIES_MAP[i];});
+    Object.keys(REL.only||{}).forEach(function(id){var i=idx(id),l=REL.only[id];if(i<0)return;if(!l)delete WHITELIST_LOCKS[i];else WHITELIST_LOCKS[i]=l.map(idx).filter(function(j){return j>=0&&j!==i;});});
+    function unex(a,b){if(EXCLUDE_MAP[a]){EXCLUDE_MAP[a]=EXCLUDE_MAP[a].filter(function(x){return x!==b;});if(!EXCLUDE_MAP[a].length)delete EXCLUDE_MAP[a];}}
+    (REL.exDel||[]).forEach(function(pr){var a=idx(pr[0]),b=idx(pr[1]);if(a<0||b<0)return;unex(a,b);unex(b,a);});
+    (REL.exAdd||[]).forEach(function(pr){var a=idx(pr[0]),b=idx(pr[1]);if(a<0||b<0||a===b)return;[[a,b],[b,a]].forEach(function(q){var l=EXCLUDE_MAP[q[0]]=EXCLUDE_MAP[q[0]]||[];if(l.indexOf(q[1])<0)l.push(q[1]);});});
   }
 
-  function isML(i){return PATTERNS[i].t==='m'||PATTERNS[i].t==='l';}
+  function isML(i){return (PATTERNS[i].t==='m'||PATTERNS[i].t==='l')&&!ML_FREE[i];}   // a Master or Legendary hand stands alone, unless the ruleset lets it stack
   function countSel(map,n){var c=0;for(var i=0;i<n;i++)if(map[i])c++;return c;}
   function patIdxByName(name){for(var i=0;i<PATTERNS.length;i++)if(PATTERNS[i].n===name)return i;return -1;}
   function floIdxByName(name){for(var i=0;i<FLOWERS_B.length;i++)if(FLOWERS_B[i].n===name)return i;return -1;}
@@ -3131,14 +3162,14 @@ window.ppSumHtml = function (o) {
     pts.forEach(function(it){
       if(stopped){excluded.push(it);return;}
       total+=it.p;counted.push(it);
-      if(total>=10)stopped=true;
+      if(total>=STACK)stopped=true;
     });
     var capNotes=pts.filter(function(it){return it.capped;}).map(function(it){return it.i;});
     return {total:total,counted:counted,excluded:excluded,stackCutoff:excluded.length>0,capNotes:capNotes};
   }
   // Once the pattern-only total above is already above 10, flower and win-condition bonuses can no
   // longer be added on top of it.
-  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>10;}
+  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>STACK;}
 
   function computeTotal(){
     var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
@@ -3148,26 +3179,26 @@ window.ppSumHtml = function (o) {
       var others=selIdx.map(function(i){return PATTERNS[i].n;});
       Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]&&+k!==gardenIdx)others.push(FLOWERS_B[k].n);});
       Object.keys(pat.win).forEach(function(k){if(pat.win[k])others.push(WINB[k].n);});
-      return {mode:'garden',total:Math.min(13,gp),counted:[{label:FLOWERS_B[gardenIdx].n,p:gp}],excluded:[],lockedOut:others,bonusLockedOut:[],capNotes:[],capped:false};
+      return {mode:'garden',total:Math.min(LIMIT,gp),counted:[{label:FLOWERS_B[gardenIdx].n,p:gp}],excluded:[],lockedOut:others,bonusLockedOut:[],capNotes:[],capped:false};
     }
     var mlIdx=selIdx.filter(isML);
     if(mlIdx.length){
       var sum=mlIdx.reduce(function(a,i){return a+PATTERNS[i].p;},0);
       return {
         mode:'ml',
-        total:Math.min(13,sum),
+        total:Math.min(LIMIT,sum),
         counted:mlIdx.map(function(i){return {label:PATTERNS[i].n,p:PATTERNS[i].p};}),
         excluded:[],
         lockedOut:selIdx.filter(function(i){return !isML(i);}).map(function(i){return PATTERNS[i].n;}),
         bonusLockedOut:[],
         capNotes:[],
-        capped:sum>13
+        capped:sum>LIMIT
       };
     }
     var pres=patternOnlyTotal(selIdx);
     var floItems=[];Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]){var c=pat.flo[k];floItems.push({label:FLOWERS_B[k].n,p:FLOWERS_B[k].p*c,count:c});}});
     var winItems=[];Object.keys(pat.win).forEach(function(k){if(pat.win[k])winItems.push({label:WINB[k].n,p:WINB[k].p});});
-    var locked=pres.total>10;
+    var locked=pres.total>STACK;
     // Bonuses stack the way patterns do: highest first (flowers before wins on a tie), added while the
     // running total is still below 10. The bonus that crosses 10 still counts in full; anything after
     // it does not. Each Flower In Season is its own +1, so two of them can end up half counted.
@@ -3182,7 +3213,7 @@ window.ppSumHtml = function (o) {
       units.sort(function(a,b){return b.p-a.p||a.k-b.k;});
       var running=pres.total,got={};
       units.forEach(function(u){
-        if(running>=10)return;
+        if(running>=STACK)return;
         running+=u.p;got[u.k]=(got[u.k]||0)+1;
       });
       allBonus.forEach(function(it,k){
@@ -3199,13 +3230,13 @@ window.ppSumHtml = function (o) {
     var grand=pres.total+bonusSum;
     return {
       mode:'normal',
-      total:Math.min(13,grand),
+      total:Math.min(LIMIT,grand),
       counted:pres.counted.concat(bonusItems),
       excluded:pres.excluded,
       lockedOut:[],
       bonusLockedOut:locked?floItems.concat(winItems):[],
       capNotes:pres.capNotes,
-      capped:grand>13,
+      capped:grand>LIMIT,
       stackCutoff:pres.stackCutoff,
       bonusLocked:locked,
       bonusTrimmed:bonusTrimmed
@@ -3235,7 +3266,7 @@ window.ppSumHtml = function (o) {
     idxs.forEach(function(i){
       var p=PATTERNS[i];
       var count=pat.sel[i]||0;
-      var dis=(hasML&&!count)||(isMLTier&&hasNonML&&!count)||(gardenSel&&!count)||(!count&&lockedOutBySelection(i,selSet));
+      var dis=(hasML&&!count)||(isML(i)&&hasNonML&&!count)||(gardenSel&&!count)||(!count&&lockedOutBySelection(i,selSet));
       var disp=(effMap[i]!=null)?effMap[i]:p.p;
       h+='<button type="button" class="chip" data-a="sel" data-v="'+i+'" aria-pressed="'+(count>0)+'"'+(dis?' disabled':'')+'><span>'+esc(p.n)+(count>1?' (\u00d7'+count+')':'')+'</span><span class="ptv">'+disp+'</span></button>';
     });
@@ -3272,10 +3303,10 @@ window.ppSumHtml = function (o) {
     if(floSelIdx>=0)h+='<p class="hint">Only one flower/season bonus applies at a time, so picking one locks the others.</p>';
     if(gardenSel)h+='<p class="hint">Win By Royal Garden and Win By Imperial Garden count on their own, so every other pattern and bonus is locked while one of them is picked.</p>';
     else if(otherPicks)h+='<p class="hint">Win By Royal Garden and Win By Imperial Garden can only be picked on their own, so they are locked while anything else is picked.</p>';
-    if(hasML)h+='<p class="hint">Master and Legendary hands don\u2019t stack with anything else, including the flower and win-condition bonuses below; those are locked.</p>';
-    else if(hasNonML)h+='<p class="hint">Master and Legendary patterns don\u2019t stack with anything else, so they\u2019re locked while a Beginner, Apprentice or Expert pattern is picked.</p>';
+    if(hasML)h+='<p class="hint">'+PATTERNS[selIdx.filter(isML)[0]].n+' stands alone: it doesn\u2019t stack with anything else, including the flower and win-condition bonuses below; those are locked.</p>';
+    else if(hasNonML)h+='<p class="hint">Master and Legendary patterns that stand alone are locked while another pattern is picked.</p>';
     if(!hasML){
-      if(bonusDis)h+='<p class="hint">Pattern points alone are already above 10, so flower and win-condition bonuses below are locked and can\u2019t be added.</p>';
+      if(bonusDis)h+='<p class="hint">Pattern points alone are already above '+STACK+', so flower and win-condition bonuses below are locked and can\u2019t be added.</p>';
       if(selSet[IDX.HALFTERM])h+='<p class="hint">Half Terminals already guarantees All Pong and Half Outside, so those are locked.</p>';
       if(selSet[IDX.SEVENPAIRS])h+='<p class="hint">Seven Pairs only stacks with All Simples, Half Flush, Full Flush and Half Terminals; everything else is locked.</p>';
       if(selSet[IDX.ALLTYPES])h+='<p class="hint">With All Types, Pong Of Dragon can only be picked once.</p>';
@@ -3297,17 +3328,17 @@ window.ppSumHtml = function (o) {
     var r=computeTotal();
     var h='Faan total <b>'+r.total+'</b> '+(r.total===1?'faan':'faan');
     h+='<div class="pkrow"><b class="cnt">Counted:</b> '+(r.counted.length?fmtItems(r.counted):'nothing picked yet')+'</div>';
-    if(r.excluded.length)h+='<div class="pkrow excl"><b class="cnt">Excluded by the 10-point stacking cutoff:</b> '+fmtItems(r.excluded)+'</div>';
+    if(r.excluded.length)h+='<div class="pkrow excl"><b class="cnt">Excluded by the '+STACK+'-point stacking cutoff:</b> '+fmtItems(r.excluded)+'</div>';
     if(r.bonusTrimmed&&r.bonusTrimmed.length)h+='<div class="pkrow excl"><b class="cnt">Not counted, the total already reached 10:</b> '+r.bonusTrimmed.map(function(t){return esc(t.label)+(t.counted?' (+'+t.counted+' of +'+t.of+' counted)':' +'+t.of);}).join(', ')+'</div>';
     if(r.lockedOut.length)h+='<div class="pkrow excl"><b class="cnt">'+(r.mode==='garden'?'Locked out by the garden win:':'Locked out by the Master/Legendary pick:')+'</b> '+r.lockedOut.join(', ')+'</div>';
-    if(r.bonusLockedOut.length)h+='<div class="pkrow excl"><b class="cnt">Locked out, pattern points already above 10:</b> '+fmtItems(r.bonusLockedOut)+'</div>';
+    if(r.bonusLockedOut.length)h+='<div class="pkrow excl"><b class="cnt">Locked out, pattern points already above '+STACK+':</b> '+fmtItems(r.bonusLockedOut)+'</div>';
     var notes=[];
     if(r.mode==='garden')notes.push('Winning by Royal Garden or Imperial Garden counts on its own, so no other pattern, flower or win-condition bonus is added.');
     else if(r.mode==='ml')notes.push('A Master or Legendary pattern is selected, so only Master/Legendary picks count toward the total; everything else is ignored.');
     else{
-      if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches 10, no further pattern points are added. The pattern that crosses 10 still counts in full.');
+      if(r.stackCutoff)notes.push('Once the running total of pattern points (sorted highest first) reaches '+STACK+', no further pattern points are added. The pattern that crosses '+STACK+' still counts in full.');
       if(r.bonusTrimmed&&r.bonusTrimmed.length)notes.push('Flower and win-condition bonuses are added highest first until the running total reaches 10. The one that crosses 10 still counts in full; the rest are not counted, even though they can still be selected.');
-      if(r.bonusLocked)notes.push('Pattern points alone are already above 10, so flower and win-condition bonuses don\u2019t add on top.');
+      if(r.bonusLocked)notes.push('Pattern points alone are already above '+STACK+', so flower and win-condition bonuses don\u2019t add on top.');
       if(r.capNotes&&r.capNotes.indexOf(IDX.KONG3)>=0)notes.push('Three Quadruplets / Kongs is counted at a reduced +3 (normally +7) because it overlaps in structure with the other triplet-family pattern(s) picked.');
       if(r.capNotes&&r.capNotes.indexOf(IDX.TCP)>=0)notes.push('Three Concealed Triplets / Pong is counted at a reduced +2 (normally +4) because it overlaps in structure with the other triplet-family pattern(s) picked.');
     }
@@ -3337,14 +3368,14 @@ window.ppSumHtml = function (o) {
     if(r.mode==='garden')notes.push('A garden win counts on its own.');
     else if(r.mode==='ml')notes.push('Master and Legendary hands count on their own.');
     else{
-      if(r.excluded.length)notes.push('Not counted, the 10-point cutoff: '+r.excluded.map(function(x){return esc(x.label);}).join(', ')+'.');
+      if(r.excluded.length)notes.push('Not counted, the '+STACK+'-point cutoff: '+r.excluded.map(function(x){return esc(x.label);}).join(', ')+'.');
       if(r.bonusTrimmed&&r.bonusTrimmed.length)notes.push('Bonus not counted, the total already reached 10: '+r.bonusTrimmed.map(function(t){return esc(t.label);}).join(', ')+'.');
-      if(r.bonusLocked)notes.push('Pattern points are above 10, so no bonus is added.');
+      if(r.bonusLocked)notes.push('Pattern points are above '+STACK+', so no bonus is added.');
       if(r.capNotes&&r.capNotes.length)notes.push('A triplet pattern is counted at a reduced value because it overlaps with another.');
     }
-    if(r.capped)notes.push('Capped at 13.');
+    if(r.capped)notes.push('Capped at '+LIMIT+'.');
     // like MCR: the minimum is met by pattern points only; flower and win-condition bonuses come on top once the hand is valid (a garden win has no minimum)
-    var garden=r.mode==='garden',low=!garden&&PP_MIN>0&&pts<PP_MIN,bonus=garden?0:r.total-Math.min(13,pts),isPat=function(c){return patIdxByName(c.label)>=0;};
+    var garden=r.mode==='garden',low=!garden&&PP_MIN>0&&pts<PP_MIN,bonus=garden?0:r.total-Math.min(LIMIT,pts),isPat=function(c){return patIdxByName(c.label)>=0;};
     var pill=!any?null:low?{cls:'bad',text:PP_MIN+' needed'}:{cls:'ok',text:'Valid win'};
     var pay=!any||garden?'':pts+' from patterns'+(PP_MIN?' (at least '+PP_MIN+')':'')+(bonus>0?' + '+bonus+' bonus'+(low?', not counted until the hand is valid':''):'');
     $('pkTotal').innerHTML='<div class="pps">'+window.ppSumHtml({n:low?pts:r.total,unit:(low?pts:r.total)===1?'point':'points',pill:pill,pay:pay,clear:any?'data-pp="clear"':'',
@@ -3360,7 +3391,7 @@ window.ppSumHtml = function (o) {
     if(a!=='sel'){
       if(a==='flo'&&GARDEN_WIN_IDX.indexOf(v)>=0)return FLOWERS_B[v].n+' can only be picked on its own.';
       if(ml!==undefined)return PATTERNS[ml].n+' stands alone: no bonus is added.';
-      if(bonusLocked(selIdx))return 'Pattern points are already above 10, so no bonus is added.';
+      if(bonusLocked(selIdx))return 'Pattern points are already above '+STACK+', so no bonus is added.';
       if(a==='flo')return 'Only one flower or season bonus applies.';
       return 'Replacement Tile and Double Replacement Tile do not go together.';
     }
@@ -3380,7 +3411,7 @@ window.ppSumHtml = function (o) {
   SEL_MAX[IDX.KONG]=2;
   SEL_MAX[IDX.PONGDRAGON]=2;
 
-  window.TBT_PICK_APPLY=function(P){applyPatterns(P);};
+  window.TBT_PICK_APPLY=function(P,stack,limit){applyPatterns(P,stack,limit);};
   $('pkBox').addEventListener('pointerup',function(e){
     if(!window.PP2)return;
     var hit=document.elementsFromPoint(e.clientX,e.clientY).filter(function(x){return x.matches&&x.matches('button[data-a][disabled]');})[0];
@@ -4298,31 +4329,39 @@ var PATTERNS=[
 
   var pat={sel:{},flo:{},win:{}};
   // Ruleset (patterns): points, how often, switched off, and custom patterns of this sub-mode. Reset to the built-in list each time.
-  var PAT_OFF={},FLO_OFF={},WIN_OFF={},PAT_BASE=null;
+  var PAT_OFF={},FLO_OFF={},WIN_OFF={},PAT_BASE=null,STACK=10,LIMIT=13,ML_FREE={};   // STACK: patterns stop adding up at this running total (Infinity: no cutoff)
   function clearObj(o){Object.keys(o).forEach(function(k){delete o[k];});}
-  function applyPatterns(P){
-    if(!PAT_BASE)PAT_BASE={n:PATTERNS.length,p:PATTERNS.map(function(x){return x.p;}),fp:FLOWERS_B.map(function(x){return x.p;}),wp:WINB.map(function(x){return x.p;}),sm:JSON.stringify(SEL_MAX),im:JSON.stringify(IMPLIES_MAP),ex:JSON.stringify(EXCLUDE_MAP)};
+  function applyPatterns(P,stack,limit){
+    STACK=stack===0?Infinity:(stack>0?stack:10);LIMIT=limit===0?Infinity:(limit>0?limit:13);
+    if(!PAT_BASE)PAT_BASE={n:PATTERNS.length,p:PATTERNS.map(function(x){return x.p;}),fp:FLOWERS_B.map(function(x){return x.p;}),wp:WINB.map(function(x){return x.p;}),sm:JSON.stringify(SEL_MAX),im:JSON.stringify(IMPLIES_MAP),ex:JSON.stringify(EXCLUDE_MAP),wl:JSON.stringify(WHITELIST_LOCKS)};
     PATTERNS.length=PAT_BASE.n;PATTERNS.forEach(function(x,i){x.p=PAT_BASE.p[i];});FLOWERS_B.forEach(function(x,i){x.p=PAT_BASE.fp[i];});WINB.forEach(function(x,i){x.p=PAT_BASE.wp[i];});
-    clearObj(SEL_MAX);Object.assign(SEL_MAX,JSON.parse(PAT_BASE.sm));clearObj(IMPLIES_MAP);Object.assign(IMPLIES_MAP,JSON.parse(PAT_BASE.im));clearObj(EXCLUDE_MAP);Object.assign(EXCLUDE_MAP,JSON.parse(PAT_BASE.ex));
-    clearObj(PAT_OFF);clearObj(FLO_OFF);clearObj(WIN_OFF);
+    clearObj(SEL_MAX);Object.assign(SEL_MAX,JSON.parse(PAT_BASE.sm));clearObj(IMPLIES_MAP);Object.assign(IMPLIES_MAP,JSON.parse(PAT_BASE.im));clearObj(EXCLUDE_MAP);Object.assign(EXCLUDE_MAP,JSON.parse(PAT_BASE.ex));clearObj(WHITELIST_LOCKS);Object.assign(WHITELIST_LOCKS,JSON.parse(PAT_BASE.wl));
+    clearObj(PAT_OFF);clearObj(FLO_OFF);clearObj(WIN_OFF);clearObj(ML_FREE);
     if(!P)return;
     var set=P.set||{};
     Object.keys(set).forEach(function(id){
       var o=set[id],k=id.slice(0,2),n=id.slice(2),i;
-      if(k==='p:'){i=patIdxByName(n);if(i<0)return;if(o.pts!=null)PATTERNS[i].p=+o.pts;if(o.max!=null)SEL_MAX[i]=+o.max;if(o.off)PAT_OFF[i]=1;}
+      if(k==='p:'){i=patIdxByName(n);if(i<0)return;if(o.pts!=null)PATTERNS[i].p=+o.pts;if(o.max!=null)SEL_MAX[i]=+o.max;if(o.off)PAT_OFF[i]=1;if(o.alone===false)ML_FREE[i]=1;}
       else if(k==='f:'){i=floIdxByName(n);if(i<0)return;if(o.pts!=null)FLOWERS_B[i].p=+o.pts;if(o.off)FLO_OFF[i]=1;}
       else if(k==='w:'){for(i=0;i<WINB.length;i++)if(WINB[i].n===n)break;if(i>=WINB.length)return;if(o.pts!=null)WINB[i].p=+o.pts;if(o.off)WIN_OFF[i]=1;}
     });
-    (P.custom||[]).forEach(function(c){var i=PATTERNS.length;PATTERNS.push({t:c.grp||'b',n:c.name,p:+c.pts||0,custom:1});if(+c.max>1)SEL_MAX[i]=+c.max;});
-    function idx(x){return patIdxByName(String(x).replace(/^p:/,''));}
+    (P.custom||[]).forEach(function(c){var i=PATTERNS.length;PATTERNS.push({t:c.grp||'b',n:c.name,p:+c.pts||0,custom:1});if(+c.max>1)SEL_MAX[i]=+c.max;if(c.alone===false)ML_FREE[i]=1;});
+    function idx(x){x=String(x);if(/^c:/.test(x)){var cc=(P.custom||[]).filter(function(c){return c.id===x;})[0];return cc?patIdxByName(cc.name):-1;}return patIdxByName(x.replace(/^p:/,''));}
     (P.custom||[]).forEach(function(c){
       var i=patIdxByName(c.name);if(i<0)return;
       (c.repl||[]).forEach(function(r){var j=idx(r);if(j>=0&&j!==i)(IMPLIES_MAP[i]=IMPLIES_MAP[i]||[]).push(j);});
       (c.excl||[]).forEach(function(r){var j=idx(r);if(j<0||j===i)return;(EXCLUDE_MAP[i]=EXCLUDE_MAP[i]||[]).push(j);(EXCLUDE_MAP[j]=EXCLUDE_MAP[j]||[]).push(i);});
     });
+    // the rules between patterns as the Ruleset page changed them: what a pattern replaces, the pairs that do not go together, and the short lists some patterns only go with
+    var REL=P.rel||{};
+    Object.keys(REL.repl||{}).forEach(function(id){var i=idx(id);if(i<0)return;var l=(REL.repl[id]||[]).map(idx).filter(function(j){return j>=0&&j!==i;});if(l.length)IMPLIES_MAP[i]=l;else delete IMPLIES_MAP[i];});
+    Object.keys(REL.only||{}).forEach(function(id){var i=idx(id),l=REL.only[id];if(i<0)return;if(!l)delete WHITELIST_LOCKS[i];else WHITELIST_LOCKS[i]=l.map(idx).filter(function(j){return j>=0&&j!==i;});});
+    function unex(a,b){if(EXCLUDE_MAP[a]){EXCLUDE_MAP[a]=EXCLUDE_MAP[a].filter(function(x){return x!==b;});if(!EXCLUDE_MAP[a].length)delete EXCLUDE_MAP[a];}}
+    (REL.exDel||[]).forEach(function(pr){var a=idx(pr[0]),b=idx(pr[1]);if(a<0||b<0)return;unex(a,b);unex(b,a);});
+    (REL.exAdd||[]).forEach(function(pr){var a=idx(pr[0]),b=idx(pr[1]);if(a<0||b<0||a===b)return;[[a,b],[b,a]].forEach(function(q){var l=EXCLUDE_MAP[q[0]]=EXCLUDE_MAP[q[0]]||[];if(l.indexOf(q[1])<0)l.push(q[1]);});});
   }
 
-  function isML(i){return PATTERNS[i].t==='m'||PATTERNS[i].t==='l';}
+  function isML(i){return (PATTERNS[i].t==='m'||PATTERNS[i].t==='l')&&!ML_FREE[i];}   // a Master or Legendary hand stands alone, unless the ruleset lets it stack
   function countSel(map,n){var c=0;for(var i=0;i<n;i++)if(map[i])c++;return c;}
   function patIdxByName(name){for(var i=0;i<PATTERNS.length;i++)if(PATTERNS[i].n===name)return i;return -1;}
   function floIdxByName(name){for(var i=0;i<FLOWERS_B.length;i++)if(FLOWERS_B[i].n===name)return i;return -1;}
@@ -4496,14 +4535,14 @@ var PATTERNS=[
     pts.forEach(function(it){
       if(stopped){excluded.push(it);return;}
       total+=it.p;counted.push(it);
-      if(total>=10)stopped=true;
+      if(total>=STACK)stopped=true;
     });
     var capNotes=pts.filter(function(it){return it.capped;}).map(function(it){return it.i;});
     return {total:total,counted:counted,excluded:excluded,stackCutoff:excluded.length>0,capNotes:capNotes};
   }
   // Once the pattern-only total above is already above 10, flower and win-condition bonuses can no
   // longer be added on top of it.
-  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>10;}
+  function bonusLocked(selIdx){return patternOnlyTotal(selIdx).total>STACK;}
 
   function computeTotal(){
     var selIdx=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])selIdx.push(+k);});
@@ -4513,26 +4552,26 @@ var PATTERNS=[
       var others=selIdx.map(function(i){return PATTERNS[i].n;});
       Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]&&+k!==gardenIdx)others.push(FLOWERS_B[k].n);});
       Object.keys(pat.win).forEach(function(k){if(pat.win[k])others.push(WINB[k].n);});
-      return {mode:'garden',total:Math.min(13,gp),counted:[{label:FLOWERS_B[gardenIdx].n,p:gp}],excluded:[],lockedOut:others,bonusLockedOut:[],capNotes:[],capped:false};
+      return {mode:'garden',total:Math.min(LIMIT,gp),counted:[{label:FLOWERS_B[gardenIdx].n,p:gp}],excluded:[],lockedOut:others,bonusLockedOut:[],capNotes:[],capped:false};
     }
     var mlIdx=selIdx.filter(isML);
     if(mlIdx.length){
       var sum=mlIdx.reduce(function(a,i){return a+PATTERNS[i].p;},0);
       return {
         mode:'ml',
-        total:Math.min(13,sum),
+        total:Math.min(LIMIT,sum),
         counted:mlIdx.map(function(i){return {label:PATTERNS[i].n,p:PATTERNS[i].p};}),
         excluded:[],
         lockedOut:selIdx.filter(function(i){return !isML(i);}).map(function(i){return PATTERNS[i].n;}),
         bonusLockedOut:[],
         capNotes:[],
-        capped:sum>13
+        capped:sum>LIMIT
       };
     }
     var pres=patternOnlyTotal(selIdx);
     var floItems=[];Object.keys(pat.flo).forEach(function(k){if(pat.flo[k]){var c=pat.flo[k];floItems.push({label:FLOWERS_B[k].n,p:FLOWERS_B[k].p*c,count:c});}});
     var winItems=[];Object.keys(pat.win).forEach(function(k){if(pat.win[k])winItems.push({label:WINB[k].n,p:WINB[k].p});});
-    var locked=pres.total>10;
+    var locked=pres.total>STACK;
     // Bonuses stack the way patterns do: highest first (flowers before wins on a tie), added while the
     // running total is still below 10. The bonus that crosses 10 still counts in full; anything after
     // it does not. Each Flower In Season is its own +1, so two of them can end up half counted.
@@ -4547,7 +4586,7 @@ var PATTERNS=[
       units.sort(function(a,b){return b.p-a.p||a.k-b.k;});
       var running=pres.total,got={};
       units.forEach(function(u){
-        if(running>=10)return;
+        if(running>=STACK)return;
         running+=u.p;got[u.k]=(got[u.k]||0)+1;
       });
       allBonus.forEach(function(it,k){
@@ -4564,13 +4603,13 @@ var PATTERNS=[
     var grand=pres.total+bonusSum;
     return {
       mode:'normal',
-      total:Math.min(13,grand),
+      total:Math.min(LIMIT,grand),
       counted:pres.counted.concat(bonusItems),
       excluded:pres.excluded,
       lockedOut:[],
       bonusLockedOut:locked?floItems.concat(winItems):[],
       capNotes:pres.capNotes,
-      capped:grand>13,
+      capped:grand>LIMIT,
       stackCutoff:pres.stackCutoff,
       bonusLocked:locked,
       bonusTrimmed:bonusTrimmed
@@ -4598,7 +4637,7 @@ function setState(s){pat={sel:Object.assign({},s.sel||{}),flo:Object.assign({},s
 function selIdxOf(s){setState(s);var out=[];Object.keys(pat.sel).forEach(function(k){if(pat.sel[k])out.push(+k);});return out;}
 function total(s){setState(s);return computeTotal();}
 function lockedOut(i,s){var set={};Object.keys(s.sel||{}).forEach(function(k){if(s.sel[k])set[k]=true;});return lockedOutBySelection(i,set);}
-return {applyPatterns:applyPatterns,IMPLIES_MAP:IMPLIES_MAP,PATTERNS:PATTERNS,FLOWERS_B:FLOWERS_B,WINB:WINB,IDX:IDX,TIER_LABEL:TIER_LABEL,SEL_MAX:SEL_MAX,selMaxFor:selMaxFor,setState:setState,total:total,lockedOut:lockedOut,isML:isML,patIdxByName:patIdxByName,floIdxByName:floIdxByName,selIdxOf:selIdxOf,getPat:function(){return pat;}};
+return {applyPatterns:applyPatterns,IMPLIES_MAP:IMPLIES_MAP,EXCLUDE_MAP:EXCLUDE_MAP,WHITELIST_LOCKS:WHITELIST_LOCKS,PATTERNS:PATTERNS,FLOWERS_B:FLOWERS_B,WINB:WINB,IDX:IDX,TIER_LABEL:TIER_LABEL,SEL_MAX:SEL_MAX,selMaxFor:selMaxFor,setState:setState,total:total,lockedOut:lockedOut,isML:isML,patIdxByName:patIdxByName,floIdxByName:floIdxByName,selIdxOf:selIdxOf,getPat:function(){return pat;}};
 })();
 
 var DET=(function(analyze,suitOf,rankOf,isTerminal,ORPHANS,R){
@@ -4881,6 +4920,14 @@ function terminalPungCap(sel) {
   const dragon = has('BigThreeDragons') ? 3 : has('LittleThreeDragons') || has('TwoDragonPungs') ? 2 : has('DragonPung') ? 1 : 0;
   return Math.max(0, 4 - wind - dragon);
 }
+// sets each fan needs at least: p = pungs or kongs, c = chows (Knitted Straight counts as three chow-like sets)
+const NEED = { BigFourWinds: [4, 0], BigThreeDragons: [3, 0], FourKongs: [4, 0], LittleFourWinds: [3, 0], LittleThreeDragons: [2, 0], FourConcealedPungs: [4, 0], FourPureShiftedPungs: [4, 0],
+  ThreeKongs: [3, 0], AllEvenPungs: [4, 0], PureShiftedPungs: [3, 0], TriplePung: [3, 0], ThreeConcealedPungs: [3, 0], BigThreeWinds: [3, 0], MixedShiftedPungs: [3, 0], AllPungs: [4, 0],
+  TwoConcealedKongs: [2, 0], TwoDragonPungs: [2, 0], MeldedAndConcealedKong: [2, 0], TwoMeldedKongs: [2, 0], DragonPung: [1, 0], PrevalentWind: [1, 0], SeatWind: [1, 0], DoublePung: [2, 0],
+  TwoConcealedPungs: [2, 0], ConcealedKong: [1, 0], MeldedKong: [1, 0], PungOfTerminalsOrHonors: [1, 0],
+  PureTerminalChows: [0, 4], QuadrupleChow: [0, 4], FourShiftedChows: [0, 4], ThreeSuitedTerminalChows: [0, 4], AllChows: [0, 4], PureTripleChow: [0, 3], PureStraight: [0, 3], PureShiftedChows: [0, 3],
+  KnittedStraight: [0, 3], MixedStraight: [0, 3], MixedTripleChow: [0, 3], MixedShiftedChows: [0, 3], PureDoubleChow: [0, 2], MixedDoubleChow: [0, 2], ShortStraight: [0, 2], TwoTerminalChows: [0, 2] };
+function needOf(id, n) { const x = NEED[id]; if (!x) return [0, 0]; return id === 'PungOfTerminalsOrHonors' ? [Math.max(1, n || 1), 0] : x; }
 function chowSmallCap(sel) { const has = id => (sel[id] || 0) > 0; return FOUR_CHOWS.some(has) ? 0 : THREE_CHOWS.some(has) ? 1 : 3; }
 // what stops each fan right now, and how many times it may count
 function analyze(sel) {
@@ -4900,8 +4947,12 @@ function analyze(sel) {
   // irregular hands have no sets, so no fan that needs a chow, pung or kong (Lesser Honors may still add Knitted Straight)
   for (const i of IRREGULAR) if (count(i) > 0) FANS.forEach(f => { if (f.sets && !(ALLOWED_SETS[i] || []).includes(f.id)) lock(f.id, 'This hand has no four sets and a pair (' + NAME(i) + ')'); });
   for (const i of IRREGULAR) { const blocker = picked.find(id => BY[id].sets && !(ALLOWED_SETS[i] || []).includes(id)); if (blocker) lock(i, 'Not with a hand of four sets and a pair (' + NAME(blocker) + ')'); }
+  // four sets and a pair: the pungs one fan needs and the chows another needs must fit in four sets (shared sets are allowed, so the larger need counts)
+  { let P = 0, C = 0, pBy = null, cBy = null; for (const id of picked) { const n = needOf(id, count(id)); if (n[0] > P) { P = n[0]; pBy = id; } if (n[1] > C) { C = n[1]; cBy = id; } }
+    if (P || C) for (const f of FANS) { const n = needOf(f.id, 1); if (!n[0] && !n[1]) continue; if (Math.max(P, n[0]) + Math.max(C, n[1]) > 4) lock(f.id, 'Needs more than four sets with ' + NAME(n[0] > n[1] ? (cBy || pBy) : (pBy || cBy))); } }
   const max = {}; for (const f of FANS) max[f.id] = MAXCOUNT[f.id] || 1;
   max.PungOfTerminalsOrHonors = terminalPungCap(sel);
+  { let C = 0; for (const id of picked) C = Math.max(C, needOf(id, 1)[1]); if (C) max.PungOfTerminalsOrHonors = Math.min(max.PungOfTerminalsOrHonors, 4 - C); }
   for (const id of CHOWSMALL) max[id] = Math.min(max[id], Math.max(count(id), ccap - CHOWSMALL.reduce((a, o) => a + (o === id ? 0 : count(o)), 0)));
   // All Green as Seven Pairs: only six green tiles exist, so one of them is always held four times; Tile Hog is part of the hand and is not added (MCR 2021, All Green example 3)
   if (count('AllHonors') > 0) { lock('TileHog', 'Tile Hog is only for suit tiles'); max.TileHog = 0; }

@@ -228,6 +228,17 @@ main.rs .wrap,.rs-wrap{max-width:1120px}
   .rs-fam{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rs-fam .rs-fh{width:100%;margin:8px 0 0}
   .rs-sm,.rs-add{width:auto;margin:0;padding:6px 12px;border-radius:999px;font-size:13px}
 }
+/* New family */
+.rs-tpl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:4px 0 6px}
+.rs-tpl button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.4}
+.rs-tpl button b{display:block;color:var(--text);font-size:14px;margin-bottom:4px}
+.rs-tpl button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rs-cols{display:flex;gap:10px;flex-wrap:wrap}
+.rs-col{width:30px;height:30px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--c);background:var(--c);padding:0}
+.rs-col[aria-pressed="true"]{box-shadow:0 0 0 2px var(--c),0 0 0 5px color-mix(in srgb,var(--c) 30%,transparent)}
+.rs-fedit{border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;text-decoration:underline;padding:0;margin-left:auto}
+.rs-newfam{width:100%;border:1px dashed var(--muted);background:transparent;border-radius:12px;padding:9px;font-size:13px;font-weight:600;margin-top:18px}
+@media (max-width:860px){.rs-newfam{width:auto;border-radius:999px;padding:6px 14px;margin-top:10px}}
 /* Patterns tab */
 .rs-pt{width:100%;border-collapse:collapse;font-size:13px}
 .rs-pt th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px;border-bottom:1px solid var(--line)}
@@ -287,16 +298,18 @@ function logout(){sessionStorage.removeItem('tbt-admin-pw');password='';authed=f
 function load(keep){
   return fetch('/api/admin/rulesets',{headers:H(),cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('x');return r.json();}).then(function(d){
     D=d;loadError='';
-    var saved=[];Object.keys(d.versions).forEach(function(id){d.versions[id].forEach(function(r){if(!isBuiltin(id)||r.v>1)saved.push({id:id,v:r.v,data:r});});});
+    var saved=(d.famSaved||[]).slice();Object.keys(d.versions).forEach(function(id){d.versions[id].forEach(function(r){if(!isBuiltin(id)||r.v>1)saved.push({id:id,v:r.v,data:r});});});
     TBTRules.setSaved(saved);
     var id=keep||S.sel||(d.modes[0]&&d.modes[0].id);select(id);
   }).catch(function(){loadError='Can’t load the rulesets. Check your connection and reload.';});
 }
 function isBuiltin(id){return (D.builtin||[]).some(function(b){return b.id===id;});}
 function cur(id){var l=D.versions[id];return l?l[l.length-1]:null;}
-function select(id){var r=cur(id);if(!r)return;S.cus=null;S.lib=null;S.pq='';S.sel=id;S.isNew=false;S.draft=strip(copy(r));S.base=copy(S.draft);S.note='';}
+function select(id){var r=cur(id);if(!r)return;S.nf=null;S.cus=null;S.rel=null;S.lib=null;S.pq='';S.sel=id;S.isNew=false;S.draft=strip(copy(r));S.base=copy(S.draft);S.note='';}
 function strip(r){delete r.v;delete r.id;return r;}
-function famName(f){var x=(D.families||[]).filter(function(F){return F.id===f;})[0];return x?x.name:f;}
+function famOf(f){return (D.families||[]).filter(function(F){return F.id===f;})[0]||null;}
+function famName(f){var x=famOf(f);return x?x.name:f;}
+function famCol(f){var x=famOf(f);return FAMCOL[f]||(x&&x.col)||'#7A5C14';}
 function usageOf(id){var u=(D.usage||{})[id]||{open:0,v:{}};return u;}
 function tablesOn(id,v){var u=usageOf(id);return u.v[v]||0;}
 
@@ -325,11 +338,12 @@ function payTab(){
     var cells=[];for(var i=0;i<=L;i++)cells.push('<label>'+i+' '+u+'<input type="number" data-tbl="'+i+'" value="'+esc(tb[i]!=null?tb[i]:'')+'"></label>');
     t='<div class="rs-tbl">'+cells.join('')+'</div><p class="rs-note">'+L+' '+u+' or more pays '+esc(tb[L]!=null?tb[L]:'?')+'.</p>';
   }else if(d.pay==='double')t='<p class="rs-note">Doubles with every '+(u==='fan'?'fan':'point')+': '+[3,4,5].map(function(n){return n+' = '+Math.pow(2,n);}).join(', ')+' … '+(d.limit?d.limit+' = '+Math.pow(2,d.limit):'')+'.</p>';
+  else if(d.pay==='flat')t='Every win is worth '+numIn('flat',{min:0,label:'Every win'})+'<p class="rs-note">The hand’s '+u+' do not change what is paid.</p>';
   else t='<p class="rs-note">The hand’s '+u+' are paid as they are'+(d.base?', plus the base below':'')+'.</p>';
   return row('Counted in','',seg('unit',[['fan','Fan'],['points','Points']]))
-   +row('Payout table','From the hand’s '+u+' to what is paid','<div style="width:100%">'+seg('pay',[['table','Table'],['double','Doubles each '+(u==='fan'?'fan':'point')],['same','Paid as counted']])+'<div style="margin-top:10px">'+t+'</div></div>')
-   +row('Limit','0 = no limit',numIn('limit',{min:0,label:'Limit'})+' '+u)
-   +row('Minimum to win',d.minIsBase?'Follows the base point':'',(d.minIsBase?'<b style="font-weight:500">= base</b>':numIn('min',{min:0,label:'Minimum'})+' '+u)+(d.picker!=='tbt'?sw('flowersMin','Flowers count toward it'):''))
+   +row('Payout table','From the hand’s '+u+' to what is paid','<div style="width:100%">'+seg('pay',[['table','Table'],['double','Doubles each '+(u==='fan'?'fan':'point')],['same','Paid as counted'],['flat','Same for every win']])+'<div style="margin-top:10px">'+t+'</div></div>')
+   +(d.pay==='flat'?'':row('Limit','0 = no limit',numIn('limit',{min:0,label:'Limit'})+' '+u))
+   +(d.picker==='none'?row('To win','This family has no patterns','Any complete hand wins'):row('Minimum to win',d.minIsBase?'Follows the base point':'',(d.minIsBase?'<b style="font-weight:500">= base</b>':numIn('min',{min:0,label:'Minimum'})+' '+u)+(d.picker!=='tbt'?sw('flowersMin','Flowers count toward it'):'')))
    +(d.picker==='mcr'?row('Base point','Every loser pays it on every win',numIn('base',{min:0,label:'Base'})+sw('baseHost','The host types it per table')):'')
    +row('Hu (from a discard)','What the discarder and the other two pay','Discarder × '+numIn('hu.disc',{step:0.5,min:0,label:'Discarder pays'})+' Other two × '+numIn('hu.others',{step:0.5,min:0,label:'Others pay'}))
    +row('Zi Mo (self draw)','','Each of the other three × '+numIn('zimo',{step:0.5,min:0,label:'Zi Mo'}))
@@ -365,38 +379,41 @@ function catList(pk){return (CAT[pk||S.draft.picker]||{list:[]}).list;}
 function grpName(pk,g){if(pk==='tbt')return TBT_GRP[g]||g;if(pk==='hk')return (CAT.hk.groups||[])[g]||'Special hands';return g+' point'+(g===1?'':'s');}
 function grpChoices(){var pk=S.draft.picker;if(pk==='tbt')return ['b','a','e','m','l'].map(function(k){return [k,TBT_GRP[k]];});if(pk==='hk')return (CAT.hk.groups||[]).map(function(n,i){return [String(i),n];}).filter(function(x){return x[1]!=='Flowers and seasons';});return [];}
 function P(){return S.draft.patterns||{set:{},custom:[]};}
-function putP(p){var empty=!Object.keys(p.set||{}).length&&!(p.custom||[]).length;S.draft.patterns=empty?null:p;}
+function putP(p){var empty=!Object.keys(p.set||{}).length&&!(p.custom||[]).length&&!p.rel;S.draft.patterns=empty?null:p;}
 function ov(id){return (P().set||{})[id]||{};}
 function setOv(id,k,v){
   var p=copy(P());p.set=p.set||{};p.custom=p.custom||[];var b=catList().filter(function(x){return x.id===id;})[0]||{},o=p.set[id]||{};
-  var dflt=k==='pts'?b.pts:k==='max'?b.max:k==='win'?(b.win||'both'):false;
+  var dflt=k==='pts'?b.pts:k==='max'?b.max:k==='win'?(b.win||'both'):k==='alone'?true:false;
   if(v===dflt||v==null||v==='')delete o[k];else o[k]=v;
   if(Object.keys(o).length)p.set[id]=o;else delete p.set[id];putP(p);
 }
 function nameOf(id){var x=catList().filter(function(f){return f.id===id;})[0]||(P().custom||[]).filter(function(c){return c.id===id;})[0];return x?x.name:String(id).replace(/^p:/,'');}
 function winWord(w){return w==='zimo'?'Zi Mo only':w==='hu'?'Hu only':'Both';}
 function patTab(){
+  if(S.draft.picker==='none')return '<p class="rs-note" style="margin:14px 0 4px">This family has no patterns: any complete hand wins, and the payout follows the Payouts tab. Pick Patterns and Pick Tiles are not shown on the scoreboard.</p>';
   var d=S.draft,pk=d.picker,hk=pk==='hk',L=catList(),q=(S.pq||'').toLowerCase(),u=d.unit==='fan'?'Fan':'Points',cus=P().custom||[],groups=[],by={};
   L.forEach(function(f){var k=String(f.grp);if(!by[k]){by[k]=[];groups.push(k);}by[k].push(f);});
-  var cols=hk?7:6,head='<tr><th>On</th><th>Pattern</th><th>'+u+'</th><th class="c-max">Max</th><th class="c-rep">Replaces</th>'+(hk?'<th>Win</th>':'')+'<th class="c-det">Pick Tiles</th></tr>';
+  var tb=pk==='tbt',cols=hk||tb?7:6,head='<tr><th>On</th><th>Pattern</th><th>'+u+'</th><th class="c-max">Max</th><th class="c-rep">'+(tb?'Rules':'Replaces')+'</th>'+(hk?'<th>Win</th>':'')+(tb?'<th title="Stands alone: does not stack with other patterns or bonuses">Alone</th>':'')+'<th class="c-det">Pick Tiles</th></tr>';
   var offN=0,chN=0;Object.keys(P().set||{}).forEach(function(id){var o=P().set[id];if(o.off)offN++;else chN++;});
   var rows=groups.map(function(g){
     var fs=by[g].filter(function(f){return !q||f.name.toLowerCase().indexOf(q)>=0;});if(!fs.length)return '';
     return '<tr class="gh"><td colspan="'+cols+'">'+esc(grpName(pk,pk==='hk'?+g:pk==='mcr'?+g:g))+'</td></tr>'+fs.map(function(f){
-      var o=ov(f.id),on=!o.off,pts=o.pts!=null?o.pts:f.pts,mx=o.max!=null?o.max:f.max,w=o.win||f.win||'both',ch=o.pts!=null||o.max!=null||o.win!=null;
+      var o=ov(f.id),on=!o.off,pts=o.pts!=null?o.pts:f.pts,mx=o.max!=null?o.max:f.max,w=o.win||f.win||'both',ch=o.pts!=null||o.max!=null||o.win!=null||o.alone===false,rl=tb&&/^p:/.test(f.id),rch=rl&&relChanged(f.id);
       return '<tr'+(on?'':' class="off"')+'><td><button type="button" class="rs-sw" role="switch" data-poff="'+esc(f.id)+'" aria-checked="'+on+'" aria-label="'+esc(f.name)+' on"></button></td>'
-       +'<td><b style="font-weight:'+(ch?700:500)+'">'+esc(f.name)+'</b>'+(ch?' <button type="button" class="rs-ib" data-preset="'+esc(f.id)+'" title="Back to '+f.pts+'">reset</button>':'')+'</td>'
+       +'<td><b style="font-weight:'+(ch||rch?700:500)+'">'+esc(f.name)+'</b>'+(ch?' <button type="button" class="rs-ib" data-preset="'+esc(f.id)+'" title="Back to '+f.pts+'">reset</button>':'')+(rl?'<div><button type="button" class="rs-ib" style="padding-left:0" data-prel="'+esc(f.id)+'">Rules'+(rch?' (changed)':'')+'</button></div>':'')+'</td>'
        +'<td><input type="number" min="0" data-pnum="'+esc(f.id)+'|pts" value="'+pts+'" aria-label="'+esc(f.name)+' '+u+'"></td>'
        +'<td class="c-max">'+(f.fixed?'<span class="meta">1</span>':'<input type="number" min="1" max="20" data-pnum="'+esc(f.id)+'|max" value="'+mx+'" style="width:48px" aria-label="'+esc(f.name)+' max">')+'</td>'
-       +'<td class="c-rep">'+((f.repl||[]).length?f.repl.slice(0,4).map(function(r){return '<span class="rs-chip">'+esc(nameOf(r))+'</span>';}).join('')+(f.repl.length>4?'<span class="rs-chip" title="'+esc(f.repl.slice(4).map(nameOf).join(', '))+'">+'+(f.repl.length-4)+' more</span>':''):'<span class="meta">–</span>')+'</td>'
+       +(rl?'<td class="c-rep">'+relSummary(f.id)+'</td>':'<td class="c-rep">'+((f.repl||[]).length?f.repl.slice(0,4).map(function(r){return '<span class="rs-chip">'+esc(nameOf(r))+'</span>';}).join('')+(f.repl.length>4?'<span class="rs-chip" title="'+esc(f.repl.slice(4).map(nameOf).join(', '))+'">+'+(f.repl.length-4)+' more</span>':''):'<span class="meta">–</span>')+'</td>')
+       +(tb?'<td>'+(f.grp==='m'||f.grp==='l'?'<button type="button" class="rs-sw" role="switch" data-palone="'+esc(f.id)+'" aria-checked="'+(o.alone!==false)+'" aria-label="'+esc(f.name)+' stands alone"></button>':'<span class="meta">–</span>')+'</td>':'')
        +(hk?'<td><select data-pwin="'+esc(f.id)+'" style="font:inherit;font-size:12px;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:4px">'+[['both','Both'],['zimo','Zi Mo only'],['hu','Hu only']].map(function(x){return '<option value="'+x[0]+'"'+(w===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></td>':'')
        +'<td class="c-det"><span class="rs-det auto">Auto</span></td></tr>';}).join('');}).join('');
   var crow=cus.filter(function(c){return !q||c.name.toLowerCase().indexOf(q)>=0;}).map(function(c){var i=cus.indexOf(c);
     return '<tr><td></td><td><b style="font-weight:500">'+esc(c.name)+'</b>'+(pk!=='mcr'&&c.grp!==''?'<div class="meta" style="font-size:11px">'+esc(grpName(pk,pk==='hk'?+c.grp:c.grp))+(c.from?' · from '+esc(FAM_LIB[c.from.split(':')[0]]||''):'')+'</div>':c.from?'<div class="meta" style="font-size:11px">from '+esc(FAM_LIB[c.from.split(':')[0]]||'')+'</div>':'')+'<div><button type="button" class="rs-ib" style="padding-left:0" data-cedit="'+i+'">Edit</button><button type="button" class="rs-ib" data-cdel="'+i+'">Remove</button></div></td><td>'+c.pts+'</td><td class="c-max">'+c.max+'</td>'
      +'<td class="c-rep">'+(c.repl.length||c.excl.length?c.repl.map(function(r){return '<span class="rs-chip">'+esc(nameOf(r))+'</span>';}).join('')+c.excl.map(function(r){return '<span class="rs-chip" title="Does not go with">≠ '+esc(nameOf(r))+'</span>';}).join(''):'<span class="meta">–</span>')+'</td>'
-     +(hk?'<td style="font-size:12px;color:var(--muted)">'+winWord(c.win)+'</td>':'')
+     +(hk?'<td style="font-size:12px;color:var(--muted)">'+winWord(c.win)+'</td>':'')+(tb?'<td style="font-size:12px;color:var(--muted)">'+(c.grp==='m'||c.grp==='l'?(c.alone!==false?'Yes':'No'):'–')+'</td>':'')
      +'<td class="c-det"><span class="rs-det man">By hand</span></td></tr>';}).join('');
-  return '<p class="rs-note" style="margin:10px 0 0">'+u+' of each pattern in this sub-mode. A pattern switched off is not offered in Pick Patterns and Pick Tiles leaves it out. <b>Auto</b> = Pick Tiles finds it from the tiles.'+(offN||chN||cus.length?' Now: '+[chN?chN+' changed':'',offN?offN+' off':'',cus.length?cus.length+' custom':''].filter(Boolean).join(', ')+'.':'')+'</p>'
+  return (pk==='tbt'?row('Stacking cutoff','Patterns are added highest first until the running total reaches this; the one that crosses it still counts in full. 0 = no cutoff. Master and Legendary hands stand alone unless switched off in the Alone column.',numIn('stack',{min:0,label:'Stacking cutoff'})+' points'):'')
+   +'<p class="rs-note" style="margin:10px 0 0">'+u+' of each pattern in this sub-mode. A pattern switched off is not offered in Pick Patterns and Pick Tiles leaves it out. <b>Auto</b> = Pick Tiles finds it from the tiles.'+(offN||chN||cus.length?' Now: '+[chN?chN+' changed':'',offN?offN+' off':'',cus.length?cus.length+' custom':''].filter(Boolean).join(', ')+'.':'')+'</p>'
    +'<div class="rs-ptbar"><input type="search" id="pq" placeholder="Search patterns" value="'+esc(S.pq||'')+'"><span style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-x="lib">+ From library</button><button type="button" class="btn sm" data-x="cus">+ Custom pattern</button></span></div>'
    +'<div style="overflow-x:auto"><table class="rs-pt"><thead>'+head+'</thead><tbody>'+rows+(crow?'<tr class="gh"><td colspan="'+cols+'">Custom</td></tr>'+crow:'')+'</tbody></table></div>';
 }
@@ -419,6 +436,7 @@ function cusSheet(){
    +(gc.length?row('Group','Where it shows in Pick Patterns','<select data-cf="grp" style="font:inherit;font-size:15px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px">'+gc.map(function(x){return '<option value="'+x[0]+'"'+(String(c.grp)===x[0]?' selected':'')+'>'+esc(x[1])+'</option>';}).join('')+'</select>'):row('Group','In Pick Patterns it shows with the other patterns of the same points','<b style="font-weight:500">'+c.pts+' point'+(c.pts==1?'':'s')+'</b>'))
    +row('Replaces','Picking this removes these, and they cannot be added beside it',chipsEdit('repl'))
    +row('Does not go with','These cannot be picked together with it',chipsEdit('excl'))
+   +(pk==='tbt'&&(c.grp==='m'||c.grp==='l')?row('Stands alone','Like the other Master and Legendary hands: no other pattern or bonus goes with it','<button type="button" class="rs-sw" role="switch" data-calone="1" aria-checked="'+(c.alone!==false)+'" aria-label="Stands alone"></button>'):'')
    +(pk==='hk'?row('Win','',[['both','Hu or Zi Mo'],['zimo','Zi Mo only'],['hu','Hu only']].map(function(x){return '<button type="button" class="btn sm" data-cwin="'+x[0]+'" aria-pressed="'+(c.win===x[0])+'" style="'+(c.win===x[0]?'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent)':'')+'">'+x[1]+'</button>';}).join('')):'')
    +'<div class="rs-banner" style="margin:12px 0 0">Pick Tiles cannot recognise a custom pattern from the tiles. Players pick it by hand in Pick Patterns, also after Pick Tiles.</div>'
    +'</div><div class="sf"><button type="button" class="btn" data-x="closeSheet">Cancel</button><button type="button" class="btn primary" data-x="cusOk"'+(ok?'':' disabled')+'>'+(S.cus.i<0?'Add pattern':'Done')+'</button></div></div></div>';
@@ -435,7 +453,93 @@ function libSheet(){
    +'<p class="rs-note">Each one is added as a custom pattern with the '+(src==='hk'?'fan':'points')+' of its family: check the '+(S.draft.unit==='fan'?'fan':'points')+' after adding. Pick Tiles of this family does not recognise them, so players pick them by hand.</p>'
    +'</div><div class="sf"><button type="button" class="btn" data-x="closeSheet">Cancel</button><button type="button" class="btn primary" data-x="libOk"'+(n?'':' disabled')+'>Add '+n+' pattern'+(n===1?'':'s')+'</button></div></div></div>';
 }
-function sheetHtml(){return S.cus?cusSheet():S.lib?libSheet():'';}
+/* ---- TBT: what a pattern replaces, what it does not go with, and the short list some patterns only go with. Changes are kept as differences from the built-in rules. ---- */
+function relOf(){return P().rel||{repl:{},only:{},exAdd:[],exDel:[]};}
+function baseOf(id){return catList('tbt').filter(function(f){return f.id===id;})[0]||{repl:[],excl:[],only:null};}
+function samePair(pr,a,b){return (pr[0]===a&&pr[1]===b)||(pr[0]===b&&pr[1]===a);}
+function effRepl(id){var r=relOf();return r.repl&&r.repl[id]?r.repl[id].slice():(baseOf(id).repl||[]).slice();}
+function effOnly(id){var r=relOf();if(r.only&&id in r.only)return r.only[id]===false?null:r.only[id].slice();return baseOf(id).only?baseOf(id).only.slice():null;}
+function effExcl(id){
+  var r=relOf(),l=(baseOf(id).excl||[]).slice();
+  (P().custom||[]).forEach(function(c){if((c.excl||[]).indexOf(id)>=0&&l.indexOf(c.id)<0)l.push(c.id);});
+  (r.exDel||[]).forEach(function(pr){if(pr[0]===id)l=l.filter(function(x){return x!==pr[1];});else if(pr[1]===id)l=l.filter(function(x){return x!==pr[0];});});
+  (r.exAdd||[]).forEach(function(pr){var o=pr[0]===id?pr[1]:pr[1]===id?pr[0]:null;if(o&&l.indexOf(o)<0)l.push(o);});
+  return l;
+}
+function relChanged(id){var r=relOf();return !!((r.repl&&r.repl[id])||(r.only&&id in r.only)||(r.exAdd||[]).concat(r.exDel||[]).some(function(pr){return pr[0]===id||pr[1]===id;}));}
+function relSummary(id){
+  var rp=effRepl(id),ex=effExcl(id),on=effOnly(id),h='';
+  if(rp.length)h+=rp.slice(0,2).map(function(x){return '<span class="rs-chip">'+esc(nameOf(x))+'</span>';}).join('')+(rp.length>2?'<span class="rs-chip">+'+(rp.length-2)+'</span>':'');
+  if(ex.length)h+='<span class="rs-chip" title="Does not go with: '+esc(ex.map(nameOf).join(', '))+'">≠ '+ex.length+'</span>';
+  if(on)h+='<span class="rs-chip" title="Only goes with: '+esc(on.map(nameOf).join(', ')||'nothing')+'">only '+on.length+'</span>';
+  return h||'<span class="meta">–</span>';
+}
+function relOptions(id,skip){
+  var l=catList('tbt').filter(function(f){return /^p:/.test(f.id)&&f.id!==id;}).map(function(f){return [f.id,f.name];});
+  (P().custom||[]).forEach(function(c){if(c.id!==id)l.push([c.id,c.name]);});
+  return l.filter(function(x){return skip.indexOf(x[0])<0;});
+}
+function relChips(k){var R0=S.rel,list=R0[k];
+  return list.map(function(x){return '<span class="rs-chip">'+esc(nameOf(x))+'<button type="button" data-rrm="'+k+'|'+esc(x)+'" aria-label="Remove">×</button></span>';}).join('')
+   +'<select data-radd="'+k+'" style="font:inherit;font-size:13px;background:var(--field);border:1px solid var(--line);border-radius:999px;padding:4px 10px;max-width:220px"><option value="">+ Add</option>'+relOptions(R0.id,list).map(function(x){return '<option value="'+esc(x[0])+'">'+esc(x[1])+'</option>';}).join('')+'</select>';}
+function relSheet(){
+  var R0=S.rel,nm=nameOf(R0.id);
+  return '<div class="rs-ovl" data-ovl="1"><div class="rs-sheet" role="dialog" aria-label="Rules of '+esc(nm)+'"><div class="sh"><h3>Rules: '+esc(nm)+'</h3><button type="button" class="btn sm" data-x="closeSheet">Close</button></div><div class="sb">'
+   +row('Replaces','Picking it removes these, and they cannot be added beside it (the smaller pattern is already part of it)',relChips('repl'))
+   +row('Does not go with','Cannot be picked together, either way round (for example a different hand structure)',relChips('excl'))
+   +row('Only goes with','A short list: once it is picked, every pattern not on the list is locked. The flower and win bonuses still apply','<span style="width:100%">'+'<button type="button" class="rs-sw" role="switch" data-ronly="1" aria-checked="'+R0.onlyOn+'" aria-label="Only goes with a short list"></button> '+(R0.onlyOn?'On':'Off, it goes with anything not locked above')+'</span>'+(R0.onlyOn?relChips('only'):''))
+   +'<p class="rs-note">Pick Patterns and Pick Tiles both follow these rules. The structure rules stay as they are: Seven Pairs has no sets, a garden win stands alone, overlapping triplets count less.</p>'
+   +'</div><div class="sf"><button type="button" class="btn" data-x="relReset" style="margin-right:auto">Back to built-in</button><button type="button" class="btn" data-x="closeSheet">Cancel</button><button type="button" class="btn primary" data-x="relOk">Done</button></div></div></div>';
+}
+function relOpen(id){var on=effOnly(id);S.rel={id:id,repl:effRepl(id),excl:effExcl(id),onlyOn:!!on,only:on||[],ex0:effExcl(id)};}
+function relSave(){
+  var R0=S.rel,id=R0.id,b=baseOf(id),p0=copy(P());p0.set=p0.set||{};p0.custom=p0.custom||[];
+  var r=p0.rel||{repl:{},only:{},exAdd:[],exDel:[]};r.repl=r.repl||{};r.only=r.only||{};r.exAdd=r.exAdd||[];r.exDel=r.exDel||[];
+  if(same(R0.repl.slice().sort(),(b.repl||[]).slice().sort()))delete r.repl[id];else r.repl[id]=R0.repl.slice();
+  var onl=R0.onlyOn?R0.only.slice():null;
+  if((onl===null&&!b.only)||(onl&&b.only&&same(onl.slice().sort(),b.only.slice().sort())))delete r.only[id];else r.only[id]=onl===null?false:onl;
+  R0.ex0.filter(function(x){return R0.excl.indexOf(x)<0;}).forEach(function(x){var k=r.exAdd.findIndex(function(pr){return samePair(pr,id,x);});if(k>=0)r.exAdd.splice(k,1);else r.exDel.push([id,x]);});
+  R0.excl.filter(function(x){return R0.ex0.indexOf(x)<0;}).forEach(function(x){var k=r.exDel.findIndex(function(pr){return samePair(pr,id,x);});if(k>=0)r.exDel.splice(k,1);else r.exAdd.push([id,x]);});
+  var empty=!Object.keys(r.repl).length&&!Object.keys(r.only).length&&!r.exAdd.length&&!r.exDel.length;
+  if(empty)delete p0.rel;else p0.rel=r;putP(p0);
+}
+function sheetHtml(){return S.cus?cusSheet():S.lib?libSheet():S.rel?relSheet():'';}
+/* ---- a new family: how it pays (a template), its name, colour, patterns and where it is ranked. Its first sub-mode starts hidden. ---- */
+var TPLS=[['points','Points table','Like TBT: points become a payment by a table, Hu ×2, dealer ×1.5, tenpai on a draw.'],['fan','Fan table','Like HK Classic: fan by the payout table, the discarder pays double, limit hand.'],['base','Base + points','Like MCR: everyone pays a base, the discarder pays the hand’s points on top.'],['flat','Flat','Every win is worth the same. Good for Chicken Hand and beginner tables.']];
+var PATCH=[['none','None (any complete hand wins)'],['tbt','Copy from TBT'],['hk','Copy from HK Classic'],['mcr','Copy from MCR']];
+var RANKS=[['own','Own group (not in All modes)'],['tbt','Ranked with TBT'],['hk','Ranked with HK Classic'],['mcr','Ranked with MCR']];
+var NEWCOLS=['#7A5C14','#7A4B8C','#1F6F78','#B4532A','#2D6A4F','#B72323','#2F5D9E'];
+function nfDraft(){
+  var n=S.nf,src=strip(copy(cur(n.tpl==='fan'?'hkc':n.tpl==='base'?'mcr4':'casual'))),pk=n.pat;
+  src.name=n.name.trim()||'New family';src.short=src.name;src.order=1;src.hidden=true;src.events=true;src.help='';src.patterns=null;src.hostSets=false;src.deadwall=false;
+  src.picker=pk;src.entry=pk==='tbt'||pk==='none'?'grid':'typed';src.flowersMin=pk==='hk';src.stack=10;
+  if(n.tpl==='flat'){src.pay='flat';src.flat=8;src.unit='points';src.limit=0;src.min=0;src.base=0;src.minIsBase=false;src.baseHost=false;src.hu={disc:1,others:0};src.zimo=1;src.dealerMult=1;src.multi=false;src.streak=4;
+    src.pen={invalid:{kind:'each',amount:8},false:{kind:'each',amount:8}};src.draw={kind:'zero',t:[3,2,1],byMin:false};src.seat='off';src.start=true;}
+  if(pk==='none'){src.min=0;if(src.minIsBase){src.minIsBase=false;}if(src.pay!=='flat'&&src.pay!=='same'){src.pay='flat';src.flat=src.flat>1?src.flat:8;}}
+  return src;
+}
+function nfHtml(){
+  var n=S.nf,ed=!!n.edit,taken=(D.families||[]).some(function(F){return F.id!==n.edit&&F.name.toLowerCase()===n.name.trim().toLowerCase();});
+  var ok=n.name.trim()&&!taken&&!busy;
+  return '<div class="card"><h3 style="font-size:22px">'+(ed?'Family: '+esc(famName(n.edit)):'New family')+'</h3><p class="rs-note" style="margin:2px 0 12px">'+(ed?'Name, colour and where its tables are ranked. Its sub-modes keep their own settings.':'Start from how the payments work. Everything can be changed after, on the other tabs.')+'</p>'
+   +(ed?'':'<div class="rs-tpl">'+TPLS.map(function(t){return '<button type="button" data-nftpl="'+t[0]+'" aria-pressed="'+(n.tpl===t[0])+'"><b>'+t[1]+'</b>'+t[2]+'</button>';}).join('')+'</div>')
+   +row('Family name','','<input type="text" data-nf="name" maxlength="24" value="'+esc(n.name)+'" placeholder="Chicken Hand">'+(taken?'<span class="err" style="width:100%">A family with this name already exists.</span>':''))
+   +row('Colour','On chips, tags and the mode tag in the scoreboard','<div class="rs-cols">'+NEWCOLS.map(function(c){return '<button type="button" class="rs-col" data-nfcol="'+c+'" style="--c:'+c+'" aria-pressed="'+(n.col===c)+'" aria-label="Colour '+c+'"></button>';}).join('')+'</div>')
+   +(ed?'':row('Patterns','What Pick Patterns and Pick Tiles offer. A copy can be changed on the Patterns tab afterwards.','<div class="rs-seg">'+PATCH.map(function(x){return '<button type="button" data-nfpat="'+x[0]+'" aria-pressed="'+(n.pat===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>'))
+   +row('Leaderboard','Families are scored on different scales: ranked with another family, its tables count in that family’s ranking','<div class="rs-seg">'+RANKS.map(function(x){return '<button type="button" data-nfrank="'+x[0]+'" aria-pressed="'+(n.rank===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>')
+   +(ed?'':'<div class="rs-banner" style="margin:12px 0 0">Its first sub-mode is called '+esc(n.name.trim()||'…')+' and starts hidden: it is not shown in the scoreboard until you switch on “Scoreboard” under General.</div>')
+   +'<div class="rs-foot"><span class="meta">'+(ed?'Saved as a new version of the family':'Pick the family, the first sub-mode comes with it')+'</span><button type="button" class="btn" data-x="nfCancel">Cancel</button><button type="button" class="btn primary" data-x="nfOk"'+(ok?'':' disabled')+'>'+(busy?'Saving…':ed?'Save family':'Create family')+'</button></div></div>';
+}
+function nfSave(){
+  var n=S.nf,body=n.edit?{famId:n.edit,family:{name:n.name.trim(),col:n.col,rank:n.rank,order:(famOf(n.edit)||{}).order}}:{family:{name:n.name.trim(),col:n.col,rank:n.rank,order:10+(D.families||[]).length},data:nfDraft(),note:'New family'};
+  busy=true;render();
+  fetch('/api/admin/rulesets',{method:'POST',headers:H(),body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,j:j};});}).then(function(x){
+    busy=false;
+    if(!x.ok){toast(x.j.error||'Could not save. Please try again.');render();return;}
+    var wasEdit=!!n.edit;S.nf=null;S.tab='general';
+    return load(x.j.id||S.sel).then(function(){render();toast(wasEdit?'Family saved.':'Family created. Switch on “Scoreboard” when it is ready.');});
+  }).catch(function(){busy=false;render();toast('No connection. Please try again.');});
+}
 /* try a hand with the settings on screen, before they are saved */
 function calcHtml(){
   var c=S.calc,cl=TBTRules.clean(S.draft),rs=cl.rules;rs.id=S.sel||'new';
@@ -449,7 +553,7 @@ function calcHtml(){
   var low=(c.by==='hu'||c.by==='zimo')&&c.n<cfg.minPoint,r=TBTRules.scoreEvent(ev,dealer,cfg);
   return '<div class="card"><h3>Try a hand</h3><p class="rs-note" style="margin:2px 0 10px">With the settings above, before they are saved.</p>'
    +'<div class="rs-in"><div class="rs-seg">'+[['hu','Hu'],['zimo','Zi Mo'],['invalid','Invalid win'],['draw','Draw, 1 in tenpai']].map(function(x){return '<button type="button" data-calc="by" data-v="'+x[0]+'" aria-pressed="'+(c.by===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>'
-   +((c.by==='hu'||c.by==='zimo')?'<label class="rs-in">'+(rs.unit==='fan'?'Fan':'Points')+' <input type="number" id="cN" min="0" value="'+c.n+'"></label>':'')
+   +((c.by==='hu'||c.by==='zimo')&&rs.picker!=='none'?'<label class="rs-in">'+(rs.unit==='fan'?'Fan':'Points')+' <input type="number" id="cN" min="0" value="'+c.n+'"></label>':'')
    +'<div class="rs-seg">'+[['none','Dealer: East'],['win','Dealer wins']].concat(c.by==='hu'?[['disc','Dealer discards']]:[]).map(function(x){return '<button type="button" data-calc="dealer" data-v="'+x[0]+'" aria-pressed="'+(c.dealer===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>'
    +(low?'<div class="rs-banner" style="margin:12px 0 0">Below the minimum of '+cfg.minPoint+': this would be recorded as an invalid win.</div>'
      :'<div class="rs-calc">'+r.d.map(function(x,i){x=Math.round(x*100)/100;return '<div><b class="'+(x>0?'rs-pos':x<0?'rs-neg':'')+'">'+(x>0?'+':'')+x+'</b><span>'+esc(names[i])+'</span></div>';}).join('')+'</div>')
@@ -458,11 +562,11 @@ function calcHtml(){
 function sideHtml(){
   return (D.families||[]).map(function(F){
     var ms=Object.keys(D.versions).map(cur).filter(function(r){return r.fam===F.id;}).sort(function(a,b){return a.order-b.order||a.name.localeCompare(b.name);});
-    return '<div class="rs-fam"><div class="rs-fh"><span class="rs-dot" style="background:'+(FAMCOL[F.id]||'#7A5C14')+'"></span>'+esc(F.name)+'</div>'
+    return '<div class="rs-fam"><div class="rs-fh"><span class="rs-dot" style="background:'+famCol(F.id)+'"></span>'+esc(F.name)+(FAMCOL[F.id]?'':'<button type="button" class="rs-fedit" data-fedit="'+F.id+'">Edit</button>')+'</div>'
       +ms.map(function(r){return '<button type="button" class="rs-sm" data-sel="'+r.id+'" aria-current="'+(!S.isNew&&S.sel===r.id)+'"><span>'+esc(r.name)+'</span>'+(r.hidden?'<span class="rs-tag hid">Hidden</span>':'<small>v'+r.v+'</small>')+'</button>';}).join('')
       +(S.isNew&&S.draft.fam===F.id?'<button type="button" class="rs-sm" aria-current="true"><span>'+esc(S.draft.name||'New')+'</span><span class="rs-tag new">Not saved</span></button>':'')
       +'<button type="button" class="rs-add" data-copy="'+F.id+'">+ Sub-mode</button></div>';
-  }).join('');
+  }).join('')+'<button type="button" class="rs-newfam" data-x="newfam">+ New family</button>';
 }
 function render(){
   var app=document.getElementById('app');
@@ -473,6 +577,7 @@ function render(){
   }
   var top='<div class="topbar"><div class="wrap rs-wrap"><div class="tbrow"><div class="tb"><img src="'+LOGO+'" alt="">TBT ADMIN <span class="meta" style="margin:0;font-weight:500;letter-spacing:0">\u00b7 Ruleset</span></div><button class="lnk" onclick="logout()">Sign out</button></div></div></div>';
   if(!D){app.innerHTML=top+'<main><div class="wrap rs-wrap"><div class="empty">'+(loadError||'Loading…')+'</div></div></main>';return;}
+  if(S.nf){app.innerHTML=top+'<main><div class="wrap rs-wrap"><h2>Ruleset</h2><p class="meta" style="margin:6px 0 18px;max-width:72ch">Every scoring mode the scoreboard offers, and how it pays.</p><div class="rs-grid"><aside class="rs-side">'+sideHtml()+'</aside><div>'+nfHtml()+'</div></div></div></main>';return;}
   var d=S.draft,dirty=S.isNew||!same(d,S.base),r=S.isNew?null:cur(S.sel),body;
   S.draft.hidden_inv=!d.hidden;
   body=S.tab==='general'?generalTab():S.tab==='pay'?payTab():S.tab==='pat'?patTab():S.tab==='dealer'?dealerTab():S.tab==='pen'?penTab():verTab();
@@ -481,7 +586,7 @@ function render(){
   app.innerHTML=top+'<main><div class="wrap rs-wrap"><h2>Ruleset</h2><p class="meta" style="margin:6px 0 18px;max-width:72ch">Every scoring mode the scoreboard offers, and how it pays. Saving makes a new version: tables that already have a hand keep the version they started with, new tables use the new one. The scoreboard picks up a saved version within a minute.</p>'
    +'<div class="rs-grid"><aside class="rs-side">'+sideHtml()+'</aside><div>'
    +(S.isNew?'<div class="rs-banner">A new sub-mode, copied from '+esc(S.copyOf)+'. Give it a name and save. It shows in the scoreboard right after saving; switch off “Scoreboard” under General to keep it hidden until it is ready.</div>':'')
-   +'<div class="card"><div class="rs-head"><div class="g"><div class="rs-ver"><span class="rs-dot" style="background:'+(FAMCOL[d.fam]||'#7A5C14')+'"></span> '+esc(famName(d.fam))+'</div><h3 style="font-size:24px;margin-top:2px">'+esc(d.name||'New sub-mode')+'</h3>'
+   +'<div class="card"><div class="rs-head"><div class="g"><div class="rs-ver"><span class="rs-dot" style="background:'+famCol(d.fam)+'"></span> '+esc(famName(d.fam))+'</div><h3 style="font-size:24px;margin-top:2px">'+esc(d.name||'New sub-mode')+'</h3>'
    +'<div class="rs-ver">'+(S.isNew?'Not saved yet':'Version '+r.v+' · '+tablesOn(S.sel,r.v)+' table'+(tablesOn(S.sel,r.v)===1?'':'s')+' with hands on it'+(usageOf(S.sel).open?' · '+usageOf(S.sel).open+' waiting for a first hand':''))+'</div></div>'
    +(S.isNew?'':'<button type="button" class="btn sm" data-copy="'+d.fam+'" data-from="'+S.sel+'">Duplicate</button>')+'</div>'
    +'<div class="rs-tabs" role="tablist">'+TABS.filter(function(t){return !(S.isNew&&t[0]==='ver');}).map(function(t){return '<button type="button" role="tab" data-tab="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+'</button>';}).join('')+'</div>'
@@ -490,12 +595,12 @@ function render(){
      +'<input type="text" data-note="1" maxlength="200" placeholder="Note for this version (optional)" value="'+esc(S.note)+'" style="font:inherit;font-size:14px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;flex:1 1 220px;max-width:320px"'+(dirty?'':' hidden')+'>'
      +'<button type="button" class="btn" data-x="discard"'+(dirty&&!busy?'':' disabled')+'>Discard</button><button type="button" class="btn primary" data-x="save"'+(dirty&&!busy&&!cl.errors.length?'':' disabled')+'>'+(busy?'Saving…':S.isNew?'Create sub-mode':'Save as version '+nextV)+'</button></div>':'')
    +'</div>'+(S.tab!=='ver'&&S.tab!=='pat'?calcHtml():'')+'</div></div></div></main>'+sheetHtml();
-  document.body.style.overflow=S.cus||S.lib?'hidden':'';
+  document.body.style.overflow=S.cus||S.lib||S.rel?'hidden':'';
 }
-var LABELS={name:'Name',short:'Short label',hidden:'Shown in',events:'Event sessions',order:'Order',help:'Explanation',unit:'Counted in',pay:'Payout table',table:'Payout table',limit:'Limit',min:'Minimum',flowersMin:'Flowers count',base:'Base point',baseHost:'Base per table',hu:'Hu',zimo:'Zi Mo',multi:'More than one winner',dealerMult:'Dealer pays',streak:'Dealer streak',stayDraw:'Dealer stays',stayPen:'Dealer stays',seat:'Seat rotation',seatDefault:'Seat rotation',start:'Starting score',startDefault:'Starting score',hostSets:'Host sets the rules',deadwall:'Deadwall',pen:'Penalties',draw:'Draw',patterns:'Patterns'};
+var LABELS={name:'Name',short:'Short label',hidden:'Shown in',events:'Event sessions',order:'Order',help:'Explanation',unit:'Counted in',pay:'Payout table',table:'Payout table',limit:'Limit',min:'Minimum',flowersMin:'Flowers count',base:'Base point',baseHost:'Base per table',hu:'Hu',zimo:'Zi Mo',multi:'More than one winner',dealerMult:'Dealer pays',streak:'Dealer streak',stayDraw:'Dealer stays',stayPen:'Dealer stays',seat:'Seat rotation',seatDefault:'Seat rotation',start:'Starting score',startDefault:'Starting score',hostSets:'Host sets the rules',deadwall:'Deadwall',pen:'Penalties',draw:'Draw',patterns:'Patterns',stack:'Stacking cutoff',flat:'Every win'};
 function labelOf(k){return LABELS[k]||k;}
 /* ---- typing and tapping ---- */
-function redrawKeep(sel){var a=document.activeElement,attr=a&&['num','txt','tbl','pnum','cf'].filter(function(x){return a.dataset[x]!=null;})[0],k=attr?a.dataset[attr]:a&&(a.id==='cN'||a.id==='pq'||a.id==='lq')?a.id:'',pos=a&&a.selectionStart;render();if(!k)return;var n=attr?document.querySelector('[data-'+attr+'="'+k.replace(/"/g,'\\"')+'"]'):document.getElementById(k);if(n){n.focus();try{if(pos!=null&&n.type!=='number')n.setSelectionRange(pos,pos);}catch(e){}}}
+function redrawKeep(sel){var a=document.activeElement,attr=a&&['num','txt','tbl','pnum','cf','nf'].filter(function(x){return a.dataset[x]!=null;})[0],k=attr?a.dataset[attr]:a&&(a.id==='cN'||a.id==='pq'||a.id==='lq')?a.id:'',pos=a&&a.selectionStart;render();if(!k)return;var n=attr?document.querySelector('[data-'+attr+'="'+k.replace(/"/g,'\\"')+'"]'):document.getElementById(k);if(n){n.focus();try{if(pos!=null&&n.type!=='number')n.setSelectionRange(pos,pos);}catch(e){}}}
 document.addEventListener('input',function(e){
   var t=e.target;if(!S.draft)return;
   if(t.dataset.num){var v=t.value===''?'':parseFloat(t.value);set(t.dataset.num,v===''||isNaN(v)?0:v);redrawKeep();}
@@ -506,25 +611,41 @@ document.addEventListener('input',function(e){
   else if(t.dataset.pnum){var a=t.dataset.pnum.split('|'),v2=t.value===''?null:parseFloat(t.value);if(v2!=null&&!isNaN(v2))setOv(a[0],a[1],a[1]==='max'?Math.max(1,Math.round(v2)):v2);redrawKeep();}
   else if(t.dataset.cf&&t.tagName!=='SELECT'){var c=S.cus.c;c[t.dataset.cf]=t.dataset.cf==='name'?t.value:(parseFloat(t.value)||0);redrawKeep();}
   else if(t.id==='pq'){S.pq=t.value;redrawKeep();}
+  else if(t.dataset.nf){S.nf[t.dataset.nf]=t.value;redrawKeep();}
   else if(t.id==='lq'){S.lib.q=t.value;redrawKeep();}
 });
 document.addEventListener('change',function(e){
   var t=e.target;if(!S.draft)return;
   if(t.dataset.pwin){setOv(t.dataset.pwin,'win',t.value);render();}
   else if(t.dataset.cf&&t.tagName==='SELECT'){S.cus.c[t.dataset.cf]=t.value;render();}
+  else if(t.dataset.radd&&t.value){S.rel[t.dataset.radd]=S.rel[t.dataset.radd].concat([t.value]);render();}
   else if(t.dataset.cadd&&t.value){var c=S.cus.c,k=t.dataset.cadd;c[k]=c[k].concat([t.value]);render();}
   else if(t.dataset.lib){var key=S.lib.src+':'+t.dataset.lib;if(t.checked)S.lib.pick[key]=1;else delete S.lib.pick[key];render();}
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&(S.cus||S.lib)){S.cus=null;S.lib=null;render();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&(S.cus||S.lib||S.rel)){S.cus=null;S.lib=null;S.rel=null;render();}});
 document.addEventListener('click',function(e){
-  if(e.target.dataset&&e.target.dataset.ovl){S.cus=null;S.lib=null;render();return;}
+  if(e.target.dataset&&e.target.dataset.ovl){S.cus=null;S.lib=null;S.rel=null;render();return;}
   var b=e.target.closest&&e.target.closest('button');if(!b||!D)return;var ds=b.dataset;
+  if(ds.x==='newfam'||ds.fedit){
+    if((S.isNew||(S.draft&&!same(S.draft,S.base)))&&!confirm('Leave without saving the changes?'))return;
+    if(S.isNew)select(S.sel);else if(S.draft)S.draft=copy(S.base);
+    var F0=ds.fedit?famOf(ds.fedit):null;S.nf=F0?{edit:F0.id,name:F0.name,col:F0.col,rank:F0.rank||'own'}:{tpl:'flat',name:'',col:NEWCOLS[0],pat:'none',rank:'own'};render();
+    var nn=document.querySelector('[data-nf="name"]');if(nn)nn.focus();return;
+  }
+  if(ds.nftpl){S.nf.tpl=ds.nftpl;if(ds.nftpl!=='flat'&&S.nf.pat==='none')S.nf.pat=ds.nftpl==='fan'?'hk':ds.nftpl==='base'?'mcr':'tbt';render();return;}
+  if(ds.nfcol){S.nf.col=ds.nfcol;render();return;}
+  if(ds.nfpat){S.nf.pat=ds.nfpat;render();return;}
+  if(ds.nfrank){S.nf.rank=ds.nfrank;render();return;}
+  if(ds.x==='nfCancel'){S.nf=null;render();return;}
+  if(ds.x==='nfOk'){nfSave();return;}
+  if(ds.palone){setOv(ds.palone,'alone',ov(ds.palone).alone===false);render();return;}
   if(ds.poff){setOv(ds.poff,'off',!ov(ds.poff).off);render();return;}
   if(ds.preset){var p0=copy(P());p0.set=p0.set||{};var keep=p0.set[ds.preset]&&p0.set[ds.preset].off;delete p0.set[ds.preset];if(keep)p0.set[ds.preset]={off:true};putP(p0);render();return;}
   if(ds.x==='cus'){S.cus={i:-1,c:newCus()};render();var n0=document.querySelector('[data-cf="name"]');if(n0)n0.focus();return;}
   if(ds.cedit){S.cus={i:+ds.cedit,c:copy(P().custom[+ds.cedit])};render();return;}
   if(ds.cdel){var c0=P().custom[+ds.cdel];if(!confirm('Remove '+c0.name+'?'))return;var p1=copy(P());p1.custom.splice(+ds.cdel,1);p1.custom.forEach(function(c){c.repl=c.repl.filter(function(x){return x!==c0.id;});c.excl=c.excl.filter(function(x){return x!==c0.id;});});putP(p1);render();return;}
   if(ds.crm){var a=ds.crm.split('|'),k=a.shift(),id=a.join('|');S.cus.c[k]=S.cus.c[k].filter(function(x){return x!==id;});render();return;}
+  if(ds.calone){S.cus.c.alone=S.cus.c.alone===false;render();return;}
   if(ds.cwin){S.cus.c.win=ds.cwin;render();return;}
   if(ds.x==='cusOk'){var c1=S.cus.c,p2=copy(P());p2.set=p2.set||{};p2.custom=p2.custom||[];c1.name=c1.name.trim();c1.pts=Math.max(0,+c1.pts||0);c1.max=Math.min(20,Math.max(1,Math.round(+c1.max||1)));if(S.cus.i<0)p2.custom.push(c1);else p2.custom[S.cus.i]=c1;putP(p2);S.cus=null;render();toast(c1.name+' is in the list. Save to use it.');return;}
   if(ds.x==='lib'){var others=['tbt','hk','mcr'].filter(function(f){return f!==S.draft.picker;});S.lib={src:others[0],q:'',pick:{}};render();return;}
@@ -534,14 +655,21 @@ document.addEventListener('click',function(e){
       if(p3.custom.some(function(c){return c.name.toLowerCase()===f.name.toLowerCase();}))return;
       p3.custom.push({id:nc.id+j,name:f.name,pts:f.pts,max:f.max||1,grp:nc.grp,repl:[],excl:[],win:src==='hk'&&S.draft.picker==='hk'?(f.win||'both'):'both',from:src+':'+fid});added++;});
     putP(p3);S.lib=null;render();toast(added+' pattern'+(added===1?'':'s')+' added. Check the '+(S.draft.unit==='fan'?'fan':'points')+' and save.');return;}
-  if(ds.x==='closeSheet'){S.cus=null;S.lib=null;render();return;}
-  if(ds.sel){if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;select(ds.sel);render();return;}
+  if(ds.x==='closeSheet'){S.cus=null;S.lib=null;S.rel=null;render();return;}
+  if(ds.prel){relOpen(ds.prel);render();return;}
+  if(ds.rrm){var a2=ds.rrm.split('|'),k2=a2.shift(),id2=a2.join('|');S.rel[k2]=S.rel[k2].filter(function(x){return x!==id2;});render();return;}
+  if(ds.ronly){S.rel.onlyOn=!S.rel.onlyOn;render();return;}
+  if(ds.x==='relReset'){var b2=baseOf(S.rel.id);S.rel.repl=(b2.repl||[]).slice();S.rel.onlyOn=!!b2.only;S.rel.only=(b2.only||[]).slice();
+    var ex1=(b2.excl||[]).slice();(P().custom||[]).forEach(function(c){if((c.excl||[]).indexOf(S.rel.id)>=0&&ex1.indexOf(c.id)<0)ex1.push(c.id);});S.rel.excl=ex1;render();return;}
+  if(ds.x==='relOk'){relSave();S.rel=null;render();toast('Rules changed. Save to use them.');return;}
+  if(ds.sel){if(!S.nf&&(S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;select(ds.sel);render();return;}
   if(ds.tab){S.tab=ds.tab;render();return;}
   if(ds.sw){if(ds.sw==='hidden_inv')S.draft.hidden=!S.draft.hidden;else set(ds.sw,!get(ds.sw));render();return;}
   if(ds.seg){var v=JSON.parse(ds.v);set(ds.seg,v);if(ds.seg==='pay'&&v==='table'&&(!S.draft.table||S.draft.table.length<(S.draft.limit||13)+1)){var L=S.draft.limit||13,tb=(S.draft.table||[]).slice();while(tb.length<=L)tb.push(tb.length?tb[tb.length-1]:0);S.draft.table=tb;}render();return;}
   if(ds.calc){S.calc[ds.calc]=ds.v;if(ds.calc==='by'&&ds.v!=='hu'&&S.calc.dealer==='disc')S.calc.dealer='none';render();return;}
   if(ds.copy){
-    if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;
+    if(S.nf){S.nf=null;}
+    else if((S.isNew||!same(S.draft,S.base))&&!confirm('Leave without saving the changes?'))return;
     var from=ds.from||Object.keys(D.versions).map(cur).filter(function(r){return r.fam===ds.copy;}).sort(function(a,b){return a.order-b.order;})[0].id,src=strip(copy(cur(from)));
     src.name=('Copy of '+src.name).slice(0,30);src.short=src.name;src.order=(src.order||0)+10;src.hidden=false;src.help='';
     S.isNew=true;S.copyOf=cur(from).name;S.draft=src;S.base=copy(src);S.tab='general';S.note='';render();
