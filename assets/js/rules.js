@@ -53,7 +53,8 @@
   // Families: the three built in, then the ones made on the Ruleset page (saved as rows with id '@' + family id).
   // rank: the family a new family's tables are ranked with on the leaderboard ('own' = a group of its own).
   var BUILTIN_FAMILIES = [
-    { id: 'tbt', name: 'TBT', col: '#2D6A4F', rank: 'own', order: 1 }, { id: 'hk', name: 'HK Classic', col: '#B72323', rank: 'own', order: 2 }, { id: 'mcr', name: 'MCR', col: '#2F5D9E', rank: 'own', order: 3 }
+    { id: 'tbt', name: 'TBT', col: '#2D6A4F', rank: 'own', order: 1 }, { id: 'hk', name: 'HK Classic', col: '#B72323', rank: 'own', order: 2 }, { id: 'mcr', name: 'MCR', col: '#2F5D9E', rank: 'own', order: 3 },
+    { id: 'riichi', name: 'Riichi', col: '#7A4B8C', rank: 'own', order: 4 }
   ];
   var FAMILIES = clone(BUILTIN_FAMILIES);   // the same array is kept (and refilled) so pages holding it see new families
   var FAM_COLOURS = ['#2D6A4F', '#B72323', '#2F5D9E', '#7A5C14', '#7A4B8C', '#1F6F78', '#B4532A'];
@@ -65,6 +66,9 @@
     var order = Math.round(Math.min(999, Math.max(4, parseFloat(f.order) || 10)));
     return { family: { name: name, col: col, rank: rank, order: order, hidden: !!f.hidden }, errors: e };
   }
+  // Riichi (WRC 2025): scored by its own engine below (pay 'riichi'); the table picks the starting score, the length and red fives
+  var RIICHI = { fam: 'riichi', unit: 'han', entry: 'hanfu', picker: 'riichi', pay: 'riichi', table: [], limit: 0, min: 1, hu: { disc: 1, others: 0 }, zimo: 1, dealerMult: 1, multi: false, streak: 0, stayDraw: true,
+    draw: { kind: 'tenpai', t: [3, 2, 1], byMin: false }, seat: 'off', start: false };
   var BUILTIN = [
     R({ id: 'casual', name: 'Casual', order: 1, min: 1, streak: 4 }),
     R({ id: 'default', name: 'Default', order: 2, min: 2, streak: 4 }),
@@ -74,7 +78,8 @@
     R(ext(HK, { id: 'hkf', name: 'Full Spicy', short: 'HK Full Spicy', order: 2, pay: 'double' })),
     R(ext(MCR, { id: 'mcr4', name: 'MCR-4', order: 1, base: 4, min: 4 })),
     R(ext(MCR, { id: 'mcr8', name: 'MCR-8', order: 2, base: 8, min: 8 })),
-    R(ext(MCR, { id: 'mcrc', name: 'MCR-Custom', order: 3, base: 3, min: 3, baseHost: true }))
+    R(ext(MCR, { id: 'mcrc', name: 'MCR-Custom', order: 3, base: 3, min: 3, baseHost: true })),
+    R(ext(RIICHI, { id: 'wrc', name: 'WRC 2025', short: 'Riichi WRC 2025', order: 1 }))
   ];
   BUILTIN.forEach(function (r) { r.v = 1; });
 
@@ -142,6 +147,7 @@
     cfg.value = function (n) { return valueOf(rs, n); };
     // names the scoreboard already uses
     cfg.mcr = cfg.typed; cfg.hk = rs.picker === 'hk'; cfg.hkFull = rs.pay === 'double';
+    if (rs.pay === 'riichi') { var ro = g.riichi || {}; cfg.riichi = { start: +ro.start === 25000 ? 25000 : 30000, len: ro.len === 'east' ? 'east' : 'south', aka: !!ro.aka }; cfg.maxStreak = Infinity; }
     return cfg;
   }
   // what a hand of n (points or fan) is worth
@@ -191,11 +197,99 @@
     return { d: d, dealerWon: stay, winners: winners, disc: ev.disc };
   }
 
+  // ---- Riichi, WRC 2025 ----
+  // Hands: {kind:'hu', winner, disc, hf:{han, fu, yk, pao}, called:[...]} (ron) {kind:'zimo', winner, hf} (tsumo) {kind:'draw', tenpai:[...]} {kind:'chombo', who}
+  // and riichi: [seats] on every hand but a chombo: who declared riichi in it (1.000 each to the table).
+  // Ron: one winner only (head bump). Kiriage mangan, counted yakuman at 13 han, honba 300, noten payment 3.000, no abortive draws,
+  // no agari-yame and no bust. The dealer stays after a win or when in tenpai at a draw. A chombo re-deals the hand: the riichi sticks of
+  // that hand go back, the dealer and honba stay, the points don't change; it costs 30 on the hanchan score.
+  var RII_UMA = [15, 5, -5, -15], RII_RETURN = 30000;
+  function riiUp(x) { return Math.ceil(x / 100) * 100; }
+  function riiBasic(han, fu, yk) {
+    if (yk) return 8000 * yk;
+    if (han >= 13) return 8000;
+    if (han >= 11) return 6000;
+    if (han >= 8) return 4000;
+    if (han >= 6) return 3000;
+    if (han >= 5) return 2000;
+    var b = fu * Math.pow(2, han + 2);
+    return b >= 1920 ? 2000 : b;
+  }
+  function riiLimit(han, fu, yk) {
+    if (yk) return yk > 1 ? yk + '× yakuman' : 'Yakuman';
+    if (han >= 13) return 'Counted yakuman';
+    if (han >= 11) return 'Sanbaiman'; if (han >= 8) return 'Baiman'; if (han >= 6) return 'Haneman';
+    if (han >= 1 && riiBasic(han, fu, 0) === 2000) return 'Mangan';
+    return '';
+  }
+  // what one win moves, before the riichi sticks
+  function riiWin(ev, dealer, honba) {
+    var d = [0, 0, 0, 0], w = ev.winner, hf = ev.hf || {}, isD = w === dealer, tsumo = ev.kind === 'zimo', yk = Math.max(0, Math.round(num(hf.yk)));
+    function pay(from, amt) { if (from === w || from == null || from < 0 || !amt) return; d[from] -= amt; d[w] += amt; }
+    function tsumoAll(b, each) { for (var i = 0; i < 4; i++) if (i !== w) pay(i, (isD || i === dealer ? riiUp(b * 2) : riiUp(b)) + each); }
+    var pao = yk >= 1 && hf.pao != null && hf.pao >= 0 && hf.pao !== w ? hf.pao : null;
+    if (pao != null) {
+      // WRC 11.2: the liable player pays the fed yakuman in full on a tsumo, half of it on a ron (the discarder pays the other half); other yakuman are paid as usual
+      var fed = riiUp(8000 * (isD ? 6 : 4)), rest = yk - 1;
+      if (tsumo) { pay(pao, fed); if (rest > 0) tsumoAll(8000 * rest, honba * 100); else pay(pao, honba * 300); }
+      else {
+        if (pao === ev.disc) pay(ev.disc, fed); else { pay(pao, fed / 2); pay(ev.disc, fed / 2); }
+        if (rest > 0) pay(ev.disc, riiUp(8000 * rest * (isD ? 6 : 4)));
+        pay(ev.disc, honba * 300);
+      }
+    } else {
+      var b = riiBasic(num(hf.han), num(hf.fu), yk);
+      if (tsumo) tsumoAll(b, honba * 100); else pay(ev.disc, riiUp(b * (isD ? 6 : 4)) + honba * 300);
+    }
+    return d;
+  }
+  function riiDraw(tenpai) {
+    var t = tenpai || [], n = t.length, d = [0, 0, 0, 0];
+    if (n === 0 || n === 4) return d;
+    for (var i = 0; i < 4; i++) d[i] = t.indexOf(i) >= 0 ? 3000 / n : -3000 / (4 - n);
+    return d;
+  }
+  function riiSeats(a) { var o = []; (Array.isArray(a) ? a : []).forEach(function (x) { x = +x; if (x >= 0 && x < 4 && o.indexOf(x) < 0) o.push(x); }); return o.sort(); }
+  function riichiReplay(events, cfg) {
+    var R = cfg.riichi || { start: 30000, len: 'south' }, total = R.len === 'east' ? 4 : 8;
+    var round = 0, honba = 0, dep = 0, done = false, hands = [], chombo = [0, 0, 0, 0];
+    (events || []).forEach(function (ev, i) {
+      var dealer = round % 4, d = [0, 0, 0, 0], winners = [], h0 = honba, dep0 = dep, r0 = round, sticks = 0, late = done;
+      var rii = ev.kind === 'chombo' ? [] : riiSeats(ev.riichi);
+      if (!late) {
+        rii.forEach(function (p) { d[p] -= 1000; }); dep += rii.length;
+        var stay = false, next = false;
+        if (ev.kind === 'hu' || ev.kind === 'zimo') {
+          var wd = riiWin(ev, dealer, honba); for (var k = 0; k < 4; k++) d[k] += wd[k];
+          d[ev.winner] += dep * 1000; sticks = dep; dep = 0; winners.push(ev.winner);
+          stay = ev.winner === dealer; honba = stay ? honba + 1 : 0; next = !stay;
+        } else if (ev.kind === 'draw') {
+          var dd = riiDraw(riiSeats(ev.tenpai)); for (var j = 0; j < 4; j++) d[j] += dd[j];
+          stay = riiSeats(ev.tenpai).indexOf(dealer) >= 0; honba++; next = !stay;
+        } else if (ev.kind === 'chombo') { if (ev.who >= 0 && ev.who < 4) chombo[ev.who]++; }
+        if (next) { round++; if (round >= total) { round = total - 1; done = true; } }
+      }
+      hands.push({ i: i, kind: ev.kind, wind: r0 < 4 ? 0 : 1, round: r0, dealer: dealer, streak: h0, honba: h0, deposits: dep0, sticks: sticks, riichi: rii,
+        deltas: late ? [0, 0, 0, 0] : d, winners: winners, disc: ev.disc, late: late, patterns: ev.patterns });
+    });
+    return { hands: hands, wind: round < 4 ? 0 : 1, round: round, dealer: round % 4, streak: honba, honba: honba, deposits: dep, done: done, turn: round % 4, chombo: chombo, total: total };
+  }
+  // the hanchan score of each player from the final points: (points - 30.000) / 1.000 + uma (split when level) + oka (25.000 start) - 30 per chombo
+  function riichiFinal(pts, chombo, start) {
+    var pl = pts.map(function (p) { return pts.filter(function (q) { return q > p; }).length; }), oka = start === 25000 ? (RII_RETURN - 25000) * 4 / 1000 : 0;
+    return pts.map(function (p, i) {
+      var k = pl[i], same = pl.filter(function (x) { return x === k; }).length, uma = RII_UMA.slice(k, k + same).reduce(function (a, b) { return a + b; }, 0) / same;
+      var ok = k === 0 ? oka / same : 0, base = (p - RII_RETURN) / 1000, ch = -30 * ((chombo || [])[i] || 0);
+      return { i: i, place: k, base: base, uma: uma, oka: ok, chombo: ch, total: Math.round((base + uma + ok + ch) * 10) / 10 };
+    });
+  }
+
   // MCR seat rotation: which seat deals each of the 4 hands in a wind round (row 0 East; rows 1-3 the fixed MCR permutations)
   var SEAT_ORDER = [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 1, 0], [3, 2, 0, 1]];
   function seatAt(wind, turn, seatRotation) { return seatRotation ? SEAT_ORDER[wind][turn] : turn; }
   // every hand in order: dealer, streak, wind round and each hand's score changes. A wind round ends once 4 dealer turns have passed.
   function replay(events, cfg) {
+    if (cfg.rs && cfg.rs.pay === 'riichi') return riichiReplay(events, cfg);
     var wind = 0, turn = 0, dealer = seatAt(0, 0, cfg.seatRotation), streak = 1, done = false, hands = [];
     var roundTotal = [cfg.startBase, cfg.startBase, cfg.startBase, cfg.startBase];
     (events || []).forEach(function (ev, i) {
@@ -218,7 +312,7 @@
     });
     return { hands: hands, wind: wind, dealer: dealer, streak: streak, done: done, turn: turn };
   }
-  function kinds(rs) { return rs.multi ? ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'] : ['hu', 'zimo', 'invalid', 'false', 'draw']; }
+  function kinds(rs) { if (rs.pay === 'riichi') return ['hu', 'zimo', 'draw', 'chombo']; return rs.multi ? ['hu', 'zimo', 'double', 'triple', 'invalid', 'false', 'draw'] : ['hu', 'zimo', 'invalid', 'false', 'draw']; }
 
   // ---- a saved ruleset, checked: wrong shapes are refused, numbers kept in range ----
   function cleanPatterns(P, e) {
@@ -264,14 +358,15 @@
     r.short = String(r.short || r.name).trim().slice(0, 30);
     r.help = String(r.help || '').slice(0, 1500);
     if (!family(r.fam)) e.push('Unknown family');
-    if (['points', 'fan'].indexOf(r.unit) < 0) r.unit = 'points';
-    if (['grid', 'typed'].indexOf(r.entry) < 0) r.entry = 'grid';
-    if (['tbt', 'hk', 'mcr', 'none'].indexOf(r.picker) < 0) r.picker = ['tbt', 'hk', 'mcr'].indexOf(r.fam) >= 0 ? r.fam : 'none';
-    if (['table', 'double', 'same', 'flat'].indexOf(r.pay) < 0) r.pay = 'table';
+    if (['points', 'fan', 'han'].indexOf(r.unit) < 0) r.unit = 'points';
+    if (['grid', 'typed', 'hanfu'].indexOf(r.entry) < 0) r.entry = 'grid';
+    if (['tbt', 'hk', 'mcr', 'none', 'riichi'].indexOf(r.picker) < 0) r.picker = ['tbt', 'hk', 'mcr', 'riichi'].indexOf(r.fam) >= 0 ? r.fam : 'none';
+    if (['table', 'double', 'same', 'flat', 'riichi'].indexOf(r.pay) < 0) r.pay = 'table';
+    if (r.fam === 'riichi') { r.unit = 'han'; r.entry = 'hanfu'; r.picker = 'riichi'; r.pay = 'riichi'; r.limit = 0; r.start = false; r.seat = 'off'; r.multi = false; }   // riichi scores by its own engine
     r.flat = n(r.flat, 0, 1000000, 1); r.stack = Math.round(n(r.stack, 0, 99, 10));
     r.limit = Math.round(n(r.limit, 0, 99, 13));
     r.table = (Array.isArray(r.table) ? r.table : []).slice(0, 100).map(function (x) { return n(x, 0, 1000000, 0); });
-    if (r.pay === 'table' && r.table.length < (r.limit || 13) + 1) e.push('The payout table needs a value up to the limit');
+    if (r.pay === 'table' && r.fam !== 'riichi' && r.table.length < (r.limit || 13) + 1) e.push('The payout table needs a value up to the limit');
     r.min = Math.round(n(r.min, 0, 99, 1)); r.base = n(r.base, 0, 99, 0);
     r.hu = { disc: n(r.hu && r.hu.disc, 0, 100, 2), others: n(r.hu && r.hu.others, 0, 100, 0) };
     r.zimo = n(r.zimo, 0, 100, 1); r.dealerMult = n(r.dealerMult, 0.5, 10, 1);
@@ -286,6 +381,7 @@
   }
 
   var api = { DEFAULTS: DEFAULTS, BUILTIN: BUILTIN, FAMILIES: FAMILIES, BUILTIN_FAMILIES: BUILTIN_FAMILIES, FAM_COLOURS: FAM_COLOURS, family: family, cleanFamily: cleanFamily, registry: registry, setSaved: setSaved, current: current, version: version, list: list, exists: exists,
-    rulesOf: rulesOf, pinVersion: pinVersion, config: config, valueOf: valueOf, scoreEvent: scoreEvent, replay: replay, seatAt: seatAt, SEAT_ORDER: SEAT_ORDER, kinds: kinds, clean: clean };
+    rulesOf: rulesOf, pinVersion: pinVersion, config: config, valueOf: valueOf, scoreEvent: scoreEvent, replay: replay, seatAt: seatAt, SEAT_ORDER: SEAT_ORDER, kinds: kinds, clean: clean,
+    riichiReplay: riichiReplay, riichiWin: riiWin, riichiDraw: riiDraw, riichiBasic: riiBasic, riichiLimit: riiLimit, riichiFinal: riichiFinal };
   root.TBTRules = api;
 })(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));
