@@ -67,6 +67,7 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true, fam: fid, v: fv });
     }
     const c = T.clean(b && b.data);
+    if (c.rules.fam === 'riichi' || (b && typeof b.id === 'string' && T.exists(b.id) && T.current(b.id).fam === 'riichi')) return json({ error: 'Riichi follows the WRC rules and is not edited here' }, 400);
     if (c.errors.length) return json({ error: c.errors.join('. ') }, 400);
     let id = b && typeof b.id === 'string' && T.exists(b.id) ? b.id : null;
     if (id) {

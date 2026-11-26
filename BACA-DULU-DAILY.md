@@ -1777,3 +1777,34 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 
 **Database:** tidak ada perubahan (keluarga baru disimpan di tabel `rulesets`).
 **Berkas yang berubah:** `scoreboard.html`, `admin-ruleset.html`, `admin-events.html`, `leaderboard.html`, `index.html`, `events.html`, `player.html`, `players.html`, `assets/js/rules.js`, `assets/js/patterns.js`, `functions/_rules.js`, `functions/_rulesets.js`, `functions/api/admin/rulesets.js`, dan catatan ini.
+
+## Update terbaru (v86): scoreboard Riichi (WRC 2025)
+
+**Keluarga baru Riichi, sub-mode WRC 2025 (bawaan, tidak bisa diubah di halaman Ruleset)**
+- Alur sama dengan mode lain: Players and options, Record hand, Hands (Edit, Insert before, Delete). Pemain 1 = East dan dealer pertama.
+- Pilihan meja (terkunci setelah hand pertama): starting score 30.000 (WRC, tanpa oka) atau 25.000 (return 30.000, oka +20), East-South atau East only, red fives Off/On (disimpan untuk kalkulator yaku nanti).
+- Record hand: Ron, Tsumo, Draw, Chombo. Nilai hand pakai chip Han (1 sampai 13+), Fu, Yakuman (1x sampai 3x), dan Pao untuk yakuman.
+- Ron oleh beberapa pemain: tap semua yang memanggil, pemenang otomatis yang terdekat setelah discarder (head bump).
+- Riichi: tap bar RIICHI di papan atau chip di form. 1.000 langsung keluar dari poin di papan.
+- Hitungan WRC: kiriage mangan, counted yakuman 13 han, honba 300 (100 per orang saat tsumo), noten payment 3.000, dealer tetap kalau menang atau tenpai saat draw, tanpa agari-yame dan tanpa bust, game selesai setelah South 4 (atau East 4). Riichi stick yang tersisa tetap di meja.
+- Chombo: hand diulang (riichi stick hand itu kembali, dealer dan honba tetap), poin tidak berubah, −30 di hanchan score.
+- Score changes dihitung dari poin di papan setelah riichi stick dipasang (pemenang yang ikut riichi tercatat +1.000 dari stick-nya). Di bawahnya ada rincian riichi, stick yang diambil, dan honba. Angka ribuan pakai titik.
+- Papan Riichi menggantikan 4 kotak skor: angin, nama, ranking, selisih poin, honba counter (kanan dealer) dan riichi stick counter (kiri dealer). Tombol Rotate 90° (disimpan per HP) dan Full screen.
+- Game selesai: tabel hanchan score (poin, uma, oka, chombo, score).
+
+**Leaderboard, All players dan halaman pemain (sementara, sampai leaderboard rating Riichi dibuat)**
+- Meja Riichi jadi grup sendiri di menu mode. Satu meja = satu hanchan, dan semua nilai memakai hanchan score: (poin − 30.000) / 1.000 + uma + oka − 30 per chombo.
+- Saat filter Riichi dipilih, kata-katanya ikut: "Ranked by hanchan score", "Hanchan" (bukan Wind rounds), "1st in hanchan", "Hanchan score", "Average han", "Ron" (bukan Hu). Hanchan score satu desimal, poin dengan titik ribuan (+14.300).
+- Halaman pemain: tab Hanchan berisi total, hanchan score tertinggi/terendah dalam satu game dan rata-rata peringkat. Kartu game Riichi langsung membuka recap meja (tanpa rincian East/South). Tab Patterns masih kosong sampai kalkulator yaku dibuat.
+- TBT, HK dan MCR tidak berubah, dan statistik meja lama tidak dihitung ulang.
+
+**Server**
+- Bentuk hand Riichi dicek sebelum disimpan (kursi, han, fu, yakuman, pao, pemanggil ron, riichi). Pilihan Riichi meja ikut terkunci setelah hand pertama. Urutan kursi di admin ikut memindahkan riichi, pemanggil ron dan pao.
+- Halaman Ruleset: Riichi tidak tampil di daftar dan tidak bisa disimpan lewat API.
+
+**Nickname baru maksimal 20 karakter** (supaya muat satu baris di scoreboard): form daftar (`/daftar`), tambah/ubah pemain di admin, dan Register all. Nickname lama yang lebih panjang tetap boleh dipakai dan disimpan apa adanya.
+
+**Cache:** `rules.js` dan `patterns.js` sekarang dimuat dengan `?v=<hash>`, jadi browser langsung mengambil versi baru setiap kali berkas berubah (file di `/assets` di-cache setahun). Jalankan `python3 sync_rules.py` setelah mengubah `rules.js` atau membangun ulang `admin-ruleset.html`.
+
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `player.html`, `players.html`, `admin-ruleset.html`, `admin-pemain.html`, `daftar.html`, `assets/js/rules.js`, `functions/_rules.js`, `functions/_scoring.js`, `functions/_tables.js`, `functions/api/signup.js`, `functions/api/admin/players.js`, `functions/api/admin/rulesets.js`, dan catatan ini.

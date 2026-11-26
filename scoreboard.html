@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Tiles by Tiles scoreboard</title>
-<script src="/assets/js/rules.js"></script>
+<script src="/assets/js/rules.js?v=446545bb10"></script>
 <script src="/modes.js"></script>
 <link rel="icon" type="image/png" id="favicon" href="">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
@@ -273,6 +273,25 @@ body.pp2 #patModal #pkCard2{position:sticky;top:0;z-index:3;padding:0;margin:0}
 .stop .sub{font-size:13px;color:var(--muted);margin-top:2px}
 .wtile{width:52px;height:52px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--accent);color:var(--onaccent)!important;font-size:30px}
 .tots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+/* Riichi: the board in place of the score cells, and the final hanchan scores */
+.rbwrap{max-width:620px;margin:0 auto}.rbbox>svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.rbwrap.notap .sb-riichi{cursor:default}
+/* board tools: turn it 90 degrees at a time (the phone lies on the table however the dealer sits), and full screen */
+.rbbar{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0 0 8px}
+.rbbar .rbinfo{flex:1;font-size:13px;color:var(--muted);display:none}
+.rbbar .chip{display:inline-flex;align-items:center;gap:6px}.rbbar svg{width:16px;height:16px;display:block}
+.rbbox svg#rb{transition:transform .25s ease}
+.rbwrap.full{position:fixed;inset:0;z-index:1000;max-width:none;margin:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:56px 10px 10px}
+.rbwrap.full .rbbox{width:min(calc(100vw - 20px),calc(100vh - 66px));width:min(calc(100vw - 20px),calc(100dvh - 66px))}
+.rbwrap.full .rbbar{position:absolute;top:10px;left:10px;right:10px;margin:0}.rbwrap.full .rbinfo{display:block}
+@media (orientation:landscape){.rbwrap.full{padding:10px 64px}.rbwrap.full .rbbox{width:min(calc(100vw - 128px),calc(100vh - 20px));width:min(calc(100vw - 128px),calc(100dvh - 20px))}
+  .rbwrap.full .rbbar{flex-direction:column;align-items:stretch;left:auto;width:auto;max-width:150px}.rbwrap.full .rbinfo{order:9;font-size:12px}}
+html.rbfull-on,html.rbfull-on body{overflow:hidden}
+.rfin{margin-top:16px;overflow-x:auto}.rfin table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.rfin th{text-align:right;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line);font-weight:700}
+.rfin td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line)}.rfin th:nth-child(2),.rfin td:nth-child(2){text-align:left}
+.rfin td b{font-family:var(--display);font-weight:900;font-size:19px}.rfin .pos{color:var(--accent)}.rfin .neg{color:var(--red,#B72323)}
+.rnote{font-size:13px;margin:10px 0 0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#B8912E 14%,var(--surface,#fff));border:1px solid color-mix(in srgb,#B8912E 35%,transparent)}
 .tcell{border:1px solid var(--line);border-radius:12px;padding:12px 4px;text-align:center;background:var(--field);min-width:0}
 .tcell.lead{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .tn{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -452,6 +471,11 @@ button,.chip,.btn,[data-tm],.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld{touch-action:ma
     <p class="hint qtip" id="gmodeHint" hidden></p>
     <div id="gmcr" hidden style="margin:10px 0 12px"><div class="field" style="max-width:200px;margin:0"><label for="gmcrBase">Base point</label><input id="gmcrBase" type="number" min="0" max="99" step="1" inputmode="numeric"></div></div>
     <label class="chk" id="gseatWrap" hidden style="margin:0 0 12px"><input type="checkbox" id="gseat"> Seat rotation (MCR)</label>
+    <div id="griichi" hidden style="margin:0 0 12px">
+      <div class="field"><label>Starting score</label><div class="chips" id="grStart"></div></div>
+      <div class="field"><label>Game length</label><div class="chips" id="grLen"></div></div>
+      <div class="field" style="margin-bottom:0"><label>Red fives (aka dora)</label><div class="chips" id="grAka"></div></div>
+    </div>
     <div id="gcustom" hidden style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 12px">
       <div class="field" style="flex:1;min-width:120px;margin:0"><label for="gcMin">Minimum points</label><input id="gcMin" type="number" min="1" max="13" step="1"></div>
       <div class="field" style="flex:1;min-width:120px;margin:0"><label for="gcStreak">Max dealer streak</label><input id="gcStreak" type="number" min="1" step="1"></div>
@@ -467,6 +491,138 @@ button,.chip,.btn,[data-tm],.tm-pt,.tm-tb,.tm-wb,.tm-fb,.tm-meld{touch-action:ma
 
   <div class="card" id="rulesCard"></div>
   <div class="card" id="gstatus"></div>
+  <template id="rbTpl"><svg id="rb" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="group" aria-label="Riichi scoreboard">
+  <style>
+    /* V2 layout and colours unchanged. Only the fonts follow the site: Inter becomes Inter Tight (narrower, so names and
+       numbers get a little more size or spacing), the hanzi use TBT Hanzi, and the E/S/W/N labels use Inter Tight 700 in place of Impact. */
+    .sb-name-bar { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 700; fill: #ffffff; dominant-baseline: central; letter-spacing: .2px; }
+    .sb-riichi-text { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 700; font-size: 27px; letter-spacing: 2.8px; fill: #ffffff; dominant-baseline: central; }
+    .sb-score { font-family: "Playfair Display",Georgia,serif; font-weight: 900; font-size: 62px; font-variant-numeric: lining-nums tabular-nums; dominant-baseline: central; }
+    .sb-gap { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 500; font-size: 29px; font-variant-numeric: tabular-nums; letter-spacing: .3px; dominant-baseline: central; }
+    .sb-rank-t { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 1.4px; dominant-baseline: central; }
+    .hb-num { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 700; font-size: 29px; dominant-baseline: central; }
+    .sb-riichi { cursor: pointer; }
+    .sb-riichi:focus, .sb-riichi:focus-visible { outline: none; }
+    .sb-riichi:focus-visible rect { stroke: #e0b84a; stroke-width: 3; }
+    .sb-riichi .on-only { display: none; }
+    .sb-riichi.on .on-only { display: inline; }
+    .sb-riichi.on .off-only { display: none; }
+    .sb-card { fill:#faf7f2;stroke:#e6dfd2 }
+    .sb-muted { fill:#5a564d }
+    .sb-ink { fill:#1a1a1a }
+    .rb-off { fill:#2d6a4f }
+    .rb-on { fill:#b72323 }
+    .ind-board { fill:#f8f6ef }
+    .fl-a { stop-color:#e1ddcf }
+    .fl-b { stop-color:#f4f1e7 }
+    .ind-halo { display:none }
+    .hb-stick { fill:#ffffff;stroke:#1a1a1a;stroke-width:1.5 }
+    .hb-dot { fill:#111111 }
+    .gem-bg { stroke-width: 1.5; }
+    .gem-0 .gem-bg { fill:#2d6a4f;stroke:#2d6a4f } .gem-0 .gem-fg { fill:#ffffff }
+    .gem-1 .gem-bg { fill:#1b7fa6;stroke:#17678a } .gem-1 .gem-fg { fill:#ffffff }
+    .gem-2 .gem-bg { fill:#a3163f;stroke:#7d0f2f } .gem-2 .gem-fg { fill:#ffffff }
+    .gem-3 .gem-bg { fill:#1c8760;stroke:#136247 } .gem-3 .gem-fg { fill:#ffffff }
+    .gem-4 .gem-bg { fill:#2f2f2f;stroke:#1a1a1a } .gem-4 .gem-fg { fill:#ffffff }
+    @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .sb-card { fill:#0f2a20;stroke:#24493a }
+    :root:not([data-theme="light"]) .sb-muted { fill:#a9b5aa }
+    :root:not([data-theme="light"]) .sb-ink { fill:#ece8dd }
+    :root:not([data-theme="light"]) .rb-off { fill:#357c5c }
+    :root:not([data-theme="light"]) .rb-on { fill:#c62d2d }
+    :root:not([data-theme="light"]) .ind-board { fill:#ece7d9 }
+    :root:not([data-theme="light"]) .fl-a { stop-color:#bdb7a4 }
+    :root:not([data-theme="light"]) .fl-b { stop-color:#dad4c2 }
+    :root:not([data-theme="light"]) .ind-halo { display:inline }
+    :root:not([data-theme="light"]) .hb-stick { fill:#ece8dd;stroke:#ece8dd }
+    :root:not([data-theme="light"]) .gem-0 .gem-bg { fill:#357c5c;stroke:#357c5c } :root:not([data-theme="light"]) .gem-0 .gem-fg { fill:#ffffff }
+    :root:not([data-theme="light"]) .gem-1 .gem-bg { fill:#a9e2f5;stroke:#a9e2f5 } :root:not([data-theme="light"]) .gem-1 .gem-fg { fill:#0b3a4d }
+    :root:not([data-theme="light"]) .gem-2 .gem-bg { fill:#e04a6e;stroke:#e04a6e } :root:not([data-theme="light"]) .gem-2 .gem-fg { fill:#2a0612 }
+    :root:not([data-theme="light"]) .gem-3 .gem-bg { fill:#4fc79b;stroke:#4fc79b } :root:not([data-theme="light"]) .gem-3 .gem-fg { fill:#06281c }
+    :root:not([data-theme="light"]) .gem-4 .gem-bg { fill:#f3ece0;stroke:#f3ece0 } :root:not([data-theme="light"]) .gem-4 .gem-fg { fill:#3d2f20 }
+    }
+    :root[data-theme="dark"] .sb-card { fill:#0f2a20;stroke:#24493a }
+    :root[data-theme="dark"] .sb-muted { fill:#a9b5aa }
+    :root[data-theme="dark"] .sb-ink { fill:#ece8dd }
+    :root[data-theme="dark"] .rb-off { fill:#357c5c }
+    :root[data-theme="dark"] .rb-on { fill:#c62d2d }
+    :root[data-theme="dark"] .ind-board { fill:#ece7d9 }
+    :root[data-theme="dark"] .fl-a { stop-color:#bdb7a4 }
+    :root[data-theme="dark"] .fl-b { stop-color:#dad4c2 }
+    :root[data-theme="dark"] .ind-halo { display:inline }
+    :root[data-theme="dark"] .hb-stick { fill:#ece8dd;stroke:#ece8dd }
+    :root[data-theme="dark"] .gem-0 .gem-bg { fill:#357c5c;stroke:#357c5c } :root[data-theme="dark"] .gem-0 .gem-fg { fill:#ffffff }
+    :root[data-theme="dark"] .gem-1 .gem-bg { fill:#a9e2f5;stroke:#a9e2f5 } :root[data-theme="dark"] .gem-1 .gem-fg { fill:#0b3a4d }
+    :root[data-theme="dark"] .gem-2 .gem-bg { fill:#e04a6e;stroke:#e04a6e } :root[data-theme="dark"] .gem-2 .gem-fg { fill:#2a0612 }
+    :root[data-theme="dark"] .gem-3 .gem-bg { fill:#4fc79b;stroke:#4fc79b } :root[data-theme="dark"] .gem-3 .gem-fg { fill:#06281c }
+    :root[data-theme="dark"] .gem-4 .gem-bg { fill:#f3ece0;stroke:#f3ece0 } :root[data-theme="dark"] .gem-4 .gem-fg { fill:#3d2f20 }
+  </style>
+
+  <rect class="sb-card" x="0.5" y="0.5" width="999" height="999" rx="28"/>
+  <polygon id="ind-halo" class="ind-halo" points="407.63,277.00 592.37,277.00 723.00,407.63 723.00,592.37 592.37,723.00 407.63,723.00 277.00,592.37 277.00,407.63" fill="none" stroke="#4f8f73" stroke-opacity="0.75" stroke-width="2.5"/>
+
+  <svg id="wind-indicator" x="280" y="280" width="440" height="440" viewBox="0 0 96.569 96.569">
+    <style>
+      .kanji { font-family: "TBT Hanzi","KaiTi","楷体","STKaiti","Kaiti SC",serif; text-anchor: middle; dominant-baseline: central; fill: #1a1a1a; stroke: #1a1a1a; stroke-width: 0.3; stroke-linejoin: round; }
+      .label { font-family: "Inter Tight","Helvetica Neue",Arial,sans-serif; font-weight: 700; font-size: 5.7px; letter-spacing: .1px; dominant-baseline: alphabetic; fill: #1a1a1a; }
+      .kanji.dealer { fill: #e0222a; stroke: #e0222a; }
+      .label.dealer { fill: #e0222a; }
+      .soft .kanji { fill: #1B4332; stroke: #1B4332; stroke-width: .22; }
+      .soft .label { fill: #1B4332; }
+      .soft .kanji.dealer { fill: #C0262C; stroke: #C0262C; }
+      .soft .label.dealer { fill: #C0262C; }
+    </style>
+    <defs>
+      <linearGradient id="frameGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10823f"/><stop offset="0.5" stop-color="#0b6b34"/><stop offset="1" stop-color="#075a2a"/></linearGradient>
+      <linearGradient id="floorGrad" x1="0" y1="0" x2="0" y2="1"><stop class="fl-a" offset="0" stop-color="#e1ddcf"/><stop class="fl-b" offset="1" stop-color="#f4f1e7"/></linearGradient>
+      <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a9a493"/><stop offset="0.5" stop-color="#d2cebf"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+      <linearGradient id="innerShadow" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0.26"/><stop offset="0.55" stop-color="#000000" stop-opacity="0"/></linearGradient>
+      <filter id="engraved" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+        <feOffset in="SourceAlpha" dx="0.22" dy="0.22" result="hlOff"/><feGaussianBlur in="hlOff" stdDeviation="0.08" result="hlBlur"/>
+        <feFlood flood-color="#ffffff" flood-opacity="0.95"/><feComposite in2="hlBlur" operator="in" result="lip"/>
+        <feComponentTransfer in="SourceAlpha" result="inv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+        <feOffset in="inv" dx="0.32" dy="0.32" result="invOff"/><feGaussianBlur in="invOff" stdDeviation="0.15" result="invBlur"/>
+        <feFlood flood-color="#000000" flood-opacity="0.6"/><feComposite in2="invBlur" operator="in" result="shadowRaw"/>
+        <feComposite in="shadowRaw" in2="SourceAlpha" operator="in" result="innerShadow"/>
+        <feMerge><feMergeNode in="lip"/><feMergeNode in="SourceGraphic"/><feMergeNode in="innerShadow"/></feMerge>
+      </filter>
+    </defs>
+    <polygon points="28.284,0.000 68.284,0.000 96.568,28.284 96.568,68.284 68.284,96.568 28.284,96.568 0.000,68.284 0.000,28.284" fill="url(#frameGrad)"/>
+    <g stroke-width="0.06" stroke-linejoin="round">
+      <polygon points="28.284,0.000 68.284,0.000 67.663,1.500 28.905,1.500" fill="#3da869" stroke="#3da869"/>
+      <polygon points="68.284,0.000 96.568,28.284 95.068,28.905 67.663,1.500" fill="#0b6b34" stroke="#0b6b34"/>
+      <polygon points="96.568,28.284 96.568,68.284 95.068,67.663 95.068,28.905" fill="#064822" stroke="#064822"/>
+      <polygon points="96.568,68.284 68.284,96.568 67.663,95.068 95.068,67.663" fill="#043a1b" stroke="#043a1b"/>
+      <polygon points="68.284,96.568 28.284,96.568 28.905,95.068 67.663,95.068" fill="#064822" stroke="#064822"/>
+      <polygon points="28.284,96.568 0.000,68.284 1.500,67.663 28.905,95.068" fill="#0b6b34" stroke="#0b6b34"/>
+      <polygon points="0.000,68.284 0.000,28.284 1.500,28.905 1.500,67.663" fill="#3da869" stroke="#3da869"/>
+      <polygon points="0.000,28.284 28.284,0.000 28.905,1.500 1.500,28.905" fill="#52c17f" stroke="#52c17f"/>
+    </g>
+    <g stroke-width="0.06" stroke-linejoin="round">
+      <polygon points="29.527,3.000 67.041,3.000 66.627,4.000 29.941,4.000" fill="#52b57c" stroke="#52b57c"/>
+      <polygon points="67.041,3.000 93.568,29.527 92.568,29.941 66.627,4.000" fill="#0b6b34" stroke="#0b6b34"/>
+      <polygon points="93.568,29.527 93.568,67.041 92.568,66.627 92.568,29.941" fill="#064822" stroke="#064822"/>
+      <polygon points="93.568,67.041 67.041,93.568 66.627,92.568 92.568,66.627" fill="#043a1b" stroke="#043a1b"/>
+      <polygon points="67.041,93.568 29.527,93.568 29.941,92.568 66.627,92.568" fill="#064822" stroke="#064822"/>
+      <polygon points="29.527,93.568 3.000,67.041 4.000,66.627 29.941,92.568" fill="#0b6b34" stroke="#0b6b34"/>
+      <polygon points="3.000,67.041 3.000,29.527 4.000,29.941 4.000,66.627" fill="#52b57c" stroke="#52b57c"/>
+      <polygon points="3.000,29.527 29.527,3.000 29.941,4.000 4.000,29.941" fill="#6fd49a" stroke="#6fd49a"/>
+    </g>
+    <polygon points="29.941,4 66.627,4 92.568,29.941 92.568,66.627 66.627,92.568 29.941,92.568 4,66.627 4,29.941" class="ind-board"/>
+    <circle cx="48.284" cy="48.284" r="20.3" fill="none" stroke="url(#rimGrad)" stroke-width="0.6"/>
+    <circle cx="48.284" cy="48.284" r="20" fill="url(#floorGrad)"/>
+    <circle cx="48.284" cy="48.284" r="19.2" fill="none" stroke="url(#innerShadow)" stroke-width="1.6"/>
+    <g id="text-layer" filter="url(#engraved)" class="">
+      <text id="prevailing-kanji" class="kanji dealer" x="48.284" y="48.3" font-size="33">南</text>
+      <g id="wi-0" transform="rotate(0 48.284 48.284)"><text class="label" x="37.6" y="88.9" text-anchor="end">N</text><text class="kanji" x="48.284" y="80.5" font-size="17.5">北</text><text class="label" x="58.9" y="88.9" text-anchor="start">1</text></g>
+      <g id="wi-1" transform="rotate(-90 48.284 48.284)"><text class="label dealer" x="37.6" y="88.9" text-anchor="end">E</text><text class="kanji dealer" x="48.284" y="80.5" font-size="17.5">東</text><text class="label dealer" x="58.9" y="88.9" text-anchor="start">2</text></g>
+      <g id="wi-2" transform="rotate(180 48.284 48.284)"><text class="label" x="37.6" y="88.9" text-anchor="end">S</text><text class="kanji" x="48.284" y="80.5" font-size="17.5">南</text><text class="label" x="58.9" y="88.9" text-anchor="start">3</text></g>
+      <g id="wi-3" transform="rotate(90 48.284 48.284)"><text class="label" x="37.6" y="88.9" text-anchor="end">W</text><text class="kanji" x="48.284" y="80.5" font-size="17.5">西</text><text class="label" x="58.9" y="88.9" text-anchor="start">4</text></g>
+    </g>
+  </svg>
+
+  <g id="players"></g>
+</svg></template>
   <div class="card" id="gentry"></div>
   <div class="card" id="ghist"></div>
   <div class="card" id="lockBanner" hidden><b>Saved as final.</b><p class="hint" style="margin:6px 0 0">This game is locked and can’t be edited anymore. If something needs fixing, ask the admin to reopen it.</p></div>
@@ -1683,9 +1839,9 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 
   /* ---------- Casual mode: scoring ---------- */
   var GKEY='mj-casual-v1'+SUFFIX;
-  var KINDS=[['hu','Hu'],['zimo','Zi Mo'],['double','Double Hu'],['triple','Triple Hu'],['invalid','Invalid win'],['false','False win'],['draw','Draw']];
+  var KINDS=[['hu','Hu'],['zimo','Zi Mo'],['double','Double Hu'],['triple','Triple Hu'],['invalid','Invalid win'],['false','False win'],['draw','Draw'],['chombo','Chombo']];
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function defaultGame(){return {names:['','','',''],title:'Mahjong night',date:today(),useStart:false,start:'200',mode:'casual',seatRotation:true,bankrupt:false,custom:{minPoint:2,maxStreak:4,deadwall:false},mcrBase:3,events:[]};}
+  function defaultGame(){return {names:['','','',''],title:'Mahjong night',date:today(),useStart:false,start:'200',mode:'casual',seatRotation:true,bankrupt:false,custom:{minPoint:2,maxStreak:4,deadwall:false},mcrBase:3,riichi:{start:30000,len:'south',aka:false},riichiNow:[],events:[]};}
   function loadGame(){
     try{
       var s=JSON.parse(localStorage.getItem(GKEY));
@@ -1696,6 +1852,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
         if(!TBTRules.exists(g.mode))g.mode='casual';
         g.seatRotation=g.seatRotation!==false;
         g.bankrupt=!!g.bankrupt&&g.useStart;
+        var ro=(g.riichi&&typeof g.riichi==='object')?g.riichi:{};g.riichi={start:+ro.start===25000?25000:30000,len:ro.len==='east'?'east':'south',aka:!!ro.aka};
+        g.riichiNow=(Array.isArray(g.riichiNow)?g.riichiNow:[]).map(Number).filter(function(x,k,a){return x>=0&&x<4&&a.indexOf(x)===k;});
         var mb=parseFloat(g.mcrBase);g.mcrBase=isNaN(mb)?3:Math.min(99,Math.max(0,Math.round(mb)));
         var gc=(g.custom&&typeof g.custom==='object')?g.custom:{};
         g.custom={
@@ -1882,15 +2040,17 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var label=rs.short||rs.name;
     var onoff=function(b){return b?'On':'Off';};
     var rows=[rs.picker==='none'?['To win','Any complete hand']:['Minimum to win',unitWord(cfg,cfg.minPoint)]];
+    if(rs.pay==='riichi'){var RO=cfg.riichi;rows=[['Rules','WRC 2025'],['Starting score',RO.start===25000?'25.000 (return 30.000, oka +20)':'30.000 (no oka)'],['Length',RO.len==='east'?'East only':'East-South'],['Red fives',RO.aka?'On':'Off'],
+      ['Uma','+15 / +5 / \u22125 / \u221215'],['Honba','300 (100 each on tsumo)'],['Draw','3.000 noten payment'],['Chombo','Hand re-dealt, \u221230']];}
     if(rs.pay==='flat')rows.push(['Every win','pays '+cfg.value(0)]);
     if(cfg.basePoint)rows.push(['Base point',String(cfg.basePoint)]);
     if(cfg.limit&&rs.pay!=='same'&&rs.pay!=='flat')rows.push(['Limit',unitWord(cfg,cfg.limit)+', pays '+cfg.value(cfg.limit)]);
     if(rs.pay==='double')rows.push(['Payout','doubles every '+(cfg.unit==='fan'?'fan':'point')]);
-    rows.push(['Dealer',streakWord(cfg)]);
+    if(rs.pay!=='riichi'){rows.push(['Dealer',streakWord(cfg)]);}
     if(rs.seat==='host')rows.push(['Seat rotation',onoff(cfg.seatRotation)]);
     if(rs.hostSets||rs.deadwall)rows.push(['Non-replenishing deadwall',onoff(cfg.deadwall)]);
     if(rs.start){rows.push(['Starting score',game.useStart?String(game.start):'Not used']);rows.push(['Bankrupt',onoff(cfg.bankrupt)]);}
-    rows.push(['Invalid win',penWord(cfg,'invalid')]);rows.push(['False win',penWord(cfg,'false')]);
+    if(rs.pay!=='riichi'){rows.push(['Invalid win',penWord(cfg,'invalid')]);rows.push(['False win',penWord(cfg,'false')]);}
     var h='<div class="rhead"><b>Game rules</b><span class="pill">'+esc(label)+'</span></div><div class="rules">';
     rows.forEach(function(x){h+='<div><div class="k">'+x[0]+'</div><div class="v">'+esc(x[1])+'</div></div>';});
     h+='</div>';
@@ -1898,7 +2058,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var fam=modeFamily(game.mode||'casual');document.querySelectorAll('.rhead .pill').forEach(function(p){p.dataset.fam=fam;});var gst=$('gstatus');if(gst)gst.dataset.fam=fam;
     var gsTag=$('gsTag'),gsSub=$('gsSub');
     if(gsTag&&gsSub){
-      var facts=rs.pay==='flat'?['Win '+cfg.value(0),'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)]:cfg.basePoint?['Base '+cfg.basePoint,'Min '+cfg.minPoint]:(cfg.limit&&cfg.unit==='fan')?['Min '+cfg.minPoint+' fan','Limit '+cfg.value(cfg.limit)]:['Min '+cfg.minPoint,'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)],flags=[];
+      var facts=rs.pay==='riichi'?[(cfg.riichi.len==='east'?'East only':'East-South'),'Start '+(cfg.riichi.start===25000?'25.000':'30.000')]:rs.pay==='flat'?['Win '+cfg.value(0),'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)]:cfg.basePoint?['Base '+cfg.basePoint,'Min '+cfg.minPoint]:(cfg.limit&&cfg.unit==='fan')?['Min '+cfg.minPoint+' fan','Limit '+cfg.value(cfg.limit)]:['Min '+cfg.minPoint,'Streak '+(cfg.maxStreak===Infinity?'no limit':cfg.maxStreak)],flags=[];
       if(cfg.seatRotation)flags.push('Rotation');
       if(cfg.deadwall)flags.push('Deadwall');
       if(rs.start&&game.useStart)flags.push('Start '+game.start);
@@ -1918,6 +2078,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     var gs=$('gstart');if(gs)gs.disabled=frozen||!game.useStart;
     document.querySelectorAll('#gnames input').forEach(function(el){el.disabled=frozen;});
     document.querySelectorAll('#gmode .btn:not(.soon)').forEach(function(el){el.disabled=frozen;});
+    document.querySelectorAll('#griichi .chip').forEach(function(el){el.disabled=frozen;});
     var note=$('setupNote');
     if(note)note.textContent=frozen
       ?'Players and rules are fixed because the first hand has been recorded. Title and date can still be edited.'
@@ -2138,7 +2299,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   window.sbValue=function(n){return modeConfig().value(n);};          // what n points or fan pay in this game (the HK pickers use it)
   window.sbLimit=function(){return modeConfig().limit||99;};
   window.sbHu=function(n){var c=modeConfig(),m=c.rs.hu.disc,v=c.value(n);return (m===2?'double':'\u00d7'+m)+' ('+(m*v)+')';};
-  function kindsFor(){var ok=TBTRules.kinds(modeConfig().rs);return KINDS.filter(function(k){return ok.indexOf(k[0])>=0;});}
+  function isRii(){return modeConfig().rs.pay==='riichi';}
+  function kindsFor(){var ok=TBTRules.kinds(modeConfig().rs),rii=isRii();return KINDS.filter(function(k){return ok.indexOf(k[0])>=0;}).map(function(k){return rii&&k[0]==='hu'?['hu','Ron']:rii&&k[0]==='zimo'?['zimo','Tsumo']:k;});}
   function scoreEvent(ev,dealer,cfg){
     var r=TBTRules.scoreEvent(ev,dealer,cfg),desc='',fan=cfg.unit==='fan';
     function amt(w){var n=num(ev.pts&&ev.pts[w]);return fan?n+' fan':cfg.basePoint?String(r.d[w]):ptsWord(ev.pts[w]);}
@@ -2159,7 +2321,29 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   // South, West and North. With seat rotation off, every round just reuses row 0.
   var SEAT_ORDER=[[0,1,2,3],[1,0,3,2],[2,3,1,0],[3,2,0,1]];
   function seatAt(wind,turn,seatRotation){return seatRotation?SEAT_ORDER[wind][turn]:turn;}
-  function replay(events,cfg){var rp=TBTRules.replay(events,cfg);rp.hands.forEach(function(h){var ev=events[h.i];h.desc=scoreEvent(ev,h.dealer,cfg).desc;});return rp;}
+  function replay(events,cfg){var rp=TBTRules.replay(events,cfg),rii=cfg.rs.pay==='riichi';rp.hands.forEach(function(h){var ev=events[h.i];h.desc=rii?riiDesc(ev,h):scoreEvent(ev,h.dealer,cfg).desc;});return rp;}
+  // Riichi: what a hand was worth in words (han and fu, or the limit name)
+  function riiValue(hf){hf=hf||{};var yk=+hf.yk||0,han=+hf.han||0,fu=+hf.fu||0,lim=TBTRules.riichiLimit(han,fu,yk);if(yk)return lim;return han+' han'+(han<5?' '+fu+' fu':'')+(lim?', '+lim:'');}
+  // a hand's score changes as players see them: counted from the board after the riichi sticks of the hand went down
+  function riiShown(h){return h.deltas.map(function(v,i){return v+((h.riichi||[]).indexOf(i)>=0?1000:0);});}
+  function riiStickLine(h,kind){
+    var rr=h.riichi||[],t=[];
+    if(rr.length)t.push('Riichi: '+rr.map(gname).join(', ')+' (1.000 '+(rr.length>1?'each, ':'')+'paid when declared)');
+    if(h.sticks)t.push((kind==='hu'||kind==='zimo'?'Winner takes ':'')+h.sticks+' riichi stick'+(h.sticks>1?'s':'')+' from the table (+'+riiFmt(h.sticks*1000)+')');
+    else if(kind==='draw'&&h.deposits+rr.length)t.push((h.deposits+rr.length)+' riichi stick'+(h.deposits+rr.length>1?'s stay':' stays')+' on the table');
+    if(h.honba&&(kind==='hu'||kind==='zimo'))t.push(h.honba+' honba (+'+riiFmt(h.honba*300)+')');
+    return t.length?'<p class="hint" style="margin-top:6px">'+esc(t.join(' \u00b7 '))+'</p>':'';
+  }
+  function riiDesc(ev,h){
+    var t='',hf=ev.hf||{};
+    if(ev.kind==='hu')t='Ron '+gname(ev.winner)+' off '+gname(ev.disc)+', '+riiValue(hf);
+    else if(ev.kind==='zimo')t='Tsumo '+gname(ev.winner)+', '+riiValue(hf);
+    else if(ev.kind==='draw'){var tp=ev.tenpai||[];t='Draw, '+(tp.length?'tenpai: '+tp.map(gname).join(', '):'all noten');}
+    else if(ev.kind==='chombo')t='Chombo by '+gname(ev.who)+': hand re-dealt, \u221230 on the hanchan score';
+    if((ev.kind==='hu'||ev.kind==='zimo')&&hf.yk&&hf.pao>=0)t+=', pao '+gname(hf.pao);
+    if(ev.kind==='hu'&&ev.called&&ev.called.length>1)t+=' (head bump over '+ev.called.filter(function(x){return x!==ev.winner;}).map(gname).join(', ')+')';
+    return t;
+  }
   // exposed for the share-hand feature: the exact same computed row (deltas, desc, patterns)
   // already shown in the hand history, so the share card always matches what's on screen.
   window.getHandRow=function(idx){
@@ -2173,11 +2357,13 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     return (order.indexOf(player)-order.indexOf(row.dealer)+4)%4;
   };
   function gOverall(rp,w){
+    if(rp.chombo)return gTotals(rp);
     var o=[0,0,0,0];
     rp.hands.forEach(function(h){if(h.wind>w)return;h.deltas.forEach(function(v,i){o[i]+=v;});});
     return o;
   }
   function gTotals(rp){
+    if(rp.chombo){var s0=modeConfig().riichi.start,t0=[s0,s0,s0,s0];rp.hands.forEach(function(h){if(!h.late)h.deltas.forEach(function(v,i){t0[i]+=v;});});return t0;}   // riichi: one score for the whole game
     // scores reset to the starting score at the beginning of every wind round
     var b=game.useStart?num(game.start):0,t=[b,b,b,b];
     rp.hands.forEach(function(h){if(h.wind!==rp.wind)return;h.deltas.forEach(function(v,i){t[i]+=v;});});
@@ -2186,7 +2372,10 @@ function patName(l) { return PAT_ALIAS[l] || l; }
 
   /* entry form state */
   var f,editIdx=-1,insIdx=-1;   // insIdx: a new hand is being put in front of the hand with this number (index), instead of at the end
-  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},tiles:{},who:-1,tenpai:[],carry:null};editIdx=-1;insIdx=-1;}
+  function resetForm(){f={kind:'',winner:-1,disc:-1,winners:[],pts:{},patterns:{},tiles:{},who:-1,tenpai:[],carry:null,hf:{han:0,fu:30,yk:0,pao:-1},riichi:((game&&game.riichiNow)||[]).slice()};editIdx=-1;insIdx=-1;}
+  // Riichi ron: with several callers the one nearest after the discarder in turn order wins (head bump)
+  function riiRonWinner(){if(f.disc<0||!f.winners.length)return -1;for(var k=1;k<=3;k++){var i=(f.disc+k)%4;if(f.winners.indexOf(i)>=0)return i;}return -1;}
+  function riiLive(){return editIdx<0&&insIdx<0;}   // the form is about the hand being played now (not an edit or an insert)
   resetForm();
   function othersOf(x){return [0,1,2,3].filter(function(i){return i!==x;});}
   // Picks (tiles, patterns or points) made for the wrong winner move to the winner chosen instead, so nothing is entered twice.
@@ -2220,6 +2409,17 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function attachMeta(ev,w){if(f.patterns[w]){if(!ev.patterns)ev.patterns={};ev.patterns[w]=f.patterns[w];}if(f.tiles&&f.tiles[w]){if(!ev.tiles)ev.tiles={};ev.tiles[w]=f.tiles[w];}}
   function eventFromForm(){
     var k=f.kind,ev,ws;
+    if(isRii()){
+      var H=f.hf,hf={han:H.yk?0:H.han,fu:H.fu,yk:H.yk},okv=H.yk>0||H.han>0,rv=f.riichi.slice().sort();
+      if(H.yk&&H.pao>=0)hf.pao=H.pao;
+      if(k==='hu'){var rw=riiRonWinner();if(rw<0||!okv)return null;ev={kind:'hu',winner:rw,disc:f.disc,hf:hf,pts:{}};ev.pts[rw]=H.yk?13*H.yk:H.han;if(f.winners.length>1)ev.called=f.winners.slice().sort();}
+      else if(k==='zimo'){if(f.winner<0||!okv)return null;ev={kind:'zimo',winner:f.winner,hf:hf,pts:{}};ev.pts[f.winner]=H.yk?13*H.yk:H.han;}
+      else if(k==='draw')ev={kind:'draw',tenpai:f.tenpai.slice().sort()};
+      else if(k==='chombo')return f.who<0?null:{kind:'chombo',who:f.who};
+      else return null;
+      if(rv.length)ev.riichi=rv;
+      return ev;
+    }
     if(modeConfig().picker==='none')[0,1,2,3].forEach(function(p){f.pts[p]=1;});   // no patterns: every win counts the same
     if(modeConfig().mcr){   // typed points (0 is allowed: it is flagged below the minimum, not refused); a draw carries no tenpai
       if(k==='hu'){
@@ -2270,6 +2470,9 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(ev.winners)f.winners=ev.winners.slice();
     if(ev.who!=null)f.who=ev.who;
     if(ev.tenpai)f.tenpai=ev.tenpai.slice();
+    if(ev.hf)f.hf={han:+ev.hf.han||0,fu:+ev.hf.fu||30,yk:+ev.hf.yk||0,pao:ev.hf.pao>=0?+ev.hf.pao:-1};
+    f.riichi=(ev.riichi||[]).slice();
+    if(ev.kind==='hu'&&isRii())f.winners=(ev.called&&ev.called.length?ev.called:[ev.winner]).slice();
     f.pts=Object.assign({},ev.pts||{});
     f.patterns=Object.assign({},ev.patterns||{});
     f.tiles=Object.assign({},ev.tiles||{});
@@ -2349,6 +2552,13 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   }
   function scorePrevHtml(ev,dealer){
     if(!ev)return '';
+    if(isRii()){
+      var at=editIdx>=0?editIdx:insIdx,evs=game.events.slice(0,at>=0?at:game.events.length).concat([ev]),rq=TBTRules.replay(evs,modeConfig()),hd=rq.hands[rq.hands.length-1],info=[];
+      if(hd.late)return '<p class="hint">The game is already over at this point.</p>';
+      if(ev.kind==='hu'||ev.kind==='zimo'){if(ev.winner===hd.dealer)info.push('Dealer win');info.push(riiValue(ev.hf));}
+      if(ev.kind==='chombo'&&riiLive()&&f.riichi.length)info.push('Riichi sticks of this hand go back');
+      return '<div class="lbl">Score changes</div><div class="dls">'+deltaChips(riiShown(hd))+'</div>'+(info.length?'<p class="hint" style="margin-top:8px">'+esc(info.join(' \u00b7 '))+'</p>':'')+riiStickLine(hd,ev.kind);
+    }
     var pv=scoreEvent(ev,dealer,modeConfig());
     return '<div class="lbl">Score changes</div><div class="dls">'+deltaChips(pv.d)+'</div>';
   }
@@ -2373,7 +2583,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     return h;
   }
   function deltaChips(d){
-    return d.map(function(v,i){return '<span class="dl '+(v>0?'pos':v<0?'neg':'')+'">'+esc(gname(i))+' '+sgn(v)+'</span>';}).join('');
+    return d.map(function(v,i){return '<span class="dl '+(v>0?'pos':v<0?'neg':'')+'">'+esc(gname(i))+' '+(isRii()?riiSgn(v):sgn(v))+'</span>';}).join('');
   }
 
   function renderGame(){
@@ -2391,7 +2601,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       var i=curOrder[kk];
       g+='<div class="tcell'+(game.events.length&&tot[i]===mx?' lead':'')+'"><div class="tn"><span class="han">'+ROUNDS[curWind[i]].h+'</span> '+esc(gname(i))+'</div><div class="tv2">'+plainNum(tot[i])+'</div><div class="ov">Overall '+sgn(Math.round(ov[i]*100)/100)+'</div>'+(!rp.done&&i===rp.dealer?'<div class="bdg">Dealer</div>':'')+'</div>';
     }
-    $('gstatus').innerHTML=top+seatNote(rp,cfg)+g+'</div>';
+    if(isRii())riiStatus(rp,tot);
+    else $('gstatus').innerHTML=top+seatNote(rp,cfg)+g+'</div>';
 
     // entry form
     var box=$('gentry');
@@ -2405,7 +2616,8 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       kindsFor().forEach(function(k){h+='<button type="button" class="chip" data-a="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>';});
       h+='</div>';
       var k=f.kind;
-      if(k==='hu'){
+      if(isRii())h+=riiFormHtml();
+      else if(k==='hu'){
         h+='<div class="lbl">Winner</div>'+playerChips('win',f.winner);
         if(f.winner>=0){
           h+='<div class="lbl">Discarded by</div>'+playerChips('disc',f.disc,othersOf(f.winner));
@@ -2447,12 +2659,12 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     function handButtons(x){
       var b='';
       if(canEditHands)b+='<button type="button" class="lnk" data-a="edit" data-v="'+x.i+'">Edit</button><button type="button" class="lnk" data-a="ins" data-v="'+x.i+'">Insert before</button><button type="button" class="lnk" data-a="del" data-v="'+x.i+'">Delete</button>';
-      if(['hu','zimo','double','triple'].indexOf(x.kind)>=0)b+='<button type="button" class="lnk" data-a="shareHand" data-v="'+x.i+'">Share</button>';
+      if(['hu','zimo','double','triple'].indexOf(x.kind)>=0&&!isRii())b+='<button type="button" class="lnk" data-a="shareHand" data-v="'+x.i+'">Share</button>';
       return b?'<div class="hb">'+b+'</div>':'';
     }
     rp.hands.slice().reverse().forEach(function(x){
-      hh+='<div class="hitem'+(x.i===editIdx?' editing':'')+(x.i===insIdx?' inserting':'')+'"><div class="hm"><b>'+(x.i+1)+'</b> <span class="han">'+ROUNDS[x.wind].h+'</span> '+ROUNDS[x.wind].en+', dealer '+esc(gname(x.dealer))+' x'+x.streak+'</div>'
-        +'<div class="hd">'+esc(x.desc)+(x.late?' (after the game ended)':'')+'</div><div class="dls">'+deltaChips(x.deltas)+'</div>'
+      hh+='<div class="hitem'+(x.i===editIdx?' editing':'')+(x.i===insIdx?' inserting':'')+'"><div class="hm"><b>'+(x.i+1)+'</b> <span class="han">'+ROUNDS[x.wind].h+'</span> '+ROUNDS[x.wind].en+(x.round!=null?' '+(x.round%4+1)+', dealer '+esc(gname(x.dealer))+(x.honba?', '+x.honba+' honba':''):', dealer '+esc(gname(x.dealer))+' x'+x.streak)+'</div>'
+        +'<div class="hd">'+esc(x.desc)+(x.late?' (after the game ended)':'')+'</div><div class="dls">'+deltaChips(x.round!=null?riiShown(x):x.deltas)+'</div>'+(x.round!=null&&!x.late?riiStickLine(x,x.kind):'')
         +patternsReadout(x.patterns)
         +handButtons(x)+'</div>';
     });
@@ -2463,6 +2675,195 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     applySetupLock();
     applyLockState();
   }
+
+  /* ---------- Riichi: the board, the status card, the hand form and the table options ---------- */
+  var RB=null,RII_FU=[20,25,30,40,50,60,70,80,90,100,110],RII_RANK=['1ST','2ND','3RD','4TH'],RII_LET=['E','S','W','N'];
+  function riiFmt(n){return (n<0?'\u2212':'')+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  function riiSgn(n){return n===0?'0':(n>0?'+':'\u2212')+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  function riiHsc(v){return (v>0?'+':v<0?'\u2212':'')+Math.abs(Math.round(v*10)/10).toFixed(1);}
+  function riiBoard(){
+    if(RB)return RB;
+    var NS='http://www.w3.org/2000/svg',wrap=document.createElement('div');wrap.className='rbwrap';
+    wrap.innerHTML='<div class="rbbar"><span class="rbinfo"></span><button type="button" class="chip" data-rb="rot"><svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\' aria-hidden=\'true\'><path d=\'M20 11a8 8 0 1 0-2.3 5.7\'/><path d=\'M20 4v7h-7\'/></svg> Rotate 90\u00b0</button><button type="button" class="chip" data-rb="full" aria-pressed="false"><svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\' aria-hidden=\'true\'><path d=\'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\'/></svg> <span>Full screen</span></button></div><div class="rbbox"></div>';
+    wrap.querySelector('.rbbox').appendChild($('rbTpl').content.cloneNode(true));
+    wrap.querySelector('.rbbar').addEventListener('click',function(e){var bt=e.target.closest('[data-rb]');if(!bt)return;if(bt.dataset.rb==='rot')riiRotate();else riiFull(!wrap.classList.contains('full'));});
+    document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement&&RB&&RB.native)riiFull(false);});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&RB&&RB.el.classList.contains('full')&&!RB.native)riiFull(false);});
+    var root=wrap.querySelector('.rbbox>svg'),host=root.querySelector('#players');
+    function el(tag,a,parent,text){var e=document.createElementNS(NS,tag);for(var k in a)e.setAttribute(k,a[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+    var BAR={x:235,y:792,w:530},PAD=20,CY=BAR.y+35.5,XR=BAR.x+BAR.w-PAD,HC=688,P=[];
+    [0,-90,180,90].forEach(function(rot,i){
+      var g=el('g',{transform:'rotate('+rot+' 500 500)'},host);
+      var r=el('g',{'class':'sb-riichi',role:'button',tabindex:'0','aria-pressed':'false'},g);
+      el('rect',{'class':'rb-off off-only',x:BAR.x,y:BAR.y,width:BAR.w,height:70,rx:18},r);
+      el('rect',{'class':'rb-on on-only',x:BAR.x,y:BAR.y,width:BAR.w,height:70,rx:18},r);
+      var stick=el('rect',{'class':'on-only',fill:'#ffffff',width:52,height:12,rx:6,y:CY-6.5},r);
+      var dot=el('circle',{'class':'on-only',fill:'#e32d4a',r:4,cy:CY-0.5},r);
+      el('text',{'class':'sb-riichi-text off-only',x:XR,y:CY,'text-anchor':'end'},r,'RIICHI');
+      el('text',{'class':'sb-riichi-text on-only',x:XR,y:CY,'text-anchor':'end'},r,'RIICHI');
+      var name=el('text',{'class':'sb-name-bar',x:BAR.x+PAD,y:CY,'text-anchor':'start',style:'font-size:22px'},r);
+      var rg=el('g',{'class':'gem-g'},g);
+      el('rect',{'class':'gem-bg',x:220,y:883,width:66,height:32,rx:9},rg);
+      var rank=el('text',{'class':'sb-rank-t gem-fg',x:253,y:899.5,'text-anchor':'middle'},rg);
+      var opp=el('text',{'class':'sb-gap sb-muted',x:500,y:899.5,'text-anchor':'middle'},g);
+      var left=el('text',{'class':'sb-gap sb-muted',x:220,y:955.5,'text-anchor':'start'},g);
+      var pts=el('text',{'class':'sb-score sb-ink',x:500,y:955,'text-anchor':'middle'},g);
+      var right=el('text',{'class':'sb-gap sb-muted',x:780,y:955.5,'text-anchor':'end'},g);
+      var hb=el('g',{'class':'hb-g'},g),st=el('g',{transform:'rotate(-45 '+HC+' '+HC+') translate('+(HC-708)+' '+(HC-708)+')'},hb);
+      el('rect',{'class':'hb-stick',x:662,y:695,width:92,height:26,rx:13},st);
+      [694,703.3,712.7,722].forEach(function(cx){el('circle',{'class':'hb-dot',cx:cx,cy:703.6,r:3.4},st);el('circle',{'class':'hb-dot',cx:cx,cy:712.4,r:3.4},st);});
+      var hbn=el('text',{'class':'hb-num sb-ink',x:HC+25,y:HC+34,'text-anchor':'middle'},hb);
+      var LC=1000-HC,rsg=el('g',{'class':'hb-g'},g),rst=el('g',{transform:'rotate(45 '+LC+' '+HC+') translate('+(LC-708)+' '+(HC-708)+')'},rsg);
+      el('rect',{'class':'hb-stick',x:662,y:695,width:92,height:26,rx:13},rst);
+      el('circle',{fill:'#e32d4a',cx:708,cy:708,r:5.5},rst);
+      var rsn=el('text',{'class':'hb-num sb-ink',x:LC-25,y:HC+34,'text-anchor':'middle'},rsg);
+      r.addEventListener('click',function(){riiTapBoard(i);});
+      r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();riiTapBoard(i);}});
+      P.push({r:r,name:name,rg:rg,rank:rank,opp:opp,left:left,pts:pts,right:right,hb:hb,hbn:hbn,rs:rsg,rsn:rsn,stick:stick,dot:dot});
+    });
+    RB={el:wrap,root:root,P:P,RW:0,XR:XR,LX:BAR.x+PAD,el2:el,native:false};
+    riiRotApply();
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){if(RB){RB.RW=0;if(isRii())renderGame();}});
+    return RB;
+  }
+  // the RIICHI text is measured once it is on the page (the stick sits just in front of it, the name gets the rest of the bar)
+  function riiMeasure(){
+    if(RB.RW)return;
+    var t=RB.el2('text',{'class':'sb-riichi-text',x:-999,y:-999},RB.root,'RIICHI'),w=0;
+    try{w=t.getComputedTextLength();}catch(e){}t.parentNode.removeChild(t);
+    if(!w)return;RB.RW=w;
+    RB.P.forEach(function(p){p.stick.setAttribute('x',RB.XR-w-12-52);p.dot.setAttribute('cx',RB.XR-w-12-26);});
+  }
+  function riiName(t,txt){
+    var room=RB.XR-(RB.RW||92)-12-52-8-RB.LX;
+    t.removeAttribute('textLength');t.removeAttribute('lengthAdjust');t.textContent=txt;
+    var w=0;try{w=t.getComputedTextLength();}catch(e){}
+    if(w>room){t.setAttribute('textLength',room);t.setAttribute('lengthAdjust','spacingAndGlyphs');}
+  }
+  // st: {pts, dealer, wind (0 East, 1 South), honba, decl, tap}
+  function riiBoardRender(st){
+    riiMeasure();
+    var root=RB.root,KJ=['\u6771','\u5357','\u897F','\u5317'];
+    root.querySelector('#prevailing-kanji').textContent=KJ[st.wind];
+    var allEven=st.pts.every(function(p){return p===st.pts[0];}),pl=st.pts.map(function(p){return st.pts.filter(function(q){return q>p;}).length;});
+    RB.el.classList.toggle('notap',!st.tap);
+    for(var i=0;i<4;i++){
+      var w=(i-st.dealer+4)%4,d=w===0,p=RB.P[i],side=root.querySelector('#wi-'+i).children;
+      side[0].textContent=RII_LET[w];side[1].textContent=KJ[w];side[2].textContent=i+1;
+      for(var c=0;c<side.length;c++)side[c].classList.toggle('dealer',d);
+      riiName(p.name,gname(i).toUpperCase());
+      var on=st.decl.indexOf(i)>=0;
+      p.r.classList.toggle('on',on);p.r.setAttribute('aria-pressed',String(on));p.r.setAttribute('aria-label','Riichi '+gname(i));
+      p.r.setAttribute('tabindex',st.tap?'0':'-1');
+      p.rg.setAttribute('class','gem-g gem-'+(allEven?0:pl[i]+1));p.rank.textContent=allEven?'=':RII_RANK[pl[i]];
+      p.pts.textContent=riiFmt(st.pts[i]);
+      p.opp.textContent=riiSgn(st.pts[i]-st.pts[(i+2)%4]);
+      p.left.textContent=riiSgn(st.pts[i]-st.pts[(i+3)%4]);
+      p.right.textContent=riiSgn(st.pts[i]-st.pts[(i+1)%4]);
+      p.hb.style.display=d?'':'none';p.hbn.textContent='\u00d7'+st.honba;
+      p.rs.style.display=d?'':'none';p.rsn.textContent='\u00d7'+st.sticks;
+    }
+  }
+  // the turn of the board is kept on this phone (not with the game): each phone lies on the table its own way
+  function riiRotGet(){try{return (+localStorage.getItem('tbt-rb-rot')||0)%360;}catch(e){return RB?RB.rot||0:0;}}
+  function riiRotApply(){var r=riiRotGet();RB.rot=r;RB.root.style.transform=r?'rotate('+r+'deg)':'';}
+  function riiRotate(){var r=(riiRotGet()+90)%360;try{localStorage.setItem('tbt-rb-rot',String(r));}catch(e){}RB.rot=r;RB.root.style.transform=r?'rotate('+r+'deg)':'';}
+  // full screen: the browser's own when it allows it, otherwise the board covers the page
+  function riiFull(on){
+    var w=RB.el,bt=w.querySelector('[data-rb="full"]');
+    w.classList.toggle('full',on);document.documentElement.classList.toggle('rbfull-on',on);
+    bt.setAttribute('aria-pressed',String(on));bt.querySelector('span').textContent=on?'Exit':'Full screen';
+    if(on){RB.native=false;try{if(w.requestFullscreen)w.requestFullscreen().then(function(){RB.native=true;},function(){});}catch(e){}}
+    else{var nat=RB.native;RB.native=false;try{if(nat&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();}catch(e){}}
+  }
+  function riiCanTap(){return !(VIEW_ONLY||game.lockedAt);}
+  // a tap on a RIICHI bar: the call goes on the hand being played now (it shows in the Record hand form too)
+  function riiTapBoard(i){
+    if(!riiCanTap())return;
+    var rp=replay(game.events,modeConfig());if(rp.done)return;
+    if(!riiLive()){resetForm();}
+    riiToggleForm(i);renderGame();
+  }
+  function riiToggleForm(i){
+    var x=f.riichi.indexOf(i);
+    if(x>=0)f.riichi.splice(x,1);else f.riichi.push(i);
+    if(f.kind==='draw'&&x<0&&f.tenpai.indexOf(i)<0)f.tenpai.push(i);   // a player in riichi is in tenpai
+    if(riiLive()){game.riichiNow=f.riichi.slice().sort();saveGame();}
+  }
+  function riiStatus(rp,tot){
+    var b=riiBoard(),live=riiLive(),now=live&&!rp.done?f.riichi:[];
+    var pts=tot.map(function(v,i){return v-(now.indexOf(i)>=0?1000:0);}),sticks=rp.deposits+now.length;
+    var top=rp.done
+      ?'<div class="stop"><span class="wtile han">\u7D42</span><div><b>Game finished</b><div class="sub">The last hand is done. Undo or edit a hand if something is off.'+(rp.deposits?' '+rp.deposits+' riichi stick'+(rp.deposits>1?'s stay':' stays')+' on the table.':'')+'</div></div></div>'
+      :'<div class="stop"><span class="wtile han" data-w="'+rp.wind+'">'+ROUNDS[rp.wind].h+'</span><div><b>'+ROUNDS[rp.wind].en+' '+(rp.round%4+1)+'</b><div class="sub">Dealer: '+esc(gname(rp.dealer))+' \u00b7 '+rp.honba+' honba \u00b7 '+sticks+' riichi stick'+(sticks===1?'':'s')+' on the table</div></div></div>';
+    var fin='';
+    if(rp.done){
+      var RO=modeConfig().riichi,rows=TBTRules.riichiFinal(tot,rp.chombo,RO.start).slice().sort(function(a,c){return a.place-c.place||c.total-a.total;}),oka=RO.start===25000;
+      fin='<div class="rfin"><table><tr><th>#</th><th>Player</th><th>Points</th><th>Uma</th>'+(oka?'<th>Oka</th>':'')+'<th>Chombo</th><th>Score</th></tr>'
+        +rows.map(function(r){return '<tr><td>'+RII_RANK[r.place]+'</td><td>'+esc(gname(r.i))+'</td><td>'+riiFmt(tot[r.i])+'</td><td>'+riiHsc(r.uma)+'</td>'+(oka?'<td>'+(r.oka?riiHsc(r.oka):'')+'</td>':'')+'<td>'+(r.chombo?riiHsc(r.chombo):'')+'</td><td><b class="'+(r.total>0?'pos':r.total<0?'neg':'')+'">'+riiHsc(r.total)+'</b></td></tr>';}).join('')
+        +'</table><p class="hint" style="margin-top:8px">Score = (points \u2212 30.000) / 1.000 + uma'+(oka?' + oka':'')+' \u2212 30 per chombo. Players level share their uma.</p></div>';
+    }
+    var gs=$('gstatus');
+    if(b.el.parentNode!==gs||!$('rbTop')){gs.innerHTML='<div id="rbTop"></div><div id="rbFin"></div>';gs.insertBefore(b.el,$('rbFin'));}
+    $('rbTop').innerHTML=top;$('rbFin').innerHTML=fin;
+    b.el.querySelector('.rbinfo').textContent=rp.done?'Game finished':ROUNDS[rp.wind].en+' '+(rp.round%4+1)+' \u00b7 '+rp.honba+' honba \u00b7 '+sticks+' riichi stick'+(sticks===1?'':'s');
+    riiBoardRender({pts:pts,dealer:rp.dealer,wind:rp.wind,honba:rp.honba,sticks:sticks,decl:now,tap:riiCanTap()&&!rp.done});
+  }
+  function riiChips(a,items,cur){return '<div class="chips">'+items.map(function(x){return '<button type="button" class="chip" data-a="'+a+'" data-v="'+x[0]+'" aria-pressed="'+(cur(x[0])?'true':'false')+'"'+(x[2]?' disabled':'')+'>'+x[1]+'</button>';}).join('')+'</div>';}
+  function riiHanFu(w){
+    var H=f.hf,fuOn=!H.yk&&H.han>0&&H.han<5,h='<div class="lbl">Han</div><div class="pts">';
+    for(var n=1;n<=13;n++)h+='<button type="button" class="chip pt" data-a="rhan" data-v="'+n+'" aria-pressed="'+(!H.yk&&H.han===n)+'">'+(n===13?'13+':n)+'</button>';
+    h+='</div><div class="lbl">Fu</div>'+riiChips('rfu',RII_FU.map(function(v){return [v,String(v),!fuOn];}),function(v){return fuOn&&H.fu===v;});
+    if(!H.yk&&H.han>=5)h+='<p class="hint" style="margin-top:6px">5 han and up: the fu don\u2019t matter.</p>';
+    h+='<div class="lbl">Yakuman</div>'+riiChips('ryk',[[0,'None'],[1,'Yakuman'],[2,'2\u00d7'],[3,'3\u00d7']],function(v){return H.yk===v;});
+    if(H.yk){
+      h+='<div class="lbl">Liability (pao)</div>'+riiChips('rpao',[[-1,'None']].concat(othersOf(w).map(function(i){return [i,esc(gname(i))];})),function(v){return H.pao===v;})
+        +'<p class="hint" style="margin-top:6px">Only for Big Dragons, Big Winds or Four Quads: the player who fed the last set. It covers one yakuman of the hand.</p>';
+    }
+    if(!H.yk&&H.han===1&&H.fu===20&&f.kind==='hu')h+='<div class="rnote">1 han 20 fu can\u2019t be won by ron. Check the fu.</div>';
+    if(!H.yk&&H.fu===25&&H.han===1)h+='<div class="rnote">Seven Pairs (25 fu) has at least 2 han.</div>';
+    return h;
+  }
+  function riiFormHtml(){
+    var k=f.kind,h='';
+    if(!k)return h;
+    if(k!=='chombo')h+='<div class="lbl">Riichi declared in this hand</div>'+playerChips('rii',f.riichi,null,true)+(riiLive()?'<p class="hint" style="margin-top:6px">The RIICHI bars on the board do the same.</p>':'');
+    if(k==='hu'){
+      h+='<div class="lbl">Winner (if more than one called ron, tap each)</div>'+playerChips('ronc',f.winners,null,true);
+      if(f.winners.length){
+        h+='<div class="lbl">Discarded by</div>'+playerChips('disc',f.disc,[0,1,2,3].filter(function(i){return f.winners.indexOf(i)<0;}));
+        var rw=riiRonWinner();
+        if(rw>=0){
+          if(f.winners.length>1)h+='<div class="rnote">'+esc(gname(rw))+' wins: nearest after '+esc(gname(f.disc))+' in turn order (head bump). The other call doesn\u2019t count.</div>';
+          h+=riiHanFu(rw);
+        }
+      }
+    }else if(k==='zimo'){
+      h+='<div class="lbl">Winner</div>'+playerChips('win',f.winner);
+      if(f.winner>=0)h+=riiHanFu(f.winner);
+    }else if(k==='draw'){
+      h+='<div class="lbl">Players in tenpai (none, or tap each one)</div>'+playerChips('tp',f.tenpai,null,true);
+      h+='<p class="hint" style="margin-top:6px">Noten players pay 3.000 between them to the tenpai players. The dealer stays when in tenpai. Honba +1, riichi sticks stay on the table.</p>';
+      if(f.riichi.some(function(i){return f.tenpai.indexOf(i)<0;}))h+='<div class="rnote">A player in riichi is marked noten: that is a chombo. Record it with Chombo instead.</div>';
+    }else if(k==='chombo'){
+      h+='<div class="lbl">Who made the chombo?</div>'+playerChips('who',f.who);
+      h+='<p class="hint" style="margin-top:6px">The hand is re-dealt: riichi sticks of this hand go back, the dealer and honba stay. The points don\u2019t change; the player gets \u221230 on the hanchan score at the end.</p>';
+    }
+    return h;
+  }
+  function riiSetup(){
+    var R=game.riichi,fz=setupFrozen();
+    function ch(id,key,items){$(id).innerHTML=items.map(function(x){return '<button type="button" class="chip" data-ro="'+key+'" data-v="'+x[0]+'" aria-pressed="'+(String(R[key])===String(x[0]))+'"'+(fz?' disabled':'')+'>'+x[1]+'</button>';}).join('');}
+    ch('grStart','start',[[30000,'30.000 (WRC, no oka)'],[25000,'25.000 (return 30.000, oka +20)']]);
+    ch('grLen','len',[['south','East-South'],['east','East only']]);
+    ch('grAka','aka',[[false,'Off (WRC)'],[true,'On']]);
+  }
+  $('griichi').addEventListener('click',function(e){
+    var b=e.target.closest?e.target.closest('[data-ro]'):null;if(!b||setupFrozen()||VIEW_ONLY||game.lockedAt)return;
+    var k=b.dataset.ro,v=b.dataset.v;
+    game.riichi[k]=k==='start'?+v:k==='aka'?v==='true':v;
+    saveGame();syncGameMode();renderGame();
+  });
   function plainNum(n){return trimNum(n).replace('-','\u2212');}
   function patternsReadout(patterns){
     if(!patterns)return '';
@@ -2497,6 +2898,13 @@ function patName(l) { return PAT_ALIAS[l] || l; }
           else{if(old.patterns[w])f.patterns[w]=old.patterns[w];if(old.pts[w]!==undefined)f.pts[w]=old.pts[w];}
         });
       }
+      if(isRii()){   // riichi keeps the riichi calls, the han and fu, and who won when switching between Ron and Tsumo
+        f.riichi=old.riichi.slice();f.hf=old.hf;
+        if(v==='hu'){f.winners=old.kind==='zimo'&&old.winner>=0?[old.winner]:old.kind==='hu'?old.winners.slice():[];f.disc=old.kind==='hu'?old.disc:-1;}
+        if(v==='zimo'&&old.kind==='hu'){f.winner=old.winners.length===1?old.winners[0]:-1;}
+        if(v==='draw')f.tenpai=f.riichi.slice();
+        if(v==='chombo'&&old.who>=0)f.who=old.who;
+      }
     }
     else if(a==='win'){var ow=f.winner;f.winner=+v;if(f.disc===f.winner)f.disc=-1;carryPicks(ow,f.winner);}
     else if(a==='disc'){f.disc=+v;if(f.winner===f.disc)f.winner=-1;f.winners=f.winners.filter(function(x){return x!==f.disc;});}
@@ -2505,6 +2913,12 @@ function patName(l) { return PAT_ALIAS[l] || l; }
       if(ix>=0)f.winners.splice(ix,1);else if(f.winners.length<2)f.winners.push(pv);
     }
     else if(a==='pts'){f.pts[+b.dataset.p]=+v;}
+    else if(a==='rii'){riiToggleForm(+v);}
+    else if(a==='ronc'){var rc=+v,ri=f.winners.indexOf(rc);if(ri>=0)f.winners.splice(ri,1);else f.winners.push(rc);if(f.winners.indexOf(f.disc)>=0)f.disc=-1;f.hf.pao=-1;}
+    else if(a==='rhan'){f.hf.han=+v;f.hf.yk=0;f.hf.pao=-1;}
+    else if(a==='rfu'){f.hf.fu=+v;}
+    else if(a==='ryk'){f.hf.yk=+v;if(!f.hf.yk)f.hf.pao=-1;}
+    else if(a==='rpao'){f.hf.pao=+v;}
     else if(a==='ptsmode'){
       var ppm=+b.dataset.p;
       if(f.patterns[ppm]||f.tiles[ppm]){delete f.patterns[ppm];delete f.tiles[ppm];delete f.pts[ppm];renderGame();}
@@ -2552,7 +2966,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     else if(a==='cancel'){resetForm();}
     else if(a==='save'){
       var ev=eventFromForm();if(!ev)return;
-      if(editIdx>=0)game.events[editIdx]=ev;else if(insIdx>=0)game.events.splice(insIdx,0,ev);else game.events.push(ev);
+      if(editIdx>=0)game.events[editIdx]=ev;else if(insIdx>=0)game.events.splice(insIdx,0,ev);else{game.events.push(ev);game.riichiNow=[];}
       resetForm();saveGame();
     }
     renderGame();
@@ -2575,7 +2989,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(b.dataset.a==='shareHand'){if(window.openShareModal)window.openShareModal(i);return;}
     if(VIEW_ONLY||game.lockedAt)return;
     if(b.dataset.a==='edit'){insIdx=-1;formFromEvent(game.events[i]);editIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
-    else if(b.dataset.a==='ins'){resetForm();insIdx=i;renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
+    else if(b.dataset.a==='ins'){resetForm();insIdx=i;f.riichi=[];renderGame();$('gentry').scrollIntoView({behavior:'smooth',block:'start'});}
     else if(b.dataset.a==='del'){
       if(delArm!==i){
         delArm=i;b.textContent='Tap again';
@@ -2626,6 +3040,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
   function modeHint(){
     var cfg=modeConfig(),rs=cfg.rs,u=cfg.unit==='fan'?'fan':'points',t=[];
     if(rs.help)return rs.help;
+    if(rs.pay==='riichi')return (rs.short||rs.name)+': record each hand with Ron, Tsumo, Draw or Chombo and its han and fu. Riichi calls are tapped on the board. Kiriage mangan, counted yakuman at 13 han, honba 300, noten payment 3.000, one winner per discard (head bump). The dealer stays after a win or when in tenpai at a draw. No bust and no agari-yame. The game ends after the last hand; the final score is (points \u2212 30.000) / 1.000 plus uma, plus oka with a 25.000 start, \u221230 per chombo.';
     if(rs.picker==='none')t.push((rs.short||rs.name)+': any complete hand wins'+(rs.pay==='flat'?', and every win is worth '+cfg.value(0)+'.':'.'));
     else t.push((rs.short||rs.name)+': '+(rs.entry==='typed'?'type the hand’s '+u+', or use Pick Patterns or Pick Tiles to work them out.':'pick the hand’s points, or use Pick Patterns or Pick Tiles to work them out.'));
     if(rs.picker!=='none')t.push('A hand needs at least '+unitWord(cfg,cfg.minPoint)+' to win'+(rs.flowersMin?' (flower fan count toward it).':rs.picker==='tbt'?'.':' (flowers come on top and do not count toward it).'));
@@ -2658,6 +3073,7 @@ function patName(l) { return PAT_ALIAS[l] || l; }
     if(rs.baseHost&&document.activeElement!==$('gmcrBase'))$('gmcrBase').value=game.mcrBase;
     if(mcr){$('gbkWrap').hidden=true;$('gbkHint').hidden=true;}
     $('gseatWrap').hidden=!seatable;
+    var rii=rs.pay==='riichi';$('griichi').hidden=!rii;if(rii)riiSetup();
     $('seatHint').hidden=!(seatable&&game.seatRotation);
     if(seatable)$('gseat').checked=!!game.seatRotation;
     $('gcustom').hidden=!isCustom;

@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>TBT Admin &middot; Ruleset</title>
-<script src="/assets/js/rules.js"></script>
-<script src="/assets/js/patterns.js"></script>
+<script src="/assets/js/rules.js?v=446545bb10"></script>
+<script src="/assets/js/patterns.js?v=0d2d5a0107"></script>
 <link rel="icon" type="image/png" href="/assets/i/0ba6198a03.png">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/0ba66220fb.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/f/2c20035257.woff2">
@@ -560,13 +560,14 @@ function calcHtml(){
    +(cl.errors.length?'<p class="err">'+esc(cl.errors.join('. '))+'</p>':'')+'</div>';
 }
 function sideHtml(){
-  return (D.families||[]).map(function(F){
+  // Riichi follows the WRC rules and has its own engine: it is not edited here
+  return (D.families||[]).filter(function(F){return F.id!=='riichi';}).map(function(F){
     var ms=Object.keys(D.versions).map(cur).filter(function(r){return r.fam===F.id;}).sort(function(a,b){return a.order-b.order||a.name.localeCompare(b.name);});
     return '<div class="rs-fam"><div class="rs-fh"><span class="rs-dot" style="background:'+famCol(F.id)+'"></span>'+esc(F.name)+(FAMCOL[F.id]?'':'<button type="button" class="rs-fedit" data-fedit="'+F.id+'">Edit</button>')+'</div>'
       +ms.map(function(r){return '<button type="button" class="rs-sm" data-sel="'+r.id+'" aria-current="'+(!S.isNew&&S.sel===r.id)+'"><span>'+esc(r.name)+'</span>'+(r.hidden?'<span class="rs-tag hid">Hidden</span>':'<small>v'+r.v+'</small>')+'</button>';}).join('')
       +(S.isNew&&S.draft.fam===F.id?'<button type="button" class="rs-sm" aria-current="true"><span>'+esc(S.draft.name||'New')+'</span><span class="rs-tag new">Not saved</span></button>':'')
       +'<button type="button" class="rs-add" data-copy="'+F.id+'">+ Sub-mode</button></div>';
-  }).join('')+'<button type="button" class="rs-newfam" data-x="newfam">+ New family</button>';
+  }).join('')+'<p style="margin:10px 4px;font-size:12px;color:var(--muted)">Riichi (WRC 2025) is fixed and is not edited here.</p><button type="button" class="rs-newfam" data-x="newfam">+ New family</button>';
 }
 function render(){
   var app=document.getElementById('app');

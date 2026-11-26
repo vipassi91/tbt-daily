@@ -58,9 +58,13 @@ export async function onRequestGet({ request, env }) {
 function newId() { return crypto.randomUUID().replace(/-/g, '').slice(0, 10); }
 
 // Reads and validates the person fields of a request. `partial` leaves out fields that were not sent.
-function readFields(body, partial) {
+// A new nickname is at most 20 characters (it has to fit on one line of the scoreboards); keep: a player's current nickname, which may stay longer.
+function readFields(body, partial, keep) {
   const out = {};
-  if (!partial || body.nickname !== undefined) { out.nickname = cleanText(body.nickname, 30); if (!out.nickname) return { error: 'Nickname is required' }; }
+  if (!partial || body.nickname !== undefined) {
+    out.nickname = cleanText(body.nickname, 40); if (!out.nickname) return { error: 'Nickname is required' };
+    if (out.nickname.length > 20 && out.nickname !== keep) return { error: 'Nickname can be at most 20 characters' };
+  }
   if (!partial || body.fullName !== undefined) out.fullName = cleanText(body.fullName, 60);
   if (!partial || body.whatsapp !== undefined) { out.whatsapp = normWhatsapp(body.whatsapp); if (out.whatsapp === null) return { error: 'WhatsApp number is not valid' }; }
   if (!partial || body.instagram !== undefined) { out.instagram = normInstagram(body.instagram); if (out.instagram === null) return { error: 'Instagram username is not valid' }; }
@@ -123,8 +127,8 @@ async function handlePost({ request, env }) {
       for (const w of typed.values()) {
         if (reg.names.has(w.key) || (only && !only.has(w.key))) continue;
         if (looksLikeTwo(w.key)) { skippedTwo++; continue; }
-        const nickname = cleanText(w.latestName, 30);
-        if (!nickname || reg.names.has(nameKey(nickname))) { skippedOther++; continue; }
+        const nickname = cleanText(w.latestName, 40);
+        if (!nickname || nickname.length > 20 || reg.names.has(nameKey(nickname))) { skippedOther++; continue; }
         const dup = await insertPlayer(newId(), { nickname: nickname }, [w.key]);
         if (!dup) { created++; reg.names.set(w.key, 'x'); } else skippedOther++;
       }
@@ -202,7 +206,7 @@ async function handlePost({ request, env }) {
       return json({ ok: true });
     }
     if (action === 'update') {
-      const r = readFields(body, true); if (r.error) return json({ error: r.error }, 400);
+      const r = readFields(body, true, pl.nickname); if (r.error) return json({ error: r.error }, 400);
       const f = Object.assign({ nickname: pl.nickname, fullName: pl.fullName, whatsapp: pl.whatsapp, instagram: pl.instagram }, r.fields);
       const keys = [nameKey(f.nickname)].concat(f.fullName ? [nameKey(f.fullName)] : []);
       const bad = await checkKeys(keys, id); if (bad) return json({ error: bad }, 409);

@@ -17,6 +17,25 @@ function validMcrEvent(ev) {
   if (ev.kind === 'invalid' || ev.kind === 'false') return seatOk(ev.who);
   return true;
 }
+// A hand recorded under Riichi: seats 0 to 3; han 0 to 13, fu from the fu list, yakuman 0 to 6 (a win has han or yakuman);
+// pao only with a yakuman; the ron callers hold the winner and not the discarder; the riichi calls are seats, none on a chombo.
+const RII_FU = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
+function seatList(a, max) { return Array.isArray(a) && a.length <= max && a.every(seatOk) && new Set(a).size === a.length; }
+function validRiichiEvent(ev) {
+  if (!ev || ['hu', 'zimo', 'draw', 'chombo'].indexOf(ev.kind) < 0) return false;
+  if (ev.riichi !== undefined && (ev.kind === 'chombo' || !seatList(ev.riichi, 4))) return false;
+  if (ev.kind === 'draw') return ev.tenpai === undefined || seatList(ev.tenpai, 4);
+  if (ev.kind === 'chombo') return seatOk(ev.who);
+  const hf = ev.hf;
+  if (!seatOk(ev.winner) || !hf || typeof hf !== 'object') return false;
+  if (!Number.isInteger(hf.han) || hf.han < 0 || hf.han > 13 || !Number.isInteger(hf.yk) || hf.yk < 0 || hf.yk > 6 || RII_FU.indexOf(hf.fu) < 0) return false;
+  if (!hf.han && !hf.yk) return false;
+  if (hf.pao !== undefined && (!hf.yk || !seatOk(hf.pao) || hf.pao === ev.winner)) return false;
+  if (ev.kind === 'zimo') return ev.disc === undefined && ev.called === undefined;
+  if (!seatOk(ev.disc) || ev.disc === ev.winner) return false;
+  if (ev.called !== undefined && (!seatList(ev.called, 3) || ev.called.indexOf(ev.winner) < 0 || ev.called.indexOf(ev.disc) >= 0)) return false;
+  return true;
+}
 // Bump this whenever buildStats starts storing something new. Stored results with an older
 // version are rebuilt from the saved game the next time they are read (see statsFor).
 export const STATS_VERSION = 7;
@@ -72,10 +91,12 @@ export function permuteGame(game, order) {
   const keys = obj => { const out = {}; Object.keys(obj).forEach(k => { out[String(at(+k))] = obj[k]; }); return out; };
   const g = JSON.parse(JSON.stringify(game));
   g.names = order.map(o => game.names[o]);
+  if (Array.isArray(g.riichiNow)) g.riichiNow = g.riichiNow.map(at).sort(asc);
   g.events = (game.events || []).map(ev => {
     const e = JSON.parse(JSON.stringify(ev));
     ['winner', 'disc', 'who'].forEach(f => { if (Number.isInteger(e[f])) e[f] = at(e[f]); });
-    ['winners', 'tenpai'].forEach(f => { if (Array.isArray(e[f])) e[f] = e[f].map(at).sort(asc); });
+    ['winners', 'tenpai', 'riichi', 'called'].forEach(f => { if (Array.isArray(e[f])) e[f] = e[f].map(at).sort(asc); });
+    if (e.hf && Number.isInteger(e.hf.pao)) e.hf.pao = at(e.hf.pao);   // Riichi: the player liable for a yakuman
     ['pts', 'patterns', 'tiles'].forEach(f => { if (e[f] && typeof e[f] === 'object') e[f] = keys(e[f]); });
     return e;
   });
@@ -94,6 +115,11 @@ export function validGame(g) {
     if (typeof g.custom !== 'object' || g.custom === null || Array.isArray(g.custom)) return false;
   }
   if (isTyped(g.mode)) return g.events.every(validMcrEvent);
+  if (T.current(g.mode || 'casual').pay === 'riichi') {
+    if (g.riichi !== undefined && (typeof g.riichi !== 'object' || g.riichi === null || Array.isArray(g.riichi))) return false;
+    if (g.riichiNow !== undefined && !seatList(g.riichiNow, 4)) return false;
+    return g.events.every(validRiichiEvent);
+  }
   const ok = T.kinds(T.current(g.mode || 'casual'));
   return g.events.every(function (ev) { return ev && ok.indexOf(ev.kind) >= 0; });
 }
@@ -172,11 +198,22 @@ export function buildStats(game, fallbackPlayers) {
       // the four wind rounds in order: [place, net points, hands, hands won] for a wind round that had hands, null for one that did not
       wr: s.rounds.map(function (r) { return r.totalHands > 0 ? [r.places[n], r2(r.totals[n]), r.totalHands, r.handsWon[n] || 0] : null; }) };
   });
+  // Riichi: the game is one hanchan, so the round facts are about the hanchan (the leaderboard and player pages call them hanchan)
+  let winds = s.rounds.filter(function (r) { return r.totalHands > 0; }).length, windsDoneOut = windsDone;
+  if (modeConfig(g).rs.pay === 'riichi') {
+    winds = s.totalHands > 0 ? 1 : 0; windsDoneOut = s.done ? 1 : 0;
+    names.forEach(function (n) {
+      const a = s.aggregates[n], f = facts[n];
+      f.windFirsts = winds && a.place === 1 ? 1 : 0;
+      f.windHigh = s.done ? a.netTotal : null; f.windLow = s.done ? a.netTotal : null; f.windPlaceSum = s.done ? a.place : 0;
+      f.wr = null;   // no East/South breakdown on the player page: the game links to its recap
+    });
+  }
   return {
     v: STATS_VERSION, mode: g.mode || 'casual', locked: !!g.lockedAt, rules: rulesOf(g), names: names, rank: rank, wins: wins, aggregates: s.aggregates,
     hands: s.totalHands, events: events.length,
-    winds: s.rounds.filter(function (r) { return r.totalHands > 0; }).length,
-    windsDone: windsDone,
+    winds: winds,
+    windsDone: windsDoneOut,
     facts: facts,
     progress: { wind: s.wind, dealer: s.dealer, turn: s.turn, done: s.done },
   };
@@ -246,7 +283,8 @@ export function setupOf(g) {
     custom: rs.hostSets ? { minPoint: String(c.minPoint == null ? 2 : c.minPoint).trim(), maxStreak: String(c.maxStreak == null ? 4 : c.maxStreak).trim(), deadwall: !!c.deadwall } : null,
     // a mode that offers seat rotation lets the host choose; its own default applies until they do
     seatRotation: rs.seat === 'host' ? (g.seatRotation === undefined ? !!rs.seatDefault : !!g.seatRotation) : null,
-    mcrBase: rs.baseHost ? mcrBaseOf(g) : null,   // a base typed by the host (MCR-Custom) locks with the rest once a hand is recorded
+    mcrBase: rs.baseHost ? mcrBaseOf(g) : null,
+    riichi: rs.pay === 'riichi' ? modeConfig(g).riichi : null,   // starting score, length and red fives lock with the rest   // a base typed by the host (MCR-Custom) locks with the rest once a hand is recorded
     useStart: rs.start ? useStart : false,
     start: (useStart && rs.start) ? String(g.start == null ? '200' : g.start).trim() : null,
     bankrupt: (useStart && rs.start) ? !!g.bankrupt : null,

@@ -424,7 +424,7 @@ function validDate(ds){return /^\d{4}-(0[1-9]|1[0-2])-\d{2}/.test(String(ds||'')
 function shortDate(ds,withYear){return validDate(ds)?(+ds.slice(8,10))+' '+MONTHS[+ds.slice(5,7)-1].slice(0,3)+(withYear?' '+ds.slice(0,4):''):'';}
 function addDays(ds,n){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return localISO(d);}
 function mondayOf(ds){var d=new Date(ds+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return localISO(d);}
-function sgn(n){n=Math.round(n);return n>0?'+'+n:n<0?'\u2212'+Math.abs(n):'0';}
+function sgn(n){var rii=false;try{rii=riiFam(effMode());}catch(e){}n=rii?Math.round(n*10)/10:Math.round(n);var a=String(Math.abs(n));if(rii){var q=a.split('.');a=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(q[1]?'.'+q[1]:'');}return n>0?'+'+a:n<0?'\u2212'+a:'0';}   // Riichi: hanchan scores keep one decimal, points get a dot every three digits
 function slugOf(n){return String(n).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'player';}
 function fold(s){return String(s||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'');}
 function pct(a,b){return b>0?(Math.round(a/b*1000)/10)+'%':'-';}
@@ -457,6 +457,12 @@ function games(){return S.data?S.data.games:[];}
 function seasons(){var seen={};seen[currentSeason()]=1;games().forEach(function(g){if(/^\d{4}-\d{2}/.test(g.date))seen[g.date.slice(0,7)]=1;});return Object.keys(seen).sort().reverse();}
 function modesIn(){var seen={};games().forEach(function(g){seen[g.mode]=true;});return MODE_ORDER.filter(function(k){return seen[k];});}
 function effMode(){var ms=modesIn();if(ms.length<2)return ms.length&&famOf(ms[0])!=='tbt'?famOf(ms[0]):'all';return S.mode;}
+// Riichi (until its rating leaderboard): a game is one hanchan and is scored by its hanchan score, so the words follow when Riichi is shown
+var RII_WORDS=[[/Ranked by net points/g,'Ranked by hanchan score'],[/1st in wind rounds/g,'1st in hanchan'],[/Net score in one completed round/g,'Hanchan score in one game'],[/Total net score/g,'Total hanchan score'],
+  [/per wind round/g,'per hanchan'],[/Wind rounds/g,'Hanchan'],[/ wind rounds?/g,' hanchan'],[/(1st in \d+\/\d+) rounds/g,'$1 hanchan'],[/Net points/g,'Hanchan score'],[/net points/g,'hanchan score'],
+  [/1st in [01]\/1 hanchan \u00b7 /g,''],[/>Hu</g,'>Ron<'],[/<\/span> hu</g,'</span> ron<'],[/hu off someone/g,'ron off someone'],[/Average points per win/g,'Average han per win'],[/Avg points per win/g,'Avg han per win'],[/Average points/g,'Average han'],[/Net score/g,'Hanchan score']];
+function riiWords(h){RII_WORDS.forEach(function(x){h=h.replace(x[0],x[1]);});return h;}
+function riiFam(m){return (FAM_NAME[m]?m:famOf(m))==='riichi';}
 function modeOk(g){return modeMatch(g,effMode());}
 function modeLabel(){return filterLabel(effMode());}
 function autoPeriod(){   // nothing played this month: open on all time rather than on an empty page
@@ -865,12 +871,12 @@ function content(){
 function render(){
   var sheet=(S.menu&&!isWide()&&S.status==='ok')?menuSheet(S.menu):'';
   var cmp=(S.cmpOpen&&S.cmp.length===2&&S.status==='ok')?compareHtml():'';
-  document.getElementById('app').innerHTML=brandbar()+'<div class="wrap n"><a class="back" href="/leaderboard" style="display:inline-block;margin:14px 0 0;color:var(--accent);font-weight:700;text-decoration:none">\u2039 Leaderboard</a>'+content()+'</div>'+sheet+cmp+'<div id="toast" class="pp-toast" role="status" hidden></div>';
+  document.getElementById('app').innerHTML=brandbar()+'<div class="wrap n"><a class="back" href="/leaderboard" style="display:inline-block;margin:14px 0 0;color:var(--accent);font-weight:700;text-decoration:none">\u2039 Leaderboard</a>'+(S.status==='ok'&&riiFam(effMode())?riiWords(content()):content())+'</div>'+sheet+cmp+'<div id="toast" class="pp-toast" role="status" hidden></div>';
   var lock=!!(sheet||cmp);
   if(lock&&!S.locked){document.body.style.overflow='hidden';S.locked=true;}else if(!lock&&S.locked){document.body.style.overflow='';S.locked=false;}
   if(S.status==='ok'){document.title='All players | Tiles by Tiles';syncUrl();fillOthers();}
 }
-function renderList(){var el=document.getElementById('apList');if(!el){render();return;}el.innerHTML=listHtml();syncUrl();fillOthers();}
+function renderList(){var el=document.getElementById('apList');if(!el){render();return;}el.innerHTML=riiFam(effMode())?riiWords(listHtml()):listHtml();syncUrl();fillOthers();}
 function focusMenu(sel){setTimeout(function(){var el=sel?document.querySelector(sel):(document.querySelector('.n-menu [aria-selected="true"], .n-sheet [aria-selected="true"]')||document.querySelector('.n-menu .n-o, .n-sheet .n-o'));if(el&&el.focus)el.focus();},0);}
 function closeMenu(){var w=S.menu;S.menu=null;S.cust.open=false;S.cust.err='';render();if(w){var b=document.querySelector('[data-menu="'+w+'"]');if(b&&b.focus)b.focus();}}
 function toggleMenu(w){if(S.menu===w){closeMenu();return;}S.menu=w;S.cust.open=false;S.cust.err='';render();focusMenu();}

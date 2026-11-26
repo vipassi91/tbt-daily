@@ -44,8 +44,9 @@ export async function onRequestPost({ request, env }) {
     if (!o.ok) return json({ error: 'This sign-up link is not valid or has been closed.' }, 403);
     if (b.website) return json({ ok: true });                       // a hidden field only a bot fills in
     if (b.consent !== true) return json({ error: 'Please tick the consent box first.' }, 400);
-    const nickname = cleanText(b.nickname, 30);
+    const nickname = cleanText(b.nickname, 40);
     if (!nickname) return json({ error: 'Nickname is required.' }, 400);
+    if (nickname.length > 20) return json({ error: 'Nickname can be at most 20 characters.' }, 400);   // it has to fit on one line of the scoreboards
     const wa = normWhatsapp(b.whatsapp);
     if (!wa) return json({ error: wa === null ? 'WhatsApp number is not valid.' : 'WhatsApp number is required.' }, 400);
     const ig = normInstagram(b.instagram);

@@ -84,7 +84,7 @@ function closed(){only();view.innerHTML='<div class="done"><b>This link is not v
 function showForm(names){
   var opts=names.map(function(n){return '<option value="'+esc(n)+'">';}).join('');
   view.innerHTML='<div class="f">'
-    +'<label for="nick">Nickname *</label><p class="sub">This is what shows on the leaderboard.</p><input id="nick" type="text" maxlength="30" autocomplete="off">'
+    +'<label for="nick">Nickname *</label><p class="sub">This is what shows on the leaderboard.</p><input id="nick" type="text" maxlength="20" autocomplete="off">'
     +'<label for="tname">Your name on the scoreboard</label><p class="sub">If you have played before, pick the name usually written at the table so your games are linked to you. You can leave this empty.</p><input id="tname" type="text" maxlength="40" list="names" autocomplete="off"><datalist id="names">'+opts+'</datalist>'
     +'<label for="full">Full name</label><input id="full" type="text" maxlength="60" autocomplete="name">'
     +'<label for="wa">WhatsApp number *</label><input id="wa" type="tel" inputmode="tel" placeholder="0812..." autocomplete="tel">'

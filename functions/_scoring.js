@@ -93,5 +93,12 @@ export function scoreGame(rawNames, gameLike) {
     aggregates[p] = { placementScore, pointValueScore, handWinRate, netScore, leagueScore, netTotal };
   });
 
+  // Riichi: the net score is the hanchan score ((points - 30.000) / 1.000 + uma + oka - 30 per chombo), counted from the points as they stand
+  if (cfg.rs && cfg.rs.pay === 'riichi') {
+    const s0 = cfg.riichi.start, pts = [s0, s0, s0, s0];
+    rp.hands.forEach(h => { if (!h.late) h.deltas.forEach((v, i) => { pts[i] += v; }); });
+    const fin = T.riichiFinal(pts, rp.chombo, s0);
+    names.forEach((p, idx) => { const a = aggregates[p]; a.netTotal = fin[idx].total; a.leagueScore = fin[idx].total; a.points = pts[idx]; a.place = fin[idx].place + 1; a.chombo = rp.chombo[idx] || 0; });
+  }
   return { names, rounds, aggregates, totalHands, wind: rp.wind, dealer: rp.dealer, turn: rp.turn, done: rp.done, mode: gameLike && gameLike.mode };
 }

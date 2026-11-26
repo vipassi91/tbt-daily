@@ -344,7 +344,7 @@ function viewForm(){
   var f=form,isEdit=f.mode==='edit',isReq=f.mode==='request',p=isEdit?reg(f.id):null,rq=isReq?req(f.id):null;
   if((isEdit&&!p)||(isReq&&!rq)){form=null;return '';}
   var v=isReq?{nick:rq.nickname,full:rq.fullName,wa:rq.whatsapp,ig:rq.instagram}:{nick:isEdit?p.nickname:(f.name||''),full:isEdit?p.fullName:'',wa:isEdit?p.whatsapp:'',ig:isEdit?p.instagram:''};
-  var h='<div class="form">'+(isReq?'<div class="full note" style="margin:0">'+(rq.tableName?'Says they are the guest &quot;'+esc(rq.tableName)+'&quot;'+(rq.claim?' ('+rq.claim.games+' games, last '+fmtDate(rq.claim.last)+').':'.'):'Did not pick a name from the guest list.')+' Check the details, then approve.</div>':'')+'<div><label for="fNick">Nickname (shown on the leaderboard) *</label><input id="fNick" maxlength="30" autocomplete="off" value="'+esc(v.nick)+'"></div>'
+  var h='<div class="form">'+(isReq?'<div class="full note" style="margin:0">'+(rq.tableName?'Says they are the guest &quot;'+esc(rq.tableName)+'&quot;'+(rq.claim?' ('+rq.claim.games+' games, last '+fmtDate(rq.claim.last)+').':'.'):'Did not pick a name from the guest list.')+' Check the details, then approve.</div>':'')+'<div><label for="fNick">Nickname (shown on the leaderboard) *</label><input id="fNick" maxlength="20" autocomplete="off" value="'+esc(v.nick)+'"></div>'
     +'<div><label for="fFull">Full name</label><input id="fFull" maxlength="60" autocomplete="off" value="'+esc(v.full)+'"></div>'
     +'<div><label for="fWa">WhatsApp number</label><input id="fWa" inputmode="tel" placeholder="0812..." autocomplete="off" value="'+esc(v.wa)+'"></div>'
     +'<div><label for="fIg">Instagram username</label><input id="fIg" placeholder="username" autocomplete="off" value="'+esc(v.ig)+'"></div>';
