@@ -1808,3 +1808,34 @@ Contoh: Seven Pairs 22 33 44 dots, 66 bamboo, 55 karakter, EE, Red, zimo, 3 bung
 
 **Database:** tidak ada perubahan.
 **Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `player.html`, `players.html`, `admin-ruleset.html`, `admin-pemain.html`, `daftar.html`, `assets/js/rules.js`, `functions/_rules.js`, `functions/_scoring.js`, `functions/_tables.js`, `functions/api/signup.js`, `functions/api/admin/players.js`, `functions/api/admin/rulesets.js`, dan catatan ini.
+
+## Update terbaru (v87): Riichi, story hanchan, Pick Yaku dan Pick Tiles
+
+**Story Riichi (tab Story)**
+- Game Riichi membuat kartu hasil hanchan: peringkat, nama, poin akhir, uma, oka dan chombo (kalau ada), dan hanchan score besar di kanan. Juara 1 di warna aksen dan mahkota di bawah tabel.
+- Header: judul, tanggal, panjang game (East-South atau East Only) dan "Final result" (atau "After South 2" kalau belum selesai).
+- Panel Story untuk Riichi hanya berisi judul, tanggal dan gaya (tema, format 9:16 atau 4:5, background, footer). Kartu wind round TBT disembunyikan. Mode lain tidak berubah.
+
+**Pick Yaku (Record hand, pilihan Han & Fu / Pick Yaku / Pick Tiles)**
+- Semua yaku WRC 2025, ditulis romaji dengan arti bahasa Inggris kecil. Closed / Open hand mengubah nilai han (kuisagari) dan mengunci yaku khusus tangan tertutup.
+- Yaku yang tidak mungkin otomatis terkunci: tsumo/ron saja, dealer saja, butuh riichi, dan pasangan yang tidak bisa bersama (misalnya Pinfu dan Toitoi).
+- Riichi otomatis tercentang kalau pemenang riichi. Dora, ura dora (kalau riichi) dan aka dora (kalau red fives On); dora tidak dihitung tanpa yaku.
+- Fu otomatis untuk Pinfu (20/30) dan Chiitoitsu (25). Yakuman berdiri sendiri. Renhou = mangan, tidak ditambah yaku lain.
+
+**Pick Tiles**
+- Tile tangan, chi/pon/kan, tile kemenangan, dora indicator (wajib, 1 + jumlah kan), ura dora indicator (wajib kalau riichi, jumlah sama) dan red fives.
+- Semua cara membaca tangan dicoba (termasuk chiitoitsu dan kokushi), yang tertinggi disarankan: yaku, fu (tunggu, set tertutup/terbuka, kan, pair yakuhai, pair angin ganda 2 fu), dora. Lalu dicek di Pick Yaku untuk menambah yaku situasi (Ippatsu, Haitei, Rinshan, dll).
+- Tile tersimpan bersama yaku; Edit lalu Pick Tiles membuka tangan yang sama.
+
+**Halaman pemain (filter Riichi):** tab Patterns menjadi "Yaku" dan berisi koleksi yaku pemain.
+
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html`, `leaderboard.html`, `player.html`, `players.html`, dan catatan ini.
+
+## Update terbaru (v88): nama set di Pick Tiles
+
+- Riichi: tombol dan label set menjadi Chi, Pon, Kan, Concealed Kan.
+- TBT, HK Classic dan MCR: Exposed pong / Exposed kong / Concealed kong menjadi Pong, Kong, Concealed Kong. Teks petunjuknya ikut disesuaikan.
+
+**Database:** tidak ada perubahan.
+**Berkas yang berubah:** `scoreboard.html` dan catatan ini.
