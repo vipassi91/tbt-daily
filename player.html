@@ -43,6 +43,12 @@
 .wr-dots{display:flex;justify-content:center;gap:6px;padding:0 0 10px}.wr-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.wr-dots i.on{background:var(--accent);width:18px;border-radius:4px}.wr-c canvas{width:100%;max-width:340px;height:auto;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 .wr-f{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}.wr-f button{flex:1;font:inherit;font-weight:700;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--text);cursor:pointer}
 .wr-f button.p{background:var(--accent);border-color:var(--accent);color:var(--onaccent,#FAF7F2)}
+/* Wrapped on a phone: the page always fits beside the arrows (it was wider than the window and got cut off) */
+.wr-o{padding:10px}.wr-c{overflow:hidden;padding:10px 4px;flex:1 1 auto;min-height:0}
+.wr-c canvas{flex:0 1 auto;min-width:0;width:auto;height:auto;max-width:calc(100% - 92px);max-height:calc(100vh - 240px);max-height:calc(100dvh - 240px)}
+@media (max-width:420px){.wr-nav{width:36px;height:56px;font-size:26px}.wr-f{padding:10px 12px}.wr-f button{font-size:15px}}
+.wr-btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.wr-ban{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin:14px 0 0;padding:14px 18px;border:0;border-radius:16px;background:linear-gradient(135deg,#1F4B39,#0D231A);color:#FAF7F2;font:inherit;text-align:left;cursor:pointer}.wr-ban b{font-family:var(--display,Georgia);font-size:20px}.wr-ban span{font-size:14px;color:#F0CD84}
 </style>
 <style>
 :root{
@@ -846,10 +852,12 @@ function content(){
   var since=P.since?'Registered '+MONTHS[+P.since.slice(5,7)-1]+' '+P.since.slice(0,4):'';
   var meta=[since,last?'Last played '+shortDate(last):(all.length?'':'No games yet')].filter(Boolean).join(' \u00b7 ');
   var filters=ddButton('period',periodLabel(),ICON.cal,false)+(modesIn().length>=2?ddButton('mode',modeLabel(),ICON.mode,effMode()!=='all'):'');
-    var left=profHead(P,meta)
+    var dd=+todayStr().slice(8,10),cur=currentSeason(),lm=dd>=wrDim(cur)-2?cur:(function(){var y=+cur.slice(0,4),m=+cur.slice(5,7)-1;if(m<1){m=12;y--;}return y+'-'+pad2(m);})();   // the month whose Wrapped is new: this one in its last 3 days, else the one before
+    var ready=isOwner()&&(lm===cur||dd<=14)&&all.some(function(g){return (g.date||'').slice(0,7)===lm;});
+    var left=profHead(P,meta)+(ready?'<button type="button" class="wr-ban" data-wrapm="'+lm+'"><b>Your '+esc(MONTHS[+lm.slice(5,7)-1])+' Wrapped is ready</b><span>See your month at the table \u203A</span></button>':'')
     +'<div class="pp-filters">'+filters+'</div>'
     +'<div class="pp-strip"><div><b>'+t.games+'</b><span>Games</span></div><div><b>'+t.winds+'</b><span>Wind rounds</span></div><div><b>'+t.wf+'</b><span>1st in wind rounds</span></div><div><b>'+(t.hands?Math.round(t.won/t.hands*100)+'%':'-')+'</b><span>Win rate</span></div></div>'
-    +(/^\d{4}-\d{2}$/.test(S.period)&&games().some(function(g){return periodOk(g.date);})?'<button type="button" class="wr-btn" data-wrap="1">'+esc(MONTHS[+S.period.slice(5,7)-1])+' Wrapped</button>':'')
+    +(/^\d{4}-\d{2}$/.test(S.period)&&wrOpenFor(S.period)&&games().some(function(g){return periodOk(g.date);})?(isOwner()?'<button type="button" class="wr-btn" data-wrap="1">'+esc(MONTHS[+S.period.slice(5,7)-1])+' Wrapped</button>':(!S.me?'<button type="button" class="wr-btn ghost" data-pf="claim">Is this you? Sign in for your '+esc(MONTHS[+S.period.slice(5,7)-1])+' Wrapped</button>':'')):'')
     +statsCard(t);
   var shown=S.showAll?t.gs:t.gs.slice(0,SHOWN);
   var right='<div class="pp-h"><h3>Games ('+t.games+')</h3><span>Newest first</span></div>'+(t.games?(S.shown=shown).map(gameCard).join('')+(t.games>shown.length?'<button type="button" class="pp-more" data-more="1">Show all '+t.games+' games</button>':''):'<p class="empty">No games in this period and mode yet.<br>Try another period or mode.</p>');
@@ -966,6 +974,7 @@ function toast(msg){var el=document.getElementById('toast');if(!el)return;el.tex
    Built from the games on this page for the month and mode picked above, plus the month's leaderboard (/api/overview) for the rank.
    Pages: cover, games, best hand (tiles and patterns), favourite pattern, people, the leaderboard, and one summary page. */
 var WR={rank:null,of:null,cv:null,img:{},pages:[],at:0,D:null};
+var WR_TW=80;   // the one tile size of Wrapped
 var WR_TILE={0:'/assets/i/d5ff4c2ae4.png',1:'/assets/i/c5c451c5e6.png',2:'/assets/i/b6925115c2.png',3:'/assets/i/f4a31adfcc.png',4:'/assets/i/e741b05bc4.png',5:'/assets/i/da8966bdbc.png',6:'/assets/i/146a1c4697.png',7:'/assets/i/7d164f4ffe.png',8:'/assets/i/826c8659c5.png',9:'/assets/i/339108bfa7.png',10:'/assets/i/3e751031aa.png',11:'/assets/i/cd869cdf07.png',12:'/assets/i/c0c974e457.png',13:'/assets/i/4c00c50924.png',14:'/assets/i/6a8a2ad8de.png',15:'/assets/i/2986734118.png',16:'/assets/i/711f7cc98c.png',17:'/assets/i/827c40841c.png',18:'/assets/i/1919dd2bc6.png',19:'/assets/i/f428b7ccb2.png',20:'/assets/i/ac48bf596b.png',21:'/assets/i/1005240f12.png',22:'/assets/i/7eceb03e69.png',23:'/assets/i/3592a37d6e.png',24:'/assets/i/09a8086fff.png',25:'/assets/i/d626cd9407.png',26:'/assets/i/78cefdd76b.png',27:'/assets/i/dc49a937ef.png',28:'/assets/i/80702ff9df.png',29:'/assets/i/ffdc5d928f.png',30:'/assets/i/c873f47570.png',31:'/assets/i/90689ac1d3.png',32:'/assets/i/8a55ed28c4.png',33:'/assets/i/13c698e532.png',34:'/assets/i/eaed1421c7.png',35:'/assets/i/e5adcad0fc.png',36:'/assets/i/d865851a25.png',37:'/assets/i/aeab9d374e.png',38:'/assets/i/4dbaaf11c1.png',39:'/assets/i/034428eee4.png',40:'/assets/i/0f89bc99fb.png',41:'/assets/i/010b4a32c3.png'};
 var WR_MASCOTS=['one-bamboo','nine-bamboo','one-character','nine-character','one-dot','nine-dot','red-dragon','green-dragon','white-dragon','east-wind','south-wind','west-wind','north-wind','spring','summer','autumn','winter','plum-blossom','orchid','chrysanthemum','bamboo'];
 var WR_TH={
@@ -980,38 +989,72 @@ var WPF='"Playfair Display",Georgia,serif',WIN='"Inter Tight","Helvetica Neue",A
 var WR_BONUS=/flower|season|garden|last tile|last of its kind|last discard|replacement|robbing|self[- ]?draw|zi mo|blessing|heaven|earth|menzen tsumo|ippatsu|haitei|houtei|rinshan|chankan|tenhou|chiihou|renhou|dora/i;   // bonuses most hands get: not a signature
 function wrFamName(f){return f==='tbt'?'TBT':(FAM_NAME[f]||f);}
 function wrTot(gs){
-  var t={gs:gs,games:gs.length,hands:0,won:0,net:0,winds:0,firsts:0,streak:0,patterns:{},best:null};
+  var t={gs:gs,games:gs.length,hands:0,won:0,net:0,winds:0,firsts:0,streak:0,patterns:{},best:null,zimo:0,deal:0,pts:0,ranks:[0,0,0,0],worst:null};
   gs.forEach(function(g){t.hands+=g.hands;t.won+=g.won;t.net+=g.net;t.winds+=g.winds;if(g.rank===1)t.firsts++;if((g.streak||0)>t.streak)t.streak=g.streak;
+    t.zimo+=g.zimo||0;t.deal+=g.dealIns||0;t.pts+=g.ptsSum||0;if(g.rank>=1&&g.rank<=4)t.ranks[g.rank-1]++;
     Object.keys(g.patterns||{}).forEach(function(k){if(!WR_BONUS.test(k))t.patterns[k]=(t.patterns[k]||0)+g.patterns[k];});
-    if(g.bh&&(t.best===null||g.bh.d>t.best.bh.d))t.best=g;});
+    if(g.bh&&(t.best===null||g.bh.d>t.best.bh.d))t.best=g;
+    if(g.lh&&(t.worst===null||g.lh.d<t.worst.lh.d))t.worst=g;});
   t.pats=Object.keys(t.patterns).sort(function(a,b){return t.patterns[b]-t.patterns[a]||(a<b?-1:1);}).map(function(k){return [k,t.patterns[k]];});
+  // the best night: the session with the highest net at this mode
+  var nn={};gs.forEach(function(g){var k=g.date+'|'+g.session,o=nn[k]||(nn[k]={date:g.date,session:g.session,net:0,games:0});o.net+=g.net;o.games++;});
+  t.nights=Object.keys(nn).map(function(k){return nn[k];});t.bestNight=t.nights.slice().sort(function(a,b){return b.net-a.net;})[0]||null;
   return t;
 }
+// the play style over the whole month, from the player's own figures (every mode together): the strongest trait wins; a quiet month is "Steady Player"
+var WR_BIG={tbt:6,mcr:16,hk:5,riichi:4};
+function wrStyle(D){
+  var A=D.all,c=[],zr=A.won?A.zimo/A.won:0,dr=A.hands?A.deal/A.hands:1,wr=A.hands?A.won/A.hands:0,np=0,big=0,wins=0;
+  D.fams.forEach(function(F){np+=Object.keys(F.patterns).length;if(F.won){big+=(F.pts/F.won)/(WR_BIG[F.f]||6)*F.won;wins+=F.won;}});
+  big=wins?big/wins:0;   // how big the wins were, against each mode's own yardstick, weighted by the wins
+  if(A.won>=3&&zr>=0.45)c.push(['Tsumo Hunter','Wins on its own draw: '+Math.round(zr*100)+'% of your wins were self-draws.',zr/0.45,'east-wind']);
+  if(A.hands>=15&&dr<=0.1)c.push(['Iron Wall','Hard to win off: you dealt in only '+Math.round(dr*100)+'% of hands.',0.1/Math.max(dr,0.02),'white-dragon']);
+  if(A.won>=2&&big>=1)c.push(['Big Hitter','Goes for the big ones: your wins were bigger than most.',big,'red-dragon']);
+  if(A.hands>=12&&wr>=0.27)c.push(['Speedster','Wins often: '+Math.round(wr*100)+'% of hands won.',wr/0.27,'south-wind']);
+  if(np>=7)c.push(['Collector','Many ways to win: '+np+' different patterns and yaku this month.',np/7,'plum-blossom']);
+  c.sort(function(a,b){return b[2]-a[2];});
+  return c[0]||(A.games<=2?['Fresh Face','Just getting started. Next month is yours.',1,'spring']:['Steady Player','Keeps it calm and consistent at every table.',1,'one-bamboo']);
+}
+function wrDim(ym){return new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();}
+function wrOpenFor(ym){var cur=currentSeason();return ym<cur||(ym===cur&&+todayStr().slice(8,10)>=wrDim(cur)-2);}   // a month's Wrapped opens in its last 3 days
+function wrUnit(F){return F.rii?'han':F.f==='hk'?'fan':'points';}
 function wrData(){
-  var P=S.data.player,gs=games().filter(function(g){return periodOk(g.date);}),all=wrTot(gs);
+  var P=S.data.player,gs=games().filter(function(g){return periodOk(g.date);}),all=wrTot(gs),ym=S.period;
+  var pm=(function(){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1;if(m<1){m=12;y--;}return y+'-'+pad2(m);})(),prevGs=games().filter(function(g){return (g.date||'').slice(0,7)===pm;});
   var opp={};
   gs.forEach(function(g){var me=(g.tb||[]).filter(function(x){return x[3];})[0];(g.tb||[]).forEach(function(x){if(x[3])return;var k=x[0].toLowerCase(),o=opp[k]||(opp[k]={name:x[0],games:0,above:0});o.games++;if(me&&x[2]<me[2])o.above++;});});
   var ol=Object.keys(opp).map(function(k){return opp[k];}).filter(function(o){return !/^Player [1-4]$/.test(o.name);});
-  var rival=ol.filter(function(o){return o.above>0;}).sort(function(a,b){return b.above-a.above||b.games-a.games;})[0]||null;
+  var rival=ol.filter(function(o){return o.above>0;}).sort(function(a,b){return b.above-a.above||(b.above/b.games)-(a.above/a.games)||b.games-a.games;})[0]||null;
   var buddy=ol.slice().sort(function(a,b){return b.games-a.games||a.name.localeCompare(b.name);})[0]||null;
-  if(rival&&buddy&&rival.name===buddy.name&&ol.length>1){var nb=ol.filter(function(o){return o.name!==rival.name;}).sort(function(a,b){return b.games-a.games;})[0];if(nb)buddy=nb;}
   var nights={};gs.forEach(function(g){nights[g.date+'|'+g.session]=1;});
-  var order=['tbt'].concat(FAM_LIST.indexOf('mcr')<0?['mcr']:[]).concat(FAM_LIST),fams=[];
-  order.forEach(function(f){if(fams.some(function(x){return x.f===f;}))return;var fg=gs.filter(function(g){return famOf(g.mode)===f;});if(fg.length){var t=wrTot(fg);t.f=f;t.name=wrFamName(f);t.rii=f==='riichi';t.rank=null;t.of=null;fams.push(t);}});
-  gs.forEach(function(g){var f=famOf(g.mode);if(!fams.some(function(x){return x.f===f;})){var t=wrTot(gs.filter(function(h){return famOf(h.mode)===f;}));t.f=f;t.name=wrFamName(f);t.rii=f==='riichi';fams.push(t);}});
+  var fams=[];
+  gs.forEach(function(g){var f=famOf(g.mode);if(fams.some(function(x){return x.f===f;}))return;
+    var t=wrTot(gs.filter(function(h){return famOf(h.mode)===f;}));t.f=f;t.name=wrFamName(f);t.rii=f==='riichi';t.rank=null;t.of=null;t.top=null;
+    // patterns won for the first time ever (never in an earlier month at this mode)
+    var seen={};games().forEach(function(h){if(famOf(h.mode)===f&&(h.date||'')<ym+'-01')Object.keys(h.patterns||{}).forEach(function(k){seen[k]=1;});});
+    t.newPats=t.pats.filter(function(p){return !seen[p[0]];}).map(function(p){return p[0];});
+    var pv=prevGs.filter(function(h){return famOf(h.mode)===f;});t.prev=pv.length?{games:pv.length,net:pv.reduce(function(a,h){return a+h.net;},0)}:null;
+    fams.push(t);});
   fams.sort(function(a,b){return b.games-a.games;});
-  return {all:all,fams:fams,name:P.nickname,month:MONTHS[+S.period.slice(5,7)-1],year:S.period.slice(0,4),rival:rival,buddy:buddy,nights:Object.keys(nights).length,avatar:(P.profile&&P.profile.avatar)||'',
-    seed:(P.id||'x').split('').reduce(function(a,c){return a*31+c.charCodeAt(0)>>>0;},7)+(+S.period.slice(5,7))};
+  var D0={all:all,fams:fams,name:P.nickname,month:MONTHS[+ym.slice(5,7)-1],prevMonth:MONTHS[+pm.slice(5,7)-1],prevGames:prevGs.length,year:ym.slice(0,4),rival:rival,buddy:buddy,nights:Object.keys(nights).length,avatar:(P.profile&&P.profile.avatar)||'',
+    seed:(P.id||'x').split('').reduce(function(a,c){return a*31+c.charCodeAt(0)>>>0;},7)+(+ym.slice(5,7))};
+  D0.style=wrStyle(D0);return D0;
 }
-// each family's leaderboard place this month (registered players), as on the leaderboard
+// each family this month (registered players): the leaderboard place, and where the player stands in the community (games, win rate, net)
 function wrRank(D){
   var id=S.data.player.id,ym=S.period;
   return fetch('/api/overview').then(function(r){return r.ok?r.json():null;}).then(function(d){
     if(!d||!d.tables)return;var day={};(d.days||[]).forEach(function(x){day[x.id]=x.date;});
-    D.fams.forEach(function(F){var sum={};
+    D.fams.forEach(function(F){var P={};
       d.tables.forEach(function(tb){if(!(tb.events>0))return;if((day[tb.day_id]||'').slice(0,7)!==ym)return;if(famOf(tb.mode||'casual')!==F.f)return;
-        (tb.players||[]).forEach(function(p){if(p.placeholder||p.guest||!p.key)return;sum[p.key]=(sum[p.key]||0)+(+p.netTotal||0);});});
-      if(sum[id]===undefined)return;var mine=sum[id],keys=Object.keys(sum);F.rank=1+keys.filter(function(k){return sum[k]>mine;}).length;F.of=keys.length;});
+        (tb.players||[]).forEach(function(p){if(p.placeholder||p.guest||!p.key)return;var o=P[p.key]||(P[p.key]={net:0,games:0,wins:0,hands:0});o.net+=+p.netTotal||0;o.games++;o.wins+=+p.wins||0;o.hands+=+tb.hands||0;});});
+      var me=P[id];if(!me)return;var keys=Object.keys(P);
+      F.rank=1+keys.filter(function(k){return P[k].net>me.net;}).length;F.of=keys.length;
+      if(keys.length>=5){
+        var wr=function(o){return o.hands?o.wins/o.hands:0;},ms=[['games played',function(o){return o.games;}],['win rate',wr],[F.rii?'hanchan score':'net points',function(o){return o.net;}]];
+        var bestTop=null;ms.forEach(function(m){if(m[0]==='win rate'&&me.games<2)return;var above=keys.filter(function(k){return m[1](P[k])>m[1](me);}).length,top=Math.max(1,Math.ceil((above+1)/keys.length*100));if(top<=50&&(!bestTop||top<bestTop[0]))bestTop=[top,m[0]];});
+        F.top=bestTop;
+      }});
   }).catch(function(){});
 }
 // scores in each family's own terms: Riichi keeps one decimal (hanchan score) and dots in its points
@@ -1071,52 +1114,92 @@ function pGames(x,D,n){var th=WR_TH.night,t=D.all;wrBg(x,th);wrChrome(x,th,D,n,W
   var cx=90,cy=1170;D.fams.forEach(function(F){var txt=F.games+' '+F.name;x.font='700 36px '+WIN;var w=x.measureText(txt).width+52;if(cx+w>990){cx=90;cy+=80;}
     x.save();wrRR(x,cx,cy-48,w,68,34);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();x.fillStyle=th.ink;x.fillText(txt,cx+26,cy);cx+=w+14;});
   x.font='400 38px '+WIN;x.fillStyle=th.mut;x.fillText(D.nights+(D.nights===1?' night':' nights')+' at the table  ·  '+t.hands+' hands played',90,cy+90);
+  var dg=t.games-D.prevGames;if(D.prevGames){x.fillStyle=dg>0?th.acc:th.mut;x.font='700 38px '+WIN;x.fillText((dg>0?'+'+dg:dg<0?'\u2212'+Math.abs(dg):'Same as')+(dg?' games vs ':' ')+D.prevMonth,90,cy+150);}
   var tag=t.games>=12?'A true regular.':t.games>=6?'Never far from a table.':t.games>=3?'Warming up nicely.':'Every game counts.';
-  x.fillStyle=th.ink;x.font='italic 700 54px '+WPF;x.fillText(tag,90,cy+210);wrScribble(x,90,cy+240,Math.min(800,x.measureText(tag).width),th.acc);
+  x.fillStyle=th.ink;x.font='italic 700 54px '+WPF;x.fillText(tag,90,cy+260);wrScribble(x,90,cy+290,Math.min(800,x.measureText(tag).width),th.acc);
   [0,1,2].forEach(function(k){wrSticker(x,wrMascot(D,k+3),760+k*90,1600-k*40,130,(k-1)*0.25);});}
-function wrTiles(x,tl,X,Y,maxW,th,tw0){
-  // the concealed tiles in rows of at most 7, then the winning tile (outlined) and the melds on one more row
-  var hand=(tl.h||[]).slice(),w=tl.w,i=w!=null?hand.indexOf(w):-1;if(i>=0)hand.splice(i,1);
-  var tw=Math.min(tw0||116,(maxW-6*8)/7),thh=tw*220/174,y=Y;
-  var rows=[];for(var a=0;a<hand.length;a+=7)rows.push(hand.slice(a,a+7));
-  var xx=X,sw=tw*0.8,sh=sw*220/174,last=rows.length&&rows[rows.length-1].length<7?rows.length-1:-1;
-  rows.forEach(function(row,ri){row.forEach(function(t,k){var im=WR.img[WR_TILE[t]];if(im)x.drawImage(im,X+k*(tw+8),y,tw,thh);});if(ri===last){xx=X+row.length*(tw+8)+14;}else y+=thh+12;});
-  if(w!=null){x.save();wrRR(x,xx-7,y-7,tw+14,thh+14,12);x.fillStyle=th.acc;x.fill();x.restore();var wi=WR.img[WR_TILE[w]];if(wi)x.drawImage(wi,xx,y,tw,thh);xx+=tw+30;}
-  if((tl.m||[]).length&&xx>X){y+=thh+16;xx=X;}
-  (tl.m||[]).forEach(function(m){var t=m[1],ts=m[0]==='c'?[t,t+1,t+2]:m[0]==='p'?[t,t,t]:[t,t,t,t];if(xx+ts.length*(sw+4)>X+maxW){xx=X;y+=thh+16;}ts.forEach(function(q,k){var im=WR.img[WR_TILE[q]];if(im)x.drawImage(im,xx+k*(sw+4),y+(thh-sh),sw,sh);});xx+=ts.length*(sw+4)+22;});
+function wrTiles(x,tl,X,Y,maxW,th){
+  // one size for every tile on every page; the hand flows left to right: the concealed tiles, the winning tile (outlined), then the melds, each group kept together
+  var tw=WR_TW,thh=tw*220/174,gap=6,sep=22,hand=(tl.h||[]).slice(),w=tl.w,i=w!=null?hand.indexOf(w):-1;if(i>=0)hand.splice(i,1);
+  var groups=[hand.map(function(t){return {t:t};})];
+  if(w!=null)groups.push([{t:w,win:true}]);
+  (tl.m||[]).forEach(function(m){var t=m[1],ts=m[0]==='c'?[t,t+1,t+2]:m[0]==='p'?[t,t,t]:[t,t,t,t];groups.push(ts.map(function(q){return {t:q};}));});
+  var xx=X,y=Y;
+  groups.forEach(function(g,gi){
+    if(!g.length)return;
+    if(gi&&xx>X)xx+=sep-gap;
+    var gw=g.length*(tw+gap)-gap;if(gi&&xx+gw>X+maxW&&xx>X){xx=X;y+=thh+14;}
+    g.forEach(function(o){if(xx+tw>X+maxW){xx=X;y+=thh+14;}
+      if(o.win){x.save();wrRR(x,xx-6,y-6,tw+12,thh+12,12);x.fillStyle=th.acc;x.fill();x.restore();}
+      var im=WR.img[WR_TILE[o.t]];if(im)x.drawImage(im,xx,y,tw,thh);xx+=tw+gap;});
+  });
   return y+thh;
 }
 function wrHandVal(F,bh){if(F.rii&&bh.hf)return bh.hf.yk?(bh.hf.yk>1?bh.hf.yk+'× yakuman':'Yakuman'):bh.hf.han+' han'+(bh.hf.han<5?' '+bh.hf.fu+' fu':'');if(bh.p==null)return '';return bh.p+(F.f==='hk'?' fan':(bh.p===1?' point':' points'));}
-// one family: its leaderboard place, its score, its best hand (tiles and patterns) and its signature pattern or yaku
+// one family: its leaderboard place, its score, how often each place was taken, its best hand and its winning formula
 function pFam(F){return function(x,D,n){
   var th=WR_TH[WR_FTH[D.fams.indexOf(F)%WR_FTH.length]];wrBg(x,th);wrChrome(x,th,D,n,WR.pages.length);
   wrTitle(x,th,[F.name,'highlights'],370,104);
-  // three figures
   var cells=[[F.rank?'#'+F.rank:'-',F.rank?'of '+F.of+' players':'leaderboard'],[wrSc(F.net,F.rii),F.rii?'hanchan score':'net points'],[String(F.firsts),F.firsts===1?'first place':'first places']];
-  cells.forEach(function(c,i){var X=90+i*306,Y=560;x.save();wrRR(x,X,Y,282,210,30);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();
-    x.fillStyle=i===0?th.acc:th.ink;wrFit(x,c[0],230,'900',WPF,92,40);x.fillText(c[0],X+26,Y+115);x.fillStyle=th.mut;wrFit(x,c[1],230,'400',WIN,30,20);x.fillText(c[1],X+26,Y+168);});
-  x.fillStyle=th.mut;x.font='400 32px '+WIN;x.fillText(F.games+(F.games===1?' game':' games')+'  ·  '+(F.hands?Math.round(F.won/F.hands*100):0)+'% of hands won'+(F.streak>1?'  ·  '+F.streak+' wins in a row':''),90,840);
-  // best hand
-  var y=960;
+  cells.forEach(function(c,i){var X=90+i*306,Y=540;x.save();wrRR(x,X,Y,282,200,30);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();
+    x.fillStyle=i===0?th.acc:th.ink;wrFit(x,c[0],230,'900',WPF,90,40);x.fillText(c[0],X+26,Y+112);x.fillStyle=th.mut;wrFit(x,c[1],230,'400',WIN,30,20);x.fillText(c[1],X+26,Y+162);});
+  // places: 1st to 4th, one bar each
+  var py=790,mx=Math.max(1,Math.max.apply(null,F.ranks));
+  x.fillStyle=th.mut;x.font='400 30px '+WIN;x.fillText(F.games+(F.games===1?' game':' games')+'  ·  '+(F.hands?Math.round(F.won/F.hands*100):0)+'% of hands won',90,py);
+  ['1st','2nd','3rd','4th'].forEach(function(l,i){var X=90+i*228,v=F.ranks[i],bh=Math.round(70*v/mx);
+    x.save();wrRR(x,X,py+30,206,90,18);x.fillStyle=th.soft;x.fill();x.restore();
+    x.save();if(bh){wrRR(x,X,py+120-bh,206,bh,18);x.fillStyle=i===0?th.acc:th.ink;x.globalAlpha=i===0?.9:.22;x.fill();}x.restore();
+    x.fillStyle=th.ink;x.font='900 44px '+WPF;x.fillText(String(v),X+20,py+92);x.fillStyle=th.mut;x.font='700 26px '+WIN;x.textAlign='right';x.fillText(l,X+190,py+92);x.textAlign='left';});
+  var y=1000;
   if(F.best){var bh=F.best.bh;
-    x.fillStyle=th.acc;x.font='700 28px '+WIN;x.fillText('BEST HAND',90,y);y+=30;
-    if(bh.t&&bh.t.h&&bh.t.h.length)y=wrTiles(x,bh.t,90,y+10,900,th,104)+30;
-    x.fillStyle=th.ink;x.font='900 130px '+WPF;x.fillText(wrSc(bh.d,F.rii),84,y+115);var vw=x.measureText(wrSc(bh.d,F.rii)).width;
-    x.fillStyle=th.ink;x.font='700 38px '+WIN;x.fillText(wrHandVal(F,bh),110+vw,y+70);x.fillStyle=th.mut;x.font='400 28px '+WIN;x.fillText(F.best.table+'  ·  '+shortDate(F.best.date),110+vw,y+110);
+    x.fillStyle=th.acc;x.font='700 28px '+WIN;x.fillText('BEST HAND',90,y);y+=24;
+    if(bh.t&&bh.t.h&&bh.t.h.length)y=wrTiles(x,bh.t,90,y,900,th)+24;
+    x.fillStyle=th.ink;x.font='900 110px '+WPF;x.fillText(wrSc(bh.d,F.rii),84,y+96);var vw=x.measureText(wrSc(bh.d,F.rii)).width;
+    x.fillStyle=th.ink;x.font='700 36px '+WIN;x.fillText(wrHandVal(F,bh),110+vw,y+56);x.fillStyle=th.mut;x.font='400 28px '+WIN;x.fillText(F.best.table+'  ·  '+shortDate(F.best.date),110+vw,y+96);
     var pl=(bh.c||[]).map(function(c){return c[0]+(c[2]>1?' ×'+c[2]:'');}).concat(bh.dora?[bh.dora]:[]).join('  ·  ');
-    if(pl){x.fillStyle=th.mut;wrFit(x,pl,900,'400',WIN,30,20);x.fillText(pl,90,y+170);}
-    y+=260;
+    if(pl){x.fillStyle=th.mut;wrFit(x,pl,900,'400',WIN,28,18);x.fillText(pl,90,y+146);}
+    y+=210;
   }
-  // signature
-  if(F.pats.length&&y<1610){var f0=F.pats[0];x.fillStyle=th.acc;x.font='700 28px '+WIN;x.fillText(F.rii?'SIGNATURE YAKU':'SIGNATURE PATTERN',90,y);
-    x.fillStyle=th.ink;wrFit(x,f0[0],700,'900',WPF,72,36);x.fillText(f0[0],90,y+80);var fw=x.measureText(f0[0]).width;x.fillStyle=th.acc;x.font='900 56px '+WPF;x.fillText('×'+f0[1],110+fw,y+80);
-    if(F.pats.length>1){x.fillStyle=th.mut;wrFit(x,'then '+F.pats.slice(1).map(function(p){return p[0]+' ×'+p[1];}).join(', '),900,'400',WIN,30,20);x.fillText('then '+F.pats.slice(1).map(function(p){return p[0]+' ×'+p[1];}).join(', '),90,y+130);}}
-  if(!F.best&&!F.pats.length)wrSticker(x,wrMascot(D,5),540,1200,220,0.1);
+  if(F.pats.length){var f0=F.pats[0];x.fillStyle=th.acc;x.font='700 28px '+WIN;x.fillText('YOUR WINNING FORMULA',90,y);
+    x.fillStyle=th.ink;wrFit(x,f0[0],900,'900',WPF,66,34);x.fillText(f0[0],90,y+72);
+    x.fillStyle=th.mut;x.font='400 30px '+WIN;x.fillText('won with it '+f0[1]+(f0[1]===1?' time':' times')+' this month'+(F.pats.length>1?', then '+F.pats[1][0]:''),90,y+120);y+=170;}
+  if(F.newPats.length&&y<1700){var np='New in your collection: '+F.newPats.slice(0,3).join(', ')+(F.newPats.length>3?' +'+(F.newPats.length-3):'');x.save();x.font='700 30px '+WIN;var nw=Math.min(900,x.measureText(np).width+48);wrRR(x,90,y-6,nw,58,29);x.fillStyle=th.acc;x.globalAlpha=.16;x.fill();x.restore();
+    x.fillStyle=th.ink;wrFit(x,np,852,'700',WIN,30,18);x.fillText(np,114,y+33);}
+  if(!F.best&&!F.pats.length)wrSticker(x,wrMascot(D,5),540,1300,220,0.1);
 };}
+// the play style of the month (every mode together), the figures behind it, and the best place the player holds in the community
+function pStyle(x,D,n){
+  var th=WR_TH.night,A=D.all;wrBg(x,th);wrChrome(x,th,D,n,WR.pages.length);
+  x.fillStyle=th.mut;x.font='400 40px '+WIN;x.fillText('Your play style',90,380);
+  var st=D.style;x.fillStyle=th.acc;wrFit(x,st[0],900,'900',WPF,150,70);x.fillText(st[0],84,560);wrScribble(x,90,600,Math.min(700,x.measureText(st[0]).width),th.acc);
+  x.fillStyle=th.ink;var words=st[1].split(' '),line='',ly=700;x.font='400 42px '+WIN;words.forEach(function(w){var t2=line?line+' '+w:w;if(x.measureText(t2).width>900){x.fillText(line,90,ly);ly+=58;line=w;}else line=t2;});if(line)x.fillText(line,90,ly);
+  wrSticker(x,WR.img['/assets/a/'+st[3]+'.svg?v='+AV_V],540,1030,300,-0.06);
+  var cells=[[A.won?Math.round(A.zimo/A.won*100)+'%':'-','of wins self-drawn'],[A.hands?Math.round(A.deal/A.hands*100)+'%':'-','of hands dealt in'],[A.hands?Math.round(A.won/A.hands*100)+'%':'-','of hands won']];
+  cells.forEach(function(c,i){var X=90+i*306,Y=1250;x.save();wrRR(x,X,Y,282,190,30);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();
+    x.fillStyle=th.ink;wrFit(x,c[0],230,'900',WPF,80,40);x.fillText(c[0],X+26,Y+104);x.fillStyle=th.mut;wrFit(x,c[1],235,'400',WIN,28,18);x.fillText(c[1],X+26,Y+152);});
+  var tops=D.fams.filter(function(F){return F.top;}).sort(function(a,b){return a.top[0]-b.top[0];});
+  if(tops.length){var F=tops[0],tx='Top '+F.top[0]+'% for '+F.top[1]+' in '+F.name+' this month';x.save();wrRR(x,90,1490,900,110,30);x.fillStyle=th.acc;x.globalAlpha=.16;x.fill();x.restore();
+    x.fillStyle=th.ink;wrFit(x,tx,840,'700',WIN,38,22);x.fillText(tx,120,1558);}
+}
+// moments: the best night, the hand that hurt most, the month against the one before
+function pMoments(x,D,n){var th=WR_TH.cream;wrBg(x,th);wrChrome(x,th,D,n,WR.pages.length);
+  wrTitle(x,th,['The month in','moments'],370,104);
+  var y=560,cards=[],per=[];
+  D.fams.forEach(function(F){var c=[];
+    if(F.bestNight&&F.bestNight.net>0)c.push(['BEST NIGHT  \u00b7  '+F.name.toUpperCase(),F.bestNight.session||'A night at the table',shortDate(F.bestNight.date)+'  \u00b7  '+wrSc(F.bestNight.net,F.rii)+'  \u00b7  '+F.bestNight.games+(F.bestNight.games===1?' game':' games')]);
+    var w=F.worst&&F.worst.lh;if(w){var amt=wrSc(-w.d,F.rii).replace('+',''),how=w.how==='discard'&&w.by.length?'Paid '+amt+' to '+w.by.join(' & '):w.how==='selfdraw'&&w.by.length?w.by.join(' & ')+' self-drew for '+amt:w.how==='penalty'?'A penalty cost '+amt:'Lost '+amt+' in one hand';
+      c.push(['THE ONE THAT HURT  \u00b7  '+F.name.toUpperCase(),how,F.worst.table+'  \u00b7  '+shortDate(F.worst.date)]);}
+    if(F.prev){var dn=F.net-F.prev.net;c.push(['VS '+D.prevMonth.toUpperCase()+'  \u00b7  '+F.name.toUpperCase(),(dn>=0?'Up ':'Down ')+wrSc(Math.abs(dn),F.rii).replace('+','')+(F.rii?' hanchan score':' net points'),F.games+(F.games===1?' game':' games')+' now, '+F.prev.games+' in '+D.prevMonth]);}
+    per.push(c);});
+  // most played mode first: its night, its hard hand and its month-on-month, then the next mode
+  cards=[];per.forEach(function(c){c.forEach(function(x2){if(cards.length<5)cards.push(x2);});});
+  cards.slice(0,5).forEach(function(c){x.save();wrRR(x,90,y,900,200,30);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();
+    x.fillStyle=th.acc;x.font='700 26px '+WIN;x.fillText(c[0],126,y+52);x.fillStyle=th.ink;wrFit(x,c[1],830,'900',WPF,54,28);x.fillText(c[1],126,y+118);x.fillStyle=th.mut;wrFit(x,c[2],830,'400',WIN,30,20);x.fillText(c[2],126,y+164);y+=226;});
+}
 function pPeople(x,D,n){var th=WR_TH.black;wrBg(x,th);wrChrome(x,th,D,n,WR.pages.length);
   wrTitle(x,th,['Your','people'],380,120);
   var y=640;
-  [[D.buddy,'Table buddy',function(o){return o.games+(o.games===1?' game':' games')+' at the same table';},6],[D.rival,'Rival',function(o){return 'finished ahead of you '+o.above+(o.above===1?' time':' times');},7]].forEach(function(r){
+  [[D.buddy,'Table buddy',function(o){return o.games+(o.games===1?' game':' games')+' at the same table';},6],[D.rival,'Rival',function(o){return 'finished ahead of you in '+o.above+' of '+o.games+(o.games===1?' game':' games');},7]].forEach(function(r){
     if(!r[0])return;x.save();wrRR(x,90,y,900,380,40);x.fillStyle=th.soft;x.fill();x.strokeStyle=th.line;x.lineWidth=2;x.stroke();x.restore();
     wrSticker(x,wrMascot(D,r[3]),230,y+190,180,r[3]===6?-0.12:0.12);
     x.fillStyle=th.acc;x.font='700 30px '+WIN;x.fillText(r[1].toUpperCase(),360,y+120);
@@ -1137,7 +1220,7 @@ function pSum(x,D,n){var th=WR_TH.night,t=D.all;wrBg(x,th);wrChrome(x,th,D,n,WR.
   var rows=[];if(D.buddy)rows.push(['Table buddy',D.buddy.name]);if(D.rival)rows.push(['Rival',D.rival.name]);
   rows.forEach(function(r,i){var Y=y+60+i*86;x.strokeStyle=th.line;x.lineWidth=2;x.beginPath();x.moveTo(90,Y-52);x.lineTo(990,Y-52);x.stroke();x.fillStyle=th.mut;x.font='400 32px '+WIN;x.textAlign='left';x.fillText(r[0],90,Y);x.textAlign='right';x.fillStyle=th.ink;wrFit(x,r[1],560,'700',WIN,36,22);x.fillText(r[1],990,Y);x.textAlign='left';});
   x.textAlign='center';x.fillStyle=th.ink;x.font='italic 700 40px '+WPF;x.fillText('Play. Learn. Connect.',540,1720);x.textAlign='left';}
-function wrPagesFor(D){var p=[pCover,pGames];D.fams.forEach(function(F){p.push(pFam(F));});if(D.buddy||D.rival)p.push(pPeople);p.push(pSum);return p;}
+function wrPagesFor(D){var p=[pCover,pGames,pStyle];D.fams.forEach(function(F){p.push(pFam(F));});if(D.fams.some(function(F){return (F.bestNight&&F.bestNight.net>0)||F.worst||F.prev;}))p.push(pMoments);if(D.buddy||D.rival)p.push(pPeople);p.push(pSum);return p;}
 function wrDraw(){var x=WR.cv.getContext('2d');WR.cv.width=1080;WR.cv.height=1920;x.textBaseline='alphabetic';WR.pages[WR.at](x,WR.D,WR.at+1);
   var el=document.getElementById('wrapModal');var dots=el.querySelector('.wr-dots');if(dots)dots.innerHTML=WR.pages.map(function(_,i){return '<i class="'+(i===WR.at?'on':'')+'"></i>';}).join('');
   var pv=el.querySelector('[data-wr="prev"]'),nx=el.querySelector('[data-wr="next"]');if(pv)pv.disabled=WR.at===0;if(nx)nx.disabled=WR.at===WR.pages.length-1;}
@@ -1147,7 +1230,7 @@ function wrOpen(){
     +'<div class="wr-c"><button type="button" class="wr-nav" data-wr="prev" aria-label="Previous page">‹</button><canvas width="1080" height="1920" role="img" aria-label="'+esc(D.name)+', '+esc(D.month)+' Wrapped"></canvas><button type="button" class="wr-nav" data-wr="next" aria-label="Next page">›</button></div><div class="wr-dots" aria-hidden="true"></div>'
     +'<div class="wr-f"><button type="button" data-wr="save1">Save this page</button><button type="button" class="p" data-wr="saveall">Save all '+WR.pages.length+'</button></div></div>';
   el.hidden=false;WR.cv=el.querySelector('canvas');
-  var srcs=[LOGO,avUrl(D.avatar)].concat(wrMascotSrcs(D));D.fams.forEach(function(F){if(F.best&&F.best.bh.t){var tl=F.best.bh.t;(tl.h||[]).concat(tl.w!=null?[tl.w]:[]).concat([].concat.apply([],(tl.m||[]).map(function(m){return [m[1],m[1]+1,m[1]+2];}))).forEach(function(t){if(WR_TILE[t])srcs.push(WR_TILE[t]);});}});
+  var srcs=[LOGO,avUrl(D.avatar)].concat(wrMascotSrcs(D)).concat(['/assets/a/'+D.style[3]+'.svg?v='+AV_V]);D.fams.forEach(function(F){if(F.best&&F.best.bh.t){var tl=F.best.bh.t;(tl.h||[]).concat(tl.w!=null?[tl.w]:[]).concat([].concat.apply([],(tl.m||[]).map(function(m){return [m[1],m[1]+1,m[1]+2];}))).forEach(function(t){if(WR_TILE[t])srcs.push(WR_TILE[t]);});}});
   var fonts=document.fonts&&document.fonts.load?Promise.all(['900 96px "Playfair Display"','italic 700 40px "Playfair Display"','400 30px "Inter Tight"','700 30px "Inter Tight"'].map(function(f){return document.fonts.load(f);})).catch(function(){}):Promise.resolve();
   wrDraw();
   Promise.all([fonts,wrRank(D)].concat(srcs.map(wrLoad))).then(function(){if(!el.hidden)wrDraw();});
@@ -1191,6 +1274,7 @@ document.getElementById('app').addEventListener('click',function(e){
   if(b.dataset.tab){S.tab=b.dataset.tab;S.allPatterns=false;render();return;}
   if(b.dataset.share){share();return;}
   if(b.dataset.wrap){wrOpen();return;}
+  if(b.dataset.wrapm){S.period=b.dataset.wrapm;S.periodSet=true;S.mode='all';render();wrOpen();return;}
   if(b.dataset.retry){load();return;}
 });
 document.addEventListener('keydown',function(e){

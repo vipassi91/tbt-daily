@@ -303,6 +303,18 @@ function bestHandOf(row, seat) {
       dora: pk && pk.dora ? String(pk.dora).slice(0, 40) : '', hf: ev.hf ? { han: +ev.hf.han || 0, fu: +ev.hf.fu || 0, yk: +ev.hf.yk || 0 } : null, t: tiles };
   } catch (e) { return null; }
 }
+// The hand that cost the player most at one table (for Wrapped): how much, how it was lost, and to whom.
+function worstHandOf(row, seat) {
+  try {
+    const g = JSON.parse(row.rounds || '{}'), rp = replay(g.events || [], modeConfig(g)), names = Array.isArray(g.names) ? g.names : [];
+    let low = null, at = null;
+    rp.hands.forEach(function (h) { if (h.late) return; const d = h.deltas[seat]; if (d < 0 && (low === null || d < low)) { low = d; at = h; } });
+    if (!at) return null;
+    const ev = g.events[at.i] || {}, by = (at.winners || []).filter(w => w !== seat).map(w => String(names[w] || 'Player ' + (w + 1)).slice(0, 30));
+    const how = ev.kind === 'invalid' || ev.kind === 'false' || ev.kind === 'chombo' ? 'penalty' : ev.kind === 'draw' ? 'draw' : at.disc === seat ? 'discard' : ev.kind === 'zimo' ? 'selfdraw' : 'other';
+    return { d: Math.round(low * 100) / 100, how: how, by: by };
+  } catch (e) { return null; }
+}
 export async function playerPage(env, rawId, admin) {
   const no = function (reason, reg) {
     const body = { error: 'not_available' };
@@ -357,6 +369,7 @@ export async function playerPage(env, rawId, admin) {
             live: !stats.locked && !(stats.progress && stats.progress.done) && (Date.now() - Date.parse(row.updated_at)) < LIVE_MS,
             tb: all.map(function (p, i) { return [p.name, p.netTotal, p.rank, i === m.seat ? 1 : 0]; }).sort(function (a, b) { return a[2] - b[2] || 0; }),
             bh: f.won ? bestHandOf(row, m.seat) : null,   // the best hand won here, for Wrapped
+            lh: worstHandOf(row, m.seat),                  // the hand that cost most here, for Wrapped
           });
         } catch (e) { skipped++; }
       }
