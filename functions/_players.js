@@ -1,6 +1,7 @@
 import { statsFor, summarizePlayers } from './_tables.js';
 import { loadProfile } from './_playeraccount.js';
 import { json } from './_auth.js';
+import { replay, modeConfig } from './_scoring.js';
 
 // The player registry. An admin registers people by hand: full name, nickname (the only name shown
 // publicly), WhatsApp and Instagram (both private, admin pages only). A name typed at a table counts as
@@ -287,6 +288,21 @@ export async function safeDisplay(env, tableId, typedNames, storedNames) {
 // all get the very same answer, so nobody can find out who chose to hide. Only an admin asking is told which of these it is.
 // a table that is not locked and was saved within this long ago is still being played (it is shown as live)
 const LIVE_MS = 12 * 3600 * 1000;
+// The player's best winning hand at one table (for Wrapped): its score, its points (or han), the patterns counted and the tiles when they were picked.
+function bestHandOf(row, seat) {
+  try {
+    const g = JSON.parse(row.rounds || '{}'), rp = replay(g.events || [], modeConfig(g));
+    let best = null, at = -1;
+    rp.hands.forEach(function (h) { if (h.late || h.winners.indexOf(seat) < 0) return; const d = h.deltas[seat]; if (best === null || d > best) { best = d; at = h.i; } });
+    if (at < 0) return null;
+    const ev = g.events[at] || {}, pk = ev.patterns && ev.patterns[seat], tl = (ev.tiles && ev.tiles[seat]) || (pk && pk.tiles) || null;
+    const ok = x => Number.isInteger(x) && x >= 0 && x <= 33;
+    const tiles = tl && Array.isArray(tl.h) && tl.h.every(ok) ? { h: tl.h.slice(0, 18), m: Array.isArray(tl.m) ? tl.m.slice(0, 4).filter(m => Array.isArray(m) && ok(m[1])).map(m => [String(m[0]).slice(0, 1), m[1], m[2] ? 1 : 0]) : [], w: ok(tl.w) ? tl.w : null } : null;
+    return { d: Math.round(best * 100) / 100, k: ev.kind, p: ev.pts && isFinite(Number(ev.pts[seat])) ? Number(ev.pts[seat]) : null,
+      c: pk && Array.isArray(pk.counted) ? pk.counted.slice(0, 12).map(x => [String(x.label || '').slice(0, 40), typeof x.p === 'number' ? x.p : String(x.p || ''), x.count || 1]) : [],
+      dora: pk && pk.dora ? String(pk.dora).slice(0, 40) : '', hf: ev.hf ? { han: +ev.hf.han || 0, fu: +ev.hf.fu || 0, yk: +ev.hf.yk || 0 } : null, t: tiles };
+  } catch (e) { return null; }
+}
 export async function playerPage(env, rawId, admin) {
   const no = function (reason, reg) {
     const body = { error: 'not_available' };
@@ -340,6 +356,7 @@ export async function playerPage(env, rawId, admin) {
             wr: Array.isArray(f.wr) ? f.wr : null, turn: (stats.progress && stats.progress.turn) || 0, done: !!(stats.progress && stats.progress.done),
             live: !stats.locked && !(stats.progress && stats.progress.done) && (Date.now() - Date.parse(row.updated_at)) < LIVE_MS,
             tb: all.map(function (p, i) { return [p.name, p.netTotal, p.rank, i === m.seat ? 1 : 0]; }).sort(function (a, b) { return a[2] - b[2] || 0; }),
+            bh: f.won ? bestHandOf(row, m.seat) : null,   // the best hand won here, for Wrapped
           });
         } catch (e) { skipped++; }
       }
