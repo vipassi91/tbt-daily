@@ -108,7 +108,11 @@ main .meta a{display:inline-flex;align-items:center;min-height:38px}
 .fxp{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px}.fxp b{font-variant-numeric:tabular-nums;white-space:nowrap}.fxp.chg b{color:var(--accent)}
 .fxt{margin:12px 0 0;font-size:13px;line-height:20px;color:var(--muted)}.fxt.warn{color:var(--red)}
 .fxerr{margin-top:12px;color:var(--red);font-size:13px}
-.fxf{display:flex;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}.fxf .btn{flex:1;text-align:center;min-height:44px;cursor:pointer}
+.fxf{display:flex;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}
+.mdc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.mdc button{font:inherit;font-size:14px;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
+.mdc button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent);font-weight:700}.mdc button[disabled]{opacity:.45;cursor:default}
+.mdo{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:4px 0 12px;font-size:14px}.mdo input[type=number]{width:90px;font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--text)}
+.fxf .btn{flex:1;text-align:center;min-height:44px;cursor:pointer}
 .btn[disabled]{opacity:.4;cursor:default}
 </style>
 <style>
@@ -156,6 +160,7 @@ a.innerHTML='<div role="alert" style="max-width:420px;margin:72px auto;padding:0
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 <div class="fxo" id="fixModal" hidden role="dialog" aria-modal="true" aria-labelledby="fxT"></div>
+<div class="fxo" id="modeModal" hidden role="dialog" aria-modal="true" aria-labelledby="mdT"></div>
 <script>
 /* QR codes for tables, drawn in the browser. The encoder below is qrcode-generator, used under the MIT licence:
    Copyright (c) 2009 Kazuhiko Arase
@@ -331,7 +336,7 @@ function viewDay(){
 }
 function tableItem(t){
   var base=location.origin+'/scoreboard.html?';
-  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span>'+(t.createdBy?' <span class="mb">by '+esc(t.createdBy)+'</span>':'')+'<div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Unlock</button> ':'')+(t.events>0?'<button class="lnk" onclick="openFix(\''+t.code+'\')">Fix players</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Delete</button></div></div>'
+  return '<div class="tcard"><div class="th"><div><strong>'+esc(t.label)+'</strong> <span class="mb">'+esc(modeLabel(t.mode))+'</span>'+(t.createdBy?' <span class="mb">by '+esc(t.createdBy)+'</span>':'')+'<div class="meta">'+t.players.map(function(p){return esc(p.name);}).join(', ')+'</div><div class="meta">'+progText(t)+'</div><div class="meta">'+esc(rulesLine(t))+'</div></div><div>'+(t.locked?'<button class="lnk" onclick="unlockTable(\''+t.code+'\')">Unlock</button> ':'')+(t.events>0?'<button class="lnk" onclick="openFix(\''+t.code+'\')">Fix players</button> ':'')+(modeSiblings(t.mode).length>1?'<button class="lnk" onclick="openMode(\''+t.code+'\')">Change mode</button> ':'')+'<button class="lnk" onclick="delTable(\''+t.code+'\')">Delete</button></div></div>'
     +'<div class="cr"><span class="cl">Host</span><span class="code">'+t.code+'</span><a class="btn sm" href="'+base+'code='+t.code+'" target="_blank">Open</a><button class="btn sm" onclick="copyLink(\'host\',\''+t.code+'\')">Copy link</button><button class="btn sm" data-qr="host" data-code="'+t.code+'" data-label="'+esc(t.label)+'">QR</button></div>'
     +'<div class="cr"><span class="cl">Players</span><span class="code">'+t.view_code+'</span><a class="btn sm" href="'+base+'view='+t.view_code+'" target="_blank">Open</a><button class="btn sm" onclick="copyLink(\'view\',\''+t.view_code+'\')">Copy link</button><button class="btn sm" data-qr="view" data-code="'+t.view_code+'" data-label="'+esc(t.label)+'">QR</button></div>'
     +'<div class="meta" style="margin-top:6px">Or just share the code (host or players), then open <a href="/masuk.html" target="_blank">'+location.origin+'/masuk.html</a> and type the code</div></div>';
@@ -437,6 +442,63 @@ function renderFix(){
   el.hidden=false;document.addEventListener('keydown',fixKey);
 }
 function fixKey(e){if(e.key==='Escape')closeFix();}
+
+/* ---------- change the mode of a table (same family only) ---------- */
+var md=null;
+function modeFam(m){var M=(window.TBT_MODES&&TBT_MODES.modes)||[];for(var i=0;i<M.length;i++)if(M[i].id===(m||'casual'))return M[i].fam;return null;}
+function modeSiblings(m){var f=modeFam(m),M=(window.TBT_MODES&&TBT_MODES.modes)||[];if(!f)return [];return M.filter(function(x){return x.fam===f&&(!x.hidden||x.id===m);});}
+function openMode(code){
+  var t=((day&&day.tables)||[]).filter(function(x){return x.code===code;})[0];if(!t)return;
+  md={code:code,label:t.label,from:t.mode||'casual',to:null,opts:{},preview:null,busy:false,err:''};
+  renderMode();var b=document.getElementById('mdClose');if(b)b.focus();
+}
+function closeMode(){md=null;renderMode();}
+function modeCall(apply){
+  md.busy=true;md.err='';renderMode();
+  var body={code:md.code,mode:md.to,apply:apply};Object.keys(md.opts).forEach(function(k){body[k]=md.opts[k];});
+  return fetch('/api/admin/table-mode',{method:'POST',headers:H(),body:JSON.stringify(body)}).then(function(r){return r.json().then(function(b){return {ok:r.ok,b:b};});}).then(function(x){
+    md.busy=false;
+    if(!x.ok){md.err=x.b.message||x.b.error||'Failed';md.preview=null;renderMode();return null;}
+    return x.b;
+  }).catch(function(){md.busy=false;md.err='Could not reach the server.';renderMode();return null;});
+}
+function modePick(id){if(!md||md.busy)return;md.to=id;md.opts={};md.preview=null;modeCall(false).then(function(b){if(b&&md){md.preview=b.summary;renderMode();}});}
+function modeOpt(k,v){if(!md||md.busy)return;md.opts[k]=v;modeCall(false).then(function(b){if(b&&md){md.preview=b.summary;renderMode();}});}
+function modeApply(){
+  if(!md||!md.preview)return;
+  var pv=md.preview;
+  if(!confirm('Change '+md.label+' from '+pv.from+' to '+pv.to+'? Every hand is scored again and the leaderboard changes too.'+(pv.locked?' The table is saved as final and stays locked.':'')))return;
+  modeCall(true).then(function(b){if(!b)return;md=null;renderMode();return openDay(day.id).then(function(){render();toast('Mode changed');});});
+}
+function renderMode(){
+  var el=document.getElementById('modeModal');
+  if(!md){el.hidden=true;el.innerHTML='';document.removeEventListener('keydown',modeKey);return;}
+  var sib=modeSiblings(md.from),pv=md.preview,o=pv&&pv.options;
+  var chips='<div class="mdc" role="group" aria-label="Mode">'+sib.map(function(m){var cur=m.id===md.from;return '<button type="button" aria-pressed="'+(md.to===m.id)+'" onclick="modePick(\''+m.id+'\')"'+(md.busy?' disabled':'')+'>'+esc(m.short||m.name)+(cur?' (now)':'')+'</button>';}).join('')+'</div>';
+  var opts='';
+  if(o){
+    if(o.baseHost)opts+='<label class="mdo">Base point <input type="number" min="0" max="99" step="1" value="'+o.mcrBase+'" onchange="modeOpt(\'mcrBase\',this.value)"'+(md.busy?' disabled':'')+'></label>';
+    if(o.hostSets)opts+='<div class="mdo"><label>Minimum <input type="number" min="1" max="13" value="'+esc(o.custom.minPoint)+'" onchange="modeOpt(\'custom\',{minPoint:this.value,maxStreak:\''+esc(o.custom.maxStreak)+'\',deadwall:'+!!o.custom.deadwall+'})"></label><label>Max streak <input type="number" min="1" value="'+esc(o.custom.maxStreak)+'" onchange="modeOpt(\'custom\',{minPoint:\''+esc(o.custom.minPoint)+'\',maxStreak:this.value,deadwall:'+!!o.custom.deadwall+'})"></label></div>';
+    if(o.seat)opts+='<label class="mdo"><input type="checkbox"'+(o.seatRotation?' checked':'')+' onchange="modeOpt(\'seatRotation\',this.checked)"'+(md.busy?' disabled':'')+'> Seat rotation</label>';
+  }
+  var res='';
+  if(pv){
+    var w='';
+    if(pv.low.length)w+='<p class="fxt warn">'+pv.low.length+' hand'+(pv.low.length>1?'s are':' is')+' below the minimum of '+pv.minPoint+' '+(pv.unit==='fan'?'fan':'points')+' of '+esc(pv.to)+': '+pv.low.slice(0,6).map(function(x){return 'hand '+x.hand+' ('+esc(x.name)+', '+x.pts+')';}).join(', ')+(pv.low.length>6?', \u2026':'')+'. They still count as they are; fix them on the scoreboard if they should be invalid wins.</p>';
+    if(pv.dealerChanged)w+='<p class="fxt warn">The dealer differs in '+pv.dealerChanged+' of '+pv.hands+' hands (the dealer streak or seat rotation is different).</p>';
+    if(pv.doneBefore&&!pv.doneAfter)w+='<p class="fxt warn">Under this mode the game is no longer finished.</p>';
+    else if(pv.lateAfter!==pv.lateBefore)w+='<p class="fxt warn">'+pv.lateAfter+' hand(s) fall after the game ended and are not counted (before: '+pv.lateBefore+').</p>';
+    if(o&&o.startDropped)w+='<p class="fxt warn">This mode has no starting score: it is switched off.</p>';
+    res='<div class="fxres"><div class="fxt" style="margin:0 0 6px">'+esc(pv.from)+' \u2192 '+esc(pv.to)+': net score of each player, before and after</div>'+pv.people.map(function(p){return '<div class="fxp'+(p.before!==p.after?' chg':'')+'"><span>'+esc(p.name)+'</span><b>'+signed(p.before)+' \u2192 '+signed(p.after)+'</b></div>';}).join('')+(pv.hands?'':'<p class="fxt">No hands yet: only the mode changes.</p>')+w+'</div>';
+  }
+  var canSave=pv&&!md.busy&&(md.to!==md.from||Object.keys(md.opts).length);
+  el.innerHTML='<div class="fxs"><div class="fxh"><h2 id="mdT">Change mode</h2><button type="button" class="fxx" id="mdClose" aria-label="Close" onclick="closeMode()">&times;</button></div>'
+    +'<div class="fxb"><p>Table <b>'+esc(md.label)+'</b>. Pick another mode of the same family. The hands stay as they are and are scored again under the new mode\u2019s rules (base, minimum, payouts, dealer).</p>'
+    +chips+opts+res+(md.err?'<div class="fxerr" role="alert">'+esc(md.err)+'</div>':'')+'</div>'
+    +'<div class="fxf"><button type="button" class="btn" onclick="closeMode()">Cancel</button><button type="button" class="btn primary" onclick="modeApply()"'+(canSave?'':' disabled')+'>Save</button></div></div>';
+  el.hidden=false;document.addEventListener('keydown',modeKey);
+}
+function modeKey(e){if(e.key==='Escape')closeMode();}
 (function(){
   if(!password){render();return;}
   checkLogin().then(function(ok){
